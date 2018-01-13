@@ -1,0 +1,13 @@
+# vi(m) temp files
+*.swp
+*.swo
+
+# C object files, asm and more
+*.s
+*.map
+*.o
+*.elf
+*.a
+*.d
+
+./build
