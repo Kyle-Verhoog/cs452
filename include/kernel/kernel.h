@@ -14,4 +14,17 @@
 
 #define KERNEL_ENTRY 0x28
 
+//Macros
+#define PRINT_REG(reg)   asm(				\
+						   "mov  r0, #1;" 	\
+						   "mov  r1, "reg";"\
+						   "bl   bwputr;"	\
+						  );
+
+#define PRINT_PSR(psr)   asm(				\
+						   "mov  r0, #1;" 	\
+						   "mrs  r1, "psr";"\
+						   "bl   bwputr;"	\
+						  );
+
 #endif /* KERNEL_H */

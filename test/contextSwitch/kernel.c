@@ -41,41 +41,37 @@ int main( int argc, char* argv[] ) {
   // 	);
   bwprintf(COM2, "%x\n\r", *(int*)(0x10));
   bwprintf(COM2, "%x\n\r", *(int*)(0x8));
-  bwprintf(COM2, "%x\n\r", *(int*)(0x4));
-  bwprintf(COM2, "%x\n\r", *(int*)(0xc));
 
-  PRINT_REG("#1");
+  asm(
+   "mov  r0, #1;"
+   "mrs  r1, cpsr;"
+   "bl   bwputr;"
+  );
 
-  // asm(
-  //  "mov  r0, #1;"
-  //  "mrs  r1, cpsr;"
-  //  "bl   bwputr;"
-  // );
+  //Set the CPSR to user mode
+  asm(
+  	"mrs r0, cpsr;"
+  	"bic r0, r0, #31;"
+  	"orr r0, r0, #16;"
+  	"msr cpsr, r0;"
+  );
 
-  // //Set the CPSR to user mode
-  // asm(
-  // 	"mrs r0, cpsr;"
-  // 	"bic r0, r0, #31;"
-  // 	"orr r0, r0, #16;"
-  // 	"msr cpsr, r0;"
-  // );
-
-  // asm(
-  // 	"mrs r0, cpsr;"
-  // 	"bic r0, r0, #31;"
-  // 	"orr r0, r0, #19;"
-  // 	"msr cpsr, r0;"
-  // );
-
-  // // asm(
-  // //   "swi 0x0;"
-  // // );
+  asm(
+  	"mrs r0, cpsr;"
+  	"bic r0, r0, #31;"
+  	"orr r0, r0, #19;"
+  	"msr cpsr, r0;"
+  );
 
   // asm(
-  //  "mov  r0, #1;"
-  //  "mrs  r1, cpsr;"
-  //  "bl   bwputr;"
+  //   "swi 0x0;"
   // );
+
+  asm(
+   "mov  r0, #1;"
+   "mrs  r1, cpsr;"
+   "bl   bwputr;"
+  );
 
 	return 0;
 }
