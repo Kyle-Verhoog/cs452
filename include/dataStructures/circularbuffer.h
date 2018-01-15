@@ -12,6 +12,6 @@ typedef struct CircularBuffer{
 
 } CircularBuffer;
 
-init_circularBuffer(CircularBuffer *buffer);
+void init_circularBuffer(CircularBuffer *buffer);
 
 #endif /* CIRCULAR_BUFFER_H */

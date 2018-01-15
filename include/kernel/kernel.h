@@ -12,4 +12,6 @@
 	#include <debug.h>
 #endif /* DEBUG_ON */
 
+#define KERNEL_ENTRY 0x28
+
 #endif /* KERNEL_H */
