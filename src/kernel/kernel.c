@@ -2,59 +2,58 @@
 
 #define asm __asm__
 
+/**
+ * Saves the old SP to the new kernel stack and sets SP to the kernel stack.
+ */
+#define KERNEL_INIT() asm( \
+  ".extern kernel_stack_base;" \
+	"ldr r1, =kernel_stack_base;" \
+	"ldr r1, [r1];" \
+	"mov r2, sp;" \
+	"mov sp, r1;" \
+	"stmed sp!, {r2};" \
+);
+
+/**
+ * Restores the old SP in order to return to RedBoot.
+ */
+#define KERNEL_EXIT() asm( \
+	"ldmed sp, {sp};" \
+);
+
+
 int kernel_stack_base = KERNEL_STACK_BASE;
 int user_stack_base = USER_STACK_BASE;
 
-void handler(void) {
-  	// TODO
-	bwprintf(COM2, "BAD ACCESS");
+/**
+ * Handles the SWI interrupt.
+ */
+void swi_handler(void) {
+	bwprintf(COM2, "SWI HANDLER\n\r");
 }
+
 
 void initialize() {
 	//Move our stack pointer to base of kernel
 	PRINT_REG("sp");
 
-	//Set the extern
-	asm(
-		".extern kernel_stack_base;"
-		".extern user_stack_base;"
-	);
-
-	//Move stack pointer to kernel head
-	asm(
-		"ldr r6, =kernel_stack_base;"
-		"ldr r6, [r6];"
-		"mov r5, sp;"
-		"mov sp, r6;"
-	);
-	
-	//Store previous stack pointer
-	asm(
-		"stmed sp!, {r5};"
-	);
-
-	PRINT_REG("sp");
-
+  // Set the SWI handler to swi_handler
 	int *kep = (int *)KERNEL_ENTRY;
-  	*kep = &handler;
-
-  	PRINT_REG("sp");
+  *kep = (int)&swi_handler;
 }
 
-void cleanup() {
-	//Pop kernel stack and put to SP
-	PRINT_REG("sp");
-	asm(
-		//"ldr sp, [sp, #4];"
-		"ldr r7, [sp, #4];"
-		);
-
-	PRINT_REG("r7");
-}
 
 int main( int argc, char* argv[] ) {
+	PRINT_REG("sp");
+  KERNEL_INIT();
+	//Set the extern
+	//Move stack pointer to new kernel stack
+	
+  //Store previous stack pointer
 
-	initialize();
+	PRINT_REG("sp");
+
+	// initialize();
 
 	// asm(
 	// 	"mrs r0, cpsr;"
@@ -94,7 +93,8 @@ int main( int argc, char* argv[] ) {
 	//  "mrs  r1, cpsr;"
 	//  "bl   bwputr;"
 	// );
-	cleanup();
 
+  KERNEL_EXIT();
+	PRINT_REG("sp");
 	return 0;
 }
