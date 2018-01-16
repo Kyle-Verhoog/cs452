@@ -12,7 +12,16 @@
 	#include <debug.h>
 #endif /* DEBUG_ON */
 
+//Kernel Defines
 #define KERNEL_ENTRY 0x28
+
+
+#define KERNEL_STACK_BASE 0x0fffffc
+#define USER_STACK_BASE 0x01fffffc
+	#define USER_STACK_SIZE_OFFSET 0x100000	//1 MB User stacks
+
+extern int kernel_stack_base;
+
 
 //Macros
 #define PRINT_REG(reg)   asm(				\
@@ -26,5 +35,7 @@
 						   "mrs  r1, "psr";"\
 						   "bl   bwputr;"	\
 						  );
+//
+
 
 #endif /* KERNEL_H */

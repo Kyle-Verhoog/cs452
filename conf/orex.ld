@@ -8,7 +8,7 @@ MEMORY
 
 SECTIONS
 {
-  data : /* Initialized data. */
+  .data : /* Initialized data. */
   {
     _DataStart = . ;
     *(.data)
@@ -16,7 +16,7 @@ SECTIONS
 } >ram
 
 
-bss : /* Uninitialized data. */
+.bss : /* Uninitialized data. */
 {
   _BssStart = . ;
   *(.bss)
