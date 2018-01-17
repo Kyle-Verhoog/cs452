@@ -35,7 +35,13 @@ extern int kernel_stack_base;
 						   "mrs  r1, "psr";"\
 						   "bl   bwputr;"	\
 						  );
-//
+
+#define SET_CPSR(mode) asm( \
+		"mrs r0, cpsr;" \
+		"bic r0, r0, #31;" \
+		"orr r0, r0,"mode";" \
+		"msr cpsr, r0;" \
+	); \
 
 
 #endif /* KERNEL_H */
