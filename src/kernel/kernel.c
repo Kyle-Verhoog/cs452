@@ -29,27 +29,20 @@ int user_stack_base = USER_STACK_BASE;
  * Handles the SWI interrupt.
  */
 void swi_handler(void) {
-	bwprintf(COM2, "SWI HANDLER\r\n");
-  bwprintf(COM2, "lr: ");
-  asm("mov r7, lr;");
-  PRINT_REG("r7");
-  bwprintf(COM2, "\r\n");
+  asm(
+    "stmed sp!, {lr};"
+  );
+  // asm("mov r7, lr;");
+	// bwprintf(COM2, "SWI HANDLER\r\n");
+  // bwprintf(COM2, "lr: ");
+  // PRINT_REG("r7");
+  // bwprintf(COM2, "\r\n");
 
-  bwprintf(COM2, "kstack: ");
-  PRINT_REG("sp");
-  bwprintf(COM2, "\r\n");
+  // bwprintf(COM2, "kstack: ");
+  // PRINT_REG("sp");
+  // bwprintf(COM2, "\r\n");
   // get arguments of request, save to stack
   // get the lr which is the pc of the user task
-  
-	
-  // bwprintf(COM2, "  PUSHING LR TO KERNEL STACK\r\n");
-  // push lr to kernel stack
-  /*
-  asm(
-    "stmed sp!, {r14};"
-  );
-  */
-
 
   bwprintf(COM2, "  SWITCHING TO SYS MODE\r\n");
   // switch to sys mode
@@ -60,10 +53,10 @@ void swi_handler(void) {
 		"msr cpsr, r0;"
 	);
   // PRINT_REG("sp");
-  bwprintf(COM2, "lr: ");
-  asm("mov r7, lr;");
-  PRINT_REG("r7");
-  bwprintf(COM2, "\r\n");
+  // bwprintf(COM2, "lr: ");
+  // asm("mov r7, lr;");
+  // PRINT_REG("r7");
+  // bwprintf(COM2, "\r\n");
 
   bwprintf(COM2, "  PUSHING TASK REGISTERS TO TASK STACK\r\n");
   // push task registers to task stack
@@ -81,29 +74,29 @@ void swi_handler(void) {
 		"orr r0, r0, #19;"
 		"msr cpsr, r0;"
 	);
-  bwprintf(COM2, "kstack: ");
-  PRINT_REG("sp");
-  bwprintf(COM2, "\r\n");
+  // bwprintf(COM2, "kstack: ");
+  // PRINT_REG("sp");
+  // bwprintf(COM2, "\r\n");
 
   bwprintf(COM2, "  LOADING KERNEL TRAP FRAME\r\n");
   asm(
+	  "ldmed sp!, {lr};"
 	  "ldmed sp!, {r0-r12};"
   );
-  bwprintf(COM2, "kstack: ");
-  PRINT_REG("sp");
-  bwprintf(COM2, "\r\n");
+
+  asm("mov r7, lr");
   bwprintf(COM2, "r8: ");
   PRINT_REG("r8");
   bwprintf(COM2, "\r\n");
 
-  bwprintf(COM2, "lr: ");
-  asm("mov r7, lr;");
-  PRINT_REG("r7");
-  bwprintf(COM2, "\r\n");
+  // bwprintf(COM2, "lr: ");
+  // asm("mov r7, lr;");
+  // PRINT_REG("r7");
+  // bwprintf(COM2, "\r\n");
 
-  bwprintf(COM2, "END SWI HANDLER\r\n");
+  // bwprintf(COM2, "END SWI HANDLER\r\n");
 
-  asm("mov pc, lr");
+  asm("mov pc, r7");
 }
 
 
@@ -112,7 +105,7 @@ void initialize() {
 
   // Set the SWI handler to swi_handler
 	int *kep = (int *)KERNEL_ENTRY;
-  *kep = (int)(&swi_handler+20); // TODO there has to be a better way...
+  *kep = (int)(&swi_handler+12); // TODO there has to be a better way...
 }
 
 
@@ -145,10 +138,6 @@ void start_user_task() {
 		"msr cpsr, r0;"
 	);
   
-  bwprintf(COM2, "user stack: ");
-  PRINT_REG("sp");
-  bwprintf(COM2, "\r\n");
- 
 
   // set the sp of the task
   // TODO this has to be dynamically done
