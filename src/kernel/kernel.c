@@ -85,6 +85,15 @@ void swi_handler(void) {
   );
 
   asm("mov r7, lr");
+  
+  // save kernel registers to kernel stack
+  bwprintf(COM2, "kstack: ");
+  PRINT_REG("sp");
+  bwprintf(COM2, "\r\n");
+  asm(
+    "stmed sp!, {r0-r12};"
+  );
+
   bwprintf(COM2, "r8: ");
   PRINT_REG("r8");
   bwprintf(COM2, "\r\n");
@@ -96,7 +105,8 @@ void swi_handler(void) {
 
   // bwprintf(COM2, "END SWI HANDLER\r\n");
 
-  asm("mov pc, r7");
+  //asm("mov pc, r7");
+  asm("movs pc, r7");
 }
 
 
@@ -173,9 +183,20 @@ void start_user_task() {
   bwprintf(COM2, "TASK1 start\r\n");
   asm("mov r7, pc;");
   PRINT_REG("r7");
+
 	asm("swi 0x0;");
+
+	PRINT_PSR("cpsr");
   bwprintf(COM2, "TASK1 end\r\n");
   bwprintf(COM2, "TASK1 end\r\n");
+
+
+
+  asm("swi 0x0;");
+	
+	PRINT_PSR("cpsr");
+  bwprintf(COM2, "TASK1 end\r\n");
+  bwprintf(COM2, "TASK1 end\r\n");  
 }
 
 
