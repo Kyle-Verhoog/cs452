@@ -60,6 +60,10 @@ void swi_handler(void) {
 		"msr cpsr, r0;"
 	);
   // PRINT_REG("sp");
+  bwprintf(COM2, "lr: ");
+  asm("mov r7, lr;");
+  PRINT_REG("r7");
+  bwprintf(COM2, "\r\n");
 
   bwprintf(COM2, "  PUSHING TASK REGISTERS TO TASK STACK\r\n");
   // push task registers to task stack
@@ -108,7 +112,7 @@ void initialize() {
 
   // Set the SWI handler to swi_handler
 	int *kep = (int *)KERNEL_ENTRY;
-  *kep = (int)(&swi_handler+24); // TODO there has to be a better way...
+  *kep = (int)(&swi_handler+20); // TODO there has to be a better way...
 }
 
 
@@ -166,8 +170,13 @@ void start_user_task() {
 		"orr r0, r0, #16;"
 		"msr cpsr, r0;"
 	);
+
   bwprintf(COM2, "user stack: ");
   PRINT_REG("sp");
+  bwprintf(COM2, "\r\n");
+
+  bwprintf(COM2, "user lr: ");
+  PRINT_REG("lr");
   bwprintf(COM2, "\r\n");
 
 
