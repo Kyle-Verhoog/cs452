@@ -72,56 +72,19 @@ KernelRequest activate(TaskDescriptor* td) {
     "stmfd sp!, {r0-r12};"
   );
 
-  // asm(
-  //   "mov r5, %0;"::"r"(td)
-  //   );
-  // PRINT_REG("r5");
-  //Set the spsr register in Kernel mode
-  //bwprintf(COM2, "TD: psr %x, sp %x, pc %x \r\n", td->psr, td->sp, td->pc);
-
-  //PRINT_PSR("spsr");
-
-  // asm (
-  //   "msr spsr, %0;"::"r"(td->psr)
-  // );
-
-  // PRINT_PSR("spsr");
-
-  // bwprintf(COM2, "LOADED SPSR\n\r");
-
-  // asm(
-  //   "mov r5, fp;"
-  // );
-  // PRINT_REG("r5");
-
-  // asm(
-  //   "mov r5, %0;"::"r"(td->sp)
-  // );
-  // PRINT_REG("r5");
-
   //Change to system mode
   SET_CPSR(STR(SYSTEM_MODE));
-  //Change the stack pointer to the task's stack (use arbitrary scratch register r3)
-  /*asm (
-    "ldr r3, [fp, #-20];"
-    "ldr ip, [r3, #4];"
-    "mov sp, ip;"
-  );*/
-
+  //Change the stack pointer to the task's stack (uses fp so no worries)
   asm(
     "mov sp, %0;"::"r"(td->sp)
   );
-  // PRINT_REG("r5");
 
   PRINT_REG("sp");
 
-  //bwprintf(COM2, "TD: psr %x, sp %x, pc %x \r\n", td->psr, td->sp, td->pc);
-
   //Load the User Trap Frame
-  /*
    asm(
      "ldmfd sp!, {r0-r12};"
-   );*/
+   );
 
   PRINT_REG("sp");
 
@@ -145,13 +108,6 @@ KernelRequest activate(TaskDescriptor* td) {
   //AFTER USER TASK CALLS SWI
   asm("KERNEL_ENTRY:");
 
-  //Save the lr_svc to TaskDescriptor's pc
-  asm(
-    "ldr r3, [fp, #-16];"
-    "ldr r3, [r3, #12];"
-    "str lr, [r3]"
-  );
-
   //Change to System mode
   SET_CPSR(STR(SYSTEM_MODE));
 
@@ -163,12 +119,19 @@ KernelRequest activate(TaskDescriptor* td) {
   //Save the user sp to TaskDescriptor's sp
   asm(
     "ldr r3, [fp, #-16];"
-    "ldr r3, [r3, #4];"
-    "str sp, [r3]"
+    //"ldr r3, [r3, #4];"
+    "str sp, [r3, #4]"
   );
 
   //Change back to kernel mode
   SET_CPSR(STR(KERNEL_MODE));
+
+  //Save the lr_svc to TaskDescriptor's pc
+  asm(
+    "ldr r3, [fp, #-16];"
+    //"ldr r3, [r3, #12];"
+    "str lr, [r3, #12]"
+  );
 
   //Load kernel Trap Frame
   asm(
