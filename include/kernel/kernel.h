@@ -2,19 +2,18 @@
 #define KERNEL_H
 
 #include <bwio.h>
+#include <defines.h>
 #include <ts7200.h>
 #include <task.h>
 
 //Data Structures
 #include <circularbuffer.h>
 
-//Debug - set DEBUG_ON through the gcc option (-D DEBUG_ON)
-#ifdef DEBUG_ON
+//Debug - set DEBUG through the gcc option (-D DEBUG)
+#ifdef DEBUG
 	#include <debug.h>
 #endif /* DEBUG_ON */
 
-#define FALSE 0
-#define TRUE 1
 
 //Kernel Defines
 #define KERNEL_ENTRY 0x28
@@ -56,18 +55,15 @@ extern unsigned int user_stack_base;
 #define SET_CPSR(mode) asm( \
 		"mrs r0, cpsr;" \
 		"bic r0, r0, #31;" \
-		"orr r0, r0, #"mode";" \
+		"orr r0, r0, #"STR(mode)";" \
 		"msr cpsr, r0;" \
 	);
 
-#define STR_HELPER(x) #x
-#define STR(x) STR_HELPER(x)
-
-#define STORE_STATE(param)	asm( \
+#define PUSH_STACK(param)	asm( \
 					    		"stmfd sp!, {"param"};" \
 					  		);
 
-#define LOAD_STATE(param)	asm ( \
+#define POP_STACK(param)	asm ( \
 								"ldmfd sp!, {"param"};" \
 							);	
 

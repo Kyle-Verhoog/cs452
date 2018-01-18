@@ -1,3 +1,4 @@
+#include <system.h>
 #include <kernel.h>
 
 #define asm __asm__
@@ -10,22 +11,23 @@ TaskDescriptor TEST_TASK;
 /**
  * Saves the old SP to the new kernel stack and sets SP to the kernel stack.
  */
-#define KERNEL_INIT() asm( \
-  ".extern kernel_stack_base;" \
+#define KERNEL_INIT() asm(      \
+  ".extern kernel_stack_base;"  \
 	"ldr r1, =kernel_stack_base;" \
-	"ldr r1, [r1];" \
-  "sub fp, r1, #4;" \
-  "sub r1, r1, #64;" \
-	"mov r2, sp;" \
-	"mov sp, r1;" \
-	"stmfd sp!, {r2};" \
+	"ldr r1, [r1];"               \
+  "sub fp, r1, #4;"             \
+  "sub r1, r1, #64;"            \
+	"mov r2, sp;"                 \
+	"mov sp, r1;"                 \
+	"stmfd sp!, {r2};"            \
 );
 
 /**
  * Restores the old SP in order to return to RedBoot.
  */
 #define KERNEL_EXIT() asm( \
-	"ldmfd sp, {sp};" \
+  "KERNEL_EXIT:"           \
+	"ldmfd sp, {sp};"        \
 );
 
 
@@ -50,13 +52,13 @@ void initialize() {
   TEST_TASK.status = READY;
 
   //Initialize the Test task pc
-  SET_CPSR(STR(SYSTEM_MODE));
+  SET_CPSR(SYSTEM_MODE);
   WRITE_SP(TEST_TASK.sp);
   asm(
     "mov r3, %0;"::"r"(TEST_TASK.task)
   );
-  STORE_STATE("r3");
-  SET_CPSR(STR(KERNEL_MODE));
+  PUSH_STACK("r3");
+  SET_CPSR(KERNEL_MODE);
   TEST_TASK.sp = TEST_TASK.sp - 4; //saved lr_svc
 
   //Put the first USER task onto the schedule as READY
@@ -68,54 +70,53 @@ TaskDescriptor* schedule(){
 
 KernelRequest activate(TaskDescriptor* td) {
   //Store Kernel State
-  STORE_STATE("r0-r12");
+  PUSH_STACK("r0-r12");
   //Install SPSR
   WRITE_SPSR(td->psr);
   //Change to system mode
-  SET_CPSR(STR(SYSTEM_MODE));
+  SET_CPSR(SYSTEM_MODE);
   //Change the stack pointer to the task's stack (uses fp so no worries)
   WRITE_SP(td->sp);
   //Load instruction after swi (r3) from user stack
-  LOAD_STATE("r3");
+  POP_STACK("r3");
   //Change to kernel mode
-  SET_CPSR(STR(KERNEL_MODE));
+  SET_CPSR(KERNEL_MODE);
   //Save into kernel lr for loading
   asm("mov lr, r3;");
   //Change to system mode
-  SET_CPSR(STR(SYSTEM_MODE));
+  SET_CPSR(SYSTEM_MODE);
   //Load the User Trap Frame
-  LOAD_STATE("r0-r12, lr");
+  POP_STACK("r0-r12, lr");
   //Switch back to kernel mode
-  SET_CPSR(STR(KERNEL_MODE));
+  SET_CPSR(KERNEL_MODE);
   //Move to the user task
   REVERSE_SWI();
-  
 
   //AFTER USER TASK CALLS SWI
   asm("KERNEL_ENTRY:");
 
   //Change to System mode
-  SET_CPSR(STR(SYSTEM_MODE));
+  SET_CPSR(SYSTEM_MODE);
   //Save the user state
-  STORE_STATE("r0-r12, lr"); 
+  PUSH_STACK("r0-r12, lr");
   //Change to Kernel mode
-  SET_CPSR(STR(KERNEL_MODE));
+  SET_CPSR(KERNEL_MODE);
   //Save lr to stratch r3
   asm("mov r3, lr");
   //Change to System mode
-  SET_CPSR(STR(SYSTEM_MODE));
+  SET_CPSR(SYSTEM_MODE);
   //Save the lr(r3)
-  STORE_STATE("r3")
+  PUSH_STACK("r3")
   //Change back to kernel mode
-  SET_CPSR(STR(KERNEL_MODE));
+  SET_CPSR(KERNEL_MODE);
   //load the kernel stack (fp is now resuable again!)
-  LOAD_STATE("r0-r12");
+  POP_STACK("r0-r12");
   //Change back to system mode
-  SET_CPSR(STR(SYSTEM_MODE)); //Note we can still use fp!
+  SET_CPSR(SYSTEM_MODE); //Note we can still use fp!
   //Save the user sp to TaskDescriptor's sp
   READ_SP(td->sp);
   //Change back to kernel mode
-  SET_CPSR(STR(KERNEL_MODE));
+  SET_CPSR(KERNEL_MODE);
   //Save the spsr to the TaskDescriptor's psr
   READ_SPSR(td->psr);
 
@@ -124,7 +125,7 @@ KernelRequest activate(TaskDescriptor* td) {
   return PASS;
 }
 
-void handle(KernelRequest req){
+void handle(KernelRequest req) {
   //Switch Statement
 };
 
@@ -133,9 +134,11 @@ int main(void) {
 
   initialize();
 
-  while(TRUE){
+  while(true) {
     //get a task from scheduler
     TaskDescriptor* td = schedule();
+
+    KASSERT(td != NULL);
 
     //activate task
     KernelRequest req = activate(td);
