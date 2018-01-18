@@ -10,4 +10,15 @@ void taskOne(){
 	);
 	
 	bwprintf(COM2, "PRINT TWO\n\r");
+
+	asm(
+		"swi #0;"
+	);
+
+	bwprintf(COM2, "PRINT THREE\n\r");
+	bwprintf(COM2, "PRINT THREE AGAIN\n\r");
+
+	asm(
+		"swi #0;"
+	);	
 }

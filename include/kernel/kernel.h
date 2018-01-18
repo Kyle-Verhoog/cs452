@@ -58,9 +58,37 @@ extern unsigned int user_stack_base;
 		"bic r0, r0, #31;" \
 		"orr r0, r0, #"mode";" \
 		"msr cpsr, r0;" \
-	); \
+	);
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
+
+#define STORE_STATE(param)	asm( \
+					    		"stmfd sp!, {"param"};" \
+					  		);
+
+#define LOAD_STATE(param)	asm ( \
+								"ldmfd sp!, {"param"};" \
+							);	
+
+#define WRITE_SP(val)	asm( \
+					    	"mov sp, %0;"::"r"(val) \
+						);
+
+#define WRITE_SPSR(val) asm( \
+							"msr spsr, %0;"::"r"(val) \
+						);
+
+#define READ_SP(var) 	asm ( \
+							"mov %0, sp;":"=r"(var): \
+						);
+
+#define READ_SPSR(var)	asm ( \
+							"mrs %0, spsr;":"=r"(var): \
+						);
+
+#define REVERSE_SWI() 	asm( \
+							"movs pc, lr" \
+						)
 
 #endif /* KERNEL_H */

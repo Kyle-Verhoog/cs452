@@ -10,12 +10,10 @@ typedef enum TaskStatus{
 typedef struct TaskDescriptor{
 	unsigned int tid;	//Task id
 	
-	int sp;		//stack pointer
+	unsigned int sp;		//stack pointer
 	unsigned int stack_base; //stack base
 
-	unsigned int pc;		//program counter
-
-	int psr;		//Status Register
+	unsigned int psr;		//Status Register
 	
 	void* task;	//Function pointer
 	TaskStatus status;	//Task status

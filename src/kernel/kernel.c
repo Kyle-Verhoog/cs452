@@ -32,16 +32,9 @@ TaskDescriptor TEST_TASK;
 unsigned int kernel_stack_base = KERNEL_STACK_BASE;
 unsigned int user_stack_base = USER_STACK_BASE;
 
-void swi_handler(){
-
-}
-
 void initialize() {
   bwprintf(COM2, "Initializing...\n\r");
 
-  // Set the SWI handler to swi_handler
-	//int *kep = (int *)KERNEL_ENTRY;
-  //*kep = (int)(&swi_handler);
   asm(
     "ldr r3, =KERNEL_ENTRY;"
     "mov r4, #"STR(KERNEL_ENTRY)";"
@@ -50,13 +43,21 @@ void initialize() {
 
   //TODO: Fix Initialize task one
   TEST_TASK.tid = 0;
-  TEST_TASK.sp = USER_STACK_BASE - 52;  //Initialize stack pointer down 13 registers
+  TEST_TASK.sp = USER_STACK_BASE - 56;  //Save r0-12, lr
   TEST_TASK.stack_base = USER_STACK_BASE; 
-  TEST_TASK.pc = (unsigned int)&taskOne;
   TEST_TASK.psr = 16;
   TEST_TASK.task = &taskOne;
   TEST_TASK.status = READY;
 
+  //Initialize the Test task pc
+  SET_CPSR(STR(SYSTEM_MODE));
+  WRITE_SP(TEST_TASK.sp);
+  asm(
+    "mov r3, %0;"::"r"(TEST_TASK.task)
+  );
+  STORE_STATE("r3");
+  SET_CPSR(STR(KERNEL_MODE));
+  TEST_TASK.sp = TEST_TASK.sp - 4; //saved lr_svc
 
   //Put the first USER task onto the schedule as READY
 }
@@ -66,77 +67,57 @@ TaskDescriptor* schedule(){
 }
 
 KernelRequest activate(TaskDescriptor* td) {
-  PRINT_REG("r0");
   //Store Kernel State
-  asm(
-    "stmfd sp!, {r0-r12};"
-  );
-
+  STORE_STATE("r0-r12");
+  //Install SPSR
+  WRITE_SPSR(td->psr);
   //Change to system mode
   SET_CPSR(STR(SYSTEM_MODE));
   //Change the stack pointer to the task's stack (uses fp so no worries)
-  asm(
-    "mov sp, %0;"::"r"(td->sp)
-  );
-
-  PRINT_REG("sp");
-
+  WRITE_SP(td->sp);
+  //Load instruction after swi (r3) from user stack
+  LOAD_STATE("r3");
+  //Change to kernel mode
+  SET_CPSR(STR(KERNEL_MODE));
+  //Save into kernel lr for loading
+  asm("mov lr, r3;");
+  //Change to system mode
+  SET_CPSR(STR(SYSTEM_MODE));
   //Load the User Trap Frame
-   asm(
-     "ldmfd sp!, {r0-r12};"
-   );
-
-  PRINT_REG("sp");
-
-  //bwprintf(COM2, "LOADED USER TRAP\n\r");
-
+  LOAD_STATE("r0-r12, lr");
   //Switch back to kernel mode
   SET_CPSR(STR(KERNEL_MODE));
-
-  PRINT_REG("sp");
-
-  //Install spsr
-  asm(
-    "msr spsr, %0;"::"r"(td->psr)
-  );
-
   //Move to the user task
-  asm (
-    "movs pc, %0;"::"r"(td->pc)
-  );
+  REVERSE_SWI();
+  
 
   //AFTER USER TASK CALLS SWI
   asm("KERNEL_ENTRY:");
 
   //Change to System mode
   SET_CPSR(STR(SYSTEM_MODE));
-
-  //Save the user state 
-  asm(
-    "stmfd sp!, {r0-r12};"
-  );
-
-  //Save the user sp to TaskDescriptor's sp
-  asm(
-    "ldr r3, [fp, #-16];"
-    //"ldr r3, [r3, #4];"
-    "str sp, [r3, #4]"
-  );
-
+  //Save the user state
+  STORE_STATE("r0-r12, lr"); 
+  //Change to Kernel mode
+  SET_CPSR(STR(KERNEL_MODE));
+  //Save lr to stratch r3
+  asm("mov r3, lr");
+  //Change to System mode
+  SET_CPSR(STR(SYSTEM_MODE));
+  //Save the lr(r3)
+  STORE_STATE("r3")
   //Change back to kernel mode
   SET_CPSR(STR(KERNEL_MODE));
-
-  //Save the lr_svc to TaskDescriptor's pc
-  asm(
-    "ldr r3, [fp, #-16];"
-    //"ldr r3, [r3, #12];"
-    "str lr, [r3, #12]"
-  );
-
-  //Load kernel Trap Frame
-  asm(
-    "ldmfd sp!, {r0-r12};"
-  );
+  //load the kernel stack (fp is now resuable again!)
+  LOAD_STATE("r0-r12");
+  //Change back to system mode
+  SET_CPSR(STR(SYSTEM_MODE)); //Note we can still use fp!
+  //Save the user sp to TaskDescriptor's sp
+  READ_SP(td->sp);
+  //Change back to kernel mode
+  SET_CPSR(STR(KERNEL_MODE));
+  //Save the spsr to the TaskDescriptor's psr
+  READ_SPSR(td->psr);
 
   //Return SWI Argument
 
