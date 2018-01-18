@@ -2,6 +2,11 @@
 
 #define asm __asm__
 
+//TODO: Remove Test Task
+TaskDescriptor TEST_TASK;
+//
+
+
 /**
  * Saves the old SP to the new kernel stack and sets SP to the kernel stack.
  */
@@ -9,204 +14,193 @@
   ".extern kernel_stack_base;" \
 	"ldr r1, =kernel_stack_base;" \
 	"ldr r1, [r1];" \
+  "sub fp, r1, #4;" \
+  "sub r1, r1, #64;" \
 	"mov r2, sp;" \
 	"mov sp, r1;" \
-	"stmed sp!, {r2};" \
+	"stmfd sp!, {r2};" \
 );
 
 /**
  * Restores the old SP in order to return to RedBoot.
  */
 #define KERNEL_EXIT() asm( \
-	"ldmed sp, {sp};" \
+	"ldmfd sp, {sp};" \
 );
 
 
-int kernel_stack_base = KERNEL_STACK_BASE;
-int user_stack_base = USER_STACK_BASE;
+unsigned int kernel_stack_base = KERNEL_STACK_BASE;
+unsigned int user_stack_base = USER_STACK_BASE;
 
-/**
- * Handles the SWI interrupt.
- */
-void swi_handler(void) {
-  asm(
-    "stmed sp!, {lr};"
-  );
-  // asm("mov r7, lr;");
-	// bwprintf(COM2, "SWI HANDLER\r\n");
-  // bwprintf(COM2, "lr: ");
-  // PRINT_REG("r7");
-  // bwprintf(COM2, "\r\n");
+void swi_handler(){
 
-  // bwprintf(COM2, "kstack: ");
-  // PRINT_REG("sp");
-  // bwprintf(COM2, "\r\n");
-  // get arguments of request, save to stack
-  // get the lr which is the pc of the user task
-
-  bwprintf(COM2, "  SWITCHING TO SYS MODE\r\n");
-  // switch to sys mode
-	asm(
-		"mrs r0, cpsr;"
-		"bic r0, r0, #31;"
-		"orr r0, r0, #31;"
-		"msr cpsr, r0;"
-	);
-  // PRINT_REG("sp");
-  // bwprintf(COM2, "lr: ");
-  // asm("mov r7, lr;");
-  // PRINT_REG("r7");
-  // bwprintf(COM2, "\r\n");
-
-  bwprintf(COM2, "  PUSHING TASK REGISTERS TO TASK STACK\r\n");
-  // push task registers to task stack
-  asm(
-    "stmed sp, {r0-r15};"
-    "sub sp, sp, #68;"
-  );
-
-
-  bwprintf(COM2, "  SWITCHING BACK TO KERNEL MODE\r\n");
-  // switch back to kernel mode
-	asm(
-		"mrs r0, cpsr;"
-		"bic r0, r0, #31;"
-		"orr r0, r0, #19;"
-		"msr cpsr, r0;"
-	);
-  // bwprintf(COM2, "kstack: ");
-  // PRINT_REG("sp");
-  // bwprintf(COM2, "\r\n");
-
-  bwprintf(COM2, "  LOADING KERNEL TRAP FRAME\r\n");
-  asm(
-	  "ldmed sp!, {lr};"
-	  "ldmed sp!, {r0-r12};"
-  );
-
-  asm("mov r7, lr");
-  
-  // save kernel registers to kernel stack
-  bwprintf(COM2, "kstack: ");
-  PRINT_REG("sp");
-  bwprintf(COM2, "\r\n");
-  asm(
-    "stmed sp!, {r0-r12};"
-  );
-
-  bwprintf(COM2, "r8: ");
-  PRINT_REG("r8");
-  bwprintf(COM2, "\r\n");
-
-  // bwprintf(COM2, "lr: ");
-  // asm("mov r7, lr;");
-  // PRINT_REG("r7");
-  // bwprintf(COM2, "\r\n");
-
-  // bwprintf(COM2, "END SWI HANDLER\r\n");
-
-  //asm("mov pc, r7");
-  asm("movs pc, r7");
 }
-
 
 void initialize() {
-  bwprintf(COM2, "Initializing...\r\n");
+  bwprintf(COM2, "Initializing...\n\r");
 
   // Set the SWI handler to swi_handler
-	int *kep = (int *)KERNEL_ENTRY;
-  *kep = (int)(&swi_handler+12); // TODO there has to be a better way...
-}
-
-
-void test_user_task() {
-}
-
-void start_user_task() {
-  // PRINT_PSR("cpsr");
- 
-  asm("mov r8, #105");
-  bwprintf(COM2, "r8: ");
-  PRINT_REG("r8");
-  bwprintf(COM2, "\r\n");
-  // save kernel registers to kernel stack
-  bwprintf(COM2, "kstack: ");
-  PRINT_REG("sp");
-  bwprintf(COM2, "\r\n");
+	//int *kep = (int *)KERNEL_ENTRY;
+  //*kep = (int)(&swi_handler);
   asm(
-    "stmed sp!, {r0-r12};"
+    "ldr r3, =KERNEL_ENTRY;"
+    "mov r4, #"STR(KERNEL_ENTRY)";"
+    "str r3, [r4];"
   );
-  bwprintf(COM2, "kstack: ");
-  PRINT_REG("sp");
-  bwprintf(COM2, "\r\n");
 
-  // set the CPSR to system mode
-	asm(
-		"mrs r0, cpsr;"
-		"bic r0, r0, #31;"
-		"orr r0, r0, #31;"
-		"msr cpsr, r0;"
-	);
-  
-
-  // set the sp of the task
-  // TODO this has to be dynamically done
-  asm(
-    ".extern user_stack_base;"
-	  "ldr r1, =user_stack_base;"
-	  "ldr r1, [r1];"
-	  "mov sp, r1;"
-  );
-  
-  bwprintf(COM2, "user stack: ");
-  PRINT_REG("sp");
-  bwprintf(COM2, "\r\n");
-  
-  // set the CPSR to user mode
-	asm(
-		"mrs r0, cpsr;"
-		"bic r0, r0, #31;"
-		"orr r0, r0, #16;"
-		"msr cpsr, r0;"
-	);
-
-  bwprintf(COM2, "user stack: ");
-  PRINT_REG("sp");
-  bwprintf(COM2, "\r\n");
-
-  bwprintf(COM2, "user lr: ");
-  PRINT_REG("lr");
-  bwprintf(COM2, "\r\n");
+  //TODO: Fix Initialize task one
+  TEST_TASK.tid = 0;
+  TEST_TASK.sp = USER_STACK_BASE - 52;  //Initialize stack pointer down 13 registers
+  TEST_TASK.stack_base = USER_STACK_BASE; 
+  TEST_TASK.pc = (unsigned int)&taskOne;
+  TEST_TASK.psr = 16;
+  TEST_TASK.task = &taskOne;
+  TEST_TASK.status = READY;
 
 
-  // TODO: load task pc
-  bwprintf(COM2, "TASK1 start\r\n");
-  asm("mov r7, pc;");
-  PRINT_REG("r7");
-
-	asm("swi 0x0;");
-
-	PRINT_PSR("cpsr");
-  bwprintf(COM2, "TASK1 end\r\n");
-  bwprintf(COM2, "TASK1 end\r\n");
-
-
-
-  asm("swi 0x0;");
-	
-	PRINT_PSR("cpsr");
-  bwprintf(COM2, "TASK1 end\r\n");
-  bwprintf(COM2, "TASK1 end\r\n");  
+  //Put the first USER task onto the schedule as READY
 }
 
+TaskDescriptor* schedule(){
+  return &TEST_TASK;
+}
+
+KernelRequest activate(TaskDescriptor* td) {
+  PRINT_REG("r0");
+  //Store Kernel State
+  asm(
+    "stmfd sp!, {r0-r12};"
+  );
+
+  // asm(
+  //   "mov r5, %0;"::"r"(td)
+  //   );
+  // PRINT_REG("r5");
+  //Set the spsr register in Kernel mode
+  //bwprintf(COM2, "TD: psr %x, sp %x, pc %x \r\n", td->psr, td->sp, td->pc);
+
+  //PRINT_PSR("spsr");
+
+  // asm (
+  //   "msr spsr, %0;"::"r"(td->psr)
+  // );
+
+  // PRINT_PSR("spsr");
+
+  // bwprintf(COM2, "LOADED SPSR\n\r");
+
+  // asm(
+  //   "mov r5, fp;"
+  // );
+  // PRINT_REG("r5");
+
+  // asm(
+  //   "mov r5, %0;"::"r"(td->sp)
+  // );
+  // PRINT_REG("r5");
+
+  //Change to system mode
+  SET_CPSR(STR(SYSTEM_MODE));
+  //Change the stack pointer to the task's stack (use arbitrary scratch register r3)
+  /*asm (
+    "ldr r3, [fp, #-20];"
+    "ldr ip, [r3, #4];"
+    "mov sp, ip;"
+  );*/
+
+  asm(
+    "mov sp, %0;"::"r"(td->sp)
+  );
+  // PRINT_REG("r5");
+
+  PRINT_REG("sp");
+
+  //bwprintf(COM2, "TD: psr %x, sp %x, pc %x \r\n", td->psr, td->sp, td->pc);
+
+  //Load the User Trap Frame
+  /*
+   asm(
+     "ldmfd sp!, {r0-r12};"
+   );*/
+
+  PRINT_REG("sp");
+
+  //bwprintf(COM2, "LOADED USER TRAP\n\r");
+
+  //Switch back to kernel mode
+  SET_CPSR(STR(KERNEL_MODE));
+
+  PRINT_REG("sp");
+
+  //Install spsr
+  asm(
+    "msr spsr, %0;"::"r"(td->psr)
+  );
+
+  //Move to the user task
+  asm (
+    "movs pc, %0;"::"r"(td->pc)
+  );
+
+  //AFTER USER TASK CALLS SWI
+  asm("KERNEL_ENTRY:");
+
+  //Save the lr_svc to TaskDescriptor's pc
+  asm(
+    "ldr r3, [fp, #-16];"
+    "ldr r3, [r3, #12];"
+    "str lr, [r3]"
+  );
+
+  //Change to System mode
+  SET_CPSR(STR(SYSTEM_MODE));
+
+  //Save the user state 
+  asm(
+    "stmfd sp!, {r0-r12};"
+  );
+
+  //Save the user sp to TaskDescriptor's sp
+  asm(
+    "ldr r3, [fp, #-16];"
+    "ldr r3, [r3, #4];"
+    "str sp, [r3]"
+  );
+
+  //Change back to kernel mode
+  SET_CPSR(STR(KERNEL_MODE));
+
+  //Load kernel Trap Frame
+  asm(
+    "ldmfd sp!, {r0-r12};"
+  );
+
+  //Return SWI Argument
+
+  return PASS;
+}
+
+void handle(KernelRequest req){
+  //Switch Statement
+};
 
 int main(void) {
   KERNEL_INIT();
 
-	initialize();
+  initialize();
 
-  start_user_task();
+  while(TRUE){
+    //get a task from scheduler
+    TaskDescriptor* td = schedule();
+
+    //activate task
+    KernelRequest req = activate(td);
+
+    //Handle the swi
+    handle(req);
+  }
 
   KERNEL_EXIT();
 	return 0;
 }
+
