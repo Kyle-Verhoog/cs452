@@ -1,12 +1,9 @@
-#include <system.h>
 #include <kernel.h>
 
 #define asm __asm__
 
-//TODO: Remove Test Task
-TaskDescriptor TEST_TASK;
-//
-
+// TODO move to main?
+task_queue tasks;
 
 /**
  * Saves the old SP to the new kernel stack and sets SP to the kernel stack.
@@ -35,7 +32,7 @@ unsigned int kernel_stack_base = KERNEL_STACK_BASE;
 unsigned int user_stack_base = USER_STACK_BASE;
 
 void initialize() {
-  bwprintf(COM2, "Initializing...\n\r");
+  DBLOG_INIT(("Initializing"));
 
   asm(
     "ldr r3, =KERNEL_ENTRY;"
@@ -43,29 +40,44 @@ void initialize() {
     "str r3, [r4];"
   );
 
-  //TODO: Fix Initialize task one
-  TEST_TASK.tid = 0;
-  TEST_TASK.sp = USER_STACK_BASE - 56;  //Save r0-12, lr
-  TEST_TASK.stack_base = USER_STACK_BASE; 
-  TEST_TASK.psr = 16;
-  TEST_TASK.task = &taskOne;
-  TEST_TASK.status = READY;
+  DBLOG_START("init task queue");
+  tq_init(&tasks);
+  DBLOG_S();
 
-  //Initialize the Test task pc
-  SET_CPSR(SYSTEM_MODE);
-  WRITE_SP(TEST_TASK.sp);
-  asm(
-    "mov r3, %0;"::"r"(TEST_TASK.task)
+  TaskDescriptor td1, td2;
+
+  DBLOG_START("init task 1");
+  td_create(
+    &td1,
+    0,
+    USER_STACK_BASE - 56,
+    USER_MODE,
+    &taskOne,
+    READY
   );
-  PUSH_STACK("r3");
-  SET_CPSR(KERNEL_MODE);
-  TEST_TASK.sp = TEST_TASK.sp - 4; //saved lr_svc
+  DBLOG_S();
 
-  //Put the first USER task onto the schedule as READY
+  DBLOG_START("init task 2");
+  td_create(
+    &td2,
+    1,
+    USER_STACK_BASE - 56 - USER_STACK_SIZE,
+    USER_MODE,
+    &taskOne,
+    READY
+  );
+  DBLOG_S();
+
+  tq_push(&tasks, td1);
+  tq_push(&tasks, td2);
 }
 
 TaskDescriptor* schedule(){
-  return &TEST_TASK;
+  TaskDescriptor *t;
+  int ret;
+  ret = tq_pop(&tasks, t);
+  KASSERT(ret == 0 && t != NULL);
+  return t;
 }
 
 KernelRequest activate(TaskDescriptor* td) {
