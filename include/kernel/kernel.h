@@ -33,7 +33,8 @@
 //Kernel Handler
 typedef enum KernelRequest{
 	PASS,
-	BLOCK
+  EXIT,
+	BLOCK,
 }KernelRequest;
 
 //Bridges from C to ASM

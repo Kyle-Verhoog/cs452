@@ -15,17 +15,20 @@ task_queue tasks_queue;
 	"ldr r1, [r1];"               \
   "sub fp, r1, #4;"             \
   "sub r1, r1, #64;"            \
-	"mov r2, sp;"                 \
+	"mov r4, sp;"                 \
 	"mov sp, r1;"                 \
-	"stmfd sp!, {r2};"            \
+	"stmfd sp!, {r4, lr};"        \
 );
 
 /**
  * Restores the old SP in order to return to RedBoot.
  */
 #define KERNEL_EXIT() asm( \
-  "KERNEL_EXIT:"           \
-	"ldmfd sp, {sp};"        \
+  ".extern kernel_stack_base;"  \
+	"ldr r1, =kernel_stack_base;" \
+	"ldr r1, [r1];"               \
+  "sub r1, r1, #72;"            \
+	"ldmfd r1, {sp, pc};"         \
 );
 
 
@@ -58,13 +61,19 @@ void initialize() {
   }
 }
 
+// Much TODO here
 TaskDescriptor* schedule() {
   int ret;
-  TaskDescriptor *t = NULL;
-  ret = tq_pop(&tasks_queue, &t);
-  tq_push(&tasks_queue, t);
-  KASSERT(ret == 0 && t != NULL);
-  return t;
+  TaskDescriptor *td = NULL;
+  do {
+    ret = tq_pop(&tasks_queue, &td);
+    KASSERT(ret == 0 && td != NULL);
+  } while (!td->status == READY && tasks_queue.size > 0);
+
+  if (tasks_queue.size == 0)
+    return NULL;
+
+  return td;
 }
 
 KernelRequest activate(TaskDescriptor* td) {
@@ -119,33 +128,44 @@ KernelRequest activate(TaskDescriptor* td) {
   //Save the spsr to the TaskDescriptor's psr
   READ_SPSR(td->psr);
 
-  //Return SWI Argument
-  return PASS;
+  // manually put swi arg in r0, avoid overhead of return
+  asm(
+    "ldr r0, [lr, #-4];"
+    "bic r0, r0, #0xff000000;"
+  );
 }
 
-void handle(KernelRequest req) {
-  //Switch Statement
+void handle(TaskDescriptor *td, KernelRequest req) {
+  switch (req) {
+    case EXIT:
+      td->status = ZOMBIE;
+      break;
+    default:
+      tq_push(&tasks_queue, td);
+      break;
+  }
 };
 
-int main(void) {
+__attribute__((naked)) void main(void) {
   KERNEL_INIT();
+  PRINT_REG("lr");
+  PRINT_REG("r4");
 
   initialize();
 
-  while(true) {
+  while (true) {
     //get a task from scheduler
     TaskDescriptor* td = schedule();
 
-    KASSERT(td != NULL);
+    if (!td) break;
 
     //activate task
     KernelRequest req = activate(td);
 
     //Handle the swi
-    handle(req);
+    handle(td, req);
   }
 
   KERNEL_EXIT();
-	return 0;
 }
 

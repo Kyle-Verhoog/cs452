@@ -9,6 +9,7 @@ typedef enum TaskStatus{ // a task is...
 	READY   = 1,           //  ready to be run
 	ACTIVE  = 2,           //  active, currently running
   UNINIT  = 3,           //  not yet initialized
+  ZOMBIE  = 4,
 }TaskStatus;
 
 typedef struct TaskDescriptor{

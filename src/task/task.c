@@ -53,7 +53,7 @@ void taskOne() {
 	counter++;
 
 	asm(
-		"swi #0;"
+		"swi #3;"
 	);
 
 	bwprintf(COM2, "PRINT %d\n\r", counter);
@@ -61,6 +61,11 @@ void taskOne() {
 	counter++;
 
 	asm(
-		"swi #0;"
+		"swi #75;"
+	);	
+
+  // EXIT
+  asm(
+		"swi #1;"
 	);	
 }
