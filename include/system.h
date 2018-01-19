@@ -44,7 +44,14 @@
 
 
 // TODO: figure out a way to exit cleanly??
-#define KABORT() for(;;);
+#define KABORT() __asm__(       \
+  ".extern kernel_stack_base;"  \
+  "ldr r1, =kernel_stack_base;" \
+  "ldr r1, [r1];"               \
+  "sub r1, r1, #72;"            \
+  "ldmfd r1, {sp, pc};"         \
+);
 
 
 extern void kpanic(const char *fmt, ...);
+

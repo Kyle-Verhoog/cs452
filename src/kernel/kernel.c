@@ -49,7 +49,7 @@ void initialize() {
   DBLOG_S();
 
   int i;
-  for (i = 0; i < 8; i++) {
+  for (i = 0; i < 3; i++) {
     // td_init(tasks[i]);
     TaskDescriptor *td = &tasks[i];
     DBLOG_START("creating task %d", i);
@@ -59,19 +59,24 @@ void initialize() {
     tq_push(&tasks_queue, td);
     DBLOG_S();
   }
+  TaskDescriptor *td = &tasks[4];
+  td_create(td, 4, &taskTwo, READY);
+  DBLOG_START("pushing task %d to queue", 4);
+  tq_push(&tasks_queue, td);
+  DBLOG_S();
 }
 
 // Much TODO here
 TaskDescriptor* schedule() {
-  int ret;
-  TaskDescriptor *td = NULL;
-  do {
-    ret = tq_pop(&tasks_queue, &td);
-    KASSERT(ret == 0 && td != NULL);
-  } while (!td->status == READY && tasks_queue.size > 0);
-
   if (tasks_queue.size == 0)
     return NULL;
+
+  int ret;
+  TaskDescriptor *td = NULL;
+
+  ret = tq_pop(&tasks_queue, &td);
+  KASSERT(ret == 0 && td != NULL);
+
 
   return td;
 }
@@ -139,6 +144,10 @@ void handle(TaskDescriptor *td, KernelRequest req) {
   switch (req) {
     case EXIT:
       td->status = ZOMBIE;
+      break;
+    case BLOCK:
+      td->status = BLOCKED;
+      tq_push(&tasks_queue, td);
       break;
     default:
       tq_push(&tasks_queue, td);

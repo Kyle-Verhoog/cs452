@@ -42,22 +42,22 @@ void td_copy(TaskDescriptor *td1, TaskDescriptor *td2) {
 
 void taskOne() {
 	int counter = 0;
-	bwprintf(COM2, "PRINT %d\n\r", counter);
+	bwprintf(COM2, "T1 %d", counter);
 	counter++;
 
-	asm(
-		"swi #0;"
-	);
+  int i = 100000;
+  while(i--) bwprintf(COM2, "");
+	bwprintf(COM2, "\n\r", counter);
+	asm("swi #0;");
 	
-	bwprintf(COM2, "PRINT %d\n\r", counter);
+	bwprintf(COM2, "T1 %d\n\r", counter);
 	counter++;
 
 	asm(
 		"swi #3;"
 	);
 
-	bwprintf(COM2, "PRINT %d\n\r", counter);
-	bwprintf(COM2, "PRINT %d AGAIN\n\r", counter);
+	bwprintf(COM2, "T1 %d\n\r", counter);
 	counter++;
 
 	asm(
@@ -68,4 +68,16 @@ void taskOne() {
   asm(
 		"swi #1;"
 	);	
+}
+
+
+void taskTwo() {
+
+  bwprintf(COM2, "T2");
+  int i = 500000;
+  while(i--) bwprintf(COM2, "");
+  bwprintf(COM2, "\r\n");
+  asm("swi #2;"); // BLOCK
+
+  asm("swi #1;");
 }

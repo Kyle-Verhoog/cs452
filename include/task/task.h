@@ -5,11 +5,11 @@
 #include <system.h>
 
 typedef enum TaskStatus{ // a task is...
-	BLOCKED = 0,           //  blocked, waiting for something
+	ACTIVE  = 0,           //  active, currently running
 	READY   = 1,           //  ready to be run
-	ACTIVE  = 2,           //  active, currently running
+	BLOCKED = 2,           //  blocked, waiting for something
   UNINIT  = 3,           //  not yet initialized
-  ZOMBIE  = 4,
+  ZOMBIE  = 4,           //  dead... but still alive?
 }TaskStatus;
 
 typedef struct TaskDescriptor{
@@ -27,6 +27,7 @@ typedef struct TaskDescriptor{
 
 //Tasks
 void taskOne();
+void taskTwo();
 
 /**
  * Initialize a task descriptor to be uninitialized.
