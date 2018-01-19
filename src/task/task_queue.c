@@ -37,13 +37,12 @@ int tq_pushv(task_queue *tq, uint32_t tid, uint32_t sp, uint32_t psr, void *task
   return 0;
 }
 
-int tq_pop(task_queue *tq, TaskDescriptor *t) {
+int tq_pop(task_queue *tq, TaskDescriptor **t) {
   KASSERT((tq != NULL) && (t != NULL));
   if (tq->size <= 0) {
     return ETQ_EMPTY;
   }
-
-  *t = tq->q[tq->start];
+  *t = &(tq->q[tq->start]);
   tq->start = (tq->start + 1) % TQ_SIZE;
   tq->size--;
   return 0;

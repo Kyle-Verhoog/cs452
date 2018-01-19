@@ -32,7 +32,7 @@ unsigned int kernel_stack_base = KERNEL_STACK_BASE;
 unsigned int user_stack_base = USER_STACK_BASE;
 
 void initialize() {
-  DBLOG_INIT(("Initializing"));
+  DBLOG_INIT("Initializing", "");
 
   asm(
     "ldr r3, =KERNEL_ENTRY;"
@@ -40,47 +40,32 @@ void initialize() {
     "str r3, [r4];"
   );
 
-  DBLOG_START("init task queue");
+  DBLOG_START("init task queue", "");
   tq_init(&tasks);
   DBLOG_S();
 
-  TaskDescriptor td1, td2;
-
-  DBLOG_START("init task 1");
-  td_create(
-    &td1,
-    0,
-    USER_STACK_BASE - 56,
-    USER_MODE,
-    &taskOne,
-    READY
-  );
-  DBLOG_S();
-
-  DBLOG_START("init task 2");
-  td_create(
-    &td2,
-    1,
-    USER_STACK_BASE - 56 - USER_STACK_SIZE,
-    USER_MODE,
-    &taskOne,
-    READY
-  );
-  DBLOG_S();
-
-  tq_push(&tasks, td1);
-  tq_push(&tasks, td2);
+  int i;
+  for (i = 0; i < 6; i++) {
+    TaskDescriptor td;
+    DBLOG_START("creating task %d", i);
+    td_create(&td, i, &taskOne, READY);
+    DBLOG_S();
+    DBLOG_START("pushing task %d to queue", i);
+    tq_push(&tasks, td);
+    DBLOG_S();
+  }
 }
 
-TaskDescriptor* schedule(){
-  TaskDescriptor *t;
+TaskDescriptor* schedule() {
   int ret;
-  ret = tq_pop(&tasks, t);
+  TaskDescriptor *t = NULL;
+  ret = tq_pop(&tasks, &t);
   KASSERT(ret == 0 && t != NULL);
   return t;
 }
 
 KernelRequest activate(TaskDescriptor* td) {
+  DBLOG_INIT("Context Switch", "");
   //Store Kernel State
   PUSH_STACK("r0-r12");
   //Install SPSR
@@ -89,14 +74,15 @@ KernelRequest activate(TaskDescriptor* td) {
   SET_CPSR(SYSTEM_MODE);
   //Change the stack pointer to the task's stack (uses fp so no worries)
   WRITE_SP(td->sp);
-  //Load instruction after swi (r3) from user stack
-  POP_STACK("r3");
+  //Load instruction after swi (r4) from user stack
+  POP_STACK("r4");
   //Change to kernel mode
   SET_CPSR(KERNEL_MODE);
   //Save into kernel lr for loading
-  asm("mov lr, r3;");
+  asm("mov lr, r4;");
   //Change to system mode
   SET_CPSR(SYSTEM_MODE);
+  PRINT_REG("sp");
   //Load the User Trap Frame
   POP_STACK("r0-r12, lr");
   //Switch back to kernel mode

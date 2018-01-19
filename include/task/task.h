@@ -32,7 +32,7 @@ void taskOne();
  */
 void td_init(TaskDescriptor *td);
 
-void td_create(TaskDescriptor *td, uint32_t tid, uint32_t sp, uint32_t psr, void *task, TaskStatus status);
+void td_create(TaskDescriptor *td, uint32_t tid, void *task, TaskStatus status);
 
 // TODO: these are copies of the ones in kernel.h, we should figure out where
 //       to put them centrally.

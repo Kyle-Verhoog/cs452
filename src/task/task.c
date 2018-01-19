@@ -12,18 +12,18 @@ void td_init(TaskDescriptor *td) {
   td->stack_base = 0;
 }
 
-void td_create(TaskDescriptor *td, uint32_t tid, uint32_t sp, uint32_t psr, void *task, TaskStatus status) {
+void td_create(TaskDescriptor *td, uint32_t tid, void *task, TaskStatus status) {
   //Initialize the Test task pc
+  td->sp = USER_STACK_BASE - (tid*USER_STACK_SIZE) - 56;
   SET_CPSR(SYSTEM_MODE);
-  WRITE_SP(USER_STACK_BASE - (tid*USER_STACK_SIZE) - 56);
+  WRITE_SP(td->sp);
   asm("mov r3, %0;"::"r"(task));
   PUSH_STACK("r3");
   SET_CPSR(KERNEL_MODE);
-  sp -= 4; //saved lr_svc
+  td->sp -= 4; //saved lr_svc
 
   td->tid = tid;
-  td->sp = sp;
-  td->psr = psr;
+  td->psr = USER_MODE;
   td->task = task;
   td->status = status;
 }
@@ -40,7 +40,7 @@ void td_copy(TaskDescriptor *td1, TaskDescriptor *td2) {
   td1->stack_base = td2->stack_base;
 }
 
-void taskOne(){
+void taskOne() {
 	int counter = 0;
 	bwprintf(COM2, "PRINT %d\n\r", counter);
 	counter++;

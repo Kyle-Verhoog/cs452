@@ -32,7 +32,7 @@ int tq_pushv(task_queue *tq, uint32_t tid, uint32_t sp, uint32_t psr, void *task
 /**
  * TODO
  */
-int tq_pop(task_queue *tq, TaskDescriptor *t);
+int tq_pop(task_queue *tq, TaskDescriptor **t);
 
 #if DEBUG
 #include <bwio.h>
