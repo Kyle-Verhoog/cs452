@@ -6,10 +6,10 @@ void tq_init(task_queue *tq) {
   tq->size  = 0;
   tq->end   = 0;
   int i;
-  for (i = 0; i < TQ_SIZE; i++) td_init(&(tq->q[i]));
+  for (i = 0; i < TQ_SIZE; i++) tq->q[i] = NULL;
 }
 
-int tq_push(task_queue *tq, TaskDescriptor t) {
+int tq_push(task_queue *tq, TaskDescriptor *t) {
   KASSERT(tq != NULL);
   if (tq->size + 1 > TQ_SIZE) {
     return ETQ_FULL;
@@ -20,31 +20,25 @@ int tq_push(task_queue *tq, TaskDescriptor t) {
   return 0;
 }
 
-int tq_pushv(task_queue *tq, uint32_t tid, uint32_t sp, uint32_t psr, void *task, TaskStatus status) {
-  KASSERT(tq != NULL);
-  if (tq->size + 1 > TQ_SIZE) {
-    return ETQ_FULL;
-  }
-  TaskDescriptor *td = &(tq->q[tq->end]);
-  td->tid = tid;
-  td->sp = sp;
-  td->psr = psr;
-  td->task = task;
-  td->status = status;
-  tq->size++;
-  tq->end = (tq->end + 1) % TQ_SIZE;
-
-  return 0;
-}
-
 int tq_pop(task_queue *tq, TaskDescriptor **t) {
   KASSERT((tq != NULL) && (t != NULL));
   if (tq->size <= 0) {
     return ETQ_EMPTY;
   }
-  *t = &(tq->q[tq->start]);
+  
+  *t = tq->q[tq->start];
+  tq->q[tq->start] = NULL;
   tq->start = (tq->start + 1) % TQ_SIZE;
   tq->size--;
+  return 0;
+}
+
+int tq_peek(task_queue *tq, TaskDescriptor **t) {
+  KASSERT((tq != NULL) && (t != NULL));
+  if (tq->size <= 0) {
+    return ETQ_EMPTY;
+  }
+  *t = &(tq->q[tq->start]);
   return 0;
 }
 

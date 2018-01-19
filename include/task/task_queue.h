@@ -10,7 +10,7 @@
 
 
 typedef struct task_queue {
-  TaskDescriptor q[TQ_SIZE];
+  TaskDescriptor *q[TQ_SIZE];
   int start;
   int end;
   int size;
@@ -22,7 +22,7 @@ void tq_init(task_queue *tq);
 /**
  * TODO
  */
-int tq_push(task_queue *tq, TaskDescriptor t);
+int tq_push(task_queue *tq, TaskDescriptor *t);
 
 /**
  * TODO
@@ -33,6 +33,8 @@ int tq_pushv(task_queue *tq, uint32_t tid, uint32_t sp, uint32_t psr, void *task
  * TODO
  */
 int tq_pop(task_queue *tq, TaskDescriptor **t);
+
+int tq_peek(task_queue *tq, TaskDescriptor **t);
 
 #if DEBUG
 #include <bwio.h>

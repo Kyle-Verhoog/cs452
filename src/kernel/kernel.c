@@ -3,7 +3,8 @@
 #define asm __asm__
 
 // TODO move to main?
-task_queue tasks;
+TaskDescriptor tasks[10];
+task_queue tasks_queue;
 
 /**
  * Saves the old SP to the new kernel stack and sets SP to the kernel stack.
@@ -41,17 +42,18 @@ void initialize() {
   );
 
   DBLOG_START("init task queue", "");
-  tq_init(&tasks);
+  tq_init(&tasks_queue);
   DBLOG_S();
 
   int i;
-  for (i = 0; i < 6; i++) {
-    TaskDescriptor td;
+  for (i = 0; i < 8; i++) {
+    // td_init(tasks[i]);
+    TaskDescriptor *td = &tasks[i];
     DBLOG_START("creating task %d", i);
-    td_create(&td, i, &taskOne, READY);
+    td_create(td, i, &taskOne, READY);
     DBLOG_S();
     DBLOG_START("pushing task %d to queue", i);
-    tq_push(&tasks, td);
+    tq_push(&tasks_queue, td);
     DBLOG_S();
   }
 }
@@ -59,13 +61,13 @@ void initialize() {
 TaskDescriptor* schedule() {
   int ret;
   TaskDescriptor *t = NULL;
-  ret = tq_pop(&tasks, &t);
+  ret = tq_pop(&tasks_queue, &t);
+  tq_push(&tasks_queue, t);
   KASSERT(ret == 0 && t != NULL);
   return t;
 }
 
 KernelRequest activate(TaskDescriptor* td) {
-  DBLOG_INIT("Context Switch", "");
   //Store Kernel State
   PUSH_STACK("r0-r12");
   //Install SPSR
@@ -82,7 +84,6 @@ KernelRequest activate(TaskDescriptor* td) {
   asm("mov lr, r4;");
   //Change to system mode
   SET_CPSR(SYSTEM_MODE);
-  PRINT_REG("sp");
   //Load the User Trap Frame
   POP_STACK("r0-r12, lr");
   //Switch back to kernel mode
@@ -119,7 +120,6 @@ KernelRequest activate(TaskDescriptor* td) {
   READ_SPSR(td->psr);
 
   //Return SWI Argument
-
   return PASS;
 }
 
