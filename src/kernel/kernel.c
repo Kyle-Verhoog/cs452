@@ -5,6 +5,7 @@
 // TODO move to main?
 TaskDescriptor tasks[10];
 task_queue tasks_queue;
+int global_task_num;
 
 /**
  * Saves the old SP to the new kernel stack and sets SP to the kernel stack.
@@ -36,6 +37,7 @@ unsigned int kernel_stack_base = KERNEL_STACK_BASE;
 unsigned int user_stack_base = USER_STACK_BASE;
 
 void initialize() {
+  SANITY();
   DBLOG_INIT("Initializing", "");
 
   asm(
@@ -48,22 +50,22 @@ void initialize() {
   tq_init(&tasks_queue);
   DBLOG_S();
 
-  int i;
-  for (i = 0; i < 3; i++) {
-    // td_init(tasks[i]);
-    TaskDescriptor *td = &tasks[i];
-    DBLOG_START("creating task %d", i);
-    td_create(td, i, &taskOne, READY);
+  for (global_task_num = 0; global_task_num < 1; global_task_num++) {
+    // td_init(tasks[global_task_num]);
+    TaskDescriptor *td = &tasks[global_task_num];
+    DBLOG_START("creating task %d", global_task_num);
+    td_create(td, global_task_num, &taskOne, READY, NULL);
     DBLOG_S();
-    DBLOG_START("pushing task %d to queue", i);
+    DBLOG_START("pushing task %d to queue", global_task_num);
     tq_push(&tasks_queue, td);
     DBLOG_S();
   }
-  TaskDescriptor *td = &tasks[4];
-  td_create(td, 4, &taskTwo, READY);
-  DBLOG_START("pushing task %d to queue", 4);
-  tq_push(&tasks_queue, td);
-  DBLOG_S();
+   // TaskDescriptor *td = &tasks[global_task_num];
+   // td_create(td, global_task_num, &taskTwo, READY, NULL);
+   // DBLOG_START("pushing task %d to queue", global_task_num);
+   // tq_push(&tasks_queue, td);
+   // global_task_num++;
+   // DBLOG_S();
 }
 
 // Much TODO here
@@ -81,7 +83,7 @@ TaskDescriptor* schedule() {
   return td;
 }
 
-KernelRequest activate(TaskDescriptor* td) {
+TaskRequest activate(TaskDescriptor* td) {
   //Store Kernel State
   PUSH_STACK("r0-r12");
   //Install SPSR
@@ -107,9 +109,12 @@ KernelRequest activate(TaskDescriptor* td) {
 
   //AFTER USER TASK CALLS SWI
   asm("KERNEL_ENTRY:");
-
+  //Save r0 to td
+  asm ("mov %0, r0;":"=r"(td->ret):);
   //Change to System mode
   SET_CPSR(SYSTEM_MODE);
+  //Reload r0
+  asm ("mov r0, %0;"::"r"(td->ret));
   //Save the user state
   PUSH_STACK("r0-r12, lr");
   //Change to Kernel mode
@@ -132,24 +137,88 @@ KernelRequest activate(TaskDescriptor* td) {
   SET_CPSR(KERNEL_MODE);
   //Save the spsr to the TaskDescriptor's psr
   READ_SPSR(td->psr);
-
   // manually put swi arg in r0, avoid overhead of return
-  asm(
-    "ldr r0, [lr, #-4];"
-    "bic r0, r0, #0xff000000;"
-  );
+  SWI_ARG_FETCH("r0");
+
+  return 1;
 }
 
-void handle(TaskDescriptor *td, KernelRequest req) {
+void create(TaskDescriptor *td){
+  //SANITY();
+ //Get the arguments r0 (priority) r1 (function pointer)
+ int priority;
+ void *task; 
+
+  //Store Kernel State (TODO: Maybe these are scratch registers and I don't have to save)
+  PUSH_STACK("r0-r12");
+
+  //read r0 and r1
+   asm( 
+       "mov r3, %0;"::"r"(td->sp)
+   );
+   asm(
+       "ldr r4, [r3, #4];"
+       "ldr r5, [r3, #8];"
+   );
+
+  //Create the task
+  asm(
+    "mov %0, r4;":"=r"(priority):
+  );
+  asm(
+    "mov %0, r5;":"=r"(task):
+  );
+  //SANITY();
+  //bwprintf(COM2, "%x\n\r", task);
+  KASSERT((int)task == 0x219aa0);
+  KASSERT(priority == 5);
+  KASSERT(0);
+
+  //TODO: FIX THIS ONCE SCHEDULING IS DONE
+  if(global_task_num > 10){
+    asm(
+      "str %0, [%1, #4]"::"r"(-2), "r"(td->sp)
+    );
+  }
+  //else if(bad priority)
+  else{
+    TaskDescriptor *newTask = &tasks[global_task_num];
+    td_create(newTask, global_task_num, task, READY, td);
+    tq_push(&tasks_queue, newTask);
+    global_task_num++;
+    //set the tid of the newly created task back to the caller (in r0)
+    asm(
+      "str %0, [%1, #4]"::"r"(global_task_num - 1), "r"(td->sp)
+    );  
+  }
+  
+  //Load the original kernel stack
+  POP_STACK("r0-r12");
+}
+
+void handle(TaskDescriptor *td, TaskRequest req) {
+      KASSERT(0);
+
   switch (req) {
-    case EXIT:
-      td->status = ZOMBIE;
+    case PASS:
+      tq_push(&tasks_queue, td);
       break;
     case BLOCK:
       td->status = BLOCKED;
       tq_push(&tasks_queue, td);
       break;
+    case CREATE:
+      create(td);
+      tq_push(&tasks_queue, td);
+      //SANITY();
+      break;
+    case MY_TID:
+    case MY_PARENT_TID:
+    case EXIT:
+      td->status = ZOMBIE;
+      break;
     default:
+      KASSERT(false);
       tq_push(&tasks_queue, td);
       break;
   }
@@ -157,8 +226,6 @@ void handle(TaskDescriptor *td, KernelRequest req) {
 
 __attribute__((naked)) void main(void) {
   KERNEL_INIT();
-  PRINT_REG("lr");
-  PRINT_REG("r4");
 
   initialize();
 
@@ -169,7 +236,7 @@ __attribute__((naked)) void main(void) {
     if (!td) break;
 
     //activate task
-    KernelRequest req = activate(td);
+    TaskRequest req = activate(td);
 
     //Handle the swi
     handle(td, req);
@@ -177,4 +244,3 @@ __attribute__((naked)) void main(void) {
 
   KERNEL_EXIT();
 }
-

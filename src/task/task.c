@@ -10,9 +10,10 @@ void td_init(TaskDescriptor *td) {
   td->task = NULL;
   td->status = UNINIT;
   td->stack_base = 0;
+  td->parent = NULL;
 }
 
-void td_create(TaskDescriptor *td, uint32_t tid, void *task, TaskStatus status) {
+void td_create(TaskDescriptor *td, uint32_t tid, void *task, TaskStatus status, TaskDescriptor *parent) {
   //Initialize the Test task pc
   td->sp = USER_STACK_BASE - (tid*USER_STACK_SIZE) - 56;
   SET_CPSR(SYSTEM_MODE);
@@ -26,6 +27,7 @@ void td_create(TaskDescriptor *td, uint32_t tid, void *task, TaskStatus status) 
   td->psr = USER_MODE;
   td->task = task;
   td->status = status;
+  td->parent = parent;
 }
 
 /**
@@ -40,6 +42,56 @@ void td_copy(TaskDescriptor *td1, TaskDescriptor *td2) {
   td1->stack_base = td2->stack_base;
 }
 
+/**
+ * SysCalls (TODO: PASS ENUM LITERAL)
+ */
+void Pass(){
+	asm (
+		"swi #0;"
+	);
+}
+
+void Block(){
+	asm (
+		"swi #1;"
+	);
+}
+
+int Create(int priority, void (*code)()){
+	//r0 = priority, r1 = code
+	//Call swi with create
+
+	asm(
+		"swi #0;"
+	);
+
+	//Expect from here r0 is set already as the return value
+}
+
+int MyTid(){
+	//Call swi with myTid
+	asm(
+		"swi #3;"
+	);
+
+	//Expect r0 set
+}
+
+int MyParentTid(){
+	//Call swi with myTid
+	asm(
+		"swi #4;"
+	);
+
+	//Expect r0 set	
+}
+
+void Exit(){
+	asm (
+		"swi #5;"
+	);
+}
+
 void taskOne() {
 	int counter = 0;
 	bwprintf(COM2, "T1 %d", counter);
@@ -48,26 +100,25 @@ void taskOne() {
   int i = 100000;
   while(i--) bwprintf(COM2, "");
 	bwprintf(COM2, "\n\r", counter);
-	asm("swi #0;");
+	//Pass();
 	
 	bwprintf(COM2, "T1 %d\n\r", counter);
 	counter++;
 
-	asm(
-		"swi #3;"
-	);
+	//int childTid = Create(5, &taskTwo);
+	int childTid = Create(5, &taskTwo);
+	Pass();
 
+	//bwprintf(COM2, "Made new task: %d\n\r", childTid);
 	bwprintf(COM2, "T1 %d\n\r", counter);
 	counter++;
 
-	asm(
-		"swi #75;"
-	);	
+	// asm(
+	// 	"swi #75;"
+	// );	
 
   // EXIT
-  asm(
-		"swi #1;"
-	);	
+  Exit();
 }
 
 
@@ -77,7 +128,7 @@ void taskTwo() {
   int i = 500000;
   while(i--) bwprintf(COM2, "");
   bwprintf(COM2, "\r\n");
-  asm("swi #2;"); // BLOCK
+  Block();
 
-  asm("swi #1;");
+  Exit();
 }
