@@ -109,12 +109,8 @@ TaskRequest activate(TaskDescriptor* td) {
 
   //AFTER USER TASK CALLS SWI
   asm("KERNEL_ENTRY:");
-  //Save r0 to td
-  asm ("mov %0, r0;":"=r"(td->ret):);
   //Change to System mode
   SET_CPSR(SYSTEM_MODE);
-  //Reload r0
-  asm ("mov r0, %0;"::"r"(td->ret));
   //Save the user state
   PUSH_STACK("r0-r12, lr");
   //Change to Kernel mode
@@ -139,27 +135,20 @@ TaskRequest activate(TaskDescriptor* td) {
   READ_SPSR(td->psr);
   // manually put swi arg in r0, avoid overhead of return
   SWI_ARG_FETCH("r0");
-
-  return 1;
 }
 
-void create(TaskDescriptor *td){
-  //SANITY();
- //Get the arguments r0 (priority) r1 (function pointer)
- int priority;
- void *task; 
-
-  //Store Kernel State (TODO: Maybe these are scratch registers and I don't have to save)
-  PUSH_STACK("r0-r12");
-
+void create(TaskDescriptor *td) {
+  //Get the arguments r0 (priority) r1 (function pointer)
+  int priority;
+  void *task; 
   //read r0 and r1
-   asm( 
-       "mov r3, %0;"::"r"(td->sp)
-   );
-   asm(
-       "ldr r4, [r3, #4];"
-       "ldr r5, [r3, #8];"
-   );
+  asm(
+    "mov r3, %0;"::"r"(td->sp)
+  );
+  asm(
+    "ldr r4, [r3, #4];"
+    "ldr r5, [r3, #8];"
+  );
 
   //Create the task
   asm(
@@ -168,20 +157,15 @@ void create(TaskDescriptor *td){
   asm(
     "mov %0, r5;":"=r"(task):
   );
-  //SANITY();
-  //bwprintf(COM2, "%x\n\r", task);
-  KASSERT((int)task == 0x219aa0);
-  KASSERT(priority == 5);
-  KASSERT(0);
 
   //TODO: FIX THIS ONCE SCHEDULING IS DONE
-  if(global_task_num > 10){
+  if (global_task_num > 10) {
     asm(
       "str %0, [%1, #4]"::"r"(-2), "r"(td->sp)
     );
   }
   //else if(bad priority)
-  else{
+  else {
     TaskDescriptor *newTask = &tasks[global_task_num];
     td_create(newTask, global_task_num, task, READY, td);
     tq_push(&tasks_queue, newTask);
@@ -191,16 +175,12 @@ void create(TaskDescriptor *td){
       "str %0, [%1, #4]"::"r"(global_task_num - 1), "r"(td->sp)
     );  
   }
-  
-  //Load the original kernel stack
-  POP_STACK("r0-r12");
 }
 
 void handle(TaskDescriptor *td, TaskRequest req) {
-      KASSERT(0);
-
   switch (req) {
     case PASS:
+      KASSERT(false);
       tq_push(&tasks_queue, td);
       break;
     case BLOCK:

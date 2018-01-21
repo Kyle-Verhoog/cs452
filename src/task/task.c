@@ -62,7 +62,7 @@ int Create(int priority, void (*code)()){
 	//Call swi with create
 
 	asm(
-		"swi #0;"
+		"swi #2;"
 	);
 
 	//Expect from here r0 is set already as the return value
@@ -93,42 +93,32 @@ void Exit(){
 }
 
 void taskOne() {
-	int counter = 0;
-	bwprintf(COM2, "T1 %d", counter);
-	counter++;
-
-  int i = 100000;
-  while(i--) bwprintf(COM2, "");
-	bwprintf(COM2, "\n\r", counter);
-	//Pass();
+	bwprintf(COM2, "T1 START\r\n");
 	
-	bwprintf(COM2, "T1 %d\n\r", counter);
-	counter++;
+	bwprintf(COM2, "T1 CREATE\n\r");
 
 	//int childTid = Create(5, &taskTwo);
 	int childTid = Create(5, &taskTwo);
-	Pass();
+	// Pass();
 
 	//bwprintf(COM2, "Made new task: %d\n\r", childTid);
-	bwprintf(COM2, "T1 %d\n\r", counter);
-	counter++;
+	// bwprintf(COM2, "T1 %d\n\r", counter);
+	// counter++;
 
 	// asm(
 	// 	"swi #75;"
 	// );	
 
+	bwprintf(COM2, "T1 EXIT\n\r");
   // EXIT
   Exit();
 }
 
 
 void taskTwo() {
-
-  bwprintf(COM2, "T2");
-  int i = 500000;
-  while(i--) bwprintf(COM2, "");
-  bwprintf(COM2, "\r\n");
+  bwprintf(COM2, "T2 START\r\n");
   Block();
 
+  bwprintf(COM2, "T2 EXIT\r\n");
   Exit();
 }

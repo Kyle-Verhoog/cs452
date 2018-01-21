@@ -23,10 +23,10 @@
 							);	
 
 #define SET_CPSR(mode)  asm( \
-							"mrs r0, cpsr;" \
-							"bic r0, r0, #31;" \
-							"orr r0, r0, #"STR(mode)";" \
-							"msr cpsr, r0;" \
+							"mrs r12, cpsr;" \
+							"bic r12, r12, #31;" \
+							"orr r12, r12, #"STR(mode)";" \
+							"msr cpsr, r12;" \
 						); 
 
 #define WRITE_SP(val)	asm( \
