@@ -1,59 +1,72 @@
-#include <include/task/task_queue.h>
+#include <task_queue.h>
 
 void tq_init(task_queue *tq) {
-  KASSERT(tq != NULL);
-  tq->start = 0;
-  tq->size  = 0;
-  tq->end   = 0;
-  int i;
-  for (i = 0; i < TQ_SIZE; i++) tq->q[i] = NULL;
-}
+  tq->head = NULL;
+  tq->tail = NULL;
+  tq->size = 0;
+}     
 
 int tq_push(task_queue *tq, TaskDescriptor *t) {
-  KASSERT(tq != NULL);
-  if (tq->size + 1 > TQ_SIZE) {
-    return ETQ_FULL;
+  if (tq->size > 0) {
+    tq->tail->next = t;
+    tq->tail = t;
+  } else {
+    tq->head = t;
+    tq->tail = t;
   }
-  tq->q[tq->end] = t;
   tq->size++;
-  tq->end = (tq->end + 1) % TQ_SIZE;
   return 0;
 }
 
 int tq_pop(task_queue *tq, TaskDescriptor **t) {
-  KASSERT((tq != NULL) && (t != NULL));
-  if (tq->size <= 0) {
-    return ETQ_EMPTY;
-  }
-  
-  *t = tq->q[tq->start];
-  tq->q[tq->start] = NULL;
-  tq->start = (tq->start + 1) % TQ_SIZE;
+  *t = tq->head;
+  tq->head = tq->head->next;
+  (*t)->next = NULL;
   tq->size--;
+
+  if (tq->size == 0) {
+    tq->head = NULL;
+    tq->tail = NULL;
+  }
+  if (tq->size <= 1) {
+    tq->tail = tq->head;
+  }
   return 0;
 }
 
 int tq_peek(task_queue *tq, TaskDescriptor **t) {
-  KASSERT((tq != NULL) && (t != NULL));
-  if (tq->size <= 0) {
-    return ETQ_EMPTY;
-  }
-  *t = &(tq->q[tq->start]);
   return 0;
 }
 
-#if DEBUG
+/*
 void tq_print(task_queue *tq) {
-  int end1 = tq->end >= tq->start ? tq->end : TQ_SIZE;
-  int i;
-  for (i = tq->start; i < end1; i++) {
-    bwprintf(LOG_COM, "%x", tq->q[i]);
+  if (tq->size <= 0) {
+    printf("\n");
+    return;
   }
-
-  int end2 = tq->end >= tq->start ? 0 : tq->end;
-  for (i = 0; i < end2; i++) {
-    bwprintf(LOG_COM, "%x", tq->q[i]);
-  }
-  bwprintf(LOG_COM, "\n");
+  TaskDescriptor *td = tq->head;
+  do {
+    printf("%d ", td->tid);
+  } while ((td = td->next) != NULL);
+  printf("\n");
 }
-#endif
+*/
+
+/*
+int main(void) {
+  task_queue tq;
+  tq_init(&tq);
+
+  TaskDescriptor td; td.tid = 0; td.next = NULL;
+  TaskDescriptor td2; td2.tid = 1; td2.next = NULL;
+  TaskDescriptor td3; td3.tid = 2; td3.next = NULL;
+
+  priority_queue pq;
+  pq_init(&pq);
+  pq_push(&pq, 0, &td);
+  TaskDescriptor *t;
+  pq_pop(&pq, &t);
+  if (t != &td) printf("WTF\n");
+  return 0;
+}
+*/
