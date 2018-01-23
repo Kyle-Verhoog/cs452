@@ -24,20 +24,33 @@ typedef enum TaskRequest{
 }TaskRequest;
 
 typedef struct TaskDescriptor{
-	unsigned int tid;	//Task id
+	uint32_t  tid;	//Task id
 	
-	unsigned int sp;		//stack pointer
-	unsigned int stack_base; //stack base
+	uint32_t  sp;		//stack pointer
+	uint32_t  stack_base; //stack base
 
-	unsigned int psr;		//Status Register
+	uint32_t  psr;		//Status Register
 	
 	void* task;	//Function pointer
 	TaskStatus status;	//Task status
 
 	struct TaskDescriptor *parent; //Parent task
 
-	int ret; //return value
+	uint32_t ret; //Return value
 }TaskDescriptor;
+
+//Active Task Global
+typedef struct ActiveTask{
+	int r0;
+	int r1;
+	int r2;
+	int r3;
+
+	//Change CPSR Location
+	int psr_temp;
+}ActiveTask;
+
+ActiveTask active_task;
 
 //Tasks
 void taskOne();

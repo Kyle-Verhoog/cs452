@@ -2,7 +2,6 @@
 #include <ts7200.h>
 #include <bwio.h>
 
-
 void td_init(TaskDescriptor *td) {
   td->tid = 0;
   td->sp =  0;
@@ -16,18 +15,23 @@ void td_init(TaskDescriptor *td) {
 void td_create(TaskDescriptor *td, uint32_t tid, void *task, TaskStatus status, TaskDescriptor *parent) {
   //Initialize the Test task pc
   td->sp = USER_STACK_BASE - (tid*USER_STACK_SIZE) - 56;
-  SET_CPSR(SYSTEM_MODE);
-  WRITE_SP(td->sp);
-  asm("mov r3, %0;"::"r"(task));
-  PUSH_STACK("r3");
-  SET_CPSR(KERNEL_MODE);
+  asm("mov r8, %0;"::"r"(task));
+  asm("stmfd %0!, {r8};"::"r"(td->sp));
   td->sp -= 4; //saved lr_svc
+  // td->sp = USER_STACK_BASE - (tid*USER_STACK_SIZE) - 56;
+  // SET_CPSR(SYSTEM_MODE);
+  // WRITE_SP(td->sp);
+  // asm("mov r8, %0;"::"r"(task));
+  // PUSH_STACK("r8");
+  // SET_CPSR(KERNEL_MODE);
+  // td->sp -= 4; //saved lr_svc
 
   td->tid = tid;
   td->psr = USER_MODE;
   td->task = task;
   td->status = status;
   td->parent = parent;
+  td->ret = 0;
 }
 
 /**
@@ -93,21 +97,15 @@ void Exit(){
 }
 
 void taskOne() {
-	bwprintf(COM2, "T1 START\r\n");
-	
-	bwprintf(COM2, "T1 CREATE\n\r");
+	bwprintf(COM2, "T1: START\r\n");
+	Pass();
 
-	//int childTid = Create(5, &taskTwo);
-	int childTid = Create(5, &taskTwo);
-	// Pass();
+	bwprintf(COM2, "T1: CREATE\n\r");
 
-	//bwprintf(COM2, "Made new task: %d\n\r", childTid);
-	// bwprintf(COM2, "T1 %d\n\r", counter);
-	// counter++;
+	bwprintf(COM2, "T1: MADE NEW TASK: %d\n\r", Create(5, &taskTwo));
 
-	// asm(
-	// 	"swi #75;"
-	// );	
+	bwprintf(COM2, "T1: THIS IS MY TID: %d\n\r", MyTid());
+	bwprintf(COM2, "T1: THIS IS MY PARENT'S TID: %d\n\r", MyParentTid());
 
 	bwprintf(COM2, "T1 EXIT\n\r");
   // EXIT
@@ -117,7 +115,13 @@ void taskOne() {
 
 void taskTwo() {
   bwprintf(COM2, "T2 START\r\n");
-  Block();
+  //Block();
+  Pass();
+
+	bwprintf(COM2, "T2: THIS IS MY TID: %d\n\r", MyTid());
+	bwprintf(COM2, "T2: THIS IS MY PARENT'S TID: %d\n\r", MyParentTid());
+
+	bwprintf(COM2, "T2: MADE NEW TASK: %d\n\r", Create(5, &taskOne));
 
   bwprintf(COM2, "T2 EXIT\r\n");
   Exit();

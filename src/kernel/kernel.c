@@ -3,9 +3,11 @@
 #define asm __asm__
 
 // TODO move to main?
+//uint32_t active_task.psr_temp; //Used as a active_task.psr_temp to set CPSR
 TaskDescriptor tasks[10];
 task_queue tasks_queue;
 int global_task_num;
+
 
 /**
  * Saves the old SP to the new kernel stack and sets SP to the kernel stack.
@@ -86,6 +88,9 @@ TaskDescriptor* schedule() {
 TaskRequest activate(TaskDescriptor* td) {
   //Store Kernel State
   PUSH_STACK("r0-r12");
+  //Push ret val to stack as temp
+  asm("mov r8, %0"::"r"(td->ret));
+  PUSH_STACK("r8");
   //Install SPSR
   WRITE_SPSR(td->psr);
   //Change to system mode
@@ -104,10 +109,12 @@ TaskRequest activate(TaskDescriptor* td) {
   POP_STACK("r0-r12, lr");
   //Switch back to kernel mode
   SET_CPSR(KERNEL_MODE);
+  //Set r0 with the new return value from stack
+  POP_STACK("r0");
   //Move to the user task
   REVERSE_SWI();
 
-  //AFTER USER TASK CALLS SWI
+  //AFTER USER TASK CALLS SWI (CANT USE FP)
   asm("KERNEL_ENTRY:");
   //Change to System mode
   SET_CPSR(SYSTEM_MODE);
@@ -141,28 +148,16 @@ void create(TaskDescriptor *td) {
   //Get the arguments r0 (priority) r1 (function pointer)
   int priority;
   void *task; 
-  //read r0 and r1
-  asm(
-    "mov r3, %0;"::"r"(td->sp)
-  );
-  asm(
-    "ldr r4, [r3, #4];"
-    "ldr r5, [r3, #8];"
-  );
-
-  //Create the task
-  asm(
-    "mov %0, r4;":"=r"(priority):
-  );
-  asm(
-    "mov %0, r5;":"=r"(task):
-  );
+  
+  asm("ldr %0, [%1, #4];":"=r"(priority):"r"(td->sp));
+  asm("ldr %0, [%1, #8];":"=r"(task):"r"(td->sp));
 
   //TODO: FIX THIS ONCE SCHEDULING IS DONE
-  if (global_task_num > 10) {
-    asm(
-      "str %0, [%1, #4]"::"r"(-2), "r"(td->sp)
-    );
+  if (global_task_num >= 10) {
+    // asm(
+    //   "str %0, [%1, #4]"::"r"(-2), "r"(td->sp)
+    // );
+    td->ret = -2;
   }
   //else if(bad priority)
   else {
@@ -171,16 +166,32 @@ void create(TaskDescriptor *td) {
     tq_push(&tasks_queue, newTask);
     global_task_num++;
     //set the tid of the newly created task back to the caller (in r0)
-    asm(
-      "str %0, [%1, #4]"::"r"(global_task_num - 1), "r"(td->sp)
-    );  
+    // asm(
+    //   "str %0, [%1, #4]"::"r"(global_task_num - 1), "r"(td->sp)
+    // );  
+    td->ret = global_task_num - 1;
   }
+}
+
+void get_tid(TaskDescriptor *td){
+  //Get the tid into user stack
+  // asm(
+  //   "str %0, [%1, #4]"::"r"(td->tid), "r"(td->sp)
+  // );
+  td->ret = td->tid;
+}
+
+void get_parentTid(TaskDescriptor *td){
+  //Get the parent tid into user stack
+  // asm(
+  //   "str %0, [%1, #4]"::"r"(td->parent ? td->parent->tid : -1), "r"(td->sp)
+  // );
+  td->ret = td->parent ? td->parent->tid : -1;
 }
 
 void handle(TaskDescriptor *td, TaskRequest req) {
   switch (req) {
     case PASS:
-      KASSERT(false);
       tq_push(&tasks_queue, td);
       break;
     case BLOCK:
@@ -190,10 +201,15 @@ void handle(TaskDescriptor *td, TaskRequest req) {
     case CREATE:
       create(td);
       tq_push(&tasks_queue, td);
-      //SANITY();
       break;
     case MY_TID:
+      get_tid(td);
+      tq_push(&tasks_queue, td);
+      break;
     case MY_PARENT_TID:
+      get_parentTid(td);
+      tq_push(&tasks_queue, td);
+      break;
     case EXIT:
       td->status = ZOMBIE;
       break;

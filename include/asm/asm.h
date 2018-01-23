@@ -22,13 +22,6 @@
 								"ldmfd sp!, {"param"};" \
 							);	
 
-#define SET_CPSR(mode)  asm( \
-							"mrs r12, cpsr;" \
-							"bic r12, r12, #31;" \
-							"orr r12, r12, #"STR(mode)";" \
-							"msr cpsr, r12;" \
-						); 
-
 #define WRITE_SP(val)	asm( \
 					    	"mov sp, %0;"::"r"(val) \
 						);
@@ -43,6 +36,14 @@
 
 #define READ_SPSR(var)	asm ( \
 							"mrs %0, spsr;":"=r"(var): \
+						);
+
+
+#define SET_CPSR(mode)  asm( \
+							"mrs r12, cpsr;" \
+							"bic r12, r12, #31;" \
+							"orr r12, r12, #"STR(mode)";" \
+							"msr cpsr, r12;" \
 						);
 
 #define SWI(arg) asm ( \
