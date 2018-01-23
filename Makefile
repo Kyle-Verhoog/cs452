@@ -1,8 +1,9 @@
-
 XCC = /u/wbcowan/gnuarm-4.0.2/arm-elf/bin/gcc
 AS  = /u/wbcowan/gnuarm-4.0.2/arm-elf/bin/as
 LD  = /u/wbcowan/gnuarm-4.0.2/arm-elf/bin/ld
+CP = /bin/cp
 
+ARM_DIR ?= /u/cs452/tftp/ARM
 BUILD_DIR ?= build
 CONF_DIR  ?= conf
 DOCS_DIR  ?= docs
@@ -27,7 +28,7 @@ TEST_OBJS := $(TEST_SRCS:%=$(BUILD_DIR)/%.o) $(OBJS)
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
-CFLAGS = -c -fPIC -Wall -I. $(INC_FLAGS) -mcpu=arm920t -msoft-float -MMD -MP
+CFLAGS = -c -fPIC -Wall -I. $(INC_FLAGS) -mcpu=arm920t -msoft-float -MMD -MP $(DFLAGS)
 LDFLAGS = -init main -Map $(TARGET_MAP) -N -T $(LINKER_SCRIPT) -L/u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2 -L./lib
 
 all: $(BUILD_DIR)/$(TARGET_ELF)
@@ -63,6 +64,9 @@ $(DOCS_DIR)/%.pdf: $(DOCS_DIR)/%.md
 
 clean:
 	$(RM) -r $(BUILD_DIR)
+
+copy:
+	$(MAKE) clean && $(MAKE) && $(CP) $(BUILD_DIR)/$(TARGET_ELF) $(ARM_DIR)/$(USER)
 
 -include $(DEPS)
 
