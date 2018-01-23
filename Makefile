@@ -49,9 +49,9 @@ INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 ARM_CFLAGS   = -c -fPIC -Wall -I. $(INC_FLAGS) -mcpu=arm920t -msoft-float -MMD -MP $(DFLAGS)
 ARM_LDFLAGS  = -init main -Map $(TARGET_MAP) -N -T $(LINKER_SCRIPT) -L$(GNU_COWAN)/lib/gcc/arm-elf/4.0.2 -L./lib
 TEST_CFLAGS  = -Wall -I. $(INC_FLAGS)
-TEST_LDFLAGS = 
+TEST_LDFLAGS =
 CFLAGS  = $(ARM_CFLAGS)
-LD_FLAGS = $(ARM_LDFLAGS)
+LDFLAGS = $(ARM_LDFLAGS)
 
 
 all: $(BUILD_DIR)/$(TARGET_ELF)
