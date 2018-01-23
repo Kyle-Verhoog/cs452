@@ -1,5 +1,6 @@
 #include <task_queue.h>
-#define NUM_PRIORITIES 5
+
+#define NUM_PRIORITIES 20
 
 
 #define PQ_ENOTFOUND 1
