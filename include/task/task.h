@@ -36,7 +36,7 @@ typedef enum TaskRequest{
 }TaskRequest;
 
 typedef struct TaskDescriptor{
-	uint32_t  tid;	//Task id
+	int  tid;	//Task id
 	
 	uint32_t  sp;		//stack pointer
 	uint32_t  stack_base; //stack base
@@ -58,13 +58,17 @@ typedef struct TidTracker{
 }TidTracker;
 
 void tt_init(TidTracker *tt);
-unsigned int tt_get(TidTracker *tt);
-void tt_return(unsigned int tid, TidTracker *tt);
+int tt_get(TidTracker *tt);
+void tt_return(int tid, TidTracker *tt);
 
 
 //Tasks
 void taskOne();
 void taskTwo();
+
+//A1 Tasks
+void FirstUserTask();
+void OtherTask();
 
 /**
  * Initialize a task descriptor to be uninitialized.

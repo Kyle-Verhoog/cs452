@@ -4,7 +4,7 @@
 
 // TODO move to main?
 //uint32_t active_task.psr_temp; //Used as a active_task.psr_temp to set CPSR
-TaskDescriptor tasks[10];
+TaskDescriptor tasks[MAX_TASK];
 TidTracker tid_tracker;
 priority_queue pq_tasks;
 int global_task_num;
@@ -53,24 +53,21 @@ void initialize() {
   pq_init(&pq_tasks);
   DBLOG_S();
 
+  //bwprintf(COM2, "%x\n\r", tid_tracker.cb.buffer[0]);
+
   int i;
   for (i = 0; i < 1; i++) {
     int priority = 1;
     // td_init(tasks[global_task_num]);
-    TaskDescriptor *td = &tasks[global_task_num];
-    DBLOG_START("creating task %d", global_task_num);
-    td_create(td, global_task_num, &taskOne, priority, READY, NULL);
+    int tid = tt_get(&tid_tracker);
+    TaskDescriptor *td = &tasks[(tid & 0xffff)];
+    DBLOG_START("creating task %x", tid);
+    td_create(td, tid, &FirstUserTask, priority, READY, NULL);
     DBLOG_S();
-    DBLOG_START("pushing task %d to queue", global_task_num);
+    DBLOG_START("pushing task %x to queue", tid);
     pq_push(&pq_tasks, priority, td);
     DBLOG_S();
   }
-   // TaskDescriptor *td = &tasks[global_task_num];
-   // td_create(td, global_task_num, &taskTwo, READY, NULL);
-   // DBLOG_START("pushing task %d to queue", global_task_num);
-   // tq_push(&tasks_queue, td);
-   // global_task_num++;
-   // DBLOG_S();
 }
 
 // Much TODO here
@@ -148,6 +145,7 @@ TaskRequest activate(TaskDescriptor* td) {
 
 void create(TaskDescriptor *td) {
   //Get the arguments r0 (priority) r1 (function pointer)
+  int tid = tt_get(&tid_tracker);
   int priority;
   void *task; 
   
@@ -155,31 +153,20 @@ void create(TaskDescriptor *td) {
   asm("ldr %0, [%1, #8];":"=r"(task):"r"(td->sp));
 
   //TODO: FIX THIS ONCE SCHEDULING IS DONE
-  if (global_task_num >= 10) {
-    // asm(
-    //   "str %0, [%1, #4]"::"r"(-2), "r"(td->sp)
-    // );
+  if (tid < 0 /*|| (tid & 0xffff) >= 10*/) {
     td->ret = -2;
+    KASSERT(false && "Out of Tids");
   }
   //else if(bad priority)
   else {
-    TaskDescriptor *newTask = &tasks[global_task_num];
-    td_create(newTask, global_task_num, task, priority, READY, td);
+    TaskDescriptor *newTask = &tasks[(tid & 0xffff)];
+    td_create(newTask, tid, task, priority, READY, td);
     pq_push(&pq_tasks, priority, newTask);
-    global_task_num++;
-    //set the tid of the newly created task back to the caller (in r0)
-    // asm(
-    //   "str %0, [%1, #4]"::"r"(global_task_num - 1), "r"(td->sp)
-    // );  
-    td->ret = global_task_num - 1;
+    td->ret = tid;
   }
 }
 
 void get_tid(TaskDescriptor *td){
-  //Get the tid into user stack
-  // asm(
-  //   "str %0, [%1, #4]"::"r"(td->tid), "r"(td->sp)
-  // );
   td->ret = td->tid;
 }
 
@@ -214,6 +201,7 @@ void handle(TaskDescriptor *td, TaskRequest req) {
       break;
     case EXIT:
       td->status = ZOMBIE;
+      tt_return(td->tid, &tid_tracker);
       break;
     default:
       KASSERT(false);

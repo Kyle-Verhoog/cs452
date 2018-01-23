@@ -3,6 +3,7 @@
 #include <bwio.h>
 
 void tt_init(TidTracker *tt){
+	init_circularBuffer(&tt->cb);
 	int i = 0;
 	for(i = 0; i < MAX_TASK; i++){
 		tt->cb.buffer[tt->cb.buffer_end] = i;
@@ -10,16 +11,16 @@ void tt_init(TidTracker *tt){
 	}
 }
 
-unsigned int tt_get(TidTracker *tt){
+int tt_get(TidTracker *tt){
 	if(tt->cb.buffer_end == tt->cb.buffer_start){
 		return -2;
 	}
-	unsigned int tid = tt->cb.buffer[tt->cb.buffer_start];
+	int tid = tt->cb.buffer[tt->cb.buffer_start];
 	tt->cb.buffer_start = (tt->cb.buffer_start + 1) % CIRCULAR_BUFFER_SIZE;
 	return tid;
 }
 
-void tt_return(unsigned int tid, TidTracker *tt){
+void tt_return(int tid, TidTracker *tt){
 	tid += (1 << 16);
 	tt->cb.buffer[tt->cb.buffer_end] = tid;
 	tt->cb.buffer_end = (tt->cb.buffer_end + 1) % CIRCULAR_BUFFER_SIZE;
@@ -124,32 +125,57 @@ void Exit(){
 }
 
 void taskOne() {
-	bwprintf(COM2, "T1: START\r\n");
+	int tid = MyTid();
+
+	bwprintf(COM2, "T1 - %x: START\r\n", tid);
 	Pass();
 
-	bwprintf(COM2, "T1: CREATE\n\r");
+	bwprintf(COM2, "T1 - %x: MADE NEW TASK: %x\n\r", tid, Create(5, &taskTwo));
+	Pass();
 
-	bwprintf(COM2, "T1: MADE NEW TASK: %d\n\r", Create(5, &taskTwo));
-
-	bwprintf(COM2, "T1: THIS IS MY TID: %d\n\r", MyTid());
-	bwprintf(COM2, "T1: THIS IS MY PARENT'S TID: %d\n\r", MyParentTid());
-
-	bwprintf(COM2, "T1 EXIT\n\r");
+	bwprintf(COM2, "T1 - %x: EXIT\n\r", tid);
   // EXIT
   Exit();
 }
 
 
 void taskTwo() {
-  bwprintf(COM2, "T2 START\r\n");
-  //Block();
-  Pass();
+	int tid = MyTid();
+  bwprintf(COM2, "T2 - %x: START\r\n", tid);
 
-	bwprintf(COM2, "T2: THIS IS MY TID: %d\n\r", MyTid());
-	bwprintf(COM2, "T2: THIS IS MY PARENT'S TID: %d\n\r", MyParentTid());
+	bwprintf(COM2, "T2 - %x: MADE NEW TASK: %x\n\r",tid, Create(5, &taskTwo));
+	bwprintf(COM2, "T2 - %x: MADE NEW TASK: %x\n\r",tid, Create(5, &taskTwo));
+	bwprintf(COM2, "T2 - %x: MADE NEW TASK: %x\n\r",tid, Create(5, &taskTwo));
 
-	bwprintf(COM2, "T2: MADE NEW TASK: %d\n\r", Create(5, &taskOne));
-
-  bwprintf(COM2, "T2 EXIT\r\n");
+  bwprintf(COM2, "T2 - %x: EXIT\r\n", tid);
   Exit();
+}
+
+/**
+ * K1 Assignment Test Tasks
+**/
+
+void OtherTask(){
+	int tid = MyTid();
+	int parentTid = MyParentTid();
+
+	bwprintf(COM2, "Tid: %d, parentTid: %d\n\r", tid, parentTid);
+	Pass();
+	bwprintf(COM2, "Tid: %d, parentTid: %d\n\r", tid, parentTid);
+
+	Exit();
+}
+
+void FirstUserTask(){
+	int val = Create(0, &OtherTask);
+	bwprintf(COM2, "Created: %d\n\r", val);
+	val = Create(0, &OtherTask);
+	bwprintf(COM2, "Created: %d\n\r", val);
+	val = Create(5, &OtherTask);
+	bwprintf(COM2, "Created: %d\n\r", val);
+	val = Create(5, &OtherTask);
+	bwprintf(COM2, "Created: %d\n\r", val);
+
+	bwprintf(COM2, "FirstUserTask: exiting.\n\r");
+	Exit();
 }
