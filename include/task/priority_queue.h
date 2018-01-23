@@ -1,8 +1,12 @@
 #include <task_queue.h>
 #define NUM_PRIORITIES 5
 
+
+#define PQ_ENOTFOUND 1
+
 typedef struct priority_queue {
   task_queue pqs[NUM_PRIORITIES];
+  int size;
 } priority_queue;
 
 

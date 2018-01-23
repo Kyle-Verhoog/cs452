@@ -9,7 +9,7 @@
 
 //Data Structures
 #include <circularbuffer.h>
-#include <task_queue.h>
+#include <priority_queue.h>
 
 //Debug - set DEBUG through the gcc option (-D DEBUG)
 #ifdef DEBUG

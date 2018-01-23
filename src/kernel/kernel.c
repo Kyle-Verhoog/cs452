@@ -6,7 +6,7 @@
 //uint32_t active_task.psr_temp; //Used as a active_task.psr_temp to set CPSR
 TaskDescriptor tasks[10];
 TidTracker tid_tracker;
-task_queue tasks_queue;
+priority_queue pq_tasks;
 int global_task_num;
 
 
@@ -50,18 +50,19 @@ void initialize() {
 
   DBLOG_START("init task queue", "");
   tt_init(&tid_tracker);
-  tq_init(&tasks_queue);
+  pq_init(&pq_tasks);
   DBLOG_S();
 
   int i;
   for (i = 0; i < 1; i++) {
+    int priority = 1;
     // td_init(tasks[global_task_num]);
     TaskDescriptor *td = &tasks[global_task_num];
     DBLOG_START("creating task %d", global_task_num);
-    td_create(td, global_task_num, &taskOne, READY, NULL);
+    td_create(td, global_task_num, &taskOne, priority, READY, NULL);
     DBLOG_S();
     DBLOG_START("pushing task %d to queue", global_task_num);
-    tq_push(&tasks_queue, td);
+    pq_push(&pq_tasks, priority, td);
     DBLOG_S();
   }
    // TaskDescriptor *td = &tasks[global_task_num];
@@ -74,13 +75,13 @@ void initialize() {
 
 // Much TODO here
 TaskDescriptor* schedule() {
-  if (tasks_queue.size == 0)
+  if (pq_tasks.size == 0)
     return NULL;
 
   int ret;
   TaskDescriptor *td = NULL;
 
-  ret = tq_pop(&tasks_queue, &td);
+  ret = pq_pop(&pq_tasks, &td);
   KASSERT(ret == 0 && td != NULL);
 
 
@@ -164,8 +165,8 @@ void create(TaskDescriptor *td) {
   //else if(bad priority)
   else {
     TaskDescriptor *newTask = &tasks[global_task_num];
-    td_create(newTask, global_task_num, task, READY, td);
-    tq_push(&tasks_queue, newTask);
+    td_create(newTask, global_task_num, task, priority, READY, td);
+    pq_push(&pq_tasks, priority, newTask);
     global_task_num++;
     //set the tid of the newly created task back to the caller (in r0)
     // asm(
@@ -194,30 +195,30 @@ void get_parentTid(TaskDescriptor *td){
 void handle(TaskDescriptor *td, TaskRequest req) {
   switch (req) {
     case PASS:
-      tq_push(&tasks_queue, td);
+      pq_push(&pq_tasks, td->priority, td);
       break;
     case BLOCK:
       td->status = BLOCKED;
-      tq_push(&tasks_queue, td);
+      pq_push(&pq_tasks, td->priority, td);
       break;
     case CREATE:
       create(td);
-      tq_push(&tasks_queue, td);
+      pq_push(&pq_tasks, td->priority, td);
       break;
     case MY_TID:
       get_tid(td);
-      tq_push(&tasks_queue, td);
+      pq_push(&pq_tasks, td->priority, td);
       break;
     case MY_PARENT_TID:
       get_parentTid(td);
-      tq_push(&tasks_queue, td);
+      pq_push(&pq_tasks, td->priority, td);
       break;
     case EXIT:
       td->status = ZOMBIE;
       break;
     default:
       KASSERT(false);
-      tq_push(&tasks_queue, td);
+      pq_push(&pq_tasks, td->priority, td);
       break;
   }
 };

@@ -1,6 +1,7 @@
 #include <priority_queue.h>
 
 void pq_init(priority_queue *pq) {
+  pq->size = 0;
   int i;
   for (i = 0; i < NUM_PRIORITIES; i++)
     tq_init(&pq->pqs[i]);
@@ -8,6 +9,7 @@ void pq_init(priority_queue *pq) {
 
 int pq_push(priority_queue *pq, int priority, TaskDescriptor *t) {
   tq_push(&pq->pqs[priority], t);
+  pq->size++;
   return 0;                        
 }
 
@@ -17,10 +19,11 @@ int pq_pop(priority_queue *pq, TaskDescriptor **t) {
     task_queue *tq = &pq->pqs[i];
     if (tq->size > 0) {
       tq_pop(tq, t);
+      pq->size--;
       return 0;
     }
   }
-  return -1;
+  return PQ_ENOTFOUND;
 }
 
 /*

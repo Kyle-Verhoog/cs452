@@ -32,7 +32,7 @@ typedef enum TaskRequest{
 	CREATE = 2,
 	MY_TID = 3,
 	MY_PARENT_TID = 4,
-  	EXIT = 5,
+  EXIT = 5,
 }TaskRequest;
 
 typedef struct TaskDescriptor{
@@ -47,6 +47,8 @@ typedef struct TaskDescriptor{
 	TaskStatus status;	//Task status
 
 	struct TaskDescriptor *parent; //Parent task
+  struct TaskDescriptor *next;
+  int priority;
 
 	uint32_t ret; //Return value
 }TaskDescriptor;
@@ -69,7 +71,7 @@ void taskTwo();
  */
 void td_init(TaskDescriptor *td);
 
-void td_create(TaskDescriptor *td, uint32_t tid, void *task, TaskStatus status, TaskDescriptor *parent);
+void td_create(TaskDescriptor *td, uint32_t tid, void *task, int priority, TaskStatus status, TaskDescriptor *parent);
 
 //SysCalls
 void Pass();

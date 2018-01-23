@@ -34,9 +34,10 @@ void td_init(TaskDescriptor *td) {
   td->status = UNINIT;
   td->stack_base = 0;
   td->parent = NULL;
+  td->priority = 1;
 }
 
-void td_create(TaskDescriptor *td, uint32_t tid, void *task, TaskStatus status, TaskDescriptor *parent) {
+void td_create(TaskDescriptor *td, uint32_t tid, void *task, int priority, TaskStatus status, TaskDescriptor *parent) {
   //Initialize the Test task pc
   td->sp = USER_STACK_BASE - (tid*USER_STACK_SIZE) - 56;
   asm("mov r8, %0;"::"r"(task));
@@ -55,6 +56,8 @@ void td_create(TaskDescriptor *td, uint32_t tid, void *task, TaskStatus status, 
   td->task = task;
   td->status = status;
   td->parent = parent;
+  td->priority = priority;
+  td->next = NULL;
   td->ret = 0;
 }
 

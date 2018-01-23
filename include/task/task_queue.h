@@ -1,5 +1,5 @@
 #include <system.h>
-// #include <task.h>
+#include <task.h>
 
 #define TQ_SIZE 10
 
@@ -7,12 +7,6 @@
 #define ETQ_NONE  0
 #define ETQ_FULL  1
 #define ETQ_EMPTY 2
-
-typedef struct TaskDescriptor {
-  int tid;
-  struct TaskDescriptor *next;
-} TaskDescriptor;
-
 
 typedef struct task_queue {
   TaskDescriptor *head;
