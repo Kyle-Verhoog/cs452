@@ -3,6 +3,6 @@
 #include <task/task_queue.h>
 #include <assert.h>
 
-void tq_sanity();
+void task_queue_tests();
 
 #endif /* TEST_TASK_QUEUE_H */

@@ -6,7 +6,7 @@
 int main(void) {
   printf("RUNNING UNIT TESTS\n");
   cb_sanity();
-  tq_sanity();
+  task_queue_tests();
   printf("ALL TESTS PASSED\n");
   return 0;
 }

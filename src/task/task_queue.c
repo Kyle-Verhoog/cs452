@@ -19,6 +19,7 @@ int tq_push(task_queue *tq, TaskDescriptor *t) {
 }
 
 int tq_pop(task_queue *tq, TaskDescriptor **t) {
+  if (tq->size < 1) return ETQ_EMPTY;
   *t = tq->head;
   tq->head = tq->head->next;
   (*t)->next = NULL;

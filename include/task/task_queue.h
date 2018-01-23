@@ -4,8 +4,13 @@
 
 // task_queue error codes
 #define ETQ_NONE  0
+
+// queue is full
 #define ETQ_FULL  1
+
+// queue is empty
 #define ETQ_EMPTY 2
+
 
 typedef struct task_queue {
   TaskDescriptor *head;
