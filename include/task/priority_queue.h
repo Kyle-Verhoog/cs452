@@ -1,8 +1,6 @@
-#include <task_queue.h>
+#include <task/task_queue.h>
 
 #define NUM_PRIORITIES 20
-
-
 #define PQ_ENOTFOUND 1
 
 typedef struct priority_queue {

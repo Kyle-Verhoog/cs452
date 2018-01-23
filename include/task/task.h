@@ -61,28 +61,9 @@ void tt_init(TidTracker *tt);
 int tt_get(TidTracker *tt);
 void tt_return(int tid, TidTracker *tt);
 
-
-//Tasks
-void taskOne();
-void taskTwo();
-
-//A1 Tasks
-void FirstUserTask();
-void OtherTask();
-
 /**
  * Initialize a task descriptor to be uninitialized.
  */
 void td_init(TaskDescriptor *td);
-
-void td_create(TaskDescriptor *td, uint32_t tid, void *task, int priority, TaskStatus status, TaskDescriptor *parent);
-
-//SysCalls
-void Pass();
-void Block();
-int Create(int priority, void (*code)());
-int MyTid();
-int MyParentTid();
-void Exit();
 
 #endif /* TASK_H */
