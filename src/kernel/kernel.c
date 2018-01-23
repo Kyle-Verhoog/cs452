@@ -81,9 +81,8 @@ TaskDescriptor* schedule() {
   int ret;
   TaskDescriptor *td = NULL;
 
-  ret = pq_pop(&pq_tasks, &td);
+  ret = pq_dumb_pop(&pq_tasks, &td);
   KASSERT(ret == 0 && td != NULL);
-
 
   return td;
 }

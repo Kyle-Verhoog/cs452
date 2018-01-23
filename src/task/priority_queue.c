@@ -13,7 +13,7 @@ int pq_push(priority_queue *pq, int priority, TaskDescriptor *t) {
   return 0;                        
 }
 
-int pq_pop(priority_queue *pq, TaskDescriptor **t) {
+int pq_dumb_pop(priority_queue *pq, TaskDescriptor **t) {
   int i;
   for (i = NUM_PRIORITIES-1; i >= 0; i--) {
     task_queue *tq = &pq->pqs[i];

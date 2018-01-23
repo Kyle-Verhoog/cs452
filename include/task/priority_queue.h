@@ -15,4 +15,4 @@ void pq_init(priority_queue *pq);
 
 int pq_push(priority_queue *pq, int priority, TaskDescriptor *t);
 
-int pq_pop(priority_queue *pq, TaskDescriptor **t);
+int pq_dumb_pop(priority_queue *pq, TaskDescriptor **t);
