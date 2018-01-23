@@ -4,9 +4,9 @@ ARM_XCC = $(GNU_COWAN)/arm-elf/bin/gcc
 ARM_AS  = $(GNU_COWAN)/arm-elf/bin/as
 ARM_LD  = $(GNU_COWAN)/arm-elf/bin/ld
 
-X86_XCC = gcc
-X86_AS  = as
-X86_LD  = gcc
+X86_XCC = /usr/bin/gcc
+X86_AS  = /usr/bin/as
+X86_LD  = /usr/bin/gcc
 
 XCC = $(ARM_XCC)
 AS  = $(ARM_AS)
