@@ -6,20 +6,23 @@ void tt_init(TidTracker *tt){
 	int i = 0;
 	for(i = 0; i < MAX_TASK; i++){
 		tt->cb.buffer[tt->cb.buffer_end] = i;
-		tt->cb.buffer_end++;
+		tt->cb.buffer_end = (tt->cb.buffer_end + 1) % CIRCULAR_BUFFER_SIZE;
 	}
 }
 
 unsigned int tt_get(TidTracker *tt){
+	if(tt->cb.buffer_end == tt->cb.buffer_start){
+		return -2;
+	}
 	unsigned int tid = tt->cb.buffer[tt->cb.buffer_start];
-	tt->cb.buffer_start++;
+	tt->cb.buffer_start = (tt->cb.buffer_start + 1) % CIRCULAR_BUFFER_SIZE;
 	return tid;
 }
 
 void tt_return(unsigned int tid, TidTracker *tt){
 	tid += (1 << 16);
 	tt->cb.buffer[tt->cb.buffer_end] = tid;
-	tt->cb.buffer_end++;
+	tt->cb.buffer_end = (tt->cb.buffer_end + 1) % CIRCULAR_BUFFER_SIZE;
 }
 
 
