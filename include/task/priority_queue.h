@@ -1,3 +1,4 @@
+#include <task_queue.h>
 #define NUM_PRIORITIES 5
 
 typedef struct priority_queue {

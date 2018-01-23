@@ -1,8 +1,4 @@
-#define TQ_SIZE 10
-#define ETQ_NONE  0
-#define ETQ_FULL  1
-#define ETQ_EMPTY 2
-#define NUM_PRIORITIES 5
+#include <task_queue.h>
 
 void tq_init(task_queue *tq) {
   tq->head = NULL;
