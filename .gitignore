@@ -10,4 +10,4 @@
 *.a
 *.d
 
-./build
+build/
