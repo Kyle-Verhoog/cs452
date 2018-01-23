@@ -2,6 +2,27 @@
 #include <ts7200.h>
 #include <bwio.h>
 
+void tt_init(TidTracker *tt){
+	int i = 0;
+	for(i = 0; i < MAX_TASK; i++){
+		tt->cb.buffer[tt->cb.buffer_end] = i;
+		tt->cb.buffer_end++;
+	}
+}
+
+unsigned int tt_get(TidTracker *tt){
+	unsigned int tid = tt->cb.buffer[tt->cb.buffer_start];
+	tt->cb.buffer_start++;
+	return tid;
+}
+
+void tt_return(unsigned int tid, TidTracker *tt){
+	tid += (1 << 16);
+	tt->cb.buffer[tt->cb.buffer_end] = tid;
+	tt->cb.buffer_end++;
+}
+
+
 void td_init(TaskDescriptor *td) {
   td->tid = 0;
   td->sp =  0;

@@ -6,7 +6,7 @@
 
 typedef struct CircularBuffer{
 	
-	char buffer[CIRCULAR_BUFFER_SIZE];
+	unsigned int buffer[CIRCULAR_BUFFER_SIZE];
 	unsigned int buffer_start;
 	unsigned int buffer_end;
 

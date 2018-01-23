@@ -5,6 +5,7 @@
 // TODO move to main?
 //uint32_t active_task.psr_temp; //Used as a active_task.psr_temp to set CPSR
 TaskDescriptor tasks[10];
+TidTracker tid_tracker;
 task_queue tasks_queue;
 int global_task_num;
 
@@ -41,7 +42,6 @@ unsigned int user_stack_base = USER_STACK_BASE;
 void initialize() {
   SANITY();
   DBLOG_INIT("Initializing", "");
-
   asm(
     "ldr r3, =KERNEL_ENTRY;"
     "mov r4, #"STR(KERNEL_ENTRY)";"
@@ -49,10 +49,12 @@ void initialize() {
   );
 
   DBLOG_START("init task queue", "");
+  tt_init(&tid_tracker);
   tq_init(&tasks_queue);
   DBLOG_S();
 
-  for (global_task_num = 0; global_task_num < 1; global_task_num++) {
+  int i;
+  for (i = 0; i < 1; i++) {
     // td_init(tasks[global_task_num]);
     TaskDescriptor *td = &tasks[global_task_num];
     DBLOG_START("creating task %d", global_task_num);

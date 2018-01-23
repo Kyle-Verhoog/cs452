@@ -4,6 +4,18 @@
 #include <types.h>
 #include <system.h>
 #include <asm.h>
+#include <circularbuffer.h>
+
+// TODO: these are copies of the ones in kernel.h, we should figure out where
+//       to put them centrally.
+
+#define USER_MODE 16
+#define KERNEL_MODE 19
+#define SYSTEM_MODE 31
+#define USER_STACK_BASE 0x02000000
+	#define USER_STACK_SIZE 0x100000	//1 MB User stacks
+
+#define MAX_TASK 16
 
 typedef enum TaskStatus{ // a task is...
 	ACTIVE  = 0,           //  active, currently running
@@ -39,30 +51,18 @@ typedef struct TaskDescriptor{
 	uint32_t ret; //Return value
 }TaskDescriptor;
 
-//Active Task Global
-typedef struct ActiveTask{
-	int r0;
-	int r1;
-	int r2;
-	int r3;
+typedef struct TidTracker{
+	CircularBuffer cb;
+}TidTracker;
 
-	//Change CPSR Location
-	int psr_temp;
-}ActiveTask;
+void tt_init(TidTracker *tt);
+unsigned int tt_get(TidTracker *tt);
+void tt_return(unsigned int tid, TidTracker *tt);
 
-ActiveTask active_task;
 
 //Tasks
 void taskOne();
 void taskTwo();
-
-//SysCalls
-void Pass();
-void Block();
-int Create(int priority, void (*code)());
-int MyTid();
-int MyParentTid();
-void Exit();
 
 /**
  * Initialize a task descriptor to be uninitialized.
@@ -71,14 +71,12 @@ void td_init(TaskDescriptor *td);
 
 void td_create(TaskDescriptor *td, uint32_t tid, void *task, TaskStatus status, TaskDescriptor *parent);
 
-// TODO: these are copies of the ones in kernel.h, we should figure out where
-//       to put them centrally.
-
-#define USER_MODE 16
-#define KERNEL_MODE 19
-#define SYSTEM_MODE 31
-#define USER_STACK_BASE 0x02000000
-	#define USER_STACK_SIZE 0x100000	//1 MB User stacks
-
+//SysCalls
+void Pass();
+void Block();
+int Create(int priority, void (*code)());
+int MyTid();
+int MyParentTid();
+void Exit();
 
 #endif /* TASK_H */
