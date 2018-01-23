@@ -1,3 +1,6 @@
+#ifndef SYSCALLS_H
+#define SYSCALLS_H
+
 void Pass();
 
 void Block();
@@ -9,3 +12,5 @@ int MyTid();
 int MyParentTid();
 
 void Exit();
+
+#endif /* SYSCALLS_H */

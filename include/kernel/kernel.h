@@ -6,6 +6,8 @@
 #include <system.h>
 #include <ts7200.h>
 #include <asm.h>
+#include <kernel_task.h>
+#include <user/user_tasks.h>
 
 //Data Structures
 #include <circularbuffer.h>

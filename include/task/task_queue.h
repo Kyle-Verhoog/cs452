@@ -1,4 +1,3 @@
-#include <system.h>
 #include <task.h>
 
 #define TQ_SIZE 10
@@ -22,6 +21,3 @@ int tq_push(task_queue *tq, TaskDescriptor *t);
 int tq_pop(task_queue *tq, TaskDescriptor **t);
 
 int tq_peek(task_queue *tq, TaskDescriptor **t);
-
-// void tq_print(task_queue *tq);
-

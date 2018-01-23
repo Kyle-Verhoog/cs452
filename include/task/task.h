@@ -2,7 +2,6 @@
 #define TASK_H
 #include <defines.h>
 #include <types.h>
-#include <system.h>
 #include <asm.h>
 #include <circularbuffer.h>
 

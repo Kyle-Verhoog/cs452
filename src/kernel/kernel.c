@@ -53,37 +53,19 @@ void initialize() {
   pq_init(&pq_tasks);
   DBLOG_S();
 
-  //bwprintf(COM2, "%x\n\r", tid_tracker.cb.buffer[0]);
-
   int i;
-<<<<<<< Updated upstream
   for (i = 0; i < 1; i++) {
     int priority = 1;
     // td_init(tasks[global_task_num]);
     int tid = tt_get(&tid_tracker);
     TaskDescriptor *td = &tasks[(tid & 0xffff)];
     DBLOG_START("creating task %x", tid);
-    td_create(td, tid, &FirstUserTask, priority, READY, NULL);
-=======
-  for (i = 0; i < 3; i++) {
-    // td_init(tasks[i]);
-    TaskDescriptor *td = &tasks[i];
-    DBLOG_START("creating task %d", i);
-    ktd_create(td, i, &taskOne, READY);
->>>>>>> Stashed changes
+    ktd_create(td, tid, &FirstUserTask, priority, READY, NULL);
     DBLOG_S();
     DBLOG_START("pushing task %x to queue", tid);
     pq_push(&pq_tasks, priority, td);
     DBLOG_S();
   }
-<<<<<<< Updated upstream
-=======
-  TaskDescriptor *td = &tasks[4];
-  ktd_create(td, 4, &taskTwo, READY);
-  DBLOG_START("pushing task %d to queue", 4);
-  tq_push(&tasks_queue, td);
-  DBLOG_S();
->>>>>>> Stashed changes
 }
 
 // Much TODO here
@@ -176,7 +158,7 @@ void create(TaskDescriptor *td) {
   //else if(bad priority)
   else {
     TaskDescriptor *newTask = &tasks[(tid & 0xffff)];
-    td_create(newTask, tid, task, priority, READY, td);
+    ktd_create(newTask, tid, task, priority, READY, td);
     pq_push(&pq_tasks, priority, newTask);
     td->ret = tid;
   }

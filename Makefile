@@ -6,7 +6,7 @@ ARM_LD  = $(GNU_COWAN)/arm-elf/bin/ld
 
 X86_XCC = gcc
 X86_AS  = as
-X86_LD  = ld
+X86_LD  = gcc
 
 XCC = $(ARM_XCC)
 AS  = $(ARM_AS)
@@ -29,15 +29,19 @@ TEST_EXEC  ?= tests
 
 LINKER_SCRIPT ?= $(CONF_DIR)/orex.ld
 
-SRC_IGNORE := $(wildcard src/test/*)
+SRC_IGNORE := $(wildcard src/test/*/*.c src/test/*.c)
+$(info $(SRC_IGNORE))
 SRCS := $(shell find $(SRC_DIRS) -name *.c)
-SRCS := $(filter-out $(SRC_IGNORE),  $(SRCS))
+SRCS := $(filter-out $(SRC_IGNORE), $(SRCS))
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
-TEST_IGNORE := $(wildcard src/kernel/*)
-TEST_SRCS := $(shell find $(TEST_DIR) -name *.c) $(filter-out $(TEST_IGNORE),  $(SRCS))
-TEST_OBJS := $(TEST_SRCS:%=$(BUILD_DIR)/%.o) $(OBJS)
+TEST_IGNORE := $(wildcard src/kernel/* src/user/* src/bwio/*)
+TEST_SRCS := $(shell find $(TEST_DIR) -name *.c) $(filter-out $(TEST_IGNORE), $(SRCS))
+#$(info $(TEST_SRCS))
+TEST_OBJS := $(TEST_SRCS:%=$(BUILD_DIR)/%.o)
+TEST_DEPS := $(TEST_OBJS:.o=.d)
+# $(info $(TEST_OBJS))
 
 INC_DIRS  := $(shell find $(SRC_DIRS) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
@@ -52,16 +56,16 @@ LD_FLAGS = $(ARM_LDFLAGS)
 
 all: $(BUILD_DIR)/$(TARGET_ELF)
 
-
 test: XCC = $(X86_XCC)
 test: AS  = $(X86_AS)
 test: LD  = $(X86_LD)
 test: CFLAGS = $(TEST_CFLAGS)
-test: LD_FLAGS = $(TEST_LDFLAGS)
+test: LDFLAGS = $(TEST_LDFLAGS)
 test: $(BUILD_DIR)/$(TEST_EXEC)
+	./$(BUILD_DIR)/$(TEST_EXEC)
 
 $(BUILD_DIR)/$(TEST_EXEC): $(TEST_OBJS)
-	$(XCC) $(INC_FLAGS) $(TEST_OBJS) -o $@
+	$(LD) $(LDFLAGS) -o $@ $(TEST_OBJS)
 
 $(BUILD_DIR)/$(TARGET_ELF): $(OBJS)
 	$(LD) $(LDFLAGS) -o $@ $(OBJS) -lgcc
@@ -97,6 +101,7 @@ copy:
 .PHONY: clean hashes docs test
 
 -include $(DEPS)
+# test: -include $(TEST_DEPS)
 
 MKDIR_P ?= mkdir -p
 PANDOC = pandoc
