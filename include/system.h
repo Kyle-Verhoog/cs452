@@ -13,6 +13,12 @@
 
 #define __predict_false(exp) __builtin_expect((exp), 0)
 
+#define is_set(macro) is_set_(macro)
+#define macrotest_1 ,
+#define is_set_(value) is_set__(macrotest_##value)
+#define is_set__(comma) is_set___(comma 1, 0)
+#define is_set___(_, v, ...) v
+
 #define KASSERTF(exp, msg) if (DEBUG) \
     do {                                                 \
       if (__predict_false(!(exp))) {                     \

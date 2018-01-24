@@ -3,6 +3,10 @@
 
 #include <system.h>
 
+#ifdef KDEBUG
+#include <bwio.h>
+#endif
+
 void Assert();
 
 void Pass();
@@ -17,19 +21,23 @@ int MyParentTid();
 
 void Exit();
 
-#define assert(exp) if (KDEBUG)                               \
-    do {                                                      \
-      if (__predict_false(!(exp))) {                          \
-        bwprintf(                                             \
-                 LOG_COM,                                     \
-                 "\033[31m"                                   \
-                 "ASSERTION '"STR(exp)"' FAILED <%s:%d>\r\n"  \
-                 "\033[0m",                                   \
-                 __FILE__,                                    \
-                 __LINE__                                     \
-                );                                            \
-        Assert();                                             \
-      }                                                       \
+#ifdef KDEBUG
+#define assert(exp)                                      \
+    do {                                                 \
+      if (__predict_false(!(exp))) {                     \
+        bwprintf(                                        \
+            LOG_COM,                                     \
+            "\033[31m"                                   \
+            "USER TASK "                                 \
+            "ASSERTION '"STR(exp)"' FAILED <%s:%d>\r\n"  \
+            "\033[0m",                                   \
+            __FILE__,                                    \
+            __LINE__                                     \
+                );                                       \
+        Assert();                                        \
+      }                                                  \
     } while (0)
-
+#else
+#define assert(exp) {}
+#endif /* KDEBUG */
 #endif /* SYSCALLS_H */

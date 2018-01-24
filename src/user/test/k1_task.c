@@ -1,7 +1,6 @@
 #include <k1_task.h>
 
 void taskOne() {
-  assert(0);
   int tid = MyTid();
 
   bwprintf(COM2, "T1 - %x: START\r\n", tid);
