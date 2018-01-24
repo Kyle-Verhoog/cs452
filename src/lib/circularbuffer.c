@@ -6,6 +6,7 @@ void init_circularBuffer(CircularBuffer *cb) {
 }
 
 void push_circularBuffer(CircularBuffer *cb, unsigned int val) {
+  cb->buffer[cb->buffer_end] = val;
   cb->buffer_end = (cb->buffer_end + 1) % CIRCULAR_BUFFER_SIZE;
 }
 

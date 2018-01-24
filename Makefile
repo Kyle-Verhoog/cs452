@@ -62,7 +62,7 @@ test: AS  = $(X86_AS)
 test: LD  = $(X86_LD)
 test: CFLAGS = $(TEST_CFLAGS)
 test: LDFLAGS = $(TEST_LDFLAGS)
-test: $(BUILD_DIR)/$(TEST_EXEC)
+test: clean $(BUILD_DIR)/$(TEST_EXEC)
 	./$(BUILD_DIR)/$(TEST_EXEC)
 
 $(BUILD_DIR)/$(TEST_EXEC): $(TEST_OBJS)

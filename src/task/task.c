@@ -5,8 +5,7 @@ void tt_init(TidTracker *tt) {
   init_circularBuffer(&tt->cb);
   int i = 0;
   for(i = 0; i < MAX_TASK; i++) {
-    tt->cb.buffer[tt->cb.buffer_end] = i;
-    tt->cb.buffer_end = (tt->cb.buffer_end + 1) % CIRCULAR_BUFFER_SIZE;
+  	push_circularBuffer(&tt->cb, i);
   }
 }
 
@@ -14,15 +13,15 @@ int tt_get(TidTracker *tt) {
   if(tt->cb.buffer_end == tt->cb.buffer_start) {
     return -2;
   }
-  int tid = tt->cb.buffer[tt->cb.buffer_start];
-  tt->cb.buffer_start = (tt->cb.buffer_start + 1) % CIRCULAR_BUFFER_SIZE;
+  int tid = top_circularBuffer(&tt->cb);
+  pop_circularBuffer(&tt->cb);
   return tid;
 }
 
 void tt_return(int tid, TidTracker *tt) {
   tid += (1 << 16);
-  tt->cb.buffer[tt->cb.buffer_end] = tid;
-  tt->cb.buffer_end = (tt->cb.buffer_end + 1) % CIRCULAR_BUFFER_SIZE;
+
+  pop_circularBuffer(&tt->cb);
 }
 
 void td_init(TaskDescriptor *td) {
