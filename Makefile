@@ -11,7 +11,8 @@ X86_LD  = /usr/bin/gcc
 XCC = $(ARM_XCC)
 AS  = $(ARM_AS)
 LD  = $(ARM_LD)
-CP = /bin/cp
+CP     = /bin/cp
+ASTYLE = astyle
 
 ARM_DIR ?= /u/cs452/tftp/ARM
 BUILD_DIR ?= build
@@ -98,7 +99,10 @@ clean:
 copy:
 	$(MAKE) clean && $(MAKE) && $(CP) $(BUILD_DIR)/$(TARGET_ELF) $(ARM_DIR)/$(USER)
 
-.PHONY: clean hashes docs test
+format:
+	$(ASTYLE) --options=.astylerc "src/*.c"  "include/*.h"
+
+.PHONY: clean hashes docs test format
 
 -include $(DEPS)
 # test: -include $(TEST_DEPS)

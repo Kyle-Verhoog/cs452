@@ -3,49 +3,49 @@
 /**
  * SysCalls (TODO: PASS ENUM LITERAL)
  */
-void Pass(){
-	asm (
-		"swi #0;"
-	);
+void Pass() {
+  asm (
+    "swi #0;"
+  );
 }
 
-void Block(){
-	asm (
-		"swi #1;"
-	);
+void Block() {
+  asm (
+    "swi #1;"
+  );
 }
 
-int Create(int priority, void (*code)()){
-	//r0 = priority, r1 = code
-	//Call swi with create
+int Create(int priority, void (*code)()) {
+  //r0 = priority, r1 = code
+  //Call swi with create
 
-	asm(
-		"swi #2;"
-	);
+  asm(
+    "swi #2;"
+  );
 
-	//Expect from here r0 is set already as the return value
+  //Expect from here r0 is set already as the return value
 }
 
-int MyTid(){
-	//Call swi with myTid
-	asm(
-		"swi #3;"
-	);
+int MyTid() {
+  //Call swi with myTid
+  asm(
+    "swi #3;"
+  );
 
-	//Expect r0 set
+  //Expect r0 set
 }
 
-int MyParentTid(){
-	//Call swi with myTid
-	asm(
-		"swi #4;"
-	);
+int MyParentTid() {
+  //Call swi with myTid
+  asm(
+    "swi #4;"
+  );
 
-	//Expect r0 set	
+  //Expect r0 set
 }
 
-void Exit(){
-	asm (
-		"swi #5;"
-	);
+void Exit() {
+  asm (
+    "swi #5;"
+  );
 }

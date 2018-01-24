@@ -1,12 +1,10 @@
 # Benjamin Zhao and Kyle Verhoog's CS452 Kernel Monorepo
 
 ## Documentation
-TODO
+To generate the documentation run `make docs`.
 
 ## Building
-TODO
+To build the kernel run `make`. To build and copy to the tftp server, run `make copy`.
 
 ## Testing
-TODO
-
-
+To run the unit tests (x86) run `make test`.

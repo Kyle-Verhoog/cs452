@@ -1,0 +1,8 @@
+--style=google
+--convert-tabs
+--max-code-length=80
+--indent=spaces=2
+--suffix=none
+--recursive
+--indent-preproc-define
+--indent-continuation=1

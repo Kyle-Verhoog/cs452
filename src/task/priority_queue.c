@@ -10,7 +10,7 @@ void pq_init(priority_queue *pq) {
 int pq_push(priority_queue *pq, int priority, TaskDescriptor *t) {
   tq_push(&pq->pqs[priority], t);
   pq->size++;
-  return 0;                        
+  return 0;
 }
 
 int pq_dumb_pop(priority_queue *pq, TaskDescriptor **t) {
@@ -31,11 +31,11 @@ int pq_dumb_pop(priority_queue *pq, TaskDescriptor **t) {
 int main(void) {
   task_queue tq;
   tq_init(&tq);
-  
+
   TaskDescriptor td; td.tid = 0; td.next = NULL;
   TaskDescriptor td2; td2.tid = 1; td2.next = NULL;
   TaskDescriptor td3; td3.tid = 2; td3.next = NULL;
-  
+
   priority_queue pq;
   pq_init(&pq);
   pq_push(&pq, 0, &td);

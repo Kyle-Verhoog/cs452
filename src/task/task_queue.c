@@ -4,7 +4,7 @@ void tq_init(task_queue *tq) {
   tq->head = NULL;
   tq->tail = NULL;
   tq->size = 0;
-}     
+}
 
 int tq_push(task_queue *tq, TaskDescriptor *t) {
   if (tq->size > 0) {

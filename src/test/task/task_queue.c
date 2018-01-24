@@ -27,10 +27,10 @@ void tq_pop_basic() {
   TaskDescriptor t1, t2;
   td_init(&t1);
   td_init(&t2);
- 
+
   tq_push(&tq, &t1);
   assert(tq.size == 1);
- 
+
   TaskDescriptor *td;
   int ret;
 
@@ -51,7 +51,7 @@ void tq_pop_2() {
   TaskDescriptor t1, t2;
   td_init(&t1);
   td_init(&t2);
- 
+
   TaskDescriptor *td;
   int ret;
 
@@ -59,7 +59,7 @@ void tq_pop_2() {
   assert(tq.size == 1);
   tq_push(&tq, &t2);
   assert(tq.size == 2);
-  
+
   ret = tq_pop(&tq, &td);
   assert(tq.size == 1);
   assert(ret == 0);
@@ -79,7 +79,7 @@ void tq_pop_22() {
   TaskDescriptor t1, t2;
   td_init(&t1);
   td_init(&t2);
- 
+
   TaskDescriptor *td;
   int ret;
 
@@ -87,7 +87,7 @@ void tq_pop_22() {
   assert(tq.size == 1);
   tq_push(&tq, &t2);
   assert(tq.size == 2);
-  
+
   ret = tq_pop(&tq, &td);
   assert(tq.size == 1);
   assert(ret == 0);
@@ -118,5 +118,5 @@ void task_queue_tests() {
   tq_pop_basic();
   tq_pop_2();
   tq_pop_22();
-	printf("✓ task_queue\n");
+  printf("✓ task_queue\n");
 }

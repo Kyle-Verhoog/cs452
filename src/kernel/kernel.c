@@ -13,27 +13,29 @@ int global_task_num;
 /**
  * Saves the old SP to the new kernel stack and sets SP to the kernel stack.
  */
-#define KERNEL_INIT() asm(      \
-  ".extern kernel_stack_base;"  \
-	"ldr r1, =kernel_stack_base;" \
-	"ldr r1, [r1];"               \
-  "sub fp, r1, #4;"             \
-  "sub r1, r1, #64;"            \
-	"mov r4, sp;"                 \
-	"mov sp, r1;"                 \
-	"stmfd sp!, {r4, lr};"        \
-);
+#define KERNEL_INIT() \
+  asm( \
+       ".extern kernel_stack_base;"  \
+       "ldr r1, =kernel_stack_base;" \
+       "ldr r1, [r1];"               \
+       "sub fp, r1, #4;"             \
+       "sub r1, r1, #64;"            \
+       "mov r4, sp;"                 \
+       "mov sp, r1;"                 \
+       "stmfd sp!, {r4, lr};"        \
+     );
 
 /**
  * Restores the old SP in order to return to RedBoot.
  */
-#define KERNEL_EXIT() asm( \
-  ".extern kernel_stack_base;"  \
-	"ldr r1, =kernel_stack_base;" \
-	"ldr r1, [r1];"               \
-  "sub r1, r1, #72;"            \
-	"ldmfd r1, {sp, pc};"         \
-);
+#define KERNEL_EXIT() \
+  asm( \
+       ".extern kernel_stack_base;"  \
+       "ldr r1, =kernel_stack_base;" \
+       "ldr r1, [r1];"               \
+       "sub r1, r1, #72;"            \
+       "ldmfd r1, {sp, pc};"         \
+     );
 
 
 unsigned int kernel_stack_base = KERNEL_STACK_BASE;
@@ -145,8 +147,8 @@ void create(TaskDescriptor *td) {
   //Get the arguments r0 (priority) r1 (function pointer)
   int tid = tt_get(&tid_tracker);
   int priority;
-  void *task; 
-  
+  void *task;
+
   asm("ldr %0, [%1, #4];":"=r"(priority):"r"(td->sp));
   asm("ldr %0, [%1, #8];":"=r"(task):"r"(td->sp));
 
@@ -164,11 +166,11 @@ void create(TaskDescriptor *td) {
   }
 }
 
-void get_tid(TaskDescriptor *td){
+void get_tid(TaskDescriptor *td) {
   td->ret = td->tid;
 }
 
-void get_parentTid(TaskDescriptor *td){
+void get_parentTid(TaskDescriptor *td) {
   //Get the parent tid into user stack
   // asm(
   //   "str %0, [%1, #4]"::"r"(td->parent ? td->parent->tid : -1), "r"(td->sp)
@@ -178,33 +180,33 @@ void get_parentTid(TaskDescriptor *td){
 
 void handle(TaskDescriptor *td, TaskRequest req) {
   switch (req) {
-    case PASS:
-      pq_push(&pq_tasks, td->priority, td);
-      break;
-    case BLOCK:
-      td->status = BLOCKED;
-      pq_push(&pq_tasks, td->priority, td);
-      break;
-    case CREATE:
-      create(td);
-      pq_push(&pq_tasks, td->priority, td);
-      break;
-    case MY_TID:
-      get_tid(td);
-      pq_push(&pq_tasks, td->priority, td);
-      break;
-    case MY_PARENT_TID:
-      get_parentTid(td);
-      pq_push(&pq_tasks, td->priority, td);
-      break;
-    case EXIT:
-      td->status = ZOMBIE;
-      tt_return(td->tid, &tid_tracker);
-      break;
-    default:
-      KASSERT(false);
-      pq_push(&pq_tasks, td->priority, td);
-      break;
+  case PASS:
+    pq_push(&pq_tasks, td->priority, td);
+    break;
+  case BLOCK:
+    td->status = BLOCKED;
+    pq_push(&pq_tasks, td->priority, td);
+    break;
+  case CREATE:
+    create(td);
+    pq_push(&pq_tasks, td->priority, td);
+    break;
+  case MY_TID:
+    get_tid(td);
+    pq_push(&pq_tasks, td->priority, td);
+    break;
+  case MY_PARENT_TID:
+    get_parentTid(td);
+    pq_push(&pq_tasks, td->priority, td);
+    break;
+  case EXIT:
+    td->status = ZOMBIE;
+    tt_return(td->tid, &tid_tracker);
+    break;
+  default:
+    KASSERT(false);
+    pq_push(&pq_tasks, td->priority, td);
+    break;
   }
 };
 

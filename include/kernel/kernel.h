@@ -15,7 +15,7 @@
 
 //Debug - set DEBUG through the gcc option (-D DEBUG)
 #ifdef DEBUG
-	#include <debug.h>
+#include <debug.h>
 #endif /* DEBUG_ON */
 
 
@@ -26,7 +26,7 @@
 //#define KERNEL_STACK_BASE 0x01000000 //0x01000000
 
 #define USER_STACK_BASE 0x02000000
-	#define USER_STACK_SIZE 0x100000	//1 MB User stacks
+#define USER_STACK_SIZE 0x100000  //1 MB User stacks
 
 //Kernel Modes
 #define USER_MODE 16

@@ -14,43 +14,43 @@
 #define __predict_false(exp) __builtin_expect((exp), 0)
 
 #define KASSERTF(exp, msg) if (DEBUG) do {         \
-  if (__predict_false(!(exp))) {                   \
-    bwprintf(                                      \
-      LOG_COM,                                     \
-      "\033[31m"                                   \
-      "ASSERTION '"STR(exp)"' FAILED <%s:%d>\r\n"  \
-      "\033[0m",                                   \
-      __FILE__,                                    \
-      __LINE__                                     \
-    );                                             \
-    kpanic msg;                                    \
-  }                                                \
-} while (0)
+      if (__predict_false(!(exp))) {                   \
+        bwprintf(                                      \
+            LOG_COM,                                     \
+            "\033[31m"                                   \
+            "ASSERTION '"STR(exp)"' FAILED <%s:%d>\r\n"  \
+            "\033[0m",                                   \
+            __FILE__,                                    \
+            __LINE__                                     \
+                );                                             \
+        kpanic msg;                                    \
+      }                                                \
+    } while (0)
 
 
 #define KASSERT(exp) if (DEBUG) do {               \
-  if (__predict_false(!(exp))) {                   \
-    bwprintf(                                      \
-      LOG_COM,                                     \
-      "\033[31m"                                   \
-      "ASSERTION '"STR(exp)"' FAILED <%s:%d>\r\n"  \
-      "\033[0m",                                   \
-      __FILE__,                                    \
-      __LINE__                                     \
-    );                                             \
-    KABORT();                                      \
-  }                                                \
-} while (0)
+      if (__predict_false(!(exp))) {                   \
+        bwprintf(                                      \
+            LOG_COM,                                     \
+            "\033[31m"                                   \
+            "ASSERTION '"STR(exp)"' FAILED <%s:%d>\r\n"  \
+            "\033[0m",                                   \
+            __FILE__,                                    \
+            __LINE__                                     \
+                );                                             \
+        KABORT();                                      \
+      }                                                \
+    } while (0)
 
 
 // TODO: figure out a way to exit cleanly??
 #define KABORT() __asm__(       \
-  ".extern kernel_stack_base;"  \
-  "ldr r1, =kernel_stack_base;" \
-  "ldr r1, [r1];"               \
-  "sub r1, r1, #72;"            \
-  "ldmfd r1, {sp, pc};"         \
-);
+                                ".extern kernel_stack_base;"  \
+                                "ldr r1, =kernel_stack_base;" \
+                                "ldr r1, [r1];"               \
+                                "sub r1, r1, #72;"            \
+                                "ldmfd r1, {sp, pc};"         \
+                        );
 
 
 extern void kpanic(const char *fmt, ...);
