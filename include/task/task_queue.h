@@ -1,3 +1,6 @@
+#ifndef TASK_QUEUE_H
+#define TASK_QUEUE_H
+
 #include <task.h>
 
 #define TQ_SIZE 10
@@ -26,3 +29,5 @@ int tq_push(task_queue *tq, TaskDescriptor *t);
 int tq_pop(task_queue *tq, TaskDescriptor **t);
 
 int tq_peek(task_queue *tq, TaskDescriptor **t);
+
+#endif /* TASK_QUEUE_H */

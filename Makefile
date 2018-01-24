@@ -65,18 +65,18 @@ test: $(BUILD_DIR)/$(TEST_EXEC)
 	./$(BUILD_DIR)/$(TEST_EXEC)
 
 $(BUILD_DIR)/$(TEST_EXEC): $(TEST_OBJS)
-	$(LD) $(LDFLAGS) -o $@ $(TEST_OBJS)
+	@$(LD) $(LDFLAGS) -o $@ $(TEST_OBJS)
 
 $(BUILD_DIR)/$(TARGET_ELF): $(OBJS)
-	$(LD) $(LDFLAGS) -o $@ $(OBJS) -lgcc
+	@$(LD) $(LDFLAGS) -o $@ $(OBJS) -lgcc
 
 $(BUILD_DIR)/%.o: %.s
-	$(MKDIR_P) $(dir $@)
-	$(AS) $(ASFLAGS) $< -o $@
+	@$(MKDIR_P) $(dir $@)
+	@$(AS) $(ASFLAGS) $< -o $@
 
 $(BUILD_DIR)/%.c.s: %.c
-	$(MKDIR_P) $(dir $@)
-	$(XCC) -S $(CFLAGS) $< -o $@
+	@$(MKDIR_P) $(dir $@)
+	@$(XCC) -S $(CFLAGS) $< -o $@
 
 .PRECIOUS: $(BUILD_DIR)/%.c.s
 

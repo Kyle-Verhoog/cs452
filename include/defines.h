@@ -5,7 +5,9 @@
 
 #define LOG_COM 1
 
+#ifndef NULL
 #define NULL  0
+#endif
 #define false 0
 #define true  1
 

@@ -15,5 +15,9 @@ void cb_sanity(){
 		pop_circularBuffer(&cb);
 	}
 
-	printf("CircularBuffer - Passed\n\r");
+}
+
+void circular_buffer_tests() {
+  cb_sanity();
+	printf("✓ CircularBuffer\n");
 }
