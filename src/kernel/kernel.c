@@ -184,6 +184,9 @@ void get_parentTid(TaskDescriptor *td) {
 
 void handle(TaskDescriptor *td, TaskRequest req) {
   switch (req) {
+  case ASSERT:
+    KABORT();
+    break;
   case PASS:
     pq_push(&pq_tasks, td->priority, td);
     break;

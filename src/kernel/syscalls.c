@@ -3,6 +3,13 @@
 /**
  * SysCalls (TODO: PASS ENUM LITERAL)
  */
+
+void Assert() {
+  asm (
+       "swi #6;"
+       );
+}
+
 void Pass() {
   asm (
     "swi #0;"

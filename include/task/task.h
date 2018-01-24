@@ -32,6 +32,7 @@ typedef enum TaskRequest {
   MY_TID = 3,
   MY_PARENT_TID = 4,
   EXIT = 5,
+  ASSERT = 6,
 } TaskRequest;
 
 typedef struct TaskDescriptor {
