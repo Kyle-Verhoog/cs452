@@ -57,12 +57,16 @@ void initialize() {
 
   int i;
   for (i = 0; i < 1; i++) {
-    int priority = 1;
+    int priority = 2;
     // td_init(tasks[global_task_num]);
     int tid = tt_get(&tid_tracker);
     TaskDescriptor *td = &tasks[(tid & 0xffff)];
     DBLOG_START("creating task %x", tid);
+#ifdef  KTEST
+    ktd_create(td, tid, &TestTask, 0, READY, NULL);
+#else
     ktd_create(td, tid, &FirstUserTask, priority, READY, NULL);
+#endif
     DBLOG_S();
     DBLOG_START("pushing task %x to queue", tid);
     pq_push(&pq_tasks, priority, td);

@@ -7,7 +7,11 @@
 #include <ts7200.h>
 #include <asm.h>
 #include <kernel_task.h>
-#include <user/user_tasks.h>
+#include <user/test/k1_task.h>
+
+#ifdef KTEST
+	#include <user/test/test_task.h>
+#endif
 
 //Data Structures
 #include <circularbuffer.h>

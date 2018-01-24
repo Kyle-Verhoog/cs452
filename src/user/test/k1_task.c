@@ -1,4 +1,4 @@
-#include <user/user_tasks.h>
+#include <k1_task.h>
 
 void taskOne() {
   int tid = MyTid();
@@ -44,9 +44,9 @@ void OtherTask() {
 }
 
 void FirstUserTask() {
-  int val = Create(0, &OtherTask);
+  int val = Create(1, &OtherTask);
   bwprintf(COM2, "Created: %d\n\r", val);
-  val = Create(0, &OtherTask);
+  val = Create(1, &OtherTask);
   bwprintf(COM2, "Created: %d\n\r", val);
   val = Create(5, &OtherTask);
   bwprintf(COM2, "Created: %d\n\r", val);

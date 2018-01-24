@@ -8,13 +8,19 @@ MEMORY
 
 SECTIONS
 {
-  .data : /* Initialized data. */
-  {
-    _DataStart = . ;
-    *(.data)
-    _DataEnd = . ;
+.data : /* Initialized data. */
+{
+  _DataStart = . ;
+  *(.data)
+  _DataEnd = . ;
 } >ram
 
+.rodata : 
+{
+  _RodataStart = . ;
+  *(.rodata)
+  _RodataEnd = . ;
+} >ram
 
 .bss : /* Uninitialized data. */
 {
