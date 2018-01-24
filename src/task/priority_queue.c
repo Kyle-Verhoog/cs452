@@ -1,7 +1,8 @@
 #include <priority_queue.h>
 
 void pq_init(priority_queue *pq) {
-  pq->size = 0;
+  pq->size  = 0;
+  pq->state = 0;
   int i;
   for (i = 0; i < NUM_PRIORITIES; i++)
     tq_init(&pq->pqs[i]);
@@ -9,6 +10,7 @@ void pq_init(priority_queue *pq) {
 
 int pq_push(priority_queue *pq, int priority, TaskDescriptor *t) {
   tq_push(&pq->pqs[priority], t);
+  pq->state |= 1 << priority;
   pq->size++;
   return 0;
 }
@@ -27,21 +29,23 @@ int pq_dumb_pop(priority_queue *pq, TaskDescriptor **t) {
   return PQ_ENOTFOUND;
 }
 
-/*
-int main(void) {
-  task_queue tq;
-  tq_init(&tq);
+/**
+ *
+ */
+int pq_pop(priority_queue *pq, TaskDescriptor **t) {
+  if (pq->size < 1) return PQ_EMPTY;
+  int ret;
+  int p;
 
-  TaskDescriptor td; td.tid = 0; td.next = NULL;
-  TaskDescriptor td2; td2.tid = 1; td2.next = NULL;
-  TaskDescriptor td3; td3.tid = 2; td3.next = NULL;
+  p = 31 - __builtin_clz(pq->state);
+  task_queue *tq = &pq->pqs[p];
 
-  priority_queue pq;
-  pq_init(&pq);
-  pq_push(&pq, 0, &td);
-  TaskDescriptor *t;
-  pq_pop(&pq, &t);
-  if (t != &td) printf("WTF\n");
+  if ((ret = tq_pop(&pq->pqs[p], t)) != 0)
+    return ret;
+
+  if (tq->size == 0)
+    pq->state ^= 1 << p;
+
+  pq->size--;
   return 0;
 }
-*/

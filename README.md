@@ -14,4 +14,5 @@ copy`.
 Run `make format` to run the code formatter on the code of the project. Note
 that is destructive!
 
-### Testing To run the unit tests (x86) run `make test`.
+### Testing
+To run the unit tests (x86) run `make test`.
