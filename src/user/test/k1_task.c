@@ -36,22 +36,22 @@ void OtherTask() {
   int tid = MyTid();
   int parentTid = MyParentTid();
 
-  bwprintf(COM2, "Tid: %d, parentTid: %d\n\r", tid, parentTid);
+  bwprintf(COM2, "Tid: %x, parentTid: %x\n\r", tid, parentTid);
   Pass();
-  bwprintf(COM2, "Tid: %d, parentTid: %d\n\r", tid, parentTid);
+  bwprintf(COM2, "Tid: %x, parentTid: %x\n\r", tid, parentTid);
 
   Exit();
 }
 
 void FirstUserTask() {
-  int val = Create(1, &OtherTask);
-  bwprintf(COM2, "Created: %d\n\r", val);
-  val = Create(1, &OtherTask);
-  bwprintf(COM2, "Created: %d\n\r", val);
-  val = Create(5, &OtherTask);
-  bwprintf(COM2, "Created: %d\n\r", val);
-  val = Create(5, &OtherTask);
-  bwprintf(COM2, "Created: %d\n\r", val);
+  int val = Create(0, &OtherTask);
+  bwprintf(COM2, "Created: %x\n\r", val);
+  val = Create(0, &OtherTask);
+  bwprintf(COM2, "Created: %x\n\r", val);
+  val = Create(6, &OtherTask);
+  bwprintf(COM2, "Created: %x\n\r", val);
+  val = Create(6, &OtherTask);
+  bwprintf(COM2, "Created: %x\n\r", val);
 
   bwprintf(COM2, "FirstUserTask: exiting.\n\r");
   Exit();

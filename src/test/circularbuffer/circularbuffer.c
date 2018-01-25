@@ -10,11 +10,11 @@ void cb_sanity() {
     push_circularBuffer(&cb, i);
   }
 
-  while(cb.buffer_end != cb.buffer_start) {
-    assert(CIRCULAR_BUFFER_SIZE - i == top_circularBuffer(&cb));
+  for(i = CIRCULAR_BUFFER_SIZE - 1; i >= 0; i--) {
+    int n = top_circularBuffer(&cb);
+    assert(CIRCULAR_BUFFER_SIZE-1 - i == n);
     pop_circularBuffer(&cb);
   }
-
 }
 
 void circular_buffer_tests() {

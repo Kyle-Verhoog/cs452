@@ -1,6 +1,8 @@
 #ifndef ASM_H
 #define ASM_H
 
+#define asm __asm__ volatile
+
 //Macros
 #define PRINT_REG(reg)\
   asm(\

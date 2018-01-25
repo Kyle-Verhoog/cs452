@@ -1,15 +1,15 @@
 #include <task.h>
 #include <ts7200.h>
 
-void tt_init(TidTracker *tt) {
+void tt_init( TidTracker *tt) {
   init_circularBuffer(&tt->cb);
   int i = 0;
   for(i = 0; i < MAX_TASK; i++) {
-  	push_circularBuffer(&tt->cb, i);
+    push_circularBuffer(&tt->cb, i);
   }
 }
 
-int tt_get(TidTracker *tt) {
+int tt_get( TidTracker *tt) {
   if(tt->cb.buffer_end == tt->cb.buffer_start) {
     return -2;
   }
@@ -18,13 +18,13 @@ int tt_get(TidTracker *tt) {
   return tid;
 }
 
-void tt_return(int tid, TidTracker *tt) {
+void tt_return(int tid,  TidTracker *tt) {
   tid += (1 << 16);
 
-  pop_circularBuffer(&tt->cb);
+  push_circularBuffer(&tt->cb, tid);
 }
 
-void td_init(TaskDescriptor *td) {
+void td_init( TaskDescriptor *td) {
   td->tid = 0;
   td->sp =  0;
   td->psr = 0;
@@ -38,7 +38,7 @@ void td_init(TaskDescriptor *td) {
 /**
  * Copies the values of td2 into td1
  */
-void td_copy(TaskDescriptor *td1, TaskDescriptor *td2) {
+void td_copy( TaskDescriptor *td1,  TaskDescriptor *td2) {
   td1->tid = td2->tid;
   td1->sp = td2->sp;
   td1->psr = td2->psr;

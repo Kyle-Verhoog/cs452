@@ -6,8 +6,8 @@
 
 void Assert() {
   asm (
-       "swi #6;"
-       );
+    "swi #6;"
+  );
 }
 
 void Pass() {
@@ -25,7 +25,6 @@ void Block() {
 int Create(int priority, void (*code)()) {
   //r0 = priority, r1 = code
   //Call swi with create
-
   asm(
     "swi #2;"
   );

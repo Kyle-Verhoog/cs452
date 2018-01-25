@@ -8,8 +8,8 @@ void pq_init(priority_queue *pq) {
     tq_init(&pq->pqs[i]);
 }
 
-int pq_push(priority_queue *pq, int priority, TaskDescriptor *t) {
-  tq_push(&pq->pqs[priority], t);
+int pq_push(priority_queue *pq, int priority, TaskDescriptor *td) {
+  tq_push(&pq->pqs[priority], td);
   pq->state |= 1 << priority;
   pq->size++;
   return 0;

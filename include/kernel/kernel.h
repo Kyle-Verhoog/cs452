@@ -10,7 +10,7 @@
 #include <user/test/k1_task.h>
 
 #ifdef KTEST
-	#include <user/test/test_task.h>
+#include <user/test/test_task.h>
 #endif
 
 //Data Structures
@@ -18,9 +18,7 @@
 #include <priority_queue.h>
 
 //Debug - set DEBUG through the gcc option (-D DEBUG)
-#ifdef DEBUG
 #include <debug.h>
-#endif /* DEBUG_ON */
 
 
 //Kernel Defines
