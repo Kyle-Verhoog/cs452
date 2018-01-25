@@ -6,8 +6,8 @@
 
 void Assert() {
   asm (
-       "swi #6;"
-       );
+    "swi #6;"
+  );
 }
 
 void Pass() {

@@ -1,7 +1,8 @@
 #include <kernel_task.h>
 #include <bwio.h>
 
-void ktd_create(TaskDescriptor* volatile td, uint32_t tid, void *task, int priority,
+void ktd_create(TaskDescriptor* volatile td, uint32_t tid, void *task,
+                int priority,
                 TaskStatus status, TaskDescriptor *parent) {
   //Initialize the Test task pc
   td->sp = USER_STACK_BASE - (tid*USER_STACK_SIZE) - 56;

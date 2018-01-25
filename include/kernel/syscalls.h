@@ -23,20 +23,20 @@ void Exit();
 
 #ifdef KDEBUG
 #define assert(exp)                                      \
-    do {                                                 \
-      if (__predict_false(!(exp))) {                     \
-        bwprintf(                                        \
-            LOG_COM,                                     \
-            "\033[31m"                                   \
-            "USER TASK "                                 \
-            "ASSERTION '"STR(exp)"' FAILED <%s:%d>\r\n"  \
-            "\033[0m",                                   \
-            __FILE__,                                    \
-            __LINE__                                     \
-                );                                       \
-        Assert();                                        \
-      }                                                  \
-    } while (0)
+  do {                                                 \
+    if (__predict_false(!(exp))) {                     \
+      bwprintf(                                        \
+          LOG_COM,                                     \
+          "\033[31m"                                   \
+          "USER TASK "                                 \
+          "ASSERTION '"STR(exp)"' FAILED <%s:%d>\r\n"  \
+          "\033[0m",                                   \
+          __FILE__,                                    \
+          __LINE__                                     \
+              );                                       \
+      Assert();                                        \
+    }                                                  \
+  } while (0)
 #else
 #define assert(exp) {}
 #endif /* KDEBUG */

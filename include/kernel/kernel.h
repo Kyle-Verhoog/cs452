@@ -10,7 +10,7 @@
 #include <user/test/k1_task.h>
 
 #ifdef KTEST
-	#include <user/test/test_task.h>
+#include <user/test/test_task.h>
 #endif
 
 //Data Structures

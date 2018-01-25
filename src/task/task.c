@@ -5,7 +5,7 @@ void tt_init( TidTracker *tt) {
   init_circularBuffer(&tt->cb);
   int i = 0;
   for(i = 0; i < MAX_TASK; i++) {
-  	push_circularBuffer(&tt->cb, i);
+    push_circularBuffer(&tt->cb, i);
   }
 }
 

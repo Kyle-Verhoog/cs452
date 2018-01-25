@@ -3,7 +3,7 @@
 // TODO move to main?
 //uint32_t active_task.psr_temp; //Used as a active_task.psr_temp to set CPSR
 TaskDescriptor tasks[MAX_TASK];
- TidTracker tid_tracker;
+TidTracker tid_tracker;
 priority_queue pq_tasks;
 
 
@@ -150,8 +150,8 @@ TaskRequest activate(TaskDescriptor* td) {
 
 void create( TaskDescriptor *td) {
   //Get the arguments r0 (priority) r1 (function pointer)
-   int tid = tt_get(&tid_tracker);
-   int priority;
+  int tid = tt_get(&tid_tracker);
+  int priority;
   void *task;
 
   asm("ldr %0, [%1, #4];":"=r"(priority):"r"(td->sp));
@@ -164,7 +164,7 @@ void create( TaskDescriptor *td) {
   }
   //else if(bad priority)
   else {
-     TaskDescriptor *newTask = &tasks[(tid & 0xffff)];
+    TaskDescriptor *newTask = &tasks[(tid & 0xffff)];
     ktd_create(newTask, tid, task, priority, READY, td);
     pq_push(&pq_tasks, priority, newTask);
     td->ret = tid;
@@ -224,7 +224,7 @@ __attribute__((naked)) void main(void) {
   initialize();
   while (true) {
     //get a task from scheduler
-     TaskDescriptor* td = schedule();
+    TaskDescriptor* td = schedule();
 
     if (!td) break;
 
