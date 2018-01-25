@@ -21,7 +21,7 @@ int tt_get( TidTracker *tt) {
 void tt_return(int tid,  TidTracker *tt) {
   tid += (1 << 16);
 
-  pop_circularBuffer(&tt->cb);
+  push_circularBuffer(&tt->cb, tid);
 }
 
 void td_init( TaskDescriptor *td) {

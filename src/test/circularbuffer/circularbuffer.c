@@ -13,6 +13,7 @@ void cb_sanity() {
   while(cb.buffer_end != cb.buffer_start) {
     assert(CIRCULAR_BUFFER_SIZE - i == top_circularBuffer(&cb));
     pop_circularBuffer(&cb);
+    i--;
   }
 
 }

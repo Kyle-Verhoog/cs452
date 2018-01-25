@@ -3,7 +3,7 @@
 // TODO move to main?
 //uint32_t active_task.psr_temp; //Used as a active_task.psr_temp to set CPSR
 TaskDescriptor tasks[MAX_TASK];
-volatile TidTracker tid_tracker;
+ TidTracker tid_tracker;
 priority_queue pq_tasks;
 
 
@@ -75,12 +75,12 @@ void initialize() {
 }
 
 // Much TODO here
-volatile TaskDescriptor* schedule() {
+TaskDescriptor* schedule() {
   if (pq_tasks.size == 0)
     return NULL;
 
   int ret;
-  volatile TaskDescriptor *td = NULL;
+  TaskDescriptor *td = NULL;
 
   ret = pq_dumb_pop(&pq_tasks, &td);
   KASSERT(ret == 0 && td != NULL);
@@ -88,7 +88,7 @@ volatile TaskDescriptor* schedule() {
   return td;
 }
 
-TaskRequest activate(volatile TaskDescriptor* td) {
+TaskRequest activate(TaskDescriptor* td) {
   //Store Kernel State
   PUSH_STACK("r0-r12, lr");
   //Push ret val to stack as temp
@@ -148,10 +148,10 @@ TaskRequest activate(volatile TaskDescriptor* td) {
   POP_STACK("lr");
 }
 
-void create(volatile TaskDescriptor *td) {
+void create( TaskDescriptor *td) {
   //Get the arguments r0 (priority) r1 (function pointer)
-  volatile int tid = tt_get(&tid_tracker);
-  volatile int priority;
+   int tid = tt_get(&tid_tracker);
+   int priority;
   void *task;
 
   asm("ldr %0, [%1, #4];":"=r"(priority):"r"(td->sp));
@@ -164,18 +164,18 @@ void create(volatile TaskDescriptor *td) {
   }
   //else if(bad priority)
   else {
-    volatile TaskDescriptor *newTask = &tasks[(tid & 0xffff)];
+     TaskDescriptor *newTask = &tasks[(tid & 0xffff)];
     ktd_create(newTask, tid, task, priority, READY, td);
     pq_push(&pq_tasks, priority, newTask);
     td->ret = tid;
   }
 }
 
-void get_tid(volatile TaskDescriptor *td) {
+void get_tid( TaskDescriptor *td) {
   td->ret = td->tid;
 }
 
-void get_parentTid(volatile TaskDescriptor *td) {
+void get_parentTid( TaskDescriptor *td) {
   //Get the parent tid into user stack
   // asm(
   //   "str %0, [%1, #4]"::"r"(td->parent ? td->parent->tid : -1), "r"(td->sp)
@@ -183,7 +183,7 @@ void get_parentTid(volatile TaskDescriptor *td) {
   td->ret = td->parent ? td->parent->tid : -1;
 }
 
-void handle(volatile TaskDescriptor *td, TaskRequest req) {
+void handle( TaskDescriptor *td, TaskRequest req) {
   switch (req) {
   case ASSERT:
     KABORT();
@@ -224,7 +224,7 @@ __attribute__((naked)) void main(void) {
   initialize();
   while (true) {
     //get a task from scheduler
-    volatile TaskDescriptor* td = schedule();
+     TaskDescriptor* td = schedule();
 
     if (!td) break;
 
