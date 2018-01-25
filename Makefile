@@ -37,7 +37,7 @@ SRCS := $(filter-out $(SRC_IGNORE), $(SRCS))
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
-TEST_IGNORE := $(wildcard src/kernel/* src/user/* src/bwio/*)
+TEST_IGNORE := $(wildcard src/kernel/* src/user/* src/bwio/* src/user/test/*.c)
 TEST_SRCS := $(shell find $(TEST_DIR) -name *.c) $(filter-out $(TEST_IGNORE), $(SRCS))
 #$(info $(TEST_SRCS))
 TEST_OBJS := $(TEST_SRCS:%=$(BUILD_DIR)/%.o)

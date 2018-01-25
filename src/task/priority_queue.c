@@ -1,5 +1,4 @@
 #include <priority_queue.h>
-#include <bwio.h>
 
 void pq_init(priority_queue *pq) {
   pq->size  = 0;
