@@ -19,7 +19,8 @@
 #define is_set__(comma) is_set___(comma 1, 0)
 #define is_set___(_, v, ...) v
 
-#define KASSERTF(exp, msg) if (DEBUG) \
+#ifdef DEBUG
+#define KASSERTF(exp, msg) \
     do {                                                 \
       if (__predict_false(!(exp))) {                     \
         bwprintf(                                        \
@@ -33,9 +34,12 @@
         kpanic msg;                                      \
       }                                                  \
     } while (0)
+#else 
+#define KASSERTF(exp, msg) {}
+#endif
 
-
-#define KASSERT(exp) if (DEBUG) \
+#ifdef DEBUG
+#define KASSERT(exp) \
     do {                                                 \
       if (__predict_false(!(exp))) {                     \
         bwprintf(                                        \
@@ -49,6 +53,9 @@
         KABORT();                                        \
       }                                                  \
     } while (0)
+#else 
+#define KASSERT(exp) {}
+#endif
 
 
 // TODO: figure out a way to exit cleanly??

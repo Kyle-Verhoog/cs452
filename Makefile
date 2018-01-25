@@ -47,7 +47,7 @@ TEST_DEPS := $(TEST_OBJS:.o=.d)
 INC_DIRS  := $(shell find $(SRC_DIRS) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
-ARM_CFLAGS   = -c -fPIC -Wall -I. $(INC_FLAGS) -mcpu=arm920t -msoft-float -MMD -MP $(DFLAGS)
+ARM_CFLAGS   = -c -fPIC -Wall -I. $(INC_FLAGS) -mcpu=arm920t -msoft-float -MMD -MP
 ARM_LDFLAGS  = -init main -Map $(TARGET_MAP) -N -T $(LINKER_SCRIPT) -L$(GNU_COWAN)/lib/gcc/arm-elf/4.0.2 -L./lib
 TEST_CFLAGS  = -Wall -I. $(INC_FLAGS)
 TEST_LDFLAGS =
@@ -65,6 +65,12 @@ test: LDFLAGS = $(TEST_LDFLAGS)
 test: clean $(BUILD_DIR)/$(TEST_EXEC)
 	./$(BUILD_DIR)/$(TEST_EXEC)
 
+debug: CFLAGS += -DDEBUG
+debug: all
+
+ktest: CFLAGS += -DKTEST -DDEBUG
+ktest: all
+
 $(BUILD_DIR)/$(TEST_EXEC): $(TEST_OBJS)
 	@$(LD) $(LDFLAGS) -o $@ $(TEST_OBJS)
 
@@ -77,7 +83,7 @@ $(BUILD_DIR)/%.o: %.s
 
 $(BUILD_DIR)/%.c.s: %.c
 	@$(MKDIR_P) $(dir $@)
-	@$(XCC) -S $(CFLAGS) $< -o $@
+	$(XCC) -S $(CFLAGS) $< -o $@
 
 .PRECIOUS: $(BUILD_DIR)/%.c.s
 
