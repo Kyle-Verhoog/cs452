@@ -21,39 +21,39 @@
 
 #ifdef DEBUG
 #define KASSERTF(exp, msg) \
-    do {                                                 \
-      if (__predict_false(!(exp))) {                     \
-        bwprintf(                                        \
-            LOG_COM,                                     \
-            "\033[31m"                                   \
-            "ASSERTION '"STR(exp)"' FAILED <%s:%d>\r\n"  \
-            "\033[0m",                                   \
-            __FILE__,                                    \
-            __LINE__                                     \
-                );                                       \
-        kpanic msg;                                      \
-      }                                                  \
-    } while (0)
-#else 
+  do {                                                 \
+    if (__predict_false(!(exp))) {                     \
+      bwprintf(                                        \
+          LOG_COM,                                     \
+          "\033[31m"                                   \
+          "ASSERTION '"STR(exp)"' FAILED <%s:%d>\r\n"  \
+          "\033[0m",                                   \
+          __FILE__,                                    \
+          __LINE__                                     \
+              );                                       \
+      kpanic msg;                                      \
+    }                                                  \
+  } while (0)
+#else
 #define KASSERTF(exp, msg) {}
 #endif
 
 #ifdef DEBUG
 #define KASSERT(exp) \
-    do {                                                 \
-      if (__predict_false(!(exp))) {                     \
-        bwprintf(                                        \
-            LOG_COM,                                     \
-            "\033[31m"                                   \
-            "ASSERTION '"STR(exp)"' FAILED <%s:%d>\r\n"  \
-            "\033[0m",                                   \
-            __FILE__,                                    \
-            __LINE__                                     \
-                );                                       \
-        KABORT();                                        \
-      }                                                  \
-    } while (0)
-#else 
+  do {                                                 \
+    if (__predict_false(!(exp))) {                     \
+      bwprintf(                                        \
+          LOG_COM,                                     \
+          "\033[31m"                                   \
+          "ASSERTION '"STR(exp)"' FAILED <%s:%d>\r\n"  \
+          "\033[0m",                                   \
+          __FILE__,                                    \
+          __LINE__                                     \
+              );                                       \
+      KABORT();                                        \
+    }                                                  \
+  } while (0)
+#else
 #define KASSERT(exp) {}
 #endif
 
