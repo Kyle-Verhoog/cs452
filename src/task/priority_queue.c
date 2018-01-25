@@ -9,8 +9,8 @@ void pq_init(priority_queue *pq) {
     tq_init(&pq->pqs[i]);
 }
 
-int pq_push(priority_queue *pq, int priority, TaskDescriptor *t) {
-  tq_push(&pq->pqs[priority], t);
+int pq_push(priority_queue *pq, int priority, TaskDescriptor *td) {
+  tq_push(&pq->pqs[priority], td);
   pq->state |= 1 << priority;
   pq->size++;
   return 0;
@@ -22,7 +22,6 @@ int pq_dumb_pop(priority_queue *pq, TaskDescriptor **t) {
   for (i = NUM_PRIORITIES-1; i >= 0; i--) {
     task_queue *tq = &pq->pqs[i];
     if (tq->size > 0) {
-      bwprintf(COM2, "%d\n\r", i);
       tq_pop(tq, t);
       pq->size--;
       return 0;

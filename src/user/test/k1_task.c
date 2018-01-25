@@ -48,9 +48,9 @@ void FirstUserTask() {
   bwprintf(COM2, "Created: %d\n\r", val);
   val = Create(1, &OtherTask);
   bwprintf(COM2, "Created: %d\n\r", val);
-  val = Create(5, &OtherTask);
+  val = Create(6, &OtherTask);
   bwprintf(COM2, "Created: %d\n\r", val);
-  val = Create(5, &OtherTask);
+  val = Create(6, &OtherTask);
   bwprintf(COM2, "Created: %d\n\r", val);
 
   bwprintf(COM2, "FirstUserTask: exiting.\n\r");

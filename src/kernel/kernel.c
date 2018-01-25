@@ -52,23 +52,26 @@ void initialize() {
   pq_init(&pq_tasks);
   DBLOG_S();
 
-  int i;
-  for (i = 0; i < 1; i++) {
-    int priority = 2;
-    int tid = tt_get(&tid_tracker);
-    volatile TaskDescriptor *td = &tasks[(tid & 0xffff)];
+  int priority;
+  void *task;
 
-    DBLOG_START("creating task %x", tid);
-#ifdef  KTEST
-    ktd_create(td, tid, &TestTask, 0, READY, NULL);
+#ifdef KTEST
+  priority = 0;
+  task = &TestTask;
 #else
-    ktd_create(td, tid, &FirstUserTask, priority, READY, NULL);
+  priority = 3;
+  task = &FirstUserTask;
 #endif
-    DBLOG_S();
-    DBLOG_START("pushing task %x to queue", tid);
-    pq_push(&pq_tasks, priority, td);
-    DBLOG_S();
-  }
+
+  int tid = tt_get(&tid_tracker);
+  TaskDescriptor* volatile td = &tasks[(tid & 0xffff)];
+
+  DBLOG_START("creating task %x", tid);
+  ktd_create(td, tid, task, priority, READY, NULL);
+  DBLOG_S();
+  DBLOG_START("pushing task %x to queue", tid);
+  pq_push(&pq_tasks, priority, td);
+  DBLOG_S();
 }
 
 // Much TODO here
@@ -81,8 +84,6 @@ volatile TaskDescriptor* schedule() {
 
   ret = pq_dumb_pop(&pq_tasks, &td);
   KASSERT(ret == 0 && td != NULL);
-
-    bwprintf(COM2, "tid: %d\n\r", td->priority);
 
   return td;
 }
