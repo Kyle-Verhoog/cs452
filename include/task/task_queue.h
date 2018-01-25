@@ -15,7 +15,7 @@
 #define ETQ_EMPTY 2
 
 
-typedef struct task_queue {
+typedef volatile struct task_queue {
   TaskDescriptor *head;
   TaskDescriptor *tail;
   int size;

@@ -1,13 +1,10 @@
 #include <kernel.h>
 
-#define asm __asm__
-
 // TODO move to main?
 //uint32_t active_task.psr_temp; //Used as a active_task.psr_temp to set CPSR
 TaskDescriptor tasks[MAX_TASK];
-TidTracker tid_tracker;
+volatile TidTracker tid_tracker;
 priority_queue pq_tasks;
-int global_task_num;
 
 
 /**
@@ -58,9 +55,9 @@ void initialize() {
   int i;
   for (i = 0; i < 1; i++) {
     int priority = 2;
-    // td_init(tasks[global_task_num]);
     int tid = tt_get(&tid_tracker);
-    TaskDescriptor *td = &tasks[(tid & 0xffff)];
+    volatile TaskDescriptor *td = &tasks[(tid & 0xffff)];
+
     DBLOG_START("creating task %x", tid);
 #ifdef  KTEST
     ktd_create(td, tid, &TestTask, 0, READY, NULL);
@@ -75,22 +72,24 @@ void initialize() {
 }
 
 // Much TODO here
-TaskDescriptor* schedule() {
+volatile TaskDescriptor* schedule() {
   if (pq_tasks.size == 0)
     return NULL;
 
   int ret;
-  TaskDescriptor *td = NULL;
+  volatile TaskDescriptor *td = NULL;
 
   ret = pq_dumb_pop(&pq_tasks, &td);
   KASSERT(ret == 0 && td != NULL);
 
+    bwprintf(COM2, "tid: %d\n\r", td->priority);
+
   return td;
 }
 
-TaskRequest activate(TaskDescriptor* td) {
+TaskRequest activate(volatile TaskDescriptor* td) {
   //Store Kernel State
-  PUSH_STACK("r0-r12");
+  PUSH_STACK("r0-r12, lr");
   //Push ret val to stack as temp
   asm("mov r8, %0"::"r"(td->ret));
   PUSH_STACK("r8");
@@ -145,12 +144,13 @@ TaskRequest activate(TaskDescriptor* td) {
   READ_SPSR(td->psr);
   // manually put swi arg in r0, avoid overhead of return
   SWI_ARG_FETCH("r0");
+  POP_STACK("lr");
 }
 
-void create(TaskDescriptor *td) {
+void create(volatile TaskDescriptor *td) {
   //Get the arguments r0 (priority) r1 (function pointer)
-  int tid = tt_get(&tid_tracker);
-  int priority;
+  volatile int tid = tt_get(&tid_tracker);
+  volatile int priority;
   void *task;
 
   asm("ldr %0, [%1, #4];":"=r"(priority):"r"(td->sp));
@@ -163,18 +163,18 @@ void create(TaskDescriptor *td) {
   }
   //else if(bad priority)
   else {
-    TaskDescriptor *newTask = &tasks[(tid & 0xffff)];
+    volatile TaskDescriptor *newTask = &tasks[(tid & 0xffff)];
     ktd_create(newTask, tid, task, priority, READY, td);
     pq_push(&pq_tasks, priority, newTask);
     td->ret = tid;
   }
 }
 
-void get_tid(TaskDescriptor *td) {
+void get_tid(volatile TaskDescriptor *td) {
   td->ret = td->tid;
 }
 
-void get_parentTid(TaskDescriptor *td) {
+void get_parentTid(volatile TaskDescriptor *td) {
   //Get the parent tid into user stack
   // asm(
   //   "str %0, [%1, #4]"::"r"(td->parent ? td->parent->tid : -1), "r"(td->sp)
@@ -182,7 +182,7 @@ void get_parentTid(TaskDescriptor *td) {
   td->ret = td->parent ? td->parent->tid : -1;
 }
 
-void handle(TaskDescriptor *td, TaskRequest req) {
+void handle(volatile TaskDescriptor *td, TaskRequest req) {
   switch (req) {
   case ASSERT:
     KABORT();
@@ -221,10 +221,9 @@ __attribute__((naked)) void main(void) {
   KERNEL_INIT();
 
   initialize();
-
   while (true) {
     //get a task from scheduler
-    TaskDescriptor* td = schedule();
+    volatile TaskDescriptor* td = schedule();
 
     if (!td) break;
 

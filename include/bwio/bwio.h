@@ -47,15 +47,15 @@ int bwgetc( int channel );
 
 int bwputx( int channel, char c );
 
-int bwputstr( int channel, const char *str );
+int bwputstr( int channel, const volatile char *str );
 
 int bwputr( int channel, unsigned int reg );
 
 void bwputw( int channel, int n, char fc, const char *bf );
 
-void bwformat ( int channel, const char *fmt, va_list va );
+void bwformat ( int channel, const volatile char *fmt, va_list va );
 
-void bwprintf( int channel, const char *format, ... );
+void bwprintf( int channel, const volatile char *format, ... );
 
 
 #endif /* BWIO_H */

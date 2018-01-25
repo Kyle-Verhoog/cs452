@@ -11,9 +11,9 @@ typedef struct CircularBuffer {
 
 } CircularBuffer;
 
-void init_circularBuffer(CircularBuffer *buffer);
-void push_circularBuffer(CircularBuffer *buffer, unsigned int val);
-unsigned int top_circularBuffer(CircularBuffer *buffer);
-void pop_circularBuffer(CircularBuffer *buffer);
+void init_circularBuffer(volatile CircularBuffer *buffer);
+void push_circularBuffer(volatile CircularBuffer *buffer, unsigned int val);
+unsigned int top_circularBuffer(volatile CircularBuffer *buffer);
+void pop_circularBuffer(volatile CircularBuffer *buffer);
 
 #endif /* CIRCULAR_BUFFER_H */

@@ -69,7 +69,7 @@ int bwsetspeed( int channel, int speed ) {
 }
 
 int bwputc( int channel, char c ) {
-  int *flags, *data;
+  volatile int *flags, *data;
   switch( channel ) {
   case COM1:
     flags = (int *)( UART1_BASE + UART_FLAG_OFFSET );
@@ -104,13 +104,13 @@ int bwputx( int channel, char c ) {
 
 int bwputr( int channel, unsigned int reg ) {
   int byte;
-  char *ch = (char *) &reg;
+  volatile char *ch = (char *) &reg;
 
   for( byte = 3; byte >= 0; byte-- ) bwputx( channel, ch[byte] );
   return bwputc( channel, ' ' );
 }
 
-int bwputstr( int channel, const char *str ) {
+int bwputstr( int channel, const volatile char *str ) {
   while( *str ) {
     if( bwputc( channel, *str ) < 0 ) return -1;
     str++;
@@ -156,9 +156,9 @@ int bwa2d( char ch ) {
   return -1;
 }
 
-char bwa2i( char ch, const char **src, int base, int *nump ) {
+char bwa2i( char ch, const volatile char **src, int base, int *nump ) {
   int num, digit;
-  const char *p;
+  const volatile char *p;
 
   p = *src;
   num = 0;
@@ -172,7 +172,7 @@ char bwa2i( char ch, const char **src, int base, int *nump ) {
   return ch;
 }
 
-void bwui2a( unsigned int num, unsigned int base, char *bf ) {
+void bwui2a( unsigned int num, unsigned int base, volatile char *bf ) {
   int n = 0;
   int dgt;
   unsigned int d = 1;
@@ -190,7 +190,7 @@ void bwui2a( unsigned int num, unsigned int base, char *bf ) {
   *bf = 0;
 }
 
-void bwi2a( int num, char *bf ) {
+void bwi2a( int num, volatile char *bf ) {
   if( num < 0 ) {
     num = -num;
     *bf++ = '-';
@@ -198,7 +198,7 @@ void bwi2a( int num, char *bf ) {
   bwui2a( num, 10, bf );
 }
 
-void bwformat ( int channel, const char *fmt, va_list va ) {
+void bwformat ( int channel, const volatile char *fmt, va_list va ) {
   char bf[12];
   char ch, lz;
   int w;
@@ -257,7 +257,7 @@ void bwformat ( int channel, const char *fmt, va_list va ) {
   }
 }
 
-void bwprintf( int channel, const char *fmt, ... ) {
+void bwprintf( int channel, const volatile char *fmt, ... ) {
   va_list va;
 
   va_start(va,fmt);

@@ -8,7 +8,7 @@
 #define PQ_ENOTFOUND 1
 #define PQ_EMPTY     2
 
-typedef struct priority_queue {
+typedef volatile struct priority_queue {
   task_queue pqs[NUM_PRIORITIES];
   int size;
   int state;
