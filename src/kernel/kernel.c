@@ -117,6 +117,8 @@ TaskRequest activate(TaskDescriptor* td) {
   //Move to the user task
   REVERSE_SWI();
 
+  // TODO: to avoid corruption of r12, could we save user state onto kernel
+  //       stack?
   //AFTER USER TASK CALLS SWI (CANT USE FP)
   asm("KERNEL_ENTRY:");
   //Change to System mode

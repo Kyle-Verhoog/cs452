@@ -109,4 +109,4 @@ format:
 
 MKDIR_P ?= mkdir -p
 PANDOC = pandoc
-PANDOC_FLAGS=--metadata date="`date +'%b %d, %Y'`"
+PANDOC_FLAGS=--metadata date="`date +'%b %d, %Y'`" --toc

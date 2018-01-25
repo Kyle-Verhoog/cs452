@@ -2,22 +2,34 @@ Kernel 1 Specs - Benjamin Zhao Part
 
 ## Tid
 
-Tids are the unique identifiers for tasks tracked as unsigned ints. Every task has a unique Tid, and currently all zombie tasks return the Tid upon exiting. Tids are identified by a version number indentified by the upper 16 bits, and an id by the last 16 bits. All tids start at version 0.
+Tids are the unique identifiers for tasks tracked as unsigned 32-bit integers. Every task has a unique tid, and currently all zombie tasks return the rid upon exiting. The upper 16 bits of the tid represent a version number and the lower 16 bits represent an id. All tids start at version 0.
+
+For example, tid `0x0000|0001` represents a task with id `1` and version `0`.
 
 ```
 Tid: 0x 0000 | 0001
 ```
 
-We can mask the upper bits to obtain the id: Tid_id = Tid & 0xffff
-We can mask the lower bits and shift to obtain the version: Tid_ver = (Tid >> 16) & 0xffff
+We can mask the lower bits to obtain the id: `Tid_id = Tid & 0xffff`
+We can shift the upper bits and mask to obtain the version: `Tid_ver = (Tid >> 16) & 0xffff`
 
 ## TidTracker
 
-The TidTracker is a distributer which distributes unique Tids upon request. The tids are pre-generated when the kernel starts running.  Tids are re-used (with an incremented version) when a task exits and the Tid is returned to the distributer for re-use. When the distributer runs out of Tids, likely either two things have happened:
+The TidTracker is a distributer which distributes unique tids upon request. The
+tids are pre-generated when the kernel starts running. Tids are re-used (with
+an incremented version) when a task exits and the Tid is returned to the
+distributer for re-use. When the distributer runs out of tids, likely either
+two things have happened:
 - All tids are in use
-- The use of a Tid has exceeded 2^16 re-issues in which an overflow may cause undefined behaviours
+- The use of a tid has exceeded $$2^16$$ re-issues in which an overflow may cause
+  undefined behaviours
 
-The TidTracker uses a circular buffer, prefilled with some maximum number of Tids allowed to be allocated to tasks at once. When a task is created, the kernel requests for a Tid using tt_get() from the TidTracker. The tracker then takes the first tid from the queue, pops it and gives it to the kernel. When the task exits, the kernel calls tt_return to return the tid to the tracker. The tracker appends 1 << 16 to the tid, and inserts to the end of the buffer.
+The TidTracker uses a circular buffer, prefilled with some maximum number of
+Tids allowed to be allocated to tasks at once. When a task is created, the
+kernel requests for a Tid using tt_get() from the TidTracker. The tracker then
+takes the first tid from the queue, pops it and gives it to the kernel. When
+the task exits, the kernel calls tt_return to return the tid to the tracker.
+The tracker appends 1 << 16 to the tid, and inserts to the end of the buffer.
 
 ```
 int tid = tt_get(&tid_tracker);
@@ -45,7 +57,8 @@ void pop_circularBuffer(CircularBuffer *buffer);
 
 A context switch is the action of changing between user tasks and kernel. A task can give up control and return to the kernel through system calls. It is the kernel's job to ensure that the task cleanly changes back to kernel state by saving its states onto the user task stack. A kernel will give up control once it has handled any syscalls that have been made by a previous task and resumes the next highest priority task through scheduling. The kernel must preserve the state of itself and restore any states the active task may have.
 
-The activate function does the following (Kernel -> User):
+The `activate` function does the following (Kernel -> User):
+
 ```
  //Store Kernel State
   PUSH_STACK("r0-r12, lr");
@@ -116,6 +129,8 @@ The activate function runs a set of inline assembly macros which perform the sav
 ## Syscalls
 
 The kernel supports the following syscalls:
+
+- Assert - Invoked via `assert` provides a method of testing conditions in tasks
 - Create - Creates another task to be put on the kernel's task schedule
 - Get Tid - Get the task's tid
 - Get Parent Tid - Get the parent's task tid

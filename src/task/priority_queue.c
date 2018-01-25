@@ -40,7 +40,7 @@ int pq_pop(priority_queue *pq, TaskDescriptor **t) {
   p = 31 - __builtin_clz(pq->state);
   task_queue *tq = &pq->pqs[p];
 
-  if ((ret = tq_pop(&pq->pqs[p], t)) != 0)
+  if ((ret = tq_pop(tq, t)) != 0)
     return ret;
 
   if (tq->size == 0)
