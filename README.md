@@ -1,8 +1,11 @@
 # Benjamin Zhao and Kyle Verhoog's CS452 Kernel Monorepo
 
+
 # NOTE TO TAs:
-*Our kernel 1 submission is in a branch kernel1*
-*The kernel 1 doc is located at docs/k1.pdf.*
+**Our kernel 1 submission is in a branch: kernel1**
+
+**The kernel 1 doc is located at docs/k1.pdf.**
+
 
 ## Documentation 
 The documentation is written in Markdown and generated using `pandoc`. To
