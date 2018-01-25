@@ -35,7 +35,7 @@ typedef enum TaskRequest {
   ASSERT = 6,
 } TaskRequest;
 
-typedef volatile struct TaskDescriptor {
+typedef struct TaskDescriptor {
   int  tid; //Task id
 
   uint32_t  sp;   //stack pointer
@@ -46,8 +46,8 @@ typedef volatile struct TaskDescriptor {
   void* task; //Function pointer
   TaskStatus status;  //Task status
 
-  volatile struct TaskDescriptor *parent; //Parent task
-  volatile struct TaskDescriptor *next;
+  struct TaskDescriptor *parent; //Parent task
+  struct TaskDescriptor *next;
   int priority;
 
   uint32_t ret; //Return value
@@ -57,13 +57,13 @@ typedef struct TidTracker {
   CircularBuffer cb;
 } TidTracker;
 
-void tt_init(volatile TidTracker *tt);
-int tt_get(volatile TidTracker *tt);
-void tt_return(int tid, volatile TidTracker *tt);
+void tt_init(TidTracker *tt);
+int tt_get(TidTracker *tt);
+void tt_return(int tid, TidTracker *tt);
 
 /**
  * Initialize a task descriptor to be uninitialized.
  */
-void td_init(volatile TaskDescriptor *td);
+void td_init(TaskDescriptor *td);
 
 #endif /* TASK_H */
