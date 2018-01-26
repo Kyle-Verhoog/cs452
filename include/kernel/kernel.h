@@ -1,8 +1,8 @@
 #ifndef KERNEL_H
 #define KERNEL_H
 
-#include <bwio.h>
 #include <defines.h>
+#include <bwio.h>
 #include <system.h>
 #include <ts7200.h>
 #include <asm.h>
@@ -21,23 +21,20 @@
 //Debug - set DEBUG through the gcc option (-D DEBUG)
 #include <debug.h>
 
+#include <kernel/handlers/msg.h>
 
-//Kernel Defines
-#define KERNEL_ENTRY 0x28
-
-#define KERNEL_STACK_BASE 0x01000000 //0x01000000
-//#define KERNEL_STACK_BASE 0x01000000 //0x01000000
-
-#define USER_STACK_BASE 0x02000000
-#define USER_STACK_SIZE 0x100000  //1 MB User stacks
-
-//Kernel Modes
-#define USER_MODE 16
-#define KERNEL_MODE 19
-#define SYSTEM_MODE 31
 
 //Bridges from C to ASM
 extern unsigned int kernel_stack_base;
 extern unsigned int user_stack_base;
+
+void send_handler(TaskDescriptor *std);
+void receive_handler(TaskDescriptor *rtd);
+
+TaskDescriptor tasks[MAX_TASK];
+TidTracker tid_tracker;
+priority_queue pq_tasks;
+int nameserver;
+
 
 #endif /* KERNEL_H */

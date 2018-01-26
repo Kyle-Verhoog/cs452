@@ -22,17 +22,24 @@ typedef enum TaskStatus { // a task is...
   BLOCKED = 2,           //  blocked, waiting for something
   UNINIT  = 3,           //  not yet initialized
   ZOMBIE  = 4,           //  dead... but still alive?
+  RCV_BL  = 5,
+  SND_BL  = 6,
+  RPL_BL  = 7,
 } TaskStatus;
 
 //Kernel Handles Task Request
 typedef enum TaskRequest {
-  PASS = 0,
-  BLOCK = 1,
-  CREATE = 2,
-  MY_TID = 3,
+  PASS          = 0,
+  BLOCK         = 1,
+  CREATE        = 2,
+  MY_TID        = 3,
   MY_PARENT_TID = 4,
-  EXIT = 5,
-  ASSERT = 6,
+  EXIT          = 5,
+  ASSERT        = 6,
+  SEND          = 7,
+  RECEIVE       = 8,
+  REPLY         = 9,
+  SET_NAMESERVER=10,
 } TaskRequest;
 
 typedef struct TaskDescriptor {
@@ -49,6 +56,8 @@ typedef struct TaskDescriptor {
   struct TaskDescriptor *parent; //Parent task
   struct TaskDescriptor *next;
   int priority;
+
+  CircularBuffer send_q;
 
   uint32_t ret; //Return value
 } TaskDescriptor;

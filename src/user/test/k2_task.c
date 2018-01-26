@@ -1,6 +1,9 @@
 #include <k2_task.h>
+#include <syscalls.h>
 
 void InitTask(){
+	bwprintf(COM2, "InitTask Start\n\r");
+
 	//Create the nameserver
 	Create(31, &NameServerTask);
 
@@ -15,7 +18,7 @@ void InitTask(){
 	int reply;
 	RPCreq req;
 	req.type = S_Close;
-	send(2, &req, sizeof(RPCreq), &reply, sizeof(int));	
+	Send(2, &req, sizeof(RPCreq), &reply, sizeof(int));	
 
 	Exit();
 }
@@ -54,6 +57,7 @@ void RPCSignup(CircularBuffer *cb, RPCmatch* match, int requestor){
 	push_circularBuffer(cb, requestor);
 
 	if(cb->size >= 2 && match->ready != true){
+		bwprintf(COM2, "Match is readying!\n\r");
 		match->tidOne = top_circularBuffer(cb);
 		pop_circularBuffer(cb);
 		match->tidTwo = top_circularBuffer(cb);
@@ -61,8 +65,9 @@ void RPCSignup(CircularBuffer *cb, RPCmatch* match, int requestor){
 		match->ready = true;
 
 		//Reply to our waiting players
-		reply(match->tidOne, &match->tidTwo, sizeof(int));
-		reply(match->tidTwo, &match->tidOne, sizeof(int));
+		Reply(match->tidOne, &match->tidTwo, sizeof(int));
+		Reply(match->tidTwo, &match->tidOne, sizeof(int));
+		bwprintf(COM2, "Match is ready!\n\r");
 	}
 }
 
@@ -95,8 +100,8 @@ void RPCPlay(RPCmatch* match, int playerTid, RPCmove move){
 				res.gameResult = Tie;
 				break;
 		}
-		reply(match->tidOne, &res, sizeof(RPCresult));	
-		reply(match->tidTwo, &res, sizeof(RPCresult));
+		Reply(match->tidOne, &res, sizeof(RPCresult));	
+		Reply(match->tidTwo, &res, sizeof(RPCresult));
 		ResetMatch(match);
 	}
 }
@@ -107,23 +112,27 @@ void RPCQuit(RPCmatch *match, int playerTid){
 	res.playerOfFocus = playerTid;
 
 	//notify players and early out
-	reply(match->tidOne, &res, sizeof(RPCresult));
-	reply(match->tidTwo, &res, sizeof(RPCresult));
+	Reply(match->tidOne, &res, sizeof(RPCresult));
+	Reply(match->tidTwo, &res, sizeof(RPCresult));
 
 	ResetMatch(match);
 }
 
 void RPCClient(){
+	bwprintf(COM2, "RPCClient Start\n\r");
+
 	RPCreq req;
 	RPCresult result;
 
 	int replyOne;
 	req.type = S_Signup;
-	send(2, &req, sizeof(RPCreq), &replyOne, sizeof(int));
+	Send(2, &req, sizeof(RPCreq), &replyOne, sizeof(int));
+
+	bwprintf(COM2, "I AM READY\n\r");
 
 	req.type = S_Play;
 	req.move = MyTid() % 3;
-	send(2, &req, sizeof(RPCreq), &result, sizeof(RPCresult));
+	Send(2, &req, sizeof(RPCreq), &result, sizeof(RPCresult));
 
 	bwprintf(COM2, "Winner %x\n\r", result.playerOfFocus);
 
@@ -131,6 +140,7 @@ void RPCClient(){
 }
 
 void RPCServer(){
+	bwprintf(COM2, "RPCServer Start\n\r");
 	int finish = false;
 	CircularBuffer cb;
 	RPCmatch match;	//currently on-going match
@@ -142,21 +152,23 @@ void RPCServer(){
 		RPCreq request;
 
 		//wait for input
-		receive(&requestor, &request, sizeof(RPCreq));
+		Receive(&requestor, &request, sizeof(RPCreq));
 
 		switch(request.type){
 			case S_Signup:
+				bwprintf(COM2, "Signed Up\n\r");
 				RPCSignup(&cb, &match, requestor);
 				break;
 			case S_Play:
 				RPCPlay(&match, requestor, request.move);
+				bwprintf(COM2, "Play\n\r");
 				break;
 			case S_Quit:
 				RPCQuit(&match, requestor);
 				break;
 			case S_Close:
 				finish = true;
-				reply(requestor, &finish, sizeof(int));
+				Reply(requestor, &finish, sizeof(int));
 				break;
 			default:
 				assert(0);

@@ -19,6 +19,14 @@ int MyTid();
 
 int MyParentTid();
 
+int Send(int tid, void *msg, int msg_len, void *reply, int reply_len);
+
+int Receive(int *tid, void *msg, int msg_len);
+
+int Reply(int tid, void *reply, int reply_len);
+
+void Halt();
+
 void Exit();
 
 #ifdef KDEBUG

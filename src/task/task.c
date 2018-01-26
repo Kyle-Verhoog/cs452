@@ -24,7 +24,7 @@ void tt_return(int tid,  TidTracker *tt) {
   push_circularBuffer(&tt->cb, tid);
 }
 
-void td_init( TaskDescriptor *td) {
+void td_init(TaskDescriptor *td) {
   td->tid = 0;
   td->sp =  0;
   td->psr = 0;
@@ -33,6 +33,7 @@ void td_init( TaskDescriptor *td) {
   td->stack_base = 0;
   td->parent = NULL;
   td->priority = 1;
+  init_circularBuffer(&td->send_q);
 }
 
 /**
