@@ -9,7 +9,7 @@ void tt_init( TidTracker *tt) {
   }
 }
 
-int tt_get( TidTracker *tt) {
+int tt_get(TidTracker *tt) {
   if(tt->cb.buffer_end == tt->cb.buffer_start) {
     return -2;
   }
@@ -22,6 +22,10 @@ void tt_return(int tid,  TidTracker *tt) {
   tid += (1 << 16);
 
   push_circularBuffer(&tt->cb, tid);
+}
+
+int tt_size(TidTracker *tt) {
+  return (tt->cb).size;
 }
 
 void td_init(TaskDescriptor *td) {

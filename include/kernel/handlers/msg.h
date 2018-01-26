@@ -5,7 +5,6 @@
 
 void send_handler(TaskDescriptor *std);
 
-
 void receive_handler(TaskDescriptor *rtd);
 
 void reply_handler(TaskDescriptor *rtd);
