@@ -29,8 +29,12 @@ void Halt();
 
 void Exit();
 
-#ifdef KDEBUG
-#define assert(exp)                                      \
+void RegisterNS();
+
+int GetNS();
+
+#ifdef DEBUG
+#define assert(exp)                                    \
   do {                                                 \
     if (__predict_false(!(exp))) {                     \
       bwprintf(                                        \

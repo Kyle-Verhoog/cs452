@@ -58,20 +58,24 @@ void Halt() {
 
 int Send(int tid, void *msg, int msg_len, void *reply, int reply_len) {
   asm("swi #7;");
-  return 0;
+  return 0; // TODO
 }
 
 int Receive(int *tid, void *msg, int msg_len) {
   asm("swi #8;");
-  return 0;
+  return 0; // TODO
 }
 
 int Reply(int tid, void *reply, int reply_len) {
   asm("swi #9;");
-  return 0;
+  return 0; // TODO
 }
 
-void SetAsNameServer(){
+void RegisterNS() {
   asm("swi #10;");
+}
+
+int GetNS() {
+  asm("swi #11;");
 }
 

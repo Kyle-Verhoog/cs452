@@ -22,6 +22,7 @@
 #include <debug.h>
 
 #include <kernel/handlers/msg.h>
+#include <kernel/handlers/nameserver.h>
 
 
 //Bridges from C to ASM
@@ -34,7 +35,6 @@ void receive_handler(TaskDescriptor *rtd);
 TaskDescriptor tasks[MAX_TASK];
 TidTracker tid_tracker;
 priority_queue pq_tasks;
-int nameserver;
 
 
 #endif /* KERNEL_H */

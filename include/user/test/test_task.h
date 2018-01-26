@@ -2,6 +2,7 @@
 #define TEST_TASKS_H
 
 #include <kernel/syscalls.h>
+#include <user/nameserver.h>
 #include <user/test/k1_task.h>
 #include <user/test/messaging.h>
 

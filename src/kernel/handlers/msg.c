@@ -156,8 +156,3 @@ void reply_handler(TaskDescriptor *rtd) {
   rtd->status = READY;
   pq_push(&pq_tasks, rtd->priority, rtd);
 }
-
-
-void set_nameserver_handler(TaskDescriptor *ns){
-  nameserver = ns->tid;
-}

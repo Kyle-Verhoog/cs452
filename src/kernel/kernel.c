@@ -218,8 +218,14 @@ void handle(TaskDescriptor *td, TaskRequest req) {
   case REPLY:
     reply_handler(td);
     break;
-  case SET_NAMESERVER:
-    
+  case NS_REG:
+    ns_register(td);
+    pq_push(&pq_tasks, td->priority, td);
+    break;
+  case NS_GET:
+    ns_get(td);
+    pq_push(&pq_tasks, td->priority, td);
+    break;
   case EXIT:
     // TODO: uninitialize the task descriptor
     td->status = ZOMBIE;

@@ -17,11 +17,11 @@
 #define MAX_TASK 16
 
 typedef enum TaskStatus { // a task is...
-  ACTIVE  = 0,           //  active, currently running
-  READY   = 1,           //  ready to be run
-  BLOCKED = 2,           //  blocked, waiting for something
-  UNINIT  = 3,           //  not yet initialized
-  ZOMBIE  = 4,           //  dead... but still alive?
+  ACTIVE  = 0,            //  active, currently running
+  READY   = 1,            //  ready to be run
+  BLOCKED = 2,            //  blocked, waiting for something
+  UNINIT  = 3,            //  not yet initialized
+  ZOMBIE  = 4,            //  dead... but still alive?
   RCV_BL  = 5,
   SND_BL  = 6,
   RPL_BL  = 7,
@@ -29,17 +29,18 @@ typedef enum TaskStatus { // a task is...
 
 //Kernel Handles Task Request
 typedef enum TaskRequest {
-  PASS          = 0,
-  BLOCK         = 1,
-  CREATE        = 2,
-  MY_TID        = 3,
-  MY_PARENT_TID = 4,
-  EXIT          = 5,
-  ASSERT        = 6,
-  SEND          = 7,
-  RECEIVE       = 8,
-  REPLY         = 9,
-  SET_NAMESERVER=10,
+  PASS           = 0,
+  BLOCK          = 1,
+  CREATE         = 2,
+  MY_TID         = 3,
+  MY_PARENT_TID  = 4,
+  EXIT           = 5,
+  ASSERT         = 6,
+  SEND           = 7,
+  RECEIVE        = 8,
+  REPLY          = 9,
+  NS_REG         = 10,
+  NS_GET         = 11
 } TaskRequest;
 
 typedef struct TaskDescriptor {

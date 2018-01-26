@@ -90,15 +90,25 @@ void DynamicPriorityTest() {
   Exit();
 }
 
+void GetNameServer() {
+  int mytid = MyTid();
+  RegisterAs(42);
+  int tid = WhoIs(42);
+  assert(mytid == tid);
+  Exit();
+}
+
 void TestTask() {
   bwprintf(COM2, "Starting Test:\n\r");
   // Create(0, &Stall);
   // Create(0, &DynamicPriorityTest);
   // Create(1, &FirstUserTask);
   // Create(0, &TestRegisters);
-  Create(0, &SimpleReceiver);
-  Create(0, &SimpleSender);
+  // Create(0, &SimpleReceiver);
   // Create(0, &SimpleSender);
+  // Create(0, &SimpleSender);
+  Create(10, &NameServerTask);
+  Create(5, &GetNameServer);
   bwprintf(COM2, "All tests completed.\n\r");
   Exit();
 }

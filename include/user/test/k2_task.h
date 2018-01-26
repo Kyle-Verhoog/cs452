@@ -2,7 +2,7 @@
 #define K2_TASK_H
 #include <bwio.h>
 #include <kernel/syscalls.h>
-#include <nameserver/nameserver.h>
+#include <user/nameserver.h>
 #include <lib/circularbuffer.h>
 
 typedef enum RPCservice{
