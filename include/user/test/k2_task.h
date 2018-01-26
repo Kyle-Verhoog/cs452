@@ -13,9 +13,10 @@ typedef enum RPCservice{
 }RPCservice;
 
 typedef enum RPCmove{
-	Rock = 0,
-	Paper = 1,
-	Scissor = 2
+	M_Rock = 0,
+	M_Paper = 1,
+	M_Scissor = 2,
+	M_Quit = 3
 }RPCmove;
 
 typedef enum RPCfinish{
@@ -49,6 +50,7 @@ typedef struct RPCresult{
 //All Tasks
 void InitTask();
 void RPCClient();
+void RPCClient2();
 void RPCServer();
 
 #endif /* K2_TASK_H */
