@@ -233,8 +233,9 @@ void handle(TaskDescriptor *td, TaskRequest req) {
 };
 
 int no_tasks() {
-  return tid_tracker.cb.size == CIRCULAR_BUFFER_SIZE;
+  return tid_tracker.cb.size == MAX_TASK;
 }
+
 
 // TODO: fix this
 // NOTE: sl register not loaded

@@ -5,7 +5,7 @@ void InitTask(){
 	bwprintf(COM2, "InitTask Start\n\r");
 
 	//Create the nameserver
-	Create(31, &NameServerTask);
+	//Create(31, &NameServerTask);
 
 	//Kick off the rpc Server
 	Create(30, &RPCServer);
@@ -13,12 +13,23 @@ void InitTask(){
 	//Create our clients
 	Create(5, &RPCClient);
 	Create(5, &RPCClient);
+	Create(5, &RPCClient);
+	Create(5, &RPCClient);
+	Create(5, &RPCClient);
+	Create(5, &RPCClient);
+	Create(5, &RPCClient);
+	Create(5, &RPCClient);
+	Create(5, &RPCClient);
+	Create(5, &RPCClient);
+
 
 	//Send to server to exit
 	int reply;
 	RPCreq req;
 	req.type = S_Close;
-	Send(2, &req, sizeof(RPCreq), &reply, sizeof(int));	
+	bwprintf(COM2, "Send Before\n\r");
+	Send(1, &req, sizeof(RPCreq), &reply, sizeof(int));	
+	bwprintf(COM2, "Send After\n\r");
 
 	Exit();
 }
@@ -126,13 +137,11 @@ void RPCClient(){
 
 	int replyOne;
 	req.type = S_Signup;
-	Send(2, &req, sizeof(RPCreq), &replyOne, sizeof(int));
-
-	bwprintf(COM2, "I AM READY\n\r");
+	Send(1, &req, sizeof(RPCreq), &replyOne, sizeof(int));
 
 	req.type = S_Play;
 	req.move = MyTid() % 3;
-	Send(2, &req, sizeof(RPCreq), &result, sizeof(RPCresult));
+	Send(1, &req, sizeof(RPCreq), &result, sizeof(RPCresult));
 
 	bwprintf(COM2, "Winner %x\n\r", result.playerOfFocus);
 
@@ -156,25 +165,23 @@ void RPCServer(){
 
 		switch(request.type){
 			case S_Signup:
-				bwprintf(COM2, "Signed Up\n\r");
 				RPCSignup(&cb, &match, requestor);
 				break;
 			case S_Play:
 				RPCPlay(&match, requestor, request.move);
-				bwprintf(COM2, "Play\n\r");
 				break;
 			case S_Quit:
 				RPCQuit(&match, requestor);
 				break;
 			case S_Close:
 				finish = true;
+				bwprintf(COM2, "Reply Before\n\r");
 				Reply(requestor, &finish, sizeof(int));
-				break;
+				bwprintf(COM2, "Reply After\n\r");
+				Exit();
 			default:
 				assert(0);
 				break;
 		}
-	}
-
-	Exit();
+	}	
 }
