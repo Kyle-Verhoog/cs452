@@ -221,7 +221,7 @@ void handle(TaskDescriptor *td, TaskRequest req) {
   case SET_NAMESERVER:
     
   case EXIT:
-    // TODO: uninitialize the task descriptor.
+    // TODO: uninitialize the task descriptor
     td->status = ZOMBIE;
     tt_return(td->tid, &tid_tracker);
     break;
@@ -232,8 +232,16 @@ void handle(TaskDescriptor *td, TaskRequest req) {
   }
 };
 
+int no_tasks() {
+  return tid_tracker.cb.size == CIRCULAR_BUFFER_SIZE;
+}
+
+// TODO: fix this
+// NOTE: sl register not loaded
+//       YOU CANNOT USE GLOBALS IN MAIN
 __attribute__((naked)) void main(void) {
   KERNEL_INIT();
+
   asm(
     "ldr r3, =KERNEL_ENTRY;"
     "mov r4, #"STR(KERNEL_ENTRY)";"
@@ -241,11 +249,14 @@ __attribute__((naked)) void main(void) {
   );
 
   initialize();
+
   while (true) {
     //get a task from scheduler
     TaskDescriptor* td = schedule();
 
-    if (!td) break;
+    if (!td && no_tasks()) break;
+
+    if (!td) continue;
 
     //activate task
     TaskRequest req = activate(td);

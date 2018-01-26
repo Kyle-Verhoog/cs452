@@ -98,8 +98,7 @@ void TestTask() {
   // Create(0, &TestRegisters);
   Create(0, &SimpleReceiver);
   Create(0, &SimpleSender);
-  Create(0, &SimpleSender);
-  Create(0, &SimpleSender);
+  // Create(0, &SimpleSender);
   bwprintf(COM2, "All tests completed.\n\r");
   Exit();
 }

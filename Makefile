@@ -65,11 +65,14 @@ test: LDFLAGS = $(TEST_LDFLAGS)
 test: clean $(BUILD_DIR)/$(TEST_EXEC)
 	./$(BUILD_DIR)/$(TEST_EXEC)
 
+o2: CFLAGS += -O2
+
 debug: CFLAGS += -DDEBUG
 debug: all
 
 ktest: CFLAGS += -DKTEST -DDEBUG
 ktest: all
+
 
 $(BUILD_DIR)/$(TEST_EXEC): $(TEST_OBJS)
 	@$(LD) $(LDFLAGS) -o $@ $(TEST_OBJS)
@@ -108,7 +111,7 @@ copy:
 format:
 	$(ASTYLE) --options=.astylerc "src/*.c"  "include/*.h"
 
-.PHONY: clean hashes docs test format
+.PHONY: clean hashes docs test format o2
 
 -include $(DEPS)
 # test: -include $(TEST_DEPS)

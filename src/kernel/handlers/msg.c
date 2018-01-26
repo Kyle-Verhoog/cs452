@@ -121,9 +121,9 @@ void receive_handler(TaskDescriptor *rtd) {
 
 
 void reply_handler(TaskDescriptor *rtd) {
-  // reply is copied from receiver to sender
-  // sender's state is set to ready
-  // receiver's state is set to ready
+  // 1. reply is copied from receiver to sender
+  // 2. sender's state is set to ready
+  // 3. receiver's state is set to ready
 
   int i, stid;
   void *rreply, *sreply;
@@ -138,7 +138,10 @@ void reply_handler(TaskDescriptor *rtd) {
   KASSERT(IS_VALID_USER_P(rtd->tid, rreply));
   KASSERT(msg_len > 0 && msg_len < 5000);
 
+  // load the reply arg from sender
   TaskDescriptor *std = &(tasks[stid]);
+  asm("ldr %0, [%1, #16];":"=r"(sreply):"r"(std->sp));
+  KASSERT(IS_VALID_USER_P(std->tid, sreply));
 
   // 1.
   for (i = 0; i < msg_len; i++) {
@@ -147,7 +150,11 @@ void reply_handler(TaskDescriptor *rtd) {
 
   // 2.
   std->status = READY;
+  pq_push(&pq_tasks, std->priority, std);
+
+  // 3.
   rtd->status = READY;
+  pq_push(&pq_tasks, rtd->priority, rtd);
 }
 
 

@@ -69,6 +69,7 @@ typedef struct TidTracker {
 void tt_init(TidTracker *tt);
 int tt_get(TidTracker *tt);
 void tt_return(int tid, TidTracker *tt);
+int tt_size(TidTracker *tt);
 
 /**
  * Initialize a task descriptor to be uninitialized.
