@@ -9,6 +9,7 @@ int main(void) {
   circular_buffer_tests();
   task_queue_tests();
   priority_queue_tests();
+  nameserver_tests();
   printf("✓✓✓ ALL TESTS PASSED ✓✓✓\n\n");
   return 0;
 }

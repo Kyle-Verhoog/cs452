@@ -47,7 +47,7 @@ TEST_DEPS := $(TEST_OBJS:.o=.d)
 INC_DIRS  := $(shell find $(SRC_DIRS) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
-ARM_CFLAGS   = -c -fPIC -Wall -I. $(INC_FLAGS) -mcpu=arm920t -msoft-float -MMD -MP
+ARM_CFLAGS   = -c -fPIC -Wall -I. $(INC_FLAGS) -mcpu=arm920t -msoft-float -MMD -MP $(DFLAGS)
 ARM_LDFLAGS  = -init main -Map $(TARGET_MAP) -N -T $(LINKER_SCRIPT) -L$(GNU_COWAN)/lib/gcc/arm-elf/4.0.2 -L./lib
 TEST_CFLAGS  = -Wall -I. $(INC_FLAGS)
 TEST_LDFLAGS =
@@ -103,7 +103,7 @@ clean:
 	$(RM) -r $(BUILD_DIR)
 
 copy:
-	$(MAKE) clean && $(MAKE) && $(CP) $(BUILD_DIR)/$(TARGET_ELF) $(ARM_DIR)/$(USER)
+	$(CP) $(BUILD_DIR)/$(TARGET_ELF) $(ARM_DIR)/$(USER)
 
 format:
 	$(ASTYLE) --options=.astylerc "src/*.c"  "include/*.h"

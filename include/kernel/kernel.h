@@ -8,6 +8,7 @@
 #include <asm.h>
 #include <kernel_task.h>
 #include <user/test/k1_task.h>
+#include <user/test/k2_task.h>
 
 #ifdef KTEST
 #include <user/test/test_task.h>

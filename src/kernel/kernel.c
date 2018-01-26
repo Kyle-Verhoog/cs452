@@ -60,7 +60,8 @@ void initialize() {
   task = &TestTask;
 #else
   priority = 3;
-  task = &FirstUserTask;
+  //task = &InitTask;
+  task=&FirstUserTask;
 #endif
 
   int tid = tt_get(&tid_tracker);
