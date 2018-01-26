@@ -1,6 +1,5 @@
 #include <user/test/test_task.h>
 
-
 void Stall() {
   int stallTime = 10000;
   int i;
@@ -93,10 +92,14 @@ void DynamicPriorityTest() {
 
 void TestTask() {
   bwprintf(COM2, "Starting Test:\n\r");
-  Create(0, &Stall);
-  Create(0, &DynamicPriorityTest);
-  Create(1, &FirstUserTask);
-  Create(0, &TestRegisters);
+  // Create(0, &Stall);
+  // Create(0, &DynamicPriorityTest);
+  // Create(1, &FirstUserTask);
+  // Create(0, &TestRegisters);
+  Create(0, &SimpleReceiver);
+  Create(0, &SimpleSender);
+  Create(0, &SimpleSender);
+  Create(0, &SimpleSender);
   bwprintf(COM2, "All tests completed.\n\r");
   Exit();
 }

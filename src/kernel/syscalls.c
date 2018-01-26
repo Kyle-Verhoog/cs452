@@ -4,12 +4,6 @@
  * SysCalls (TODO: PASS ENUM LITERAL)
  */
 
-void Assert() {
-  asm (
-    "swi #6;"
-  );
-}
-
 void Pass() {
   asm (
     "swi #0;"
@@ -51,7 +45,29 @@ int MyParentTid() {
 }
 
 void Exit() {
-  asm (
-    "swi #5;"
-  );
+  asm("swi #5;");
 }
+
+void Assert() {
+  asm("swi #6;");
+}
+
+void Halt() {
+  asm("swi #6;");
+}
+
+int Send(int tid, void *msg, int msg_len, void *reply, int reply_len) {
+  asm("swi #7;");
+  return 0;
+}
+
+int Receive(int *tid, void *msg, int msg_len) {
+  asm("swi #8;");
+  return 0;
+}
+
+int Reply(int tid, void *reply, int reply_len) {
+  asm("swi #9;");
+  return 0;
+}
+

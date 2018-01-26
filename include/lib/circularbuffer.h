@@ -8,6 +8,7 @@ typedef struct CircularBuffer {
   unsigned int buffer[CIRCULAR_BUFFER_SIZE];
   unsigned int buffer_start;
   unsigned int buffer_end;
+  int size;
 
 } CircularBuffer;
 

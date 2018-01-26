@@ -59,4 +59,18 @@
 #define DBLOG_START(fmt, ...) {}
 #endif
 
+
+#ifdef DEBUG
+#define IS_VALID_USER_P(tid, sp) (sp >= ((USER_STACK_BASE - ((tid & 0xffff)+1)*USER_STACK_SIZE)) && sp <= (USER_STACK_BASE - ((tid & 0xffff)*USER_STACK_SIZE)))
+#else
+#define IS_VALID_USER_P(tid, sp)
+#endif
+
+#ifdef DEBUG
+#define IS_VALID_ID(tid) (tid >= 0 && tid < MAX_TASK)
+#else
+#define IS_VALID_ID(tid)
+#endif
+
+
 #endif /* DEBUG_H */

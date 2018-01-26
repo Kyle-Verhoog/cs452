@@ -1,12 +1,5 @@
 #include <kernel.h>
 
-// TODO move to main?
-//uint32_t active_task.psr_temp; //Used as a active_task.psr_temp to set CPSR
-TaskDescriptor tasks[MAX_TASK];
-TidTracker tid_tracker;
-priority_queue pq_tasks;
-
-
 /**
  * Saves the old SP to the new kernel stack and sets SP to the kernel stack.
  */
@@ -41,11 +34,18 @@ unsigned int user_stack_base = USER_STACK_BASE;
 void initialize() {
   SANITY();
   DBLOG_INIT("Initializing", "");
+  /*
   asm(
     "ldr r3, =KERNEL_ENTRY;"
     "mov r4, #"STR(KERNEL_ENTRY)";"
     "str r3, [r4];"
   );
+  */
+
+  int i;
+  for (i = 0; i < MAX_TASK; i++) {
+    td_init(&tasks[i]);
+  }
 
   DBLOG_START("init task queue", "");
   tt_init(&tid_tracker);
@@ -150,7 +150,7 @@ TaskRequest activate(TaskDescriptor* td) {
   POP_STACK("lr");
 }
 
-void create( TaskDescriptor *td) {
+void create(TaskDescriptor *td) {
   //Get the arguments r0 (priority) r1 (function pointer)
   int tid = tt_get(&tid_tracker);
   int priority;
@@ -173,7 +173,7 @@ void create( TaskDescriptor *td) {
   }
 }
 
-void get_tid( TaskDescriptor *td) {
+void get_tid(TaskDescriptor *td) {
   td->ret = td->tid;
 }
 
@@ -185,7 +185,7 @@ void get_parentTid( TaskDescriptor *td) {
   td->ret = td->parent ? td->parent->tid : -1;
 }
 
-void handle( TaskDescriptor *td, TaskRequest req) {
+void handle(TaskDescriptor *td, TaskRequest req) {
   switch (req) {
   case ASSERT:
     KABORT();
@@ -209,12 +209,22 @@ void handle( TaskDescriptor *td, TaskRequest req) {
     get_parentTid(td);
     pq_push(&pq_tasks, td->priority, td);
     break;
+  case SEND:
+    send_handler(td);
+    break;
+  case RECEIVE:
+    receive_handler(td);
+    break;
+  case REPLY:
+    reply_handler(td);
+    break;
   case EXIT:
+    // TODO: uninitialize the task descriptor.
     td->status = ZOMBIE;
     tt_return(td->tid, &tid_tracker);
     break;
   default:
-    KASSERT(false);
+    KASSERT(false && "UNDEFINED SWI PARAM");
     pq_push(&pq_tasks, td->priority, td);
     break;
   }
@@ -222,6 +232,11 @@ void handle( TaskDescriptor *td, TaskRequest req) {
 
 __attribute__((naked)) void main(void) {
   KERNEL_INIT();
+  asm(
+    "ldr r3, =KERNEL_ENTRY;"
+    "mov r4, #"STR(KERNEL_ENTRY)";"
+    "str r3, [r4];"
+  );
 
   initialize();
   while (true) {
@@ -239,3 +254,5 @@ __attribute__((naked)) void main(void) {
 
   KERNEL_EXIT();
 }
+
+
