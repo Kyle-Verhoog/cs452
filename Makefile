@@ -23,7 +23,7 @@ TEST_DIR  ?= src/test
 SRC_DIRS ?= src include
 MD5_OUT  ?= $(BUILD_DIR)/md5_hashes.txt
 
-TARGET     ?= a1
+TARGET     ?= kernel2
 TARGET_ELF ?= $(TARGET).elf
 TARGET_MAP ?= $(BUILD_DIR)/$(TARGET).map
 TEST_EXEC  ?= tests

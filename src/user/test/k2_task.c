@@ -153,7 +153,8 @@ void RPCQuit(RPCmatch *match, int playerTid){
 void RPCClient(){
 	RPCreq req;
 	RPCresult result;
-	int tid = MyTid();
+	Pass();
+
 	int serverTid = WhoIs(RPC_SERVER_NAME);
 
 	int replyOne;

@@ -26,5 +26,6 @@ int RegisterAs(int n);
 int WhoIs(int n);
 
 void NameServerTask();
+void StopNameServer();
 
 #endif /*NAMESERVER_H*/

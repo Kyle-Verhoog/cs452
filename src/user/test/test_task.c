@@ -95,6 +95,8 @@ void GetNameServer() {
   RegisterAs(42);
   int tid = WhoIs(42);
   assert(mytid == tid);
+  (void)mytid;
+  (void)tid;
   Exit();
 }
 
