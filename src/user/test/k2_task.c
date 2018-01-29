@@ -24,7 +24,11 @@ void InitTask(){
 		}
 	}
 
+	Create(1, &StopServer);
+	Exit();
+}
 
+void StopServer(){
 	//Send to server to exit
 	int reply;
 	RPCreq req;

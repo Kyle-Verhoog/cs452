@@ -52,5 +52,6 @@ void InitTask();
 void RPCClient();
 void RPCClient2();
 void RPCServer();
+void StopServer();
 
 #endif /* K2_TASK_H */
