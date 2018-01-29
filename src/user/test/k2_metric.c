@@ -7,18 +7,14 @@
 //Tid 2 = Sender
 //##NO NAMESERVER##
 
+volatile int *rt4_low, *rt4_high;
+
 void K2InitMetricTask(){
-	//Start up timer
-	volatile int *rt4_low, *rt4_high;
+	//Setup Timer
 	rt4_low = (int*)(TIMER4_LOW);
 	rt4_high = (int*)(TIMER4_HIGH);
 	*rt4_high = (int)TIMER4_ENABLE_MASK;
 
-	int dbug_ti = *rt4_low;
-	int dbug_tc = 0;
-	int dbug_max = 0;
-
-	//** Timer is going to capture Creation of two tasks **//
 	//Create Reciever
 	#ifdef METRIC_64
 	Create(30, &Receiver64);
@@ -33,9 +29,6 @@ void K2InitMetricTask(){
 	Create(31, &Sender4);
 	#endif
 	
-	//Read timer
-	dbug_tc = *rt4_low;
-	bwprintf(COM2, "Total: %d\n\r", (dbug_tc - dbug_ti)/NUM_SENDS);
 	Exit();
 }
 
@@ -43,11 +36,21 @@ void Sender4(){
 	int req = 0;
 	int reply;
 
+	int dbug_ti;
+	int dbug_tc;
+	int dbug_max = 0;
+
 	int i;
 	for(i = 0; i < NUM_SENDS; i++){
+		dbug_ti = *rt4_low;
 		Send(1, &req, sizeof(int), &reply, sizeof(int));	
+		dbug_tc = *rt4_low;
+		if(dbug_max < (dbug_tc - dbug_ti)){
+			dbug_max = dbug_tc - dbug_ti;
+		}
 	}
 
+	bwprintf(COM2, "Worst Time: %d\n\r", dbug_max);
 	Exit();
 }
 
@@ -69,10 +72,21 @@ void Sender64(){
 	char req[64] = STRING_64;
 	char reply[64];
 
+	int dbug_ti;
+	int dbug_tc;
+	int dbug_max = 0;
+
 	int i;
 	for(i = 0; i < NUM_SENDS; i++){
+		dbug_ti = *rt4_low;
 		Send(1, &req, 64, &reply, 64);	
+		dbug_tc = *rt4_low;
+		if(dbug_max < (dbug_tc - dbug_ti)){
+			dbug_max = dbug_tc - dbug_ti;
+		}
 	}
+
+	bwprintf(COM2, "Worst Time: %d\n\r", dbug_max);
 
 	Exit();
 }
