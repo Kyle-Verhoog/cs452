@@ -6,7 +6,8 @@
 
 typedef enum NSservice {
 	WhoIs_t = 0,
-	RegisterAs_t = 1
+	RegisterAs_t = 1,
+	Stop_t = 2
 } NSservice;
 
 typedef struct NSrecord {

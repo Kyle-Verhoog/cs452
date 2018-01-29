@@ -20,6 +20,9 @@ void NameServerTask() {
         NameServer[request.name].tid = requestor; // request.tid;
         Reply(requestor, &NameServer[request.name].tid, sizeof(int));
         break;
+      case Stop_t:
+        Reply(requestor, &requestor, sizeof(int));
+        Exit();
       default:
         assert(0);
         break;
@@ -55,4 +58,14 @@ int WhoIs(int n) {
   Send(ns_tid, &rec, sizeof(NSreq), &reply, sizeof(NSrecord));
 
   return reply;
+}
+
+void StopNameServer(){
+  int ns_tid = GetNS();
+
+  NSreq rec;
+  rec.type = Stop_t;
+
+  int reply;
+  Send(ns_tid, &rec, sizeof(NSreq), &reply, sizeof(int));
 }

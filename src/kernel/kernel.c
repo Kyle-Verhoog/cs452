@@ -60,7 +60,13 @@ void initialize() {
   task = &TestTask;
 #else
   priority = 3;
-  task=&InitTask;
+  #ifdef METRIC_64
+    task = &K2InitMetricTask;
+  #elif METRIC_4
+    task = &K2InitMetricTask;
+  #else
+    task=&InitTask;
+  #endif
 #endif
 
   int tid = tt_get(&tid_tracker);
@@ -248,6 +254,9 @@ int no_tasks() {
 //       YOU CANNOT USE GLOBALS IN MAIN
 __attribute__((naked)) void main(void) {
   KERNEL_INIT();
+#ifdef CACHE
+  ENABLE_ALL_CACHE();
+#endif
 
   asm(
     "ldr r3, =KERNEL_ENTRY;"
@@ -271,6 +280,10 @@ __attribute__((naked)) void main(void) {
     //Handle the swi
     handle(td, req);
   }
+  
+#ifdef CACHE
+  DISABLE_ALL_CACHE();
+#endif
 
   KERNEL_EXIT();
 }

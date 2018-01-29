@@ -2,12 +2,14 @@
 #include <syscalls.h>
 #include <ts7200.h>
 
+#define RPC_SERVER_NAME 42
+
 void InitTask(){
 	bwsetfifo( COM2, OFF );
 	bwsetfifo( COM1, OFF );
 
 	//Create the nameserver
-	//Create(31, &NameServerTask);
+	Create(31, &NameServerTask);
 
 	//Kick off the rpc Server
 	Create(30, &RPCServer);
@@ -27,7 +29,12 @@ void InitTask(){
 	int reply;
 	RPCreq req;
 	req.type = S_Close;
-	Send(1, &req, sizeof(RPCreq), &reply, sizeof(int));	
+	int serverTid = WhoIs(RPC_SERVER_NAME);
+
+	Send(serverTid, &req, sizeof(RPCreq), &reply, sizeof(int));	
+
+	//Send to Nameserver to exit
+	StopNameServer();
 
 	Exit();
 }
@@ -124,8 +131,17 @@ void RPCPlay(RPCmatch* match, int playerTid, RPCmove move){
 		Reply(match->tidOne, &res, sizeof(RPCresult));	
 		Reply(match->tidTwo, &res, sizeof(RPCresult));
 
-		bwprintf(COM2, "Press Any Key to Continue: ");
-		char c = bwgetc(COM2);
+		bwprintf(COM2, "Player: %x VS. Player %x\n\r", match->tidOne, match->tidTwo);
+		bwprintf(COM2, "---------------------\n\r");
+		if(res.gameResult == Quit){
+			bwprintf(COM2, "Game End! - Player %x resigned!", res.playerOfFocus);
+		}else{
+			bwprintf(COM2, "Game End! - Player %x Won!", res.playerOfFocus);
+		}
+		bwprintf(COM2, "\n\r\n\r\n\r");
+
+		bwprintf(COM2, "Press Any Key to Continue: \n\r\n\r");
+		bwgetc(COM2);
 		ResetMatch(match);
 	}
 }
@@ -138,20 +154,15 @@ void RPCClient(){
 	RPCreq req;
 	RPCresult result;
 	int tid = MyTid();
+	int serverTid = WhoIs(RPC_SERVER_NAME);
 
 	int replyOne;
 	req.type = S_Signup;
-	Send(1, &req, sizeof(RPCreq), &replyOne, sizeof(int));
+	Send(serverTid, &req, sizeof(RPCreq), &replyOne, sizeof(int));
 
 	req.type = S_Play;
 	req.move = MyTid() % 3;
-	Send(1, &req, sizeof(RPCreq), &result, sizeof(RPCresult));
-
-	if(result.gameResult == Quit && result.playerOfFocus != tid){
-		bwprintf(COM2, "Task - %x quit on me!\n\r", result.playerOfFocus);
-	}else if(result.playerOfFocus == tid){
-		bwprintf(COM2, "I (Task - %x) Won!!\n\r", result.playerOfFocus);
-	}
+	Send(serverTid, &req, sizeof(RPCreq), &result, sizeof(RPCresult));
 
 	Exit();
 }
@@ -159,14 +170,15 @@ void RPCClient(){
 void RPCClient2(){
 	RPCreq req;
 	RPCresult result;
-	int tid = MyTid();
+	//int tid = MyTid();
+	int serverTid = WhoIs(RPC_SERVER_NAME);
 
 	int replyOne;
 	req.type = S_Signup;
-	Send(1, &req, sizeof(RPCreq), &replyOne, sizeof(int));
+	Send(serverTid, &req, sizeof(RPCreq), &replyOne, sizeof(int));
 
 	req.type = S_Quit;
-	Send(1, &req, sizeof(RPCreq), &result, sizeof(RPCresult));
+	Send(serverTid, &req, sizeof(RPCreq), &result, sizeof(RPCresult));
 
 	Exit();
 }
@@ -175,8 +187,10 @@ void RPCServer(){
 	int finish = false;
 	CircularBuffer cb;
 	RPCmatch match;	//currently on-going match
+	
 	init_circularBuffer(&cb);
 	ResetMatch(&match);
+	RegisterAs(RPC_SERVER_NAME);
 
 	while(true){
 		int requestor;
