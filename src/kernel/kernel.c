@@ -127,6 +127,8 @@ TaskRequest activate(TaskDescriptor* td) {
   //       stack?
   //AFTER USER TASK CALLS SWI (CANT USE FP)
   asm("KERNEL_ENTRY:");
+  //Save the r12 to Kernel Stack - Implicitly changed by SET_CPSR
+  PUSH_STACK("r12");
   //Change to System mode
   SET_CPSR(SYSTEM_MODE);
   //Save the user state
@@ -142,6 +144,7 @@ TaskRequest activate(TaskDescriptor* td) {
   //Change back to kernel mode
   SET_CPSR(KERNEL_MODE);
   //load the kernel stack (fp is now resuable again!)
+  asm("add sp, sp, #4");
   POP_STACK("r0-r12");
   //Change back to system mode
   SET_CPSR(SYSTEM_MODE); //Note we can still use fp!
@@ -151,6 +154,9 @@ TaskRequest activate(TaskDescriptor* td) {
   SET_CPSR(KERNEL_MODE);
   //Save the spsr to the TaskDescriptor's psr
   READ_SPSR(td->psr);
+  //Load the user's r12 and put it on user stack
+  asm("ldr r12, [sp, #-56]");
+  asm("str r12, [%0, #48]"::"r"(td->sp)); 
   // manually put swi arg in r0, avoid overhead of return
   SWI_ARG_FETCH("r0");
   POP_STACK("lr");

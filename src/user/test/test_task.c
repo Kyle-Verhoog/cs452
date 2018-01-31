@@ -65,8 +65,8 @@ void TestRegisters() {
   assert(reg == r10);
   asm("mov %0, r11":"=r"(reg):);
   assert(reg == r11);
-  // asm("mov %0, r12":"=r"(reg):);
-  // assert(reg == r12);
+  asm("mov %0, r12":"=r"(reg):);
+  assert(reg == r12);
 
   if(testRegistersCount-- > 0)
     Create(5, &TestRegisters);
@@ -105,12 +105,12 @@ void TestTask() {
   // Create(0, &Stall);
   // Create(0, &DynamicPriorityTest);
   // Create(1, &FirstUserTask);
-  // Create(0, &TestRegisters);
+  Create(0, &TestRegisters);
   // Create(0, &SimpleReceiver);
   // Create(0, &SimpleSender);
   // Create(0, &SimpleSender);
-  Create(10, &NameServerTask);
-  Create(5, &GetNameServer);
+  //Create(10, &NameServerTask);
+  //Create(5, &GetNameServer);
   bwprintf(COM2, "All tests completed.\n\r");
   Exit();
 }
