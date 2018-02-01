@@ -1,6 +1,14 @@
+#ifndef SYSTEM_H
+#define SYSTEM_H
 /**
  * Modified based off of freeBSD source
  */
+
+#include <lib/va_arg.h>
+
+#ifdef DEBUG
+#include <io.h>
+#endif
 
 #include <defines.h>
 
@@ -18,16 +26,12 @@
 #define is_set__(comma) is_set___(comma 1, 0)
 #define is_set___(_, v, ...) v
 
-#ifdef DEBUG
-#include <io.h>
-#endif
 
 #ifdef DEBUG
 #define KASSERT(exp) \
   do {                                                 \
     if (__predict_false(!(exp))) {                     \
       PRINTF(                                          \
-          LOG_COM,                                     \
           "\033[31m"                                   \
           "ASSERTION '"STR(exp)"' FAILED <%s:%d>\r\n"  \
           "\033[0m",                                   \
@@ -55,16 +59,4 @@
 
 extern void kpanic(const char *fmt, ...);
 
-#ifdef DEBUG
-typedef char *va_list;
-
-#define __va_argsiz(t)  \
-  (((sizeof(t) + sizeof(int) - 1) / sizeof(int)) * sizeof(int))
-
-#define va_start(ap, pN) ((ap) = ((va_list) __builtin_next_arg(pN)))
-
-#define va_end(ap)  ((void)0)
-
-#define va_arg(ap, t) \
-  (((ap) = (ap) + __va_argsiz(t)), *((t*) (void*) ((ap) - __va_argsiz(t))))
-#endif
+#endif /* SYSTEM_H */

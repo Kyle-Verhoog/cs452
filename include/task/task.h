@@ -40,7 +40,7 @@ typedef enum TaskRequest {
   RECEIVE        = 8,
   REPLY          = 9,
   NS_REG         = 10,
-  NS_GET         = 11
+  NS_GET         = 11,
 } TaskRequest;
 
 typedef struct TaskDescriptor {

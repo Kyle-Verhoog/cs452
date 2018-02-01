@@ -5,25 +5,13 @@
 #ifndef BWIO_H
 #define BWIO_H
 
+#include <system.h>
+
 #define COM1  0
 #define COM2  1
 
 #define ON  1
 #define OFF 0
-
-/* ep93xx-user-guide.pdf page 652 */
-#define RTC_BASE = 0x80920000
-#define RTC_LOAD = 0x8092000c
-#define RTC_CTRL = 0x80920010
-
-
-/* ep93xx-user-guide.pdf page 636 */
-#define TIMER3_DATA 0x80810084
-#define TIMER3_LOAD 0x80810080
-#define TIMER3_CTRL 0x80810088
-
-#define TIMER3_MASK 0x80
-#define TIMER3_INIT 0xffffffff
 
 int bwsetfifo( int channel, int state );
 

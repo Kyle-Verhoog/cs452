@@ -1,12 +1,10 @@
-#include <k2_task.h>
-#include <syscalls.h>
-#include <ts7200.h>
+#include <user/test/k2_task.h>
 
 #define RPC_SERVER_NAME 42
 
 void InitTask() {
-  bwsetfifo( OFF );
-  bwsetfifo( COM1, OFF );
+  bwsetfifo(COM2, OFF);
+  bwsetfifo(COM1, OFF);
 
   //Create the nameserver
   Create(31, &NameServerTask);

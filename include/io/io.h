@@ -13,6 +13,7 @@
 
 #define LOG_COM 1
 #define PRINTF(...) bwprintf(LOG_COM, __VA_ARGS__)
+
 #endif
 
 #endif /* IO_H */

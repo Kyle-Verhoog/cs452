@@ -258,7 +258,7 @@ int no_tasks() {
 // TODO: fix this
 // NOTE: sl register not loaded
 //       YOU CANNOT USE GLOBALS IN MAIN
-__attribute__((naked)) void main(void) {
+__attribute__((naked)) int main(void) {
   KERNEL_INIT();
 #ifdef CACHE
   ENABLE_ALL_CACHE();
@@ -292,6 +292,7 @@ __attribute__((naked)) void main(void) {
 #endif
 
   KERNEL_EXIT();
+  return 0; // should not be reachable!
 }
 
 

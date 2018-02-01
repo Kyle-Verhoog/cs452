@@ -36,7 +36,6 @@ int GetNS();
   do {                                                 \
     if (__predict_false(!(exp))) {                     \
       PRINTF(                                          \
-          LOG_COM,                                     \
           "\033[31m"                                   \
           "USER TASK "                                 \
           "ASSERTION '"STR(exp)"' FAILED <%s:%d>\r\n"  \
