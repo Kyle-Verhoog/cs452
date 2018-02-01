@@ -8,10 +8,10 @@ void init_circularBuffer(CircularBuffer *cb) {
 
 int push_circularBuffer(CircularBuffer *cb, unsigned int val) {
   if(cb->size < CIRCULAR_BUFFER_SIZE) {
-  	cb->buffer[cb->buffer_end] = val;
-	cb->buffer_end = (cb->buffer_end + 1) % CIRCULAR_BUFFER_SIZE;
-	cb->size++;
-	return ECB_NONE;
+    cb->buffer[cb->buffer_end] = val;
+    cb->buffer_end = (cb->buffer_end + 1) % CIRCULAR_BUFFER_SIZE;
+    cb->size++;
+    return ECB_NONE;
   }
 
   return ECB_FULL;
@@ -22,9 +22,9 @@ unsigned int top_circularBuffer(CircularBuffer *cb) {
 }
 
 int pop_circularBuffer(CircularBuffer *cb) {
-  if(cb->size > 0){
+  if(cb->size > 0) {
     cb->buffer_start = (cb->buffer_start + 1) % CIRCULAR_BUFFER_SIZE;
-    cb->size--;	
+    cb->size--;
     return ECB_NONE;
   }
 

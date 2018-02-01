@@ -1,5 +1,4 @@
 #include <kernel_task.h>
-#include <bwio.h>
 
 void ktd_create(TaskDescriptor* volatile td, uint32_t tid, void *task,
                 int priority,

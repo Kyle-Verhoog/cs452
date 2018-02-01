@@ -31,15 +31,18 @@ TEST_EXEC  ?= tests
 LINKER_SCRIPT ?= $(CONF_DIR)/orex.ld
 
 SRC_IGNORE := $(wildcard src/test/*/*.c src/test/*.c)
-$(info $(SRC_IGNORE))
+# $(info $(SRC_IGNORE))
 SRCS := $(shell find $(SRC_DIRS) -name *.c)
 SRCS := $(filter-out $(SRC_IGNORE), $(SRCS))
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
-TEST_IGNORE := $(wildcard src/kernel/* src/user/* src/bwio/* src/user/test/*.c)
+TEST_IGNORE := $(shell find src/kernel/ -type f -name '*.c' ) \
+               $(shell find src/io/bwio.c -type f -name '*.c' ) \
+               $(shell find src/user/ -type f -name '*.c' ) \
+# $(info $(TEST_IGNORE))
 TEST_SRCS := $(shell find $(TEST_DIR) -name *.c) $(filter-out $(TEST_IGNORE), $(SRCS))
-#$(info $(TEST_SRCS))
+# $(info $(TEST_SRCS))
 TEST_OBJS := $(TEST_SRCS:%=$(BUILD_DIR)/%.o)
 TEST_DEPS := $(TEST_OBJS:.o=.d)
 # $(info $(TEST_OBJS))
@@ -61,6 +64,7 @@ test: XCC = $(X86_XCC)
 test: AS  = $(X86_AS)
 test: LD  = $(X86_LD)
 test: CFLAGS = $(TEST_CFLAGS)
+test: CFLAGS += -DX86
 test: LDFLAGS = $(TEST_LDFLAGS)
 test: clean $(BUILD_DIR)/$(TEST_EXEC)
 	./$(BUILD_DIR)/$(TEST_EXEC)

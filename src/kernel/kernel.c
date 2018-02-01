@@ -60,13 +60,13 @@ void initialize() {
   task = &TestTask;
 #else
   priority = 3;
-  #ifdef METRIC_64
-    task = &K2InitMetricTask;
-  #elif METRIC_4
-    task = &K2InitMetricTask;
-  #else
-    task=&InitTask;
-  #endif
+#ifdef METRIC_64
+  task = &K2InitMetricTask;
+#elif METRIC_4
+  task = &K2InitMetricTask;
+#else
+  task=&InitTask;
+#endif
 #endif
 
   int tid = tt_get(&tid_tracker);
@@ -156,7 +156,7 @@ TaskRequest activate(TaskDescriptor* td) {
   READ_SPSR(td->psr);
   //Load the user's r12 and put it on user stack
   asm("ldr r12, [sp, #-56]");
-  asm("str r12, [%0, #48]"::"r"(td->sp)); 
+  asm("str r12, [%0, #48]"::"r"(td->sp));
   // manually put swi arg in r0, avoid overhead of return
   SWI_ARG_FETCH("r0");
   POP_STACK("lr");
@@ -286,7 +286,7 @@ __attribute__((naked)) void main(void) {
     //Handle the swi
     handle(td, req);
   }
-  
+
 #ifdef CACHE
   DISABLE_ALL_CACHE();
 #endif

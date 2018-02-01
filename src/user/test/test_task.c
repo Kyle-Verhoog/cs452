@@ -5,7 +5,6 @@ void Stall() {
   int i;
   for(i = 0; i < stallTime; i++) {
     //Stalling
-    //bwprintf(COM2, "%d \n\r", i);
     asm("mov r0, %0"::"r"(i%1));
     asm("mov r1, %0"::"r"(i%2));
     asm("mov r2, %0"::"r"(i*36));
@@ -75,7 +74,7 @@ void TestRegisters() {
 
 void TestTid() {
   int tid = MyTid();
-  bwprintf(COM2, "MyTid - %x: \n\r", tid);
+  PRINTF("MyTid - %x: \n\r", tid);
 
   Create(5, &TestTid);
   Exit();
@@ -101,7 +100,7 @@ void GetNameServer() {
 }
 
 void TestTask() {
-  bwprintf(COM2, "Starting Test:\n\r");
+  PRINTF("Starting Test:\n\r");
   // Create(0, &Stall);
   // Create(0, &DynamicPriorityTest);
   // Create(1, &FirstUserTask);
@@ -111,6 +110,6 @@ void TestTask() {
   // Create(0, &SimpleSender);
   //Create(10, &NameServerTask);
   //Create(5, &GetNameServer);
-  bwprintf(COM2, "All tests completed.\n\r");
+  PRINTF("All tests completed.\n\r");
   Exit();
 }

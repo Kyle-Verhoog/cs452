@@ -13,19 +13,19 @@ void NameServerTask() {
     Receive(&requestor, &request, sizeof(NSreq));
 
     switch(request.type) {
-      case WhoIs_t:
-        Reply(requestor, &NameServer[request.name].tid, sizeof(int));
-        break;
-      case RegisterAs_t:
-        NameServer[request.name].tid = requestor; // request.tid;
-        Reply(requestor, &NameServer[request.name].tid, sizeof(int));
-        break;
-      case Stop_t:
-        Reply(requestor, &requestor, sizeof(int));
-        Exit();
-      default:
-        assert(0);
-        break;
+    case WhoIs_t:
+      Reply(requestor, &NameServer[request.name].tid, sizeof(int));
+      break;
+    case RegisterAs_t:
+      NameServer[request.name].tid = requestor; // request.tid;
+      Reply(requestor, &NameServer[request.name].tid, sizeof(int));
+      break;
+    case Stop_t:
+      Reply(requestor, &requestor, sizeof(int));
+      Exit();
+    default:
+      assert(0);
+      break;
     }
   }
 }
@@ -38,7 +38,7 @@ int RegisterAs(int n) {
   NSreq rec;
   rec.type = RegisterAs_t;
   rec.name = n;
-  
+
   int reply;
   Send(ns_tid, &rec, sizeof(NSreq), &reply, sizeof(NSrecord));
 
@@ -60,7 +60,7 @@ int WhoIs(int n) {
   return reply;
 }
 
-void StopNameServer(){
+void StopNameServer() {
   int ns_tid = GetNS();
 
   NSreq rec;

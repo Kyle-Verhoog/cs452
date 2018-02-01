@@ -2,7 +2,6 @@
 #define KERNEL_H
 
 #include <defines.h>
-#include <bwio.h>
 #include <system.h>
 #include <ts7200.h>
 #include <asm.h>

@@ -2,7 +2,6 @@
  * Modified based off of freeBSD source
  */
 
-#include <bwio.h>
 #include <defines.h>
 
 #define STR_HELPER(x) #x
@@ -20,29 +19,14 @@
 #define is_set___(_, v, ...) v
 
 #ifdef DEBUG
-#define KASSERTF(exp, msg) \
-  do {                                                 \
-    if (__predict_false(!(exp))) {                     \
-      bwprintf(                                        \
-          LOG_COM,                                     \
-          "\033[31m"                                   \
-          "ASSERTION '"STR(exp)"' FAILED <%s:%d>\r\n"  \
-          "\033[0m",                                   \
-          __FILE__,                                    \
-          __LINE__                                     \
-              );                                       \
-      kpanic msg;                                      \
-    }                                                  \
-  } while (0)
-#else
-#define KASSERTF(exp, msg) {}
+#include <io.h>
 #endif
 
 #ifdef DEBUG
 #define KASSERT(exp) \
   do {                                                 \
     if (__predict_false(!(exp))) {                     \
-      bwprintf(                                        \
+      PRINTF(                                          \
           LOG_COM,                                     \
           "\033[31m"                                   \
           "ASSERTION '"STR(exp)"' FAILED <%s:%d>\r\n"  \
@@ -71,3 +55,16 @@
 
 extern void kpanic(const char *fmt, ...);
 
+#ifdef DEBUG
+typedef char *va_list;
+
+#define __va_argsiz(t)  \
+  (((sizeof(t) + sizeof(int) - 1) / sizeof(int)) * sizeof(int))
+
+#define va_start(ap, pN) ((ap) = ((va_list) __builtin_next_arg(pN)))
+
+#define va_end(ap)  ((void)0)
+
+#define va_arg(ap, t) \
+  (((ap) = (ap) + __va_argsiz(t)), *((t*) (void*) ((ap) - __va_argsiz(t))))
+#endif
