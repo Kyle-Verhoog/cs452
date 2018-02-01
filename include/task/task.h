@@ -8,12 +8,6 @@
 // TODO: these are copies of the ones in kernel.h, we should figure out where
 //       to put them centrally.
 
-#define USER_MODE 16
-#define KERNEL_MODE 19
-#define SYSTEM_MODE 31
-#define USER_STACK_BASE 0x02000000
-#define USER_STACK_SIZE 0x100000  //1 MB User stacks
-
 #define MAX_TASK 16
 
 typedef enum TaskStatus { // a task is...

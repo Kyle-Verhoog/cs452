@@ -31,16 +31,23 @@
 unsigned int kernel_stack_base = KERNEL_STACK_BASE;
 unsigned int user_stack_base = USER_STACK_BASE;
 
+void init_irq(){
+  SET_CPSR(IRQ_MODE);
+  WRITE_SP(IRQ_STACK_BASE);
+  SET_CPSR(KERNEL_MODE);
+
+  *(int *)(VIC1_BASE + VIC_PROTECTION_OFFSET) = 0;
+  *(int *)(VIC2_BASE + VIC_PROTECTION_OFFSET) = 0;
+  //Enable Hardware Interrupts
+  *(int *)(VIC1_BASE + VIC_INTENABLE_OFFSET) = 3;
+  *(int *)(VIC2_BASE + VIC_INTENABLE_OFFSET) = 3;
+}
+
 void initialize() {
   SANITY();
   DBLOG_INIT("Initializing", "");
-  /*
-  asm(
-    "ldr r3, =KERNEL_ENTRY;"
-    "mov r4, #"STR(KERNEL_ENTRY)";"
-    "str r3, [r4];"
-  );
-  */
+
+  init_irq();
 
   int i;
   for (i = 0; i < MAX_TASK; i++) {
@@ -125,6 +132,44 @@ TaskRequest activate(TaskDescriptor* td) {
 
   // TODO: to avoid corruption of r12, could we save user state onto kernel
   //       stack?
+  asm("IRQ_ENTRY:");
+  //Disable the interrupt
+  *(int *)(VIC1_BASE + VIC_SOFTINTCLEAR_OFFSET) = 0;
+  PUSH_STACK("r12");
+  //Change to System mode
+  SET_CPSR(SYSTEM_MODE);
+  //Save the user state
+  PUSH_STACK("r0-r12, lr");
+  //Change to Kernel mode
+  SET_CPSR(KERNEL_MODE);
+  //Save lr to stratch r3
+  asm("mov r3, lr");
+  //Change to System mode
+  SET_CPSR(SYSTEM_MODE);
+  //Save the lr(r3)
+  PUSH_STACK("r3")
+  //Change back to kernel mode
+  SET_CPSR(KERNEL_MODE);
+  //load the kernel stack (fp is now resuable again!)
+  POP_STACK("r0-r12");
+  //Change back to system mode
+  SET_CPSR(SYSTEM_MODE); //Note we can still use fp!
+  //Save the user sp to TaskDescriptor's sp
+  READ_SP(td->sp);
+  //Change back to kernel mode
+  SET_CPSR(KERNEL_MODE);
+  //Save the spsr to the TaskDescriptor's psr
+  READ_SPSR(td->psr);
+  //Load the user's r12 and put it on user stack
+  SET_CPSR(IRQ_MODE);
+  POP_STACK("r0");
+  SET_CPSR(KERNEL_MODE);
+  asm("str r0, [%0, #52]"::"r"(td->sp)); 
+  // manually put swi arg in r0, avoid overhead of return
+  SWI_ARG_FETCH("r0");
+  POP_STACK("lr");
+  asm("b ACTIVATE_END");
+
   //AFTER USER TASK CALLS SWI (CANT USE FP)
   asm("KERNEL_ENTRY:");
   //Save the r12 to Kernel Stack - Implicitly changed by SET_CPSR
@@ -160,6 +205,10 @@ TaskRequest activate(TaskDescriptor* td) {
   // manually put swi arg in r0, avoid overhead of return
   SWI_ARG_FETCH("r0");
   POP_STACK("lr");
+
+  asm("ACTIVATE_END:");
+
+  return;
 }
 
 void create(TaskDescriptor *td) {
@@ -266,7 +315,12 @@ __attribute__((naked)) void main(void) {
 
   asm(
     "ldr r3, =KERNEL_ENTRY;"
-    "mov r4, #"STR(KERNEL_ENTRY)";"
+    "mov r4, #"STR(SWI_ENTRY)";"
+    "str r3, [r4];"
+  );
+  asm(
+    "ldr r3, =IRQ_ENTRY;"
+    "mov r4, #"STR(IRQ_ENTRY)";"
     "str r3, [r4];"
   );
 
