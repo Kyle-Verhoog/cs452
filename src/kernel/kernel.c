@@ -156,7 +156,7 @@ TaskRequest activate(TaskDescriptor* td) {
   READ_SPSR(td->psr);
   //Load the user's r12 and put it on user stack
   asm("ldr r12, [sp, #-56]");
-  asm("str r12, [%0, #48]"::"r"(td->sp)); 
+  asm("str r12, [%0, #52]"::"r"(td->sp)); 
   // manually put swi arg in r0, avoid overhead of return
   SWI_ARG_FETCH("r0");
   POP_STACK("lr");
