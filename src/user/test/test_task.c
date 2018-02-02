@@ -107,23 +107,23 @@ void TestTask() {
   // Create(0, &Stall);
   // Create(0, &DynamicPriorityTest);
   // Create(1, &FirstUserTask);
-  //Create(0, &TestRegisters);
+  Create(0, &TestRegisters);
   // Create(0, &SimpleReceiver);
   // Create(0, &SimpleSender);
   // Create(0, &SimpleSender);
   //Create(10, &NameServerTask);
   //Create(5, &GetNameServer);
 
-  int var;
-  asm("mrs %0, cpsr;":"=r"(var):);
+  // int var;
+  // asm("mrs %0, cpsr;":"=r"(var):);
 
-  bwprintf(COM2, "%x\n\r", (var >> 7) & 1);
-  bwprintf(COM2, "%x\n\r", *(int *)(VIC1_BASE + VIC_INTSELECT_OFFSET));  
+  // bwprintf(COM2, "%x\n\r", (var >> 7) & 1);
+  // bwprintf(COM2, "%x\n\r", *(int *)(VIC1_BASE + VIC_INTSELECT_OFFSET));  
 
-  bwprintf(COM2, "%x\n\r", *(int *)(VIC1_BASE + VIC_IRQSTATUS_OFFSET));
-  *(int *)(VIC1_BASE + VIC_SOFTINT_OFFSET) = (1 << 30) - 1;
-  bwprintf(COM2, "%x\n\r", *(int *)(VIC1_BASE + VIC_IRQSTATUS_OFFSET));
+  // bwprintf(COM2, "%x\n\r", *(int *)(VIC1_BASE + VIC_IRQSTATUS_OFFSET));
+  // *(int *)(VIC1_BASE + VIC_SOFTINT_OFFSET) = (1 << 30) - 1;
+  // bwprintf(COM2, "%x\n\r", *(int *)(VIC1_BASE + VIC_IRQSTATUS_OFFSET));
 
-  bwprintf(COM2, "All tests completed.\n\r");
+  // bwprintf(COM2, "All tests completed.\n\r");
   Exit();
 }

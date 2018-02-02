@@ -1,5 +1,5 @@
 #include <kernel/syscalls.h>
-
+#include <asm.h>
 /**
  * SysCalls (TODO: PASS ENUM LITERAL)
  */
@@ -8,6 +8,10 @@ void Pass() {
   asm (
     "swi #0;"
   );
+
+
+  PRINT_REG("lr");
+  //bwprintf(COM2, "SANITY\n\r");
 }
 
 void Block() {
