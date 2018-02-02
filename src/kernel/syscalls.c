@@ -8,10 +8,6 @@ void Pass() {
   asm (
     "swi #0;"
   );
-
-
-  PRINT_REG("lr");
-  //bwprintf(COM2, "SANITY\n\r");
 }
 
 void Block() {
