@@ -104,10 +104,37 @@ void GetNameServer() {
 
 void TestTask() {
   bwprintf(COM2, "Starting Test:\n\r");
+  int reg;
+  asm("mov r0, #0");
+  asm("mov r1, #1");
+  asm("mov r2, #2");
+  asm("mov r3, #3");
+  asm("mov r4, #4");
+  asm("mov r5, #5");
+  asm("mov r6, #6");
+  asm("mov r7, #7");
+  asm("mov r8, #8");
+  asm("mov r9, #9");
+  asm("mov r10, #10");
+  asm("mov r11, #11");
+
+  Pass();
+
+  asm("mov %0, r4":"=r"(reg):);
+  assert(reg == 4);
+  asm("mov %0, r5":"=r"(reg):);
+  assert(reg == 5);
+  asm("mov %0, r6":"=r"(reg):);
+  assert(reg == 6);
+  asm("mov %0, r7":"=r"(reg):);
+  assert(reg == 7);
+  asm("mov %0, r8":"=r"(reg):);
+  assert(reg == 8);
+  bwprintf(COM2, "End Test:\n\r");
   // Create(0, &Stall);
   // Create(0, &DynamicPriorityTest);
   // Create(1, &FirstUserTask);
-  Create(0, &TestRegisters);
+  // Create(0, &TestRegisters);
   // Create(0, &SimpleReceiver);
   // Create(0, &SimpleSender);
   // Create(0, &SimpleSender);

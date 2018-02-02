@@ -102,7 +102,6 @@ TaskDescriptor* schedule() {
 }
 
 TaskRequest activate(TaskDescriptor* td) {
-  SANITY();
   // int reg;
   // int r0, r1, r2, r3, r4, r5, r6, r7, r8,r9, r10, r11, r12;
   // asm("mov r0, #0");
@@ -164,7 +163,7 @@ TaskRequest activate(TaskDescriptor* td) {
   //Store Kernel State
   //PUSH_STACK("r0-r12, lr");
   PUSH_STACK("r0-r12");
-  PUSH_STACK("lr");
+  // PUSH_STACK("lr");
   //Push ret val to stack as temp
   asm("mov r8, %0"::"r"(td->ret));
   PUSH_STACK("r8");
@@ -183,13 +182,14 @@ TaskRequest activate(TaskDescriptor* td) {
   //Change to system mode
   SET_CPSR(SYSTEM_MODE);
   //Load the User Trap Frame
-  //POP_STACK("r0-r12, lr");
-  POP_STACK("lr");
-  POP_STACK("r0-r12");
+  // POP_STACK("r0-r12, lr");
+  // POP_STACK("lr");
+  POP_STACK("r0-r12, lr");
   //Switch back to kernel mode
   SET_CPSR(KERNEL_MODE);
   //Set r0 with the new return value from stack
   POP_STACK("r0");
+  // PRINT_REG("sp");
   //Move to the user task
   REVERSE_SWI();
 
@@ -250,18 +250,40 @@ TaskRequest activate(TaskDescriptor* td) {
   // SET_CPSR(SYSTEM_MODE);
   // //Save the lr(r3)
   // PUSH_STACK("r3")
-  asm("stmfd sp!, {r8-r12};");
-  asm("stmfd sp!, {r0-r7};");
-  asm("mov r9, sp;"
+  asm("stmfd sp, {r0-r12};");
+  asm("sub r9, sp, #4;"
       "mov r10, lr;");
-  asm("add sp, sp, #52");
+  //asm("add sp, sp, #52");
   //Change to System
   SET_CPSR(SYSTEM_MODE);
-  asm("ldmfd r9!, {r0-r7}");
-  PUSH_STACK("r0-r7");
-  asm("ldmfd r9!, {r0-r4}");
-  PUSH_STACK("r0-r4");
+  // asm("add r9, r9, #-4");
   PUSH_STACK("lr");
+  PRINT_REG("lr");
+  asm("sub sp, sp, #4");
+  asm("ldmda r9!, {r0-r7}");
+  asm("stmda sp!, {r0-r7}");
+  asm("ldmda r9!, {r0-r4}");
+  // PRINT_REG("r4");
+  asm("stmda sp!, {r0-r4}");
+  asm("add sp, sp, #4");
+
+  POP_STACK("r4");
+  POP_STACK("r4");
+  POP_STACK("r4");
+  POP_STACK("r4");
+  POP_STACK("r4");
+  POP_STACK("r4");
+  POP_STACK("r4");
+  POP_STACK("r4");
+  POP_STACK("r4");
+  POP_STACK("r4");
+  POP_STACK("r4");
+  POP_STACK("r4");
+  POP_STACK("r4");
+  POP_STACK("r4");
+  PRINT_REG("r4");
+  KABORT();
+
   PUSH_STACK("r10");
 
   // //Change back to kernel mode
@@ -269,7 +291,7 @@ TaskRequest activate(TaskDescriptor* td) {
   //load the kernel stack (fp is now resuable again!)
   //asm("add sp, sp, #4");
   //POP_STACK("r0-r12, lr");
-  POP_STACK("lr");
+  // POP_STACK("lr");
   POP_STACK("r0-r12");
   //Change back to system mode
   SET_CPSR(SYSTEM_MODE); //Note we can still use fp!
@@ -283,6 +305,8 @@ TaskRequest activate(TaskDescriptor* td) {
   // asm("ldr r12, [sp, #-56]");
   // asm("str r12, [%0, #52]"::"r"(td->sp)); 
   // manually put swi arg in r0, avoid overhead of return
+  //
+  // IFF SWI
   SWI_ARG_FETCH("r0");
   //POP_STACK("lr");
 
@@ -327,6 +351,7 @@ void get_parentTid( TaskDescriptor *td) {
 }
 
 void handle(TaskDescriptor *td, TaskRequest req) {
+  SANITY();
   switch (req) {
   case ASSERT:
     KABORT();
@@ -368,12 +393,13 @@ void handle(TaskDescriptor *td, TaskRequest req) {
     pq_push(&pq_tasks, td->priority, td);
     break;
   case EXIT:
+    KASSERT(0);
     // TODO: uninitialize the task descriptor
     td->status = ZOMBIE;
     tt_return(td->tid, &tid_tracker);
     break;
   default:
-    //KASSERT(false && "UNDEFINED SWI PARAM");
+    KASSERT(false && "UNDEFINED SWI PARAM");
     pq_push(&pq_tasks, td->priority, td);
     break;
   }

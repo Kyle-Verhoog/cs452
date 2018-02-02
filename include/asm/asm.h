@@ -6,8 +6,8 @@
 //Macros
 #define PRINT_REG(reg)\
   asm(\
-      "mov  r0, #1;"   \
       "mov  r1, "reg";"\
+      "mov  r0, #1;"   \
       "bl   bwputr;" \
      );
 
