@@ -115,8 +115,8 @@ void TestTask() {
   asm("mov r7, #7");
   asm("mov r8, #8");
   asm("mov r9, #9");
-  asm("mov r10, #10");
-  asm("mov r11, #11");
+  // asm("mov r10, #10");
+  // asm("mov r11, #11");
 
   Pass();
 

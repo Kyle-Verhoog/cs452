@@ -251,38 +251,62 @@ TaskRequest activate(TaskDescriptor* td) {
   // //Save the lr(r3)
   // PUSH_STACK("r3")
   asm("stmfd sp, {r0-r12};");
-  asm("sub r9, sp, #4;"
+  asm("mov r9, sp;"
       "mov r10, lr;");
+  // PRINT_REG("r12");
   //asm("add sp, sp, #52");
   //Change to System
   SET_CPSR(SYSTEM_MODE);
   // asm("add r9, r9, #-4");
-  PUSH_STACK("lr");
-  PRINT_REG("lr");
-  asm("sub sp, sp, #4");
-  asm("ldmda r9!, {r0-r7}");
-  asm("stmda sp!, {r0-r7}");
-  asm("ldmda r9!, {r0-r4}");
+  // PUSH_STACK("lr");
+  // asm("sub sp, sp, #4");
+  asm("ldmdb r9!, {r0-r7}");
+  asm("stmdb sp!, {r0-r7, lr}");
+  //  PRINT_REG("lr");
+  asm("ldmdb r9!, {r0-r4}");
   // PRINT_REG("r4");
-  asm("stmda sp!, {r0-r4}");
-  asm("add sp, sp, #4");
+  asm("stmdb sp!, {r0-r4}");
+  // asm("add sp, sp, #4");
+ 
+  /*
+  POP_STACK("r0-r12, lr");
+  PRINT_REG("lr");
+  PRINT_REG("r4");
+  PRINT_REG("r5");
+  PRINT_REG("r12");
+  */
 
+  /*
   POP_STACK("r4");
+  PRINT_REG("r4");
   POP_STACK("r4");
+  PRINT_REG("r4");
   POP_STACK("r4");
+  PRINT_REG("r4");
   POP_STACK("r4");
+  PRINT_REG("r4");
   POP_STACK("r4");
+  PRINT_REG("r4");
   POP_STACK("r4");
+  PRINT_REG("r4");
   POP_STACK("r4");
+  PRINT_REG("r4");
   POP_STACK("r4");
+  PRINT_REG("r4");
   POP_STACK("r4");
+  PRINT_REG("r4");
   POP_STACK("r4");
+  PRINT_REG("r4");
   POP_STACK("r4");
+  PRINT_REG("r4");
   POP_STACK("r4");
+  PRINT_REG("r4");
   POP_STACK("r4");
+  PRINT_REG("r4");
   POP_STACK("r4");
   PRINT_REG("r4");
   KABORT();
+  */
 
   PUSH_STACK("r10");
 
@@ -393,7 +417,6 @@ void handle(TaskDescriptor *td, TaskRequest req) {
     pq_push(&pq_tasks, td->priority, td);
     break;
   case EXIT:
-    KASSERT(0);
     // TODO: uninitialize the task descriptor
     td->status = ZOMBIE;
     tt_return(td->tid, &tid_tracker);
