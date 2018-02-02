@@ -5,7 +5,7 @@ void ktd_create(TaskDescriptor* volatile td, uint32_t tid, void *task,
                 int priority,
                 TaskStatus status, TaskDescriptor *parent) {
   //Initialize the Test task pc
-  td->sp = USER_STACK_BASE - (tid*USER_STACK_SIZE) - 56;
+  td->sp = USER_STACK_BASE - ((tid&0xffff)*USER_STACK_SIZE) - 56;
   asm("mov r8, %0;"::"r"(task));
   asm("stmfd %0!, {r8};"::"r"(td->sp));
   td->sp -= 4; //saved lr_svc

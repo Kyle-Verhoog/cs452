@@ -63,7 +63,7 @@ void initialize() {
   void *task;
 
 #ifdef KTEST
-  priority = 0;
+  priority = 2;
   task = &TestTask;
 #else
   priority = 3;
@@ -123,6 +123,8 @@ TaskRequest activate(TaskDescriptor* td) {
   SET_CPSR(SYSTEM_MODE);
   //Load the User Trap Frame
   POP_STACK("r0-r12, lr");
+
+  // TODO: we only want to do this if returning from swi call
   //Switch back to kernel mode
   SET_CPSR(KERNEL_MODE);        // !! TODO: CORRUPTS r12 (we should be able to work around -- not save r0?)
   //Set r0 with the new return value from stack
@@ -130,8 +132,7 @@ TaskRequest activate(TaskDescriptor* td) {
   //Move to the user task
   REVERSE_SWI();
 
-  // TODO: to avoid corruption of r12, could we save user state onto kernel
-  //       stack?
+
   asm("IRQ_ENTRY:");
   //Disable the interrupt
   *(int *)(VIC1_BASE + VIC_SOFTINTCLEAR_OFFSET) = 0;
@@ -140,10 +141,13 @@ TaskRequest activate(TaskDescriptor* td) {
   //AFTER USER TASK CALLS SWI (CANT USE FP)
   asm("KERNEL_ENTRY:");
   asm("stmfd sp, {r0-r12};");
+
   asm("mov r9, sp;"
       "mov r10, lr;");
   //Change to System
   SET_CPSR(SYSTEM_MODE);
+
+
   asm("ldmdb r9!, {r0-r7}");
   asm("stmdb sp!, {r0-r7, lr}");
   asm("ldmdb r9!, {r0-r4}");
