@@ -102,7 +102,7 @@ TaskDescriptor* schedule() {
 }
 
 TaskRequest activate(TaskDescriptor* td) {
-  PUSH_STACK("r0-r12"); // TODO: kernel lr
+  PUSH_STACK("r0-r12, lr"); // TODO: kernel lr
   asm("mov r8, %0"::"r"(td->ret));
   PUSH_STACK("r8");
   WRITE_SPSR(td->psr);
@@ -140,7 +140,7 @@ TaskRequest activate(TaskDescriptor* td) {
   PUSH_STACK("lr");
 
   SET_CPSR(KERNEL_MODE);
-  POP_STACK("r0-r12"); // TODO kernel lr
+  POP_STACK("r0-r12");
   SET_CPSR(SYSTEM_MODE);
   READ_SP(td->sp);
   SET_CPSR(KERNEL_MODE);
@@ -150,7 +150,7 @@ TaskRequest activate(TaskDescriptor* td) {
   //       we could set up hw interrupt arg passing
   //       similar to swi (pref not?)
   SWI_ARG_FETCH("r0");
-  //POP_STACK("lr");
+  POP_STACK("lr");
 
   asm("ACTIVATE_END:");
   return;
