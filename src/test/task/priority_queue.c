@@ -193,6 +193,7 @@ void pq_pop_3_different_priorities() {
 
 
 void priority_queue_tests() {
+  PTEST_START("priority_queue");
   pq_sanity();
   pq_push_basic();
   pq_dpop_basic();
@@ -202,5 +203,5 @@ void priority_queue_tests() {
   pq_pop_basic();
   pq_pop_2_same_priorities();
   pq_pop_3_different_priorities();
-  printf("✓ priority_queue\n");
+  PTEST_END();
 }

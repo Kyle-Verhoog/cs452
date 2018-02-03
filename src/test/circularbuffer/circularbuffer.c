@@ -1,4 +1,3 @@
-#include <assert.h>
 #include <test/circularbuffer.h>
 
 void cb_sanity() {
@@ -18,6 +17,7 @@ void cb_sanity() {
 }
 
 void circular_buffer_tests() {
+  PTEST_START("circularbuffer");
   cb_sanity();
-  printf("✓ CircularBuffer\n");
+  PTEST_END();
 }
