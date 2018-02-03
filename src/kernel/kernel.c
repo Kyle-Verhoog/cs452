@@ -39,8 +39,8 @@ void init_irq(){
   *(int *)(VIC1_BASE + VIC_PROTECTION_OFFSET) = 0;
   *(int *)(VIC2_BASE + VIC_PROTECTION_OFFSET) = 0;
   //Enable Hardware Interrupts
-  *(int *)(VIC1_BASE + VIC_INTENABLE_OFFSET) = 3;
-  *(int *)(VIC2_BASE + VIC_INTENABLE_OFFSET) = 3;
+  *(int *)(VIC1_BASE + VIC_INTENABLE_OFFSET) = 0;
+  *(int *)(VIC2_BASE + VIC_INTENABLE_OFFSET) = 1 << 19;
 }
 
 void initialize() {
@@ -64,16 +64,17 @@ void initialize() {
 
 #ifdef KTEST
   priority = 2;
-  task = &TestTask;
+  //task = &TestTask;
+  task = &InitClock;
 #else
   priority = 3;
-#ifdef METRIC_64
-  task = &K2InitMetricTask;
-#elif METRIC_4
-  task = &K2InitMetricTask;
-#else
-  task=&InitTask;
-#endif
+  #ifdef METRIC_64
+    task = &K2InitMetricTask;
+  #elif METRIC_4
+    task = &K2InitMetricTask;
+  #else
+    task=&InitClock;
+  #endif
 #endif
 
   int tid = tt_get(&tid_tracker);
@@ -138,9 +139,7 @@ TaskRequest activate(TaskDescriptor* td) {
   //=============================================================//
 
   asm("IRQ_ENTRY:");
-  //Disable the interrupt
-  *(int *)(VIC1_BASE + VIC_SOFTINTCLEAR_OFFSET) = 3;
-  *(int *)(VIC2_BASE + VIC_SOFTINTCLEAR_OFFSET) = 3;
+  KASSERT(*(int *)(VIC2_BASE + VIC_IRQSTATUS_OFFSET) == 1 << 19);
 
   asm("stmfd sp, {r0-r12};");
 
@@ -240,7 +239,7 @@ void handle(TaskDescriptor *td, TaskRequest req) {
     KABORT();
     break;
   case TR_PASS:
-    pq_push(&pq_tasks, td->priority, td);
+    //pq_push(&pq_tasks, td->priority, td);
     break;
   case TR_BLOCK:
     td->status = BLOCKED;
@@ -281,8 +280,11 @@ void handle(TaskDescriptor *td, TaskRequest req) {
     tt_return(td->tid, &tid_tracker);
     break;
   case TR_IRQ:
-    SANITY();
+    //SANITY();
+    bwprintf(COM2, "%d\n\r", *(unsigned int*)(TIMER3_BASE | VAL_OFFSET));
+    *(int *)(TIMER3_BASE | CLR_OFFSET) = 1;
     pq_push(&pq_tasks, td->priority, td);
+    pq_push(&pq_tasks, 31, &tasks[1]);
     break;
   default:
     KASSERT(false && "UNDEFINED SWI PARAM");
