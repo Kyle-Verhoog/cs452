@@ -31,6 +31,7 @@ void Stall() {
     Pass();
     // Note r0, r3 corrupted
 
+    /*
     // asm("mov r5, r0");
     asm("mov r6, r1");
     asm("mov r7, r2");
@@ -40,8 +41,8 @@ void Stall() {
     assert(reg == ((i+3)*36));
     // asm("mov %0, r8":"=r"(reg):);
 
-    /*
     assert(0);
+    */
 
     // Note: r1, r2, r3 used by compiler
     asm("mov %0, r4":"=r"(reg):);
@@ -60,9 +61,8 @@ void Stall() {
     assert(reg == r10);
     asm("mov %0, r11":"=r"(reg):);
     assert(reg == r11);
-    // asm("mov %0, r12":"=r"(reg):);
-    // assert(reg == r12);
-    */
+    asm("mov %0, r12":"=r"(reg):);
+    assert(reg == r12);
 
     //Stalling
     bwprintf(COM2, "%d: %d \n\r", d, i);

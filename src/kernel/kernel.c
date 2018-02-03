@@ -102,34 +102,20 @@ TaskDescriptor* schedule() {
 }
 
 TaskRequest activate(TaskDescriptor* td) {
-  //Store Kernel State
   PUSH_STACK("r0-r12"); // TODO: kernel lr
-  //Push ret val to stack as temp
   asm("mov r8, %0"::"r"(td->ret));
   PUSH_STACK("r8");
-  //Install SPSR
   WRITE_SPSR(td->psr);
-  //Change to system mode
+  
   SET_CPSR(SYSTEM_MODE);
-  //Change the stack pointer to the task's stack (uses fp so no worries)
   WRITE_SP(td->sp);
-  //Load instruction after swi (r4) from user stack
-  POP_STACK("r4");
-  //Change to kernel mode
-  SET_CPSR(KERNEL_MODE);
-  //Save into kernel lr for loading
-  asm("mov lr, r4;");
-  //Change to system mode
-  SET_CPSR(SYSTEM_MODE);
-  //Load the User Trap Frame
-  POP_STACK("r0-r12, lr");
+  POP_STACK("lr");
+  asm("mov r8, sp");
+  asm("add sp, sp, #56");
 
-  // TODO: we only want to do this if returning from swi call
-  //Switch back to kernel mode
-  SET_CPSR(KERNEL_MODE);        // !! TODO: CORRUPTS r12 (we should be able to work around -- not save r0?)
-  //Set r0 with the new return value from stack
+  SET_CPSR(KERNEL_MODE);
+  asm("ldmfd r8, {r0-r12, lr}");
   POP_STACK("r0");
-  //Move to the user task
   REVERSE_SWI();
 
 
@@ -147,24 +133,17 @@ TaskRequest activate(TaskDescriptor* td) {
   //Change to System
   SET_CPSR(SYSTEM_MODE);
 
-
   asm("ldmdb r9!, {r0-r7}");
-  asm("stmdb sp!, {r0-r7, lr}");
+  asm("stmdb sp!, {r0-r7, r10}");
   asm("ldmdb r9!, {r0-r4}");
   asm("stmdb sp!, {r0-r4}");
-  PUSH_STACK("r10");
+  PUSH_STACK("lr");
 
-  //Change back to kernel mode
   SET_CPSR(KERNEL_MODE);
-  //load the kernel stack (fp is now resuable again!)
   POP_STACK("r0-r12"); // TODO kernel lr
-  //Change back to system mode
-  SET_CPSR(SYSTEM_MODE); //Note we can still use fp!
-  //Save the user sp to TaskDescriptor's sp
+  SET_CPSR(SYSTEM_MODE);
   READ_SP(td->sp);
-  //Change back to kernel mode
   SET_CPSR(KERNEL_MODE);
-  //Save the spsr to the TaskDescriptor's psr
   READ_SPSR(td->psr);
 
   // TODO: this will be different for hw interrupts??
