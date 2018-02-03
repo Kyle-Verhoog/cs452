@@ -71,7 +71,7 @@ void Stall() {
   Exit();
 }
 
-int testRegistersCount; = 100;
+int testRegistersCount = 100;
 void TestRegisters() {
   int reg;
   int r9, r10, r11, r12;
@@ -154,10 +154,13 @@ void GetNameServer() {
 
 void TestTask() {
   c = 0;
-  testRegistersCount; = 100;
+  testRegistersCount = 100;
   PRINTF("Starting Test:\n\r");
   
-  // Create(0, &Stall);
+  Create(2, &Stall);
+  Create(2, &Stall);
+
+  *(int *)(VIC1_BASE + VIC_SOFTINT_OFFSET) = (1 << 30) - 1;
   // Create(0, &DynamicPriorityTest);
   // Create(1, &FirstUserTask);
   // Create(0, &TestRegisters);

@@ -197,7 +197,6 @@ TaskRequest activate(TaskDescriptor* td) {
   //=============================================================//
 
   asm("ACTIVATE_END:");
-  return;
 }
 
 void create(TaskDescriptor *td) {
