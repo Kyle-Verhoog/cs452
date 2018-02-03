@@ -156,11 +156,9 @@ void TestTask() {
   bwprintf(COM2, "Starting Test:\n\r");
 
   c = 0;
-  Create(1, &Stall);
-  Create(1, &Stall);
-  Create(1, &Stall);
-
-  bwprintf(COM2, "End Test:\n\r");
+  // Create(1, &Stall);
+  // Create(1, &Stall);
+  // Create(1, &Stall);
   // Create(0, &Stall);
   // Create(0, &DynamicPriorityTest);
   // Create(1, &FirstUserTask);
@@ -170,7 +168,10 @@ void TestTask() {
   // Create(0, &SimpleSender);
   //Create(10, &NameServerTask);
   //Create(5, &GetNameServer);
+bwprintf(COM2, "\n");
+bwprintf(COM2, "SANITY\n\r");
 
+bwprintf(COM2, "\r");
   // int var;
   // asm("mrs %0, cpsr;":"=r"(var):);
 
@@ -178,9 +179,11 @@ void TestTask() {
   // bwprintf(COM2, "%x\n\r", *(int *)(VIC1_BASE + VIC_INTSELECT_OFFSET));  
 
   // bwprintf(COM2, "%x\n\r", *(int *)(VIC1_BASE + VIC_IRQSTATUS_OFFSET));
-  // *(int *)(VIC1_BASE + VIC_SOFTINT_OFFSET) = (1 << 30) - 1;
+
+  
   // bwprintf(COM2, "%x\n\r", *(int *)(VIC1_BASE + VIC_IRQSTATUS_OFFSET));
 
+  bwprintf(COM2, "End Test:\n\r");
   // bwprintf(COM2, "All tests completed.\n\r");
   Exit();
 }

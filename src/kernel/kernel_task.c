@@ -11,10 +11,10 @@ void ktd_create(TaskDescriptor* volatile td, uint32_t tid, void *task,
   td->sp -= 60; //saved lr_svc
 
   td->tid = tid;
-  //td->psr = USER_MODE | 128;
   td->psr = USER_MODE;
   td->task = task;
   td->status = status;
+  td->it = IT_SWI;
   td->parent = parent;
   td->priority = priority;
   td->next = NULL;

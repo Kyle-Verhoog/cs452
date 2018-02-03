@@ -23,19 +23,25 @@ typedef enum TaskStatus { // a task is...
 
 //Kernel Handles Task Request
 typedef enum TaskRequest {
-  PASS           = 0,
-  BLOCK          = 1,
-  CREATE         = 2,
-  MY_TID         = 3,
-  MY_PARENT_TID  = 4,
-  EXIT           = 5,
-  ASSERT         = 6,
-  SEND           = 7,
-  RECEIVE        = 8,
-  REPLY          = 9,
-  NS_REG         = 10,
-  NS_GET         = 11
+  TR_PASS           = 0,
+  TR_BLOCK          = 1,
+  TR_CREATE         = 2,
+  TR_MY_TID         = 3,
+  TR_MY_PARENT_TID  = 4,
+  TR_EXIT           = 5,
+  TR_ASSERT         = 6,
+  TR_SEND           = 7,
+  TR_RECEIVE        = 8,
+  TR_REPLY          = 9,
+  TR_NS_REG         = 10,
+  TR_NS_GET         = 11,
+  TR_IRQ            = 12
 } TaskRequest;
+
+typedef enum InterruptType{
+  IT_SWI = 0,
+  IT_IRQ = 1
+} InterruptType;
 
 typedef struct TaskDescriptor {
   int  tid; //Task id
@@ -47,6 +53,7 @@ typedef struct TaskDescriptor {
 
   void* task; //Function pointer
   TaskStatus status;  //Task status
+  InterruptType it;  //interrupt type
 
   struct TaskDescriptor *parent; //Parent task
   struct TaskDescriptor *next;

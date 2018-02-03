@@ -39,8 +39,8 @@ void init_irq(){
   *(int *)(VIC1_BASE + VIC_PROTECTION_OFFSET) = 0;
   *(int *)(VIC2_BASE + VIC_PROTECTION_OFFSET) = 0;
   //Enable Hardware Interrupts
-  //*(int *)(VIC1_BASE + VIC_INTENABLE_OFFSET) = 3;
-  //*(int *)(VIC2_BASE + VIC_INTENABLE_OFFSET) = 3;
+  *(int *)(VIC1_BASE + VIC_INTENABLE_OFFSET) = 3;
+  *(int *)(VIC2_BASE + VIC_INTENABLE_OFFSET) = 3;
 }
 
 void initialize() {
@@ -102,27 +102,72 @@ TaskDescriptor* schedule() {
 }
 
 TaskRequest activate(TaskDescriptor* td) {
-  PUSH_STACK("r0-r12, lr"); // TODO: kernel lr
-  asm("mov r8, %0"::"r"(td->ret));
-  PUSH_STACK("r8");
-  WRITE_SPSR(td->psr);
-  
-  SET_CPSR(SYSTEM_MODE);
-  WRITE_SP(td->sp);
-  POP_STACK("lr");
-  asm("mov r8, sp");
-  asm("add sp, sp, #56");
+  if(td->it){
+    //KASSERT(0);
+    PUSH_STACK("r0-r12, lr");
+    WRITE_SPSR(td->psr);
+    
+    SET_CPSR(SYSTEM_MODE);
+    WRITE_SP(td->sp);
+    POP_STACK("lr");
+    asm("mov r8, sp");
+    asm("add sp, sp, #56");
 
-  SET_CPSR(KERNEL_MODE);
-  asm("ldmfd r8, {r0-r12, lr}");
-  POP_STACK("r0");
-  REVERSE_SWI();
+    SET_CPSR(KERNEL_MODE);
+    asm("ldmfd r8, {r0-r12, lr}");
+    asm("SUBS pc, lr, #4");
+    //REVERSE_SWI();
+  }else{
+    PUSH_STACK("r0-r12, lr"); // TODO: kernel lr
+    asm("mov r8, %0"::"r"(td->ret));
+    PUSH_STACK("r8");
+    WRITE_SPSR(td->psr);
+    
+    SET_CPSR(SYSTEM_MODE);
+    WRITE_SP(td->sp);
+    POP_STACK("lr");
+    asm("mov r8, sp");
+    asm("add sp, sp, #56");
 
+    SET_CPSR(KERNEL_MODE);
+    asm("ldmfd r8, {r0-r12, lr}");
+    POP_STACK("r0");
+    REVERSE_SWI();  
+  }
+
+  //=============================================================//
 
   asm("IRQ_ENTRY:");
   //Disable the interrupt
-  *(int *)(VIC1_BASE + VIC_SOFTINTCLEAR_OFFSET) = 0;
-  *(int *)(VIC2_BASE + VIC_SOFTINTCLEAR_OFFSET) = 0;
+  *(int *)(VIC1_BASE + VIC_SOFTINTCLEAR_OFFSET) = 3;
+  *(int *)(VIC2_BASE + VIC_SOFTINTCLEAR_OFFSET) = 3;
+
+  asm("stmfd sp, {r0-r12};");
+
+  asm("mov r9, sp;"
+      "mov r10, lr;");
+  //Change to System
+  SET_CPSR(SYSTEM_MODE);
+
+  asm("ldmdb r9!, {r0-r7}");
+  asm("stmdb sp!, {r0-r7, r10}");
+  asm("ldmdb r9!, {r0-r4}");
+  asm("stmdb sp!, {r0-r4}");
+  PUSH_STACK("lr");
+
+  SET_CPSR(KERNEL_MODE);
+  POP_STACK("r0-r12");
+  SET_CPSR(SYSTEM_MODE);
+  READ_SP(td->sp);
+  SET_CPSR(KERNEL_MODE);
+  READ_SPSR(td->psr);
+  td->it = 1;
+
+  asm("mov r0, #12"); //ENUM - TR_IRQ
+  POP_STACK("lr");
+  asm("b ACTIVATE_END");
+
+  //=============================================================//
 
   //AFTER USER TASK CALLS SWI (CANT USE FP)
   asm("KERNEL_ENTRY:");
@@ -145,12 +190,14 @@ TaskRequest activate(TaskDescriptor* td) {
   READ_SP(td->sp);
   SET_CPSR(KERNEL_MODE);
   READ_SPSR(td->psr);
-
+  td->it = 0;
   // TODO: this will be different for hw interrupts??
   //       we could set up hw interrupt arg passing
   //       similar to swi (pref not?)
   SWI_ARG_FETCH("r0");
   POP_STACK("lr");
+
+  //=============================================================//
 
   asm("ACTIVATE_END:");
   return;
@@ -193,49 +240,53 @@ void get_parentTid( TaskDescriptor *td) {
 
 void handle(TaskDescriptor *td, TaskRequest req) {
   switch (req) {
-  case ASSERT:
+  case TR_ASSERT:
     KABORT();
     break;
-  case PASS:
+  case TR_PASS:
     pq_push(&pq_tasks, td->priority, td);
     break;
-  case BLOCK:
+  case TR_BLOCK:
     td->status = BLOCKED;
     pq_push(&pq_tasks, td->priority, td);
     break;
-  case CREATE:
+  case TR_CREATE:
     create(td);
     pq_push(&pq_tasks, td->priority, td);
     break;
-  case MY_TID:
+  case TR_MY_TID:
     get_tid(td);
     pq_push(&pq_tasks, td->priority, td);
     break;
-  case MY_PARENT_TID:
+  case TR_MY_PARENT_TID:
     get_parentTid(td);
     pq_push(&pq_tasks, td->priority, td);
     break;
-  case SEND:
+  case TR_SEND:
     send_handler(td);
     break;
-  case RECEIVE:
+  case TR_RECEIVE:
     receive_handler(td);
     break;
-  case REPLY:
+  case TR_REPLY:
     reply_handler(td);
     break;
-  case NS_REG:
+  case TR_NS_REG:
     ns_register(td);
     pq_push(&pq_tasks, td->priority, td);
     break;
-  case NS_GET:
+  case TR_NS_GET:
     ns_get(td);
     pq_push(&pq_tasks, td->priority, td);
     break;
-  case EXIT:
+  case TR_EXIT:
     // TODO: uninitialize the task descriptor
     td->status = ZOMBIE;
     tt_return(td->tid, &tid_tracker);
+    break;
+  case TR_IRQ:
+    SANITY();
+    pq_push(&pq_tasks, td->priority, td);
     break;
   default:
     KASSERT(false && "UNDEFINED SWI PARAM");
