@@ -67,13 +67,13 @@ void initialize() {
   task = &TestTask;
 #else
   priority = 3;
-  #ifdef METRIC_64
-    task = &K2InitMetricTask;
-  #elif METRIC_4
-    task = &K2InitMetricTask;
-  #else
-    task=&InitTask;
-  #endif
+#ifdef METRIC_64
+  task = &K2InitMetricTask;
+#elif METRIC_4
+  task = &K2InitMetricTask;
+#else
+  task=&InitTask;
+#endif
 #endif
 
   int tid = tt_get(&tid_tracker);
@@ -191,9 +191,6 @@ TaskRequest activate(TaskDescriptor* td) {
   SET_CPSR(KERNEL_MODE);
   READ_SPSR(td->psr);
   td->it = 0;
-  // TODO: this will be different for hw interrupts??
-  //       we could set up hw interrupt arg passing
-  //       similar to swi (pref not?)
   SWI_ARG_FETCH("r0");
   POP_STACK("lr");
 
@@ -303,7 +300,7 @@ int no_tasks() {
 // TODO: fix this
 // NOTE: sl register not loaded
 //       YOU CANNOT USE GLOBALS IN MAIN
-__attribute__((naked)) void main(void) {
+__attribute__((naked)) int main(void) {
   KERNEL_INIT();
 #ifdef CACHE
   ENABLE_ALL_CACHE();
@@ -336,12 +333,13 @@ __attribute__((naked)) void main(void) {
     //Handle the swi
     handle(td, req);
   }
-  
+
 #ifdef CACHE
   DISABLE_ALL_CACHE();
 #endif
 
   KERNEL_EXIT();
+  return 0; // should not be reachable!
 }
 
 

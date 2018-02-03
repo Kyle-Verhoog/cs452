@@ -3,10 +3,6 @@
 
 #include <system.h>
 
-#ifdef KDEBUG
-#include <bwio.h>
-#endif
-
 void Assert();
 
 void Pass();
@@ -34,11 +30,12 @@ void RegisterNS();
 int GetNS();
 
 #ifdef DEBUG
+#include <io.h>
+
 #define assert(exp)                                    \
   do {                                                 \
     if (__predict_false(!(exp))) {                     \
-      bwprintf(                                        \
-          LOG_COM,                                     \
+      PRINTF(                                          \
           "\033[31m"                                   \
           "USER TASK "                                 \
           "ASSERTION '"STR(exp)"' FAILED <%s:%d>\r\n"  \
@@ -50,6 +47,8 @@ int GetNS();
     }                                                  \
   } while (0)
 #else
+#ifndef X86
 #define assert(exp) {}
+#endif
 #endif /* KDEBUG */
 #endif /* SYSCALLS_H */

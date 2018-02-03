@@ -71,7 +71,7 @@ void Stall() {
   Exit();
 }
 
-int testRegistersCount = 100;
+int testRegistersCount; = 100;
 void TestRegisters() {
   int reg;
   int r9, r10, r11, r12;
@@ -127,7 +127,7 @@ void TestRegisters() {
 
 void TestTid() {
   int tid = MyTid();
-  bwprintf(COM2, "MyTid - %x: \n\r", tid);
+  PRINTF("MyTid - %x: \n\r", tid);
 
   Create(5, &TestTid);
   Exit();
@@ -153,12 +153,10 @@ void GetNameServer() {
 }
 
 void TestTask() {
-  bwprintf(COM2, "Starting Test:\n\r");
-
   c = 0;
-  // Create(1, &Stall);
-  // Create(1, &Stall);
-  // Create(1, &Stall);
+  testRegistersCount; = 100;
+  PRINTF("Starting Test:\n\r");
+  
   // Create(0, &Stall);
   // Create(0, &DynamicPriorityTest);
   // Create(1, &FirstUserTask);
@@ -166,24 +164,9 @@ void TestTask() {
   // Create(0, &SimpleReceiver);
   // Create(0, &SimpleSender);
   // Create(0, &SimpleSender);
-  //Create(10, &NameServerTask);
-  //Create(5, &GetNameServer);
-bwprintf(COM2, "\n");
-bwprintf(COM2, "SANITY\n\r");
+  // Create(10, &NameServerTask);
+  // Create(5, &GetNameServer);
 
-bwprintf(COM2, "\r");
-  // int var;
-  // asm("mrs %0, cpsr;":"=r"(var):);
-
-  // bwprintf(COM2, "%x\n\r", (var >> 7) & 1);
-  // bwprintf(COM2, "%x\n\r", *(int *)(VIC1_BASE + VIC_INTSELECT_OFFSET));  
-
-  // bwprintf(COM2, "%x\n\r", *(int *)(VIC1_BASE + VIC_IRQSTATUS_OFFSET));
-
-  
-  // bwprintf(COM2, "%x\n\r", *(int *)(VIC1_BASE + VIC_IRQSTATUS_OFFSET));
-
-  bwprintf(COM2, "End Test:\n\r");
-  // bwprintf(COM2, "All tests completed.\n\r");
+  PRINTF("All tests completed.\n\r");
   Exit();
 }

@@ -1,8 +1,15 @@
+#ifndef SYSTEM_H
+#define SYSTEM_H
 /**
  * Modified based off of freeBSD source
  */
 
-#include <bwio.h>
+#include <lib/va_arg.h>
+
+#ifdef DEBUG
+#include <io.h>
+#endif
+
 #include <defines.h>
 
 #define STR_HELPER(x) #x
@@ -19,31 +26,12 @@
 #define is_set__(comma) is_set___(comma 1, 0)
 #define is_set___(_, v, ...) v
 
-#ifdef DEBUG
-#define KASSERTF(exp, msg) \
-  do {                                                 \
-    if (__predict_false(!(exp))) {                     \
-      bwprintf(                                        \
-          LOG_COM,                                     \
-          "\033[31m"                                   \
-          "ASSERTION '"STR(exp)"' FAILED <%s:%d>\r\n"  \
-          "\033[0m",                                   \
-          __FILE__,                                    \
-          __LINE__                                     \
-              );                                       \
-      kpanic msg;                                      \
-    }                                                  \
-  } while (0)
-#else
-#define KASSERTF(exp, msg) {}
-#endif
 
 #ifdef DEBUG
 #define KASSERT(exp) \
   do {                                                 \
     if (__predict_false(!(exp))) {                     \
-      bwprintf(                                        \
-          LOG_COM,                                     \
+      PRINTF(                                          \
           "\033[31m"                                   \
           "ASSERTION '"STR(exp)"' FAILED <%s:%d>\r\n"  \
           "\033[0m",                                   \
@@ -71,3 +59,4 @@
 
 extern void kpanic(const char *fmt, ...);
 
+#endif /* SYSTEM_H */

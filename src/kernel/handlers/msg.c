@@ -48,8 +48,7 @@ void send_handler(TaskDescriptor *std) {
 
     // 4.
     std->status = RPL_BL;
-  }
-  else {
+  } else {
     // 1. add to receiver send queue
     // 2. set sender state to receive blocked
 
@@ -113,8 +112,7 @@ void receive_handler(TaskDescriptor *rtd) {
 
     // 4.
     std->status = RPL_BL;
-  }
-  else {
+  } else {
     rtd->status = SND_BL;
   }
 }

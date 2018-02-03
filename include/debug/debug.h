@@ -61,7 +61,7 @@
 
 
 #ifdef DEBUG
-#define IS_VALID_USER_P(tid, sp) (sp >= ((USER_STACK_BASE - ((tid & 0xffff)+1)*USER_STACK_SIZE)) && sp <= (USER_STACK_BASE - ((tid & 0xffff)*USER_STACK_SIZE)))
+#define IS_VALID_USER_P(tid, sp) ((uint32_t)sp >= ((USER_STACK_BASE - ((tid & 0xffff)+1)*USER_STACK_SIZE)) && (uint32_t)sp <= (USER_STACK_BASE - ((tid & 0xffff)*USER_STACK_SIZE)))
 #else
 #define IS_VALID_USER_P(tid, sp)
 #endif

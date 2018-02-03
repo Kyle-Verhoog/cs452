@@ -7,6 +7,12 @@
 #define TIMER1_BASE 0x80810000
 #define TIMER2_BASE 0x80810020
 #define TIMER3_BASE 0x80810080
+/* ep93xx-user-guide.pdf page 636 */
+#define TIMER3_DATA 0x80810084
+#define TIMER3_LOAD 0x80810080
+#define TIMER3_MASK 0x80
+#define TIMER3_INIT 0xffffffff
+#define TIMER3_CTRL 0x80810088
 #define TIMER4_LOW  0x80810060
 #define TIMER4_HIGH 0x80810064
 

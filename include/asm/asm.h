@@ -76,22 +76,22 @@
 //COPIED FROM ARM INFO CENTER
 #define ENABLE_ALL_CACHE() \
   asm( \
-      "mov r0, #0;" \
-      "mov r1, #0;" \
-  		"MRC p15, 0, r1, c1, c0, 0;" \
-  		"ORR r1, r1, #0x1 <<12;" \
-  		"ORR r1, r1, #0x1 <<2;" \
-  		"MCR p15, 0, r0, c15, c5, 0;" \
-  		"MCR p15, 0, r0, c7, c5, 0;" \
-  		"MCR p15, 0, r1, c1, c0, 0;" \
-  );
+       "mov r0, #0;" \
+       "mov r1, #0;" \
+       "MRC p15, 0, r1, c1, c0, 0;" \
+       "ORR r1, r1, #0x1 <<12;" \
+       "ORR r1, r1, #0x1 <<2;" \
+       "MCR p15, 0, r0, c15, c5, 0;" \
+       "MCR p15, 0, r0, c7, c5, 0;" \
+       "MCR p15, 0, r1, c1, c0, 0;" \
+     );
 
 //COPIED FROM ARM INFO CENTER
 #define DISABLE_ALL_CACHE() \
   asm( \
-  	"MRC p15, 0, r1, c1, c0, 0;" \
-  	"BIC r1, r1, #0x1 <<12;" \
-  	"MCR p15, 0, r1, c1, c0, 0;" \
-  );
+       "MRC p15, 0, r1, c1, c0, 0;" \
+       "BIC r1, r1, #0x1 <<12;" \
+       "MCR p15, 0, r1, c1, c0, 0;" \
+     );
 
 #endif /* ASM_H */

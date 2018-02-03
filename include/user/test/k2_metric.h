@@ -1,6 +1,6 @@
 #ifndef K2_METRIC_H
 #define K2_METRIC_H
-#include <bwio.h>
+#include <io.h>
 #include <syscalls.h>
 #include <ts7200.h>
 
