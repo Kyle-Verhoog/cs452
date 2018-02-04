@@ -47,9 +47,10 @@ int RegisterAs(int n) {
 
 int WhoIs(int n) {
   int ns_tid = GetNS();
-  if (ns_tid < 0) {
-    // TODO: error checking
-  }
+  
+  // TODO: error checking
+  KASSERT(ns_tid > 0);
+
   NSreq rec;
   rec.type = WhoIs_t;
   rec.name = n;

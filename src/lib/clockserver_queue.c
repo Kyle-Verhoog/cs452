@@ -66,8 +66,6 @@ int csq_pop(cs_queue *csq, int ticks, tid_id_t *id) {
   csq->head = csq->head->next;
   csq->size--;
   return 0;
-
-  return CSQ_NREADY;
 }
 
 int csq_remove(cs_queue *csq, tid_id_t id) {
