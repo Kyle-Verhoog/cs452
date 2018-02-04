@@ -6,7 +6,7 @@ typedef signed int int32_t;
 typedef unsigned int uint32_t;
 
 typedef int tid_t;
-#define TID_ID(tid) tid & 0xffff
+#define TID_ID(tid) (tid & 0xffff)
 typedef short int tid_id_t;
 typedef short int tid_ver_t;
 

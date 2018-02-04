@@ -62,15 +62,13 @@
 
 #ifdef DEBUG
 #define IS_VALID_USER_P(tid, sp) ((uint32_t)sp >= ((USER_STACK_BASE - ((tid & 0xffff)+1)*USER_STACK_SIZE)) && (uint32_t)sp <= (USER_STACK_BASE - ((tid & 0xffff)*USER_STACK_SIZE)))
+#define IS_VALID_ID(tid) (tid >= 0 && tid < MAX_TASK)
+// TODO: add version number checking
+#define IS_VALID_TID(tid) (TID_ID(tid) >= 0 && TID_ID(tid) < MAX_TASK)
 #else
 #define IS_VALID_USER_P(tid, sp)
-#endif
-
-#ifdef DEBUG
-#define IS_VALID_ID(tid) (tid >= 0 && tid < MAX_TASK)
-#else
 #define IS_VALID_ID(tid)
+#define IS_VALID_TID(tid)
 #endif
-
 
 #endif /* DEBUG_H */

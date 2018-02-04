@@ -8,6 +8,7 @@
 
 #ifdef DEBUG
 #include <io.h>
+#include <debug.h>
 #endif
 
 #include <defines.h>

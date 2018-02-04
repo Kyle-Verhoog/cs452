@@ -47,17 +47,25 @@ int Time(int tid) {
  * Note: this is a notifier, and should be given max priority.
  */
 void ClockServerNotifier() {
-  int cs_tid = WhoIs(CLOCKSERVER_ID);
-  KASSERT(cs_tid > 0);
-
+  int i, ureply, cs_tid;
   CSReq req;
   CSNReply reply;
+
   req.type = CSREQ_UPDATE;
+  cs_tid = WhoIs(CLOCKSERVER_ID);
+  KASSERT(cs_tid > 0);
 
   while (true) {
     // TODO: AwaitEvent(TIMER_3);
     Send(cs_tid, &req, sizeof(req), &reply, sizeof(reply));
-    KASSERT(reply == 0);
+    KASSERT(reply.ntids >= 0 && reply.ntids <= CS_PROCESS_NUM);
+    KASSERT(reply.tids != NULL);
+    for (i = 0; i < reply.ntids; i++) {
+      tid_t tid = reply.tids[i];
+      KASSERT(IS_VALID_TID(tid));
+      ureply = 0;
+      Reply(tid, &ureply, sizeof(ureply));
+    }
   }
 }
 
@@ -65,7 +73,7 @@ void ClockServerNotifier() {
 /**
  * Keeps track of 10ms ticks once started.
  *
- * Note: must be notified via ClockServerNotify()
+ * Note: must be notified of hwclock ticks via ClockServerNotify()
  */
 void ClockServer() {
   // init queue
@@ -92,20 +100,18 @@ void ClockServer() {
       case CSREQ_DELAY:
         if (req.ticks <= 0) {
           reply = CS_E_DELAY;
-        } else {
-          csq_add(&csq, req_tid, ticks + req.ticks);
-          reply = CS_SUCCESS;
+          Reply(req_tid, &reply, sizeof(int));
+          break;
         }
-        Reply(req_tid, &reply, sizeof(int));
+        csq_add(&csq, req_tid, ticks + req.ticks);
         break;
       case CSREQ_UNTIL:
         if (req.ticks < ticks) {
           reply = CS_E_DELAY;
-        } else {
-          csq_add(&csq, req_tid, req.ticks);
-          reply = CS_SUCCESS;
+          Reply(req_tid, &reply, sizeof(int));
+          break;
         }
-        Reply(req_tid, &reply, sizeof(int));
+        csq_add(&csq, req_tid, req.ticks);
         break;
       case CSREQ_TIME:
         reply = ticks;
