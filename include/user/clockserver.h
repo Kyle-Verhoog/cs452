@@ -8,6 +8,10 @@
 
 #define CLOCKSERVER_ID 2
 
+#define CS_SUCCESS  0
+#define CS_E_TID   -1
+#define CS_E_DELAY -2
+
 typedef enum CSReqType {
   CSREQ_DELAY  = 0,
   CSREQ_UNTIL  = 1,

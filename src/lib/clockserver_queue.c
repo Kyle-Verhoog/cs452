@@ -20,21 +20,27 @@ int csq_add(cs_queue *csq, tid_id_t id, int ticks) {
   if (csq->size == CSQ_SIZE) return CSQ_FULL;
   
   csq_node *new  = &csq->nodes[id];
-  new->ticks = ticks;
+  new->ticks     = ticks;
+
   csq_node *cur  =  csq->head;
   csq_node *prv  =  NULL;
 
   if (cur == NULL) {
     new->next = NULL;
     csq->head = new;
+  } else if (ticks < cur->ticks) {
+    new->next = csq->head;
+    csq->head = new;
+    goto END;
   }
+
 
   while (cur != NULL) {
     if (ticks < cur->ticks) {
       if (prv != NULL)
         prv->next = new;
       new->next = cur;
-      break;
+      goto END;
     }
 
     prv = cur;
@@ -43,10 +49,11 @@ int csq_add(cs_queue *csq, tid_id_t id, int ticks) {
     if (cur == NULL) {
       prv->next = new;
       new->next = NULL;
-      break;
+      goto END;
     }
   }
 
+END:
   csq->size++;
   return 0;
 }
@@ -80,6 +87,7 @@ csq_node *csq_find(cs_queue *csq, tid_id_t id) {
       return cur;
     cur = cur->next;
   }
-  return (csq_node *)CSQ_NEXIST;
+
+  return NULL;
 }
 
