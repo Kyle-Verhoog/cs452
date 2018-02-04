@@ -4,6 +4,9 @@
  * Specific to the TS-7200 ARM evaluation board
  */
 
+#ifndef TS_7200_H
+#define TS_7200_H
+
 #define TIMER1_BASE 0x80810000
 #define TIMER2_BASE 0x80810020
 #define TIMER3_BASE 0x80810080
@@ -104,3 +107,5 @@
 #define VIC_SOFTINTCLEAR_OFFSET 0x1c
 #define VIC_PROTECTION_OFFSET 0x20
 #define VIC_VECTADDR_OFFSET 0x30
+
+#endif //TS_7200_H

@@ -4,11 +4,22 @@
 
 InterruptEvent WakePriority[64] = {51};
 
+int get_interrupt_ret(InterruptEvent ie){
+	switch(ie){
+		case IE_TC3UI:
+			return *(int *)(TIMER3_BASE | VAL_OFFSET);
+			break;
+		default:
+			KASSERT(0 && "Bad InterruptEvent Specified.");
+	}
+
+	return -1;
+}
+
 void wakeall(interrupt_matrix *im, InterruptEvent ie){
 	while(im_eventsize(im, ie) > 0){
 		TaskDescriptor *td = im_top(im, ie);
-		//TODO: Pass possible ret value to td->ret
-		//PRINTF("TID: %x\n\r", td->tid);
+		td->ret = get_interrupt_ret(ie); //TODO: Pass possible ret value to td->ret
 		pq_push(&pq_tasks, td->priority, td);
 		im_pop(im, ie);
 	}
@@ -18,7 +29,6 @@ void clear_interrupt(InterruptEvent ie){
 	switch(ie){
 		case IE_TC3UI:
 			*(int *)(TIMER3_BASE | CLR_OFFSET) = 1;
-			PRINTF("TIMER CLEAR!\n\r");
 			break;
 		default:
 			KASSERT(0 && "Bad InterruptEvent Specified.");

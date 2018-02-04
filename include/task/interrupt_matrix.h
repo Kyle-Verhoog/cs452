@@ -5,10 +5,6 @@
 #include <task.h>
 #include <circularbuffer.h>
 
-typedef enum InterruptEvent{
-	IE_TC3UI = 51
-} InterruptEvent;
-
 typedef struct interrupt_matrix{
 	CircularBuffer TC3UI;
 } interrupt_matrix;

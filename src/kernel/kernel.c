@@ -135,6 +135,7 @@ TaskRequest activate(TaskDescriptor* td) {
 
   asm("mov r9, sp;"
       "mov r10, lr;");
+
   //Change to System
   SET_CPSR(SYSTEM_MODE);
 
@@ -148,8 +149,9 @@ TaskRequest activate(TaskDescriptor* td) {
   POP_STACK("r0-r12");
   SET_CPSR(SYSTEM_MODE);
   READ_SP(td->sp);
-  SET_CPSR(KERNEL_MODE);
+  SET_CPSR(IRQ_MODE);
   READ_SPSR(td->psr);
+  SET_CPSR(KERNEL_MODE);
   td->it = 1;
 
   asm("mov r0, #12"); //ENUM - TR_IRQ
@@ -164,6 +166,7 @@ TaskRequest activate(TaskDescriptor* td) {
 
   asm("mov r9, sp;"
       "mov r10, lr;");
+
   //Change to System
   SET_CPSR(SYSTEM_MODE);
 
@@ -325,6 +328,7 @@ __attribute__((naked)) int main(void) {
     handle(td, req);
   }
 
+  cleanup_irq();
 #ifdef CACHE
   DISABLE_ALL_CACHE();
 #endif

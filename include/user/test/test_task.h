@@ -5,6 +5,7 @@
 #include <user/nameserver.h>
 #include <user/test/k1_task.h>
 #include <user/test/messaging.h>
+#include <types.h>
 
 void TestTask();
 

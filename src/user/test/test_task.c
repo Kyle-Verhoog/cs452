@@ -12,21 +12,21 @@ void Stall() {
   int stallTime = 5000;
   int i;
   for(i = 0; i < stallTime; i+=d) {
-    int reg;
-    int r9, r10, r11, r12;
-    asm("mov r0, %0"::"r"(i*334-321431));
-    asm("mov r1, %0"::"r"(i%2));
-    asm("mov r2, %0"::"r"((i+3)*36));
-    asm("mov r3, %0"::"r"(i-32));
-    asm("mov r4, %0"::"r"(i/10));
-    asm("mov r5, %0"::"r"(i%(i+1)));
-    asm("mov r6, %0"::"r"(i/12));
-    asm("mov r7, %0"::"r"(i+7));
-    asm("mov r8, %0"::"r"(i-212));
-    asm("mov %0, r9":"=r"(r9):);
-    asm("mov %0, r10":"=r"(r10):);
-    asm("mov %0, r11":"=r"(r11):);
-    asm("mov %0, r12":"=r"(r12):);
+    // int reg;
+    // int r9, r10, r11, r12;
+    // asm("mov r0, %0"::"r"(i*334-321431));
+    // asm("mov r1, %0"::"r"(i%2));
+    // asm("mov r2, %0"::"r"((i+3)*36));
+    // asm("mov r3, %0"::"r"(i-32));
+    // asm("mov r4, %0"::"r"(i/10));
+    // asm("mov r5, %0"::"r"(i%(i+1)));
+    // asm("mov r6, %0"::"r"(i/12));
+    // asm("mov r7, %0"::"r"(i+7));
+    // asm("mov r8, %0"::"r"(i-212));
+    // asm("mov %0, r9":"=r"(r9):);
+    // asm("mov %0, r10":"=r"(r10):);
+    // asm("mov %0, r11":"=r"(r11):);
+    // asm("mov %0, r12":"=r"(r12):);
 
     Pass();
     // Note r0, r3 corrupted
@@ -45,30 +45,30 @@ void Stall() {
     */
 
     // Note: r1, r2, r3 used by compiler
-    asm("mov %0, r4":"=r"(reg):);
-    assert(reg == i/10);
-    asm("mov %0, r5":"=r"(reg):);
-    assert(reg == i%(i+1));
-    asm("mov %0, r6":"=r"(reg):);
-    assert(reg == i/12);
-    asm("mov %0, r7":"=r"(reg):);
-    assert(reg == i+7);
-    asm("mov %0, r8":"=r"(reg):);
-    assert(reg == i-212);
-    asm("mov %0, r9":"=r"(reg):);
-    assert(reg == r9);
-    asm("mov %0, r10":"=r"(reg):);
-    assert(reg == r10);
-    asm("mov %0, r11":"=r"(reg):);
-    assert(reg == r11);
-    asm("mov %0, r12":"=r"(reg):);
-    assert(reg == r12);
+    // asm("mov %0, r4":"=r"(reg):);
+    // assert(reg == i/10 && "r4");
+    // asm("mov %0, r5":"=r"(reg):);
+    // assert(reg == i%(i+1) && "r5");
+    // asm("mov %0, r6":"=r"(reg):);
+    // assert(reg == i/12 && "r6");
+    // asm("mov %0, r7":"=r"(reg):);
+    // assert(reg == i+7 && "r7");
+    // asm("mov %0, r8":"=r"(reg):);
+    // assert(reg == i-212 && "r8");
+    // asm("mov %0, r9":"=r"(reg):);
+    // assert(reg == r9);
+    // asm("mov %0, r10":"=r"(reg):);
+    // assert(reg == r10);
+    // asm("mov %0, r11":"=r"(reg):);
+    // assert(reg == r11);
+    // asm("mov %0, r12":"=r"(reg):);
+    // assert(reg == r12);
 
     //Stalling
     bwprintf(COM2, "%d: %d \n\r", d, i);
   }
 
-  Exit();
+  //Exit();
 }
 
 int testRegistersCount = 100;
@@ -153,23 +153,27 @@ void GetNameServer() {
 }
 
 void IdleTask(){
-  while(1){
-
-  }
+  PRINTF("Press a key to quit:\n\r");
+  bwgetc(COM2);
+  Exit();
 }
 
 void TickWaiter(){
   int tid = WhoIs((int)('T'+'C'+'I'));
   PRINTF("Waiting for Clock Interrupt!\n\r");
-  AwaitEvent(51);
-  PRINTF("Clock Interrupt Replied!\n\r");
+  int ret = AwaitEvent(IE_TC3UI);
+  PRINTF("Clock Interrupt Replied - %d!\n\r", ret);
 
+  Stall();
+  
   int finish;
   Send(tid, &tid, sizeof(int), &finish, sizeof(int));
 
+  Stall();
+
   PRINTF("Waiting for Clock Interrupt!\n\r");
-  AwaitEvent(51);
-  PRINTF("Clock Interrupt Replied!\n\r");
+  ret = AwaitEvent(IE_TC3UI);
+  PRINTF("Clock Interrupt Replied - %d!\n\r", ret);
 
   Send(tid, &tid, sizeof(int), &finish, sizeof(int));
 
@@ -178,17 +182,17 @@ void TickWaiter(){
 
 void TestClockInterrupt(){
   //Initialize 32bit clock - Periodic 502KHz
-  *(int*)(TIMER3_BASE | LDR_OFFSET) = 502000;
+  *(int*)(TIMER3_BASE | LDR_OFFSET) = 5020;
   *(int*)(TIMER3_BASE | CRTL_OFFSET) = ENABLE_MASK | CLKSEL_MASK | MODE_MASK; 
 
   RegisterAs((int)('T'+'C'+'I'));
 
 
-  int tw1 = Create(31, &TickWaiter);
-  int tw2 = Create(31, &TickWaiter);
-  int tw3 = Create(31, &TickWaiter);
-  int tw4 = Create(31, &TickWaiter);
-  int tw5 = Create(31, &TickWaiter);
+  Create(30, &TickWaiter);
+  Create(30, &TickWaiter);
+  Create(30, &TickWaiter);
+  Create(30, &TickWaiter);
+  Create(30, &TickWaiter);
   Create(0, &IdleTask);
 
   int requestor;
@@ -238,12 +242,24 @@ void TestClockInterrupt(){
 void TestTask() {
   c = 0;
   testRegistersCount = 100;
+  bwsetfifo(COM2, OFF);
+  bwsetfifo(COM1, OFF);
+  PRINTF("Starting Test:\n\r");
+
   //Create the nameserver
   Create(31, &NameServerTask);
-
-  PRINTF("Starting Test:\n\r");
   Create(10, &TestClockInterrupt);
-  //PRINTF("All tests completed.\n\r");
 
+  //*(int *)(VIC1_BASE + VIC_SOFTINT_OFFSET) = (1 << 30) - 1; 
+  // Create(0, &DynamicPriorityTest);
+  // Create(1, &FirstUserTask);
+  // Create(0, &TestRegisters);
+  // Create(0, &SimpleReceiver);
+  // Create(0, &SimpleSender);
+  // Create(0, &SimpleSender);
+  // Create(10, &NameServerTask);
+  // Create(5, &GetNameServer);
+
+  PRINTF("All tests completed.\n\r");
   Exit();
 }
