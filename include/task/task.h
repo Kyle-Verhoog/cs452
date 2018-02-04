@@ -78,4 +78,6 @@ int tt_size(TidTracker *tt);
  */
 void td_init(TaskDescriptor *td);
 
+#define TID_ID(tid) tid & 0xffff
+
 #endif /* TASK_H */

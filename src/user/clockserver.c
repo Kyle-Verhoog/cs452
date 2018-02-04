@@ -3,13 +3,43 @@
 
 int Delay(int tid, uint32_t ticks) {
   int cs_tid = WhoIs(CLOCKSERVER_ID);
+  KASSERT(cs_tid > 0);
+
+  CSReq req;
+  req.tid   = tid;
+  req.type  = CSREQ_DELAY;
+  req.ticks = ticks;
+
+  int reply;
+  Send(cs_tid, &req, &reply, sizeof(int));
+  return reply;
 }
 
 int DelayUntil(int tid, int ticks) {
+  int cs_tid = WhoIs(CLOCKSERVER_ID);
+  KASSERT(cs_tid > 0);
 
+  CSReq req;
+  req.tid   = tid;
+  req.type  = CSREQ_UNTIL;
+  req.ticks = ticks;
+
+  int reply;
+  Send(cs_tid, &req, &reply, sizeof(int));
+  return reply;
 }
 
 int Time(int tid) {
+  int cs_tid = WhoIs(CLOCKSERVER_ID);
+  KASSERT(cs_tid > 0);
+
+  CSReq req;
+  req.tid   = tid;
+  req.type  = CSREQ_TIME;
+
+  int reply;
+  Send(cs_tid, &req, &reply, sizeof(int));
+  return reply;
 }
 
 void ClockServer() {
@@ -24,18 +54,33 @@ void ClockServer() {
   tid_t req_tid;
   CSReq req;
 
+  int reply;
+
   while (true) {
     Receive(&req_tid, &req, sizeof(CSReq)); // TODO: AwaitEvent?
 
     switch (req.type) {
       case CSREQ_DELAY:
-        KASSERT(0 && "TODO");
+        if (req.ticks <= 0) {
+          reply = -2
+        } else {
+          csq_add(&csq, TID_ID(req_tid), ticks + req.ticks);
+          reply = 0;
+        }
+        Reply(req_tid, &reply, sizof(int));
         break;
       case CSREQ_UNTIL:
-        KASSERT(0 && "TODO");
+        if (req.ticks < ticks) {
+          reply = -2;
+        } else {
+          csq_add(&csq, TID_ID(req_tid), req.ticks);
+          reply = 0;
+        }
+        Reply(req_tid, &reply, sizof(int));
         break;
       case CSREQ_TIME:
-        KASSERT(0 && "TODO");
+        reply = ticks;
+        Reply(req_tid, &reply, sizof(int));
         break;
       case CSREQ_UPDATE:
         ticks++;

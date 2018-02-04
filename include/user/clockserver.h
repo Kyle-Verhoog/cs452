@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <lib/clockserver_queue.h>
 #include <kernel/syscalls.h>
+#include <user/nameserver.h>
 
 #define CLOCKSERVER_ID 2
 
