@@ -1,6 +1,7 @@
 #ifndef TEST_NAMESERVER_H
 #define TEST_NAMESERVER_H
-#include <stdio.h>
+
+#include <test/test.h>
 #include <user/nameserver.h>
 
 void nameserver_tests();

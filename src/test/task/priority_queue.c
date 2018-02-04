@@ -202,5 +202,4 @@ void priority_queue_tests() {
   pq_pop_basic();
   pq_pop_2_same_priorities();
   pq_pop_3_different_priorities();
-  printf("✓ priority_queue\n");
 }

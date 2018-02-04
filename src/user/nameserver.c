@@ -33,6 +33,7 @@ void NameServerTask() {
 int RegisterAs(int n) {
   int ns_tid = GetNS();
   if (ns_tid < 0) {
+    assert(0);
     // TODO: error checking
   }
   NSreq rec;
@@ -47,9 +48,10 @@ int RegisterAs(int n) {
 
 int WhoIs(int n) {
   int ns_tid = GetNS();
-  if (ns_tid < 0) {
-    // TODO: error checking
-  }
+  
+  // TODO: error checking
+  assert(ns_tid > 0);
+
   NSreq rec;
   rec.type = WhoIs_t;
   rec.name = n;
@@ -68,4 +70,5 @@ void StopNameServer() {
 
   int reply;
   Send(ns_tid, &rec, sizeof(NSreq), &reply, sizeof(int));
+  Exit();
 }

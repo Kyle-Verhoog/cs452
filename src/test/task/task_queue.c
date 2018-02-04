@@ -118,5 +118,4 @@ void task_queue_tests() {
   tq_pop_basic();
   tq_pop_2();
   tq_pop_22();
-  printf("✓ task_queue\n");
 }

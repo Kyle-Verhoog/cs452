@@ -65,13 +65,13 @@ void Stall() {
     // assert(reg == r12);
 
     //Stalling
-    bwprintf(COM2, "%d: %d \n\r", d, i);
+    PRINTF("%d: %d \n\r", d, i);
   }
 
   //Exit();
 }
 
-int testRegistersCount = 100;
+int testRegistersCount;
 void TestRegisters() {
   int reg;
   int r9, r10, r11, r12;

@@ -1,5 +1,4 @@
 #include <test/nameserver.h>
-#include <assert.h>
 
 void ns_sanity() {
   NSrecord NameServer[NAMESERVER_SIZE];
@@ -16,5 +15,4 @@ void ns_sanity() {
 
 void nameserver_tests() {
   ns_sanity();
-  printf("✓ NameServer\n");
 }

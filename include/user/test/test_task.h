@@ -3,6 +3,7 @@
 
 #include <kernel/syscalls.h>
 #include <user/nameserver.h>
+#include <user/clockserver.h>
 #include <user/test/k1_task.h>
 #include <user/test/messaging.h>
 #include <types.h>
