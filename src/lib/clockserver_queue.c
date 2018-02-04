@@ -1,7 +1,7 @@
 #include <lib/clockserver_queue.h>
 
-void csq_node_init(csq_node *csqn, tid_id_t id) {
-  csqn->id    = id;
+void csq_node_init(csq_node *csqn, tid_t tid) {
+  csqn->tid   = tid;
   csqn->ticks = 0;
   csqn->next  = NULL;
 }
@@ -16,42 +16,34 @@ void csq_init(cs_queue *csq) {
   }
 }
 
-int csq_add(cs_queue *csq, tid_id_t id, int ticks) {
-  if (csq->size == CSQ_SIZE) return CSQ_FULL;
+int csq_add(cs_queue *csq, tid_t id, int ticks) {
+  if (id > NUM_TASKS) return CSQ_E_TID;
+  if (csq->size == CSQ_SIZE) return CSQ_E_FULL;
   
-  csq_node *new  = &csq->nodes[id];
-  new->ticks     = ticks;
-
-  csq_node *cur  =  csq->head;
-  csq_node *prv  =  NULL;
-
-  if (cur == NULL) {
-    new->next = NULL;
-    csq->head = new;
-  } else if (ticks < cur->ticks) {
-    new->next = csq->head;
-    csq->head = new;
-    goto END;
-  }
-
+  csq_node *new = &csq->nodes[id];
+  new->ticks    = ticks;
+  csq_node *cur = csq->head;
+  csq_node *prv = NULL;
 
   while (cur != NULL) {
     if (ticks < cur->ticks) {
       if (prv != NULL)
         prv->next = new;
+      else
+        csq->head = new;
       new->next = cur;
       goto END;
     }
 
     prv = cur;
     cur = cur->next;
-
-    if (cur == NULL) {
-      prv->next = new;
-      new->next = NULL;
-      goto END;
-    }
   }
+
+  if (prv != NULL)
+    prv->next = new;
+  else
+    csq->head = new;
+  new->next = NULL;
 
 END:
   csq->size++;
@@ -64,26 +56,30 @@ int csq_check(cs_queue *csq, int ticks) {
   return 0;
 }
 
-int csq_pop(cs_queue *csq, int ticks, tid_id_t *id) {
+int csq_pop(cs_queue *csq, int ticks, tid_t *tid) {
   KASSERT(csq->head != NULL);
-  if (csq->head == NULL || ticks > csq->head->ticks)
-    return CSQ_NREADY;
+  if (csq->head == NULL)
+    return CSQ_E_EMPTY;
+
+  if (ticks < csq->head->ticks)
+    return CSQ_E_READY;
   
-  *id = csq->head->id;
+  *tid = csq->head->tid;
   csq->head = csq->head->next;
   csq->size--;
   return 0;
 }
 
-int csq_remove(cs_queue *csq, tid_id_t id) {
+int csq_remove(cs_queue *csq, tid_t tid) {
+  KASSERT(0 && "TODO");
   return 0;
 }
 
-csq_node *csq_find(cs_queue *csq, tid_id_t id) {
+csq_node *csq_find(cs_queue *csq, tid_t tid) {
   csq_node *cur;
   cur = csq->head;
   while (cur != NULL) {
-    if (cur->id == id)
+    if (cur->tid == tid)
       return cur;
     cur = cur->next;
   }

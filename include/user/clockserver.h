@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <lib/clockserver_queue.h>
+#include <ts7200.h>
 #include <kernel/syscalls.h>
 #include <user/nameserver.h>
 
@@ -11,6 +12,8 @@
 #define CS_SUCCESS  0
 #define CS_E_TID   -1
 #define CS_E_DELAY -2
+
+#define CS_PROCESS_NUM 5
 
 typedef enum CSReqType {
   CSREQ_DELAY  = 0,
@@ -24,6 +27,13 @@ typedef struct CSReq {
   tid_t     tid;
   uint32_t  ticks;
 } CSReq;
+
+typedef struct CSNReply {
+  // cs_queue *csq;
+  // uint32_t  ticks;
+  tid_t *tids;
+  int    ntids;
+} CSNReply;
 
 
 int Delay(int tid, uint32_t ticks);

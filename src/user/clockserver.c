@@ -51,20 +51,16 @@ void ClockServerNotifier() {
   KASSERT(cs_tid > 0);
 
   CSReq req;
+  CSNReply reply;
   req.type = CSREQ_UPDATE;
-
-  int reply;
-  return reply;
-
-  CSReq req;
-  int reply;
 
   while (true) {
     // TODO: AwaitEvent(TIMER_3);
-    Send(cs_tid, &req, sizeof(req), &reply, sizeof(int));
+    Send(cs_tid, &req, sizeof(req), &reply, sizeof(reply));
     KASSERT(reply == 0);
   }
 }
+
 
 /**
  * Keeps track of 10ms ticks once started.
@@ -74,15 +70,20 @@ void ClockServerNotifier() {
 void ClockServer() {
   // init queue
   cs_queue csq;  
-  csq_init(&csq);
+  tid_t reply_tids[CS_PROCESS_NUM];
+  tid_t req_tid, id;
+  CSReq req;
+  int i, reply;
+  CSNReply nreply;
   uint32_t ticks;
+
+  csq_init(&csq);
   ticks = 0;
+  nreply.tids  = reply_tids;
 
   // init timer 3
-
-  tid_t req_tid;
-  CSReq req;
-  int reply;
+  *(int*)(TIMER3_BASE | LDR_OFFSET) = 5020;
+  *(int*)(TIMER3_BASE | CRTL_OFFSET) = ENABLE_MASK | CLKSEL_MASK | MODE_MASK;
 
   while (true) {
     Receive(&req_tid, &req, sizeof(CSReq));
@@ -92,7 +93,7 @@ void ClockServer() {
         if (req.ticks <= 0) {
           reply = CS_E_DELAY;
         } else {
-          csq_add(&csq, TID_ID(req_tid), ticks + req.ticks);
+          csq_add(&csq, req_tid, ticks + req.ticks);
           reply = CS_SUCCESS;
         }
         Reply(req_tid, &reply, sizeof(int));
@@ -101,7 +102,7 @@ void ClockServer() {
         if (req.ticks < ticks) {
           reply = CS_E_DELAY;
         } else {
-          csq_add(&csq, TID_ID(req_tid), req.ticks);
+          csq_add(&csq, req_tid, req.ticks);
           reply = CS_SUCCESS;
         }
         Reply(req_tid, &reply, sizeof(int));
@@ -112,8 +113,18 @@ void ClockServer() {
         break;
       case CSREQ_UPDATE:
         ticks++;
-        reply = 0;
-        Reply(req_tid, &reply, sizeof(int));
+        nreply.ntids = 0;
+        for (i = 0; i < CS_PROCESS_NUM; i++) {
+          if (csq_pop(&csq, ticks, &id) == 0) {
+            break;
+          }
+          reply_tids[i] = id;
+          nreply.ntids++;
+        }
+
+        // nreply.ticks = ticks;
+        // nreply.csq   = &csq;
+        Reply(req_tid, &nreply, sizeof(nreply));
         break;
       default:
         KASSERT(0 && "CS: UNKNOWN REQUEST TYPE");
