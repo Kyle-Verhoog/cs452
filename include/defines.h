@@ -27,7 +27,9 @@
 #define KERNEL_MODE 19 
 #define SYSTEM_MODE 31 
 
+// The number of tasks in the system
 #define MAX_TASK 16
+#define NUM_TASKS 16
 
 #endif // DEFINES_H
 

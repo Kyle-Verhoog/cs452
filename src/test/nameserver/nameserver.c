@@ -14,7 +14,5 @@ void ns_sanity() {
 }
 
 void nameserver_tests() {
-  PTEST_START("NameServer");
   ns_sanity();
-  PTEST_END();
 }

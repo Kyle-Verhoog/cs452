@@ -113,11 +113,9 @@ void tq_pop_22() {
 }
 
 void task_queue_tests() {
-  PTEST_START("task_queue");
   tq_sanity();
   tq_push_basic();
   tq_pop_basic();
   tq_pop_2();
   tq_pop_22();
-  PTEST_END();
 }

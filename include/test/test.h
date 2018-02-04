@@ -4,6 +4,6 @@
 #include <io.h>
 #include <assert.h>
 
-#define PTEST_START(msg) PRINTF(msg)
-#define PTEST_END() PRINTF("\t\t✓\n")
+#define PTEST_START(msg) { PRINTF("| %-20s |", msg); }
+#define PTEST_END() PRINTF(" ✓ |\n")
 #endif /* TEST_H */

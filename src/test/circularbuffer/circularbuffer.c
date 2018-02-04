@@ -17,7 +17,5 @@ void cb_sanity() {
 }
 
 void circular_buffer_tests() {
-  PTEST_START("circularbuffer");
   cb_sanity();
-  PTEST_END();
 }
