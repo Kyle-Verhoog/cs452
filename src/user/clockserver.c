@@ -73,11 +73,9 @@ void ClockServerNotifier() {
   assert(cs_tid > 0);
 
   while (true) {
-    Pass();
-     // TODO: AwaitEvent(TIMER_3);
+    AwaitEvent(IE_TC3UI);
     Send(cs_tid, &req, sizeof(req), &reply, sizeof(reply));
     // PRINTF("%d\n\r", *(unsigned int*)(TIMER3_BASE | VAL_OFFSET));
-    assert(reply.ntids == 0);
     assert(reply.ntids >= 0 && reply.ntids <= CS_PROCESS_NUM);
     assert(reply.tids != NULL);
     for (i = 0; i < reply.ntids; i++) {
@@ -162,7 +160,6 @@ void ClockServer() {
           reply_tids[i] = id;
           nreply.ntids++;
         }
-        assert(nreply.ntids == 0);
         // nreply.ticks = ticks;
         // nreply.csq   = &csq;
 

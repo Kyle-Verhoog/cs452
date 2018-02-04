@@ -155,6 +155,8 @@ void GetNameServer() {
 void IdleTask(){
   PRINTF("Press a key to quit:\n\r");
   bwgetc(COM2);
+  ClockServerStop();
+  StopNameServer();
   Exit();
 }
 
@@ -183,7 +185,7 @@ void TickWaiter(){
 void TestClockInterrupt(){
   //Initialize 32bit clock - Periodic 502KHz
   *(int*)(TIMER3_BASE | LDR_OFFSET) = 5020;
-  *(int*)(TIMER3_BASE | CRTL_OFFSET) = ENABLE_MASK | CLKSEL_MASK | MODE_MASK; 
+  *(int*)(TIMER3_BASE | CTRL_OFFSET) = ENABLE_MASK | CLKSEL_MASK | MODE_MASK;
 
   RegisterAs((int)('T'+'C'+'I'));
 
@@ -239,6 +241,18 @@ void TestClockInterrupt(){
   Exit();
 }
 
+void CSTestTask() {
+  int tid = MyTid();
+
+  while(true) {
+    PRINTF("I'm waiting 1\n\r");
+    Delay(tid, 100);
+    int t = Time(tid);
+    PRINTF("I'm waiting 2\n\r");
+    DelayUntil(tid, t + 500);
+  }
+}
+
 void TestTask() {
   c = 0;
   testRegistersCount = 100;
@@ -248,7 +262,13 @@ void TestTask() {
 
   //Create the nameserver
   Create(31, &NameServerTask);
-  Create(10, &TestClockInterrupt);
+  Create(31, &ClockServer);
+  Create(31, &ClockServerNotifier);
+  Create(5, &CSTestTask);
+
+
+  Create(0, &IdleTask);
+  //Create(10, &TestClockInterrupt);
 
   //*(int *)(VIC1_BASE + VIC_SOFTINT_OFFSET) = (1 << 30) - 1; 
   // Create(0, &DynamicPriorityTest);
