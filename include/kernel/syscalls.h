@@ -29,6 +29,8 @@ void RegisterNS();
 
 int GetNS();
 
+int AwaitEvent( int eventid );
+
 #ifdef DEBUG
 #include <io.h>
 

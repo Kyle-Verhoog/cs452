@@ -152,24 +152,98 @@ void GetNameServer() {
   Exit();
 }
 
+void IdleTask(){
+  while(1){
+
+  }
+}
+
+void TickWaiter(){
+  int tid = WhoIs((int)('T'+'C'+'I'));
+  PRINTF("Waiting for Clock Interrupt!\n\r");
+  AwaitEvent(51);
+  PRINTF("Clock Interrupt Replied!\n\r");
+
+  int finish;
+  Send(tid, &tid, sizeof(int), &finish, sizeof(int));
+
+  PRINTF("Waiting for Clock Interrupt!\n\r");
+  AwaitEvent(51);
+  PRINTF("Clock Interrupt Replied!\n\r");
+
+  Send(tid, &tid, sizeof(int), &finish, sizeof(int));
+
+  Exit();
+}
+
+void TestClockInterrupt(){
+  //Initialize 32bit clock - Periodic 502KHz
+  *(int*)(TIMER3_BASE | LDR_OFFSET) = 502000;
+  *(int*)(TIMER3_BASE | CRTL_OFFSET) = ENABLE_MASK | CLKSEL_MASK | MODE_MASK; 
+
+  RegisterAs((int)('T'+'C'+'I'));
+
+
+  int tw1 = Create(31, &TickWaiter);
+  int tw2 = Create(31, &TickWaiter);
+  int tw3 = Create(31, &TickWaiter);
+  int tw4 = Create(31, &TickWaiter);
+  int tw5 = Create(31, &TickWaiter);
+  Create(0, &IdleTask);
+
+  int requestor;
+  int data;
+  int finish = 0;
+
+  Receive(&requestor, &data, sizeof(int));
+  Reply(requestor, &finish, sizeof(int));
+
+  Receive(&requestor, &data, sizeof(int));
+  Reply(requestor, &finish, sizeof(int));
+
+  Receive(&requestor, &data, sizeof(int));
+  Reply(requestor, &finish, sizeof(int));
+
+  Receive(&requestor, &data, sizeof(int));
+  Reply(requestor, &finish, sizeof(int));
+
+  Receive(&requestor, &data, sizeof(int));
+  Reply(requestor, &finish, sizeof(int));
+
+  PRINTF("\n\r========================\n\r\n\r");
+
+  Receive(&requestor, &data, sizeof(int));
+  Reply(requestor, &finish, sizeof(int));
+
+  Receive(&requestor, &data, sizeof(int));
+  Reply(requestor, &finish, sizeof(int));
+
+  Receive(&requestor, &data, sizeof(int));
+  Reply(requestor, &finish, sizeof(int));
+
+  Receive(&requestor, &data, sizeof(int));
+  Reply(requestor, &finish, sizeof(int));
+
+  Receive(&requestor, &data, sizeof(int));
+  Reply(requestor, &finish, sizeof(int));
+
+  PRINTF("ALL WAITERS HAVE FINISHED WAITING!\n\r");
+
+  //Send to Nameserver to exit
+  StopNameServer();
+  
+  Exit();
+}
+
 void TestTask() {
   c = 0;
   testRegistersCount = 100;
+  //Create the nameserver
+  Create(31, &NameServerTask);
+
   PRINTF("Starting Test:\n\r");
-  
-  Create(2, &Stall);
-  Create(2, &Stall);
+  Create(10, &TestClockInterrupt);
+  //PRINTF("All tests completed.\n\r");
 
-  *(int *)(VIC1_BASE + VIC_SOFTINT_OFFSET) = (1 << 30) - 1;
-  // Create(0, &DynamicPriorityTest);
-  // Create(1, &FirstUserTask);
-  // Create(0, &TestRegisters);
-  // Create(0, &SimpleReceiver);
-  // Create(0, &SimpleSender);
-  // Create(0, &SimpleSender);
-  // Create(10, &NameServerTask);
-  // Create(5, &GetNameServer);
-
-  PRINTF("All tests completed.\n\r");
   Exit();
 }

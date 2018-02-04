@@ -79,3 +79,7 @@ int GetNS() {
   asm("swi #11;");
 }
 
+int AwaitEvent( int eventid ){
+  asm("swi #13;");
+}
+

@@ -18,12 +18,14 @@
 //Data Structures
 #include <circularbuffer.h>
 #include <priority_queue.h>
+#include <interrupt_matrix.h>
 
 //Debug - set DEBUG through the gcc option (-D DEBUG)
 #include <debug.h>
 
 #include <kernel/handlers/msg.h>
 #include <kernel/handlers/nameserver.h>
+#include <kernel/handlers/interrupt.h>
 
 
 //Bridges from C to ASM
@@ -36,6 +38,7 @@ void receive_handler(TaskDescriptor *rtd);
 TaskDescriptor tasks[MAX_TASK];
 TidTracker tid_tracker;
 priority_queue pq_tasks;
+interrupt_matrix im_tasks;
 
 
 #endif /* KERNEL_H */

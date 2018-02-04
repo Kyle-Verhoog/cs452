@@ -31,23 +31,11 @@
 unsigned int kernel_stack_base = KERNEL_STACK_BASE;
 unsigned int user_stack_base = USER_STACK_BASE;
 
-void init_irq(){
-  SET_CPSR(IRQ_MODE);
-  WRITE_SP(IRQ_STACK_BASE);
-  SET_CPSR(KERNEL_MODE);
-
-  *(int *)(VIC1_BASE + VIC_PROTECTION_OFFSET) = 0;
-  *(int *)(VIC2_BASE + VIC_PROTECTION_OFFSET) = 0;
-  //Enable Hardware Interrupts
-  *(int *)(VIC1_BASE + VIC_INTENABLE_OFFSET) = 0;
-  *(int *)(VIC2_BASE + VIC_INTENABLE_OFFSET) = 1 << 19;
-}
-
 void initialize() {
   SANITY();
   DBLOG_INIT("Initializing", "");
 
-  init_irq();
+  init_irq(&im_tasks);
 
   int i;
   for (i = 0; i < MAX_TASK; i++) {
@@ -59,13 +47,17 @@ void initialize() {
   pq_init(&pq_tasks);
   DBLOG_S();
 
+  DBLOG_START("init interrupt matrix", "");
+  im_init(&im_tasks);
+  DBLOG_S();
+
   int priority;
   void *task;
 
 #ifdef KTEST
   priority = 2;
-  //task = &TestTask;
-  task = &InitClock;
+  task = &TestTask;
+  //task = &InitClock;
 #else
   priority = 3;
   #ifdef METRIC_64
@@ -139,8 +131,6 @@ TaskRequest activate(TaskDescriptor* td) {
   //=============================================================//
 
   asm("IRQ_ENTRY:");
-  KASSERT(*(int *)(VIC2_BASE + VIC_IRQSTATUS_OFFSET) == 1 << 19);
-
   asm("stmfd sp, {r0-r12};");
 
   asm("mov r9, sp;"
@@ -239,7 +229,7 @@ void handle(TaskDescriptor *td, TaskRequest req) {
     KABORT();
     break;
   case TR_PASS:
-    //pq_push(&pq_tasks, td->priority, td);
+    pq_push(&pq_tasks, td->priority, td);
     break;
   case TR_BLOCK:
     td->status = BLOCKED;
@@ -280,11 +270,11 @@ void handle(TaskDescriptor *td, TaskRequest req) {
     tt_return(td->tid, &tid_tracker);
     break;
   case TR_IRQ:
-    //SANITY();
-    bwprintf(COM2, "%d\n\r", *(unsigned int*)(TIMER3_BASE | VAL_OFFSET));
-    *(int *)(TIMER3_BASE | CLR_OFFSET) = 1;
+    event_wake(&im_tasks);
     pq_push(&pq_tasks, td->priority, td);
-    pq_push(&pq_tasks, 31, &tasks[1]);
+    break;
+  case TR_AWAIT_EVENT:
+    event_register(&im_tasks, td);
     break;
   default:
     KASSERT(false && "UNDEFINED SWI PARAM");

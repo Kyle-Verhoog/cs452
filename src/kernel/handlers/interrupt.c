@@ -1,0 +1,81 @@
+#include <interrupt.h>
+
+#define WAKE_PRIORITY_SIZE 1
+
+InterruptEvent WakePriority[64] = {51};
+
+void wakeall(interrupt_matrix *im, InterruptEvent ie){
+	while(im_eventsize(im, ie) > 0){
+		TaskDescriptor *td = im_top(im, ie);
+		//TODO: Pass possible ret value to td->ret
+		//PRINTF("TID: %x\n\r", td->tid);
+		pq_push(&pq_tasks, td->priority, td);
+		im_pop(im, ie);
+	}
+}
+
+void clear_interrupt(InterruptEvent ie){
+	switch(ie){
+		case IE_TC3UI:
+			*(int *)(TIMER3_BASE | CLR_OFFSET) = 1;
+			PRINTF("TIMER CLEAR!\n\r");
+			break;
+		default:
+			KASSERT(0 && "Bad InterruptEvent Specified.");
+	}
+}
+
+bool is_interrupt_asserted(InterruptEvent bit){
+	int IRQstatus;
+
+	if(bit < 32){
+		IRQstatus = *(int *)(VIC1_BASE | VIC_IRQSTATUS_OFFSET);
+	}else{
+		IRQstatus = *(int *)(VIC2_BASE | VIC_IRQSTATUS_OFFSET);
+		bit -= 32;
+	}
+
+	return (IRQstatus >> bit) & 1;
+}
+
+void init_irq(interrupt_matrix *im){
+  //Initialize Interrupt Matrix
+  im_init(im);
+
+  //Set the IRQ Stack Base
+  SET_CPSR(IRQ_MODE);
+  WRITE_SP(IRQ_STACK_BASE);
+  SET_CPSR(KERNEL_MODE);
+
+  //Enable Hardware Interrupts
+  *(int *)(VIC1_BASE + VIC_INTENABLE_OFFSET) = VIC1_ENABLED;
+  *(int *)(VIC2_BASE + VIC_INTENABLE_OFFSET) = VIC2_ENABLED;
+}
+
+void cleanup_irq(){
+	//Disable Hardware Interrupts
+  *(int *)(VIC1_BASE + VIC_INTENCLEAR_OFFSET) = VIC1_ENABLED;
+  *(int *)(VIC2_BASE + VIC_INTENCLEAR_OFFSET) = VIC2_ENABLED;
+}
+
+void event_register(interrupt_matrix *im, TaskDescriptor *td){
+	//Get the eventId from r0 user stack
+	volatile InterruptEvent eventid;
+	asm("ldr %0, [%1, #4];":"=r"(eventid):"r"(td->sp));
+
+	//Add waiting task to matrix
+	im_push(im, td, eventid);
+}
+
+void event_wake(interrupt_matrix *im){
+    int i;
+    for( i = 0; i < WAKE_PRIORITY_SIZE; ++i){
+    	if(is_interrupt_asserted(WakePriority[i])){
+    		clear_interrupt(WakePriority[i]);
+    		if(im_eventsize(im, WakePriority[i]) > 0){
+    			wakeall(im, WakePriority[i]);
+    			return;
+    		}
+    	}
+    }
+}
