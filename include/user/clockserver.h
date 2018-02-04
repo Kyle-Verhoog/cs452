@@ -7,6 +7,11 @@
 #include <kernel/syscalls.h>
 #include <user/nameserver.h>
 
+#define CS_TIMER_LOAD  TIMER3_BASE + LDR_OFFSET
+#define CS_TIMER_CTRL  TIMER3_BASE + CTRL_OFFSET
+#define CS_TIMER_FLAGS ENABLE_MASK | CLKSEL_MASK | MODE_MASK
+#define CS_TIMER_VALUE 5020
+
 #define CLOCKSERVER_ID 2
 
 #define CS_SUCCESS  0
@@ -29,10 +34,10 @@ typedef struct CSReq {
 } CSReq;
 
 typedef struct CSNReply {
-  // cs_queue *csq;
-  // uint32_t  ticks;
   tid_t *tids;
   int    ntids;
+  // cs_queue *csq;
+  // uint32_t  ticks;
 } CSNReply;
 
 
@@ -41,6 +46,8 @@ int Delay(int tid, uint32_t ticks);
 int DelayUntil(int tid, int ticks);
 
 int Time(int tid);
+
+void ClockServerNotifier();
 
 void ClockServer();
 

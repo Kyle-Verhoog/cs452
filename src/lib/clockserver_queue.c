@@ -17,6 +17,7 @@ void csq_init(cs_queue *csq) {
 }
 
 int csq_add(cs_queue *csq, tid_t id, int ticks) {
+  KASSERT(csq != NULL);
   if (id > NUM_TASKS) return CSQ_E_TID;
   if (csq->size == CSQ_SIZE) return CSQ_E_FULL;
   
@@ -51,6 +52,7 @@ END:
 }
 
 int csq_check(cs_queue *csq, int ticks) {
+  KASSERT(csq != NULL);
   if (ticks <= csq->head->ticks)
     return 1;
   return 0;
