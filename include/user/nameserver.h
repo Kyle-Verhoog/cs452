@@ -1,7 +1,7 @@
 #ifndef NAMESERVER_H
 #define NAMESERVER_H
 
-#include <syscalls.h>
+#include <kernel/syscalls.h>
 #define NAMESERVER_SIZE 1024
 
 typedef enum NSservice {

@@ -59,7 +59,7 @@ int csq_check(cs_queue *csq, int ticks) {
 }
 
 int csq_pop(cs_queue *csq, int ticks, tid_t *tid) {
-  KASSERT(csq->head != NULL);
+  KASSERT(csq != NULL);
   if (csq->head == NULL)
     return CSQ_E_EMPTY;
 

@@ -3,7 +3,7 @@
 
 int Delay(int tid, uint32_t ticks) {
   int cs_tid = WhoIs(CLOCKSERVER_ID);
-  KASSERT(IS_VALID_TID(cs_tid));
+  assert(IS_VALID_TID(cs_tid));
 
   CSReq req;
   req.tid   = tid;
@@ -12,13 +12,13 @@ int Delay(int tid, uint32_t ticks) {
 
   int reply;
   Send(cs_tid, &req, sizeof(req), &reply, sizeof(int));
-  KASSERT(reply == 0);
+  assert(reply == 0);
   return reply;
 }
 
 int DelayUntil(int tid, int ticks) {
   int cs_tid = WhoIs(CLOCKSERVER_ID);
-  KASSERT(IS_VALID_TID(cs_tid));
+  assert(IS_VALID_TID(cs_tid));
 
   CSReq req;
   req.tid   = tid;
@@ -27,13 +27,13 @@ int DelayUntil(int tid, int ticks) {
 
   int reply;
   Send(cs_tid, &req, sizeof(req), &reply, sizeof(int));
-  KASSERT(reply == 0);
+  assert(reply == 0);
   return reply;
 }
 
 int Time(int tid) {
   int cs_tid = WhoIs(CLOCKSERVER_ID);
-  KASSERT(cs_tid > 0);
+  assert(cs_tid > 0);
 
   CSReq req;
   req.tid   = tid;
@@ -41,8 +41,20 @@ int Time(int tid) {
 
   int reply;
   Send(cs_tid, &req, sizeof(req), &reply, sizeof(int));
-  KASSERT(reply >= 0);
+  assert(reply >= 0);
   return reply;
+}
+
+void ClockServerStop() {
+  CSReq req;
+  tid_t cs_tid;
+  int reply;
+
+  req.type = CSREQ_HALT;
+  cs_tid = WhoIs(CLOCKSERVER_ID);
+
+  Send(cs_tid, &req, sizeof(req), &reply, sizeof(reply));
+  Exit();
 }
 
 
@@ -55,18 +67,22 @@ void ClockServerNotifier() {
   CSReq req;
   CSNReply reply;
 
+  assert(MyTid() == 3);
   req.type = CSREQ_UPDATE;
   cs_tid = WhoIs(CLOCKSERVER_ID);
-  KASSERT(cs_tid > 0);
+  assert(cs_tid > 0);
 
   while (true) {
-    // TODO: AwaitEvent(TIMER_3);
+    Pass();
+     // TODO: AwaitEvent(TIMER_3);
     Send(cs_tid, &req, sizeof(req), &reply, sizeof(reply));
-    KASSERT(reply.ntids >= 0 && reply.ntids <= CS_PROCESS_NUM);
-    KASSERT(reply.tids != NULL);
+    // PRINTF("%d\n\r", *(unsigned int*)(TIMER3_BASE | VAL_OFFSET));
+    assert(reply.ntids == 0);
+    assert(reply.ntids >= 0 && reply.ntids <= CS_PROCESS_NUM);
+    assert(reply.tids != NULL);
     for (i = 0; i < reply.ntids; i++) {
       tid_t tid = reply.tids[i];
-      KASSERT(IS_VALID_TID(tid));
+      assert(IS_VALID_TID(tid));
       ureply = 0;
       Reply(tid, &ureply, sizeof(ureply));
     }
@@ -89,6 +105,8 @@ void ClockServer() {
   CSNReply nreply;
   uint32_t ticks;
 
+  ret = RegisterAs(CLOCKSERVER_ID);
+
   // init queue, ticks and reply
   csq_init(&csq);
   ticks = 0;
@@ -100,32 +118,32 @@ void ClockServer() {
 
   while (true) {
     Receive(&req_tid, &req, sizeof(CSReq));
-    KASSERT(IS_VALID_TID(req_tid));
+    assert(IS_VALID_TID(req_tid));
 
     switch (req.type) {
       case CSREQ_DELAY:
-        KASSERT(req.ticks > 0);
-        KASSERT(IS_VALID_TID(req.tid));
+        assert(req.ticks > 0);
+        assert(IS_VALID_TID(req.tid));
         if (req.ticks <= 0) {
-          KASSERT(0);
+          assert(0);
           reply = CS_E_DELAY;
           Reply(req_tid, &reply, sizeof(int));
           break;
         }
         ret = csq_add(&csq, req_tid, ticks + req.ticks);
-        KASSERT(ret == 0);
+        assert(ret == 0);
         break;
       case CSREQ_UNTIL:
-        KASSERT(req.ticks > 0);
-        KASSERT(IS_VALID_TID(req.tid));
+        assert(req.ticks > 0);
+        assert(IS_VALID_TID(req.tid));
         if (req.ticks < ticks) {
-          KASSERT(0);
+          assert(0);
           reply = CS_E_DELAY;
           Reply(req_tid, &reply, sizeof(int));
           break;
         }
         ret = csq_add(&csq, req_tid, req.ticks);
-        KASSERT(ret == 0);
+        assert(ret == 0);
         break;
       case CSREQ_TIME:
         reply = ticks;
@@ -133,17 +151,18 @@ void ClockServer() {
         break;
       case CSREQ_UPDATE:
         ticks++;
-        nreply.ntids = 0;
+        // PRINTF("%d\r\n", ticks);
 
+        nreply.ntids = 0;
         // load the ready tasks into the transfer array
         for (i = 0; i < CS_PROCESS_NUM; i++) {
-          if (csq_pop(&csq, ticks, &id) == 0) {
+          if (csq_pop(&csq, ticks, &id) != 0) {
             break;
           }
           reply_tids[i] = id;
           nreply.ntids++;
         }
-
+        assert(nreply.ntids == 0);
         // nreply.ticks = ticks;
         // nreply.csq   = &csq;
 
@@ -157,8 +176,12 @@ void ClockServer() {
         //        notifier and dealt with before the next interrupt.
         Reply(req_tid, &nreply, sizeof(nreply));
         break;
+      case CSREQ_HALT:
+        Reply(req_tid, &reply, sizeof(reply));
+        Exit();
+        break;
       default:
-        KASSERT(0 && "CS: UNKNOWN REQUEST TYPE");
+        assert(0 && "CS: UNKNOWN REQUEST TYPE");
         break;
     }
   }

@@ -7,6 +7,8 @@
 #include <kernel/syscalls.h>
 #include <user/nameserver.h>
 
+
+#define CS_TIMER_CLR   TIMER3_BASE + CLR_OFFSET
 #define CS_TIMER_LOAD  TIMER3_BASE + LDR_OFFSET
 #define CS_TIMER_CTRL  TIMER3_BASE + CTRL_OFFSET
 #define CS_TIMER_FLAGS ENABLE_MASK | CLKSEL_MASK | MODE_MASK
@@ -25,6 +27,7 @@ typedef enum CSReqType {
   CSREQ_UNTIL  = 1,
   CSREQ_TIME   = 2,
   CSREQ_UPDATE = 3,
+  CSREQ_HALT   = 4,
 } CSReqType;
 
 typedef struct CSReq {
@@ -46,6 +49,8 @@ int Delay(int tid, uint32_t ticks);
 int DelayUntil(int tid, int ticks);
 
 int Time(int tid);
+
+void ClockServerStop();
 
 void ClockServerNotifier();
 
