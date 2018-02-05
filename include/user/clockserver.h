@@ -7,6 +7,7 @@
 #include <kernel/syscalls.h>
 #include <user/nameserver.h>
 
+#define TIMER2_ENABLE (1 << 19)
 
 #define CS_TIMER_CLR   TIMER3_BASE + CLR_OFFSET
 #define CS_TIMER_LOAD  TIMER3_BASE + LDR_OFFSET
