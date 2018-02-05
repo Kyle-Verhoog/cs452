@@ -3,6 +3,8 @@
 #define K3FirstUserTaskID 13
 #define K3IdleInterfaceID 14
 
+int exit_flag;
+
 void K3ClientTask() {
   int parent_tid, ii_tid, req, i;
   K3Msg reply;
@@ -190,6 +192,7 @@ void K3IdleTask() {
 void K3FirstUserTask() {
   K3Msg reply;
   int req;
+  exit_flag = 0;
 
   // create the name server
   Create(31, &NameServer);
