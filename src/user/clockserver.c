@@ -133,6 +133,9 @@ void ClockServer() {
   not_tid = Create(31, &ClockServerNotifier);
   assert(IS_VALID_TID(not_tid));
 
+  // init the timer interrupt
+  // *(int *)(VIC1_BASE + VIC_INTENABLE_OFFSET) |= TIMER2_ENABLE;
+
   // init timer 3
   *(int*)(CS_TIMER_LOAD) = CS_TIMER_VALUE;
   *(int*)(CS_TIMER_CTRL) = CS_TIMER_FLAGS;
