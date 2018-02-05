@@ -81,10 +81,14 @@ void K3IdleTask() {
 
   //Get the starting time and ackowledge ready
   int startTime, endTime, prevTime, curTime;
-  unsigned int t3prev, t3cur;
+  unsigned int t3worst, t3best;
+  unsigned int t3prev, t3cur, t3session = 0;
   long t3total = 0;
   startTime = prevTime = Time(cs_tid, mytid);
-  t3prev = 5020;
+  t3prev = t3cur = 5020;
+  t3session = 0;
+  t3worst = 5020;
+  t3best = 0;
 
   while (true) {
     curTime = Time(cs_tid, mytid);
@@ -92,22 +96,40 @@ void K3IdleTask() {
 
     //Only when interrupt has actually happened
     if(curTime != prevTime){
-      t3total += t3prev;  //ran from t3prev to 0 but missed timing
-      prevTime = curTime;
+      t3session += t3prev;  //ran from t3prev to 0 but missed timing
+      t3total += t3session;
+    
+      //Check to quit
       Send(ii_tid, &ireq, sizeof(ireq), &ires, sizeof(ires));
       if(ires == K3_FINISHED){
         break;
       }
+
+      //Update min/max
+      if(t3session < t3worst){
+        t3worst = t3session;
+      }else if(t3session > t3best){
+        t3best = t3session;
+      }
+
+      //reset
+      prevTime = curTime;
+      t3session = 0;
     }else{
-      t3total += t3prev - t3cur;  //Compute delta
+      t3session += t3prev - t3cur; //Compute delta
     }
 
     t3prev = t3cur;
   }
 
   endTime = Time(cs_tid, mytid);
-  PRINTF("Idle ran for: %d:%d\n\r", (t3total/5020), (endTime - startTime));
-  PRINTF("Percentage Idle: %d%c\n\r", (t3total/5020)*100/(endTime - startTime), 37);
+  PRINTF("FINAL METRICS\n\r");
+  PRINTF("=============\n\r");
+  PRINTF("Idle ran for: \033[33m%d \033[37mof \033[33m%d \033[37mticks\n\r", (t3total/5020), (endTime - startTime));
+  PRINTF("Percentage Idle: \033[33m%d%c\033[37m\n\r", (t3total/5020)*100/(endTime - startTime), 37);
+  PRINTF("Worst Running Sesson: \033[33m%d.%d \033[37mtick\n\r", ((t3worst*100)/5020)/100, ((t3worst*100)/5020)%100);
+  PRINTF("Best Running Sesson: \033[33m%d.%d \033[37mtick\n\r", ((t3best*100)/5020)/100, ((t3best*100)/5020)%100);
+
   Create(2, &ClockServerStop);
   Create(1, &NameServerStop);
 
