@@ -27,7 +27,7 @@ void K3ClientTask() {
 
   for (i = 1; i <= reply.n; i++) {
     Delay(cs_tid, mytid, reply.t);
-    PRINTF("tid %x: delay %d, iter %d\r\n", mytid, reply.t, i);
+    PRINTF("t%x,d%d,i%d\n\r", mytid, reply.t, i);
   }
 
   //Tell the idle interface we've finished
@@ -135,6 +135,11 @@ void K3IdleTask() {
   Create(2, &ClockServerStop);
   Create(1, &NameServerStop);
 
+  int i;
+  for(i = 0; i < 1000000; i++){
+    (void)i;
+  }
+
   Exit();
 }
 
@@ -197,7 +202,7 @@ void K3FirstUserTask() {
   // create the name server
   Create(31, &NameServer);
   
-  // RegisterAs(K3FirstUserTaskID);
+  RegisterAs(K3FirstUserTaskID);
 
   // create the clock server
   Create(31, &ClockServer);
@@ -211,11 +216,11 @@ void K3FirstUserTask() {
   Create(4, &K3ClientTask);
   Create(3, &K3ClientTask);
 
-  //Send to idle interface how many client tasks are running
+  // //Send to idle interface how many client tasks are running
   int res, numClients = 4;
   Send(idleInt, &numClients, sizeof(numClients), &res, sizeof(res));
 
-  //Kick off user tasks
+  // //Kick off user tasks
   tid_t t6, t5, t4, t3;
   Receive(&t6, &req, sizeof(req));
   assert(t6 == 6);

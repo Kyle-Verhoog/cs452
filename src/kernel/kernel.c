@@ -88,6 +88,8 @@ TaskDescriptor* schedule() {
   int ret;
   TaskDescriptor *td = NULL;
 
+  //PRINTF("Tasks Left:%d\n\r", MAX_TASK - tid_tracker.cb.size);
+
   ret = pq_pop(&pq_tasks, &td);
   KASSERT(ret == 0 && td != NULL);
 
