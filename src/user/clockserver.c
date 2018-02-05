@@ -91,8 +91,12 @@ void ClockServerNotifier() {
     AwaitEvent(IE_TC3UI);
     Send(cs_tid, &req, sizeof(req), &reply, sizeof(reply));
     // PRINTF("%d\n\r", *(unsigned int*)(TIMER3_BASE | VAL_OFFSET));
-    assert(reply.ntids >= 0 && reply.ntids <= CS_PROCESS_NUM);
+    assert(reply.ntids >= -1 && reply.ntids <= CS_PROCESS_NUM);
     assert(reply.tids != NULL);
+    if (reply.ntids == CSN_EXIT_CODE) {
+      Exit();
+    }
+
     for (i = 0; i < reply.ntids; i++) {
       tid_t tid = reply.tids[i];
       assert(IS_VALID_TID(tid));
@@ -112,9 +116,9 @@ void ClockServer() {
   // init queue
   cs_queue csq;  
   tid_t reply_tids[CS_PROCESS_NUM];
-  tid_t req_tid, id;
+  tid_t req_tid, id, not_tid;
   CSReq req;
-  int i, ret, reply;
+  int i, ret, reply, exit_flag;
   CSNReply nreply;
   uint32_t ticks;
 
@@ -124,8 +128,10 @@ void ClockServer() {
   csq_init(&csq);
   ticks = 0;
   nreply.tids = reply_tids;
+  exit_flag = 0;
 
-  Create(31, &ClockServerNotifier);
+  not_tid = Create(31, &ClockServerNotifier);
+  assert(IS_VALID_TID(not_tid));
 
   // init timer 3
   *(int*)(CS_TIMER_LOAD) = CS_TIMER_VALUE;
@@ -165,11 +171,17 @@ void ClockServer() {
         Reply(req_tid, &reply, sizeof(int));
         break;
       case CSREQ_UPDATE:
+        if (exit_flag) {
+          nreply.ntids = CSN_EXIT_CODE;
+          Reply(not_tid, &nreply, sizeof(nreply));
+          Exit();
+        }
+
         ticks++;
         // PRINTF("%d\r\n", ticks);
 
-        nreply.ntids = 0;
         // load the ready tasks into the transfer array
+        nreply.ntids = 0;
         for (i = 0; i < CS_PROCESS_NUM; i++) {
           if (csq_pop(&csq, ticks, &id) != 0) {
             break;
@@ -177,8 +189,6 @@ void ClockServer() {
           reply_tids[i] = id;
           nreply.ntids++;
         }
-        // nreply.ticks = ticks;
-        // nreply.csq   = &csq;
 
         // send ready tasks to notifier to deal with
         // TODO?: we send the tasks back to the notifier which also handles
@@ -191,8 +201,11 @@ void ClockServer() {
         Reply(req_tid, &nreply, sizeof(nreply));
         break;
       case CSREQ_HALT:
+        // set flag to exit on next request
+        exit_flag = 1;
+
+        // reply to sender of halt
         Reply(req_tid, &reply, sizeof(reply));
-        Exit();
         break;
       default:
         assert(0 && "CS: UNKNOWN REQUEST TYPE");

@@ -22,6 +22,8 @@
 
 #define CS_PROCESS_NUM 5
 
+#define CSN_EXIT_CODE -1
+
 typedef enum CSReqType {
   CSREQ_DELAY  = 0,
   CSREQ_UNTIL  = 1,

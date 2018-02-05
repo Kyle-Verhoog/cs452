@@ -265,7 +265,6 @@ void TestTask() {
   Create(31, &ClockServer);
   Create(5, &CSTestTask);
 
-
   Create(0, &IdleTask);
   //Create(10, &TestClockInterrupt);
 
