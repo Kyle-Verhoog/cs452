@@ -8,6 +8,7 @@
 #define VIC2_ENABLED (1 << 19)
 
 void init_irq( interrupt_matrix *im );
+void cleanup_irq();
 void event_register( interrupt_matrix *im, TaskDescriptor *td);
 void event_wake(interrupt_matrix *im);
 

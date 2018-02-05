@@ -1,15 +1,18 @@
 #include <user/test/k3_task.h>
 
 #define K3FirstUserTaskID 13
+#define K3IdleInterfaceID 14
 
 void K3ClientTask() {
-  int parent_tid, req, i;
+  int parent_tid, ii_tid, req, i;
   K3Msg reply;
 
   // assignment spec indicates that we *immediately* send to the parent task
   // so no nameserver lookup
   // parent_tid = WhoIs(K3FirstUserTaskID);
-  parent_tid = 0;
+  // parent_tid = 0;
+  parent_tid = MyParentTid();  //Use syscall to obtain parent tid
+  ii_tid = WhoIs(K3IdleInterfaceID);
 
   Send(parent_tid, &req, sizeof(req), &reply, sizeof(reply));
   assert(reply.n >= 0 && reply.n <= 5000);
@@ -25,18 +28,92 @@ void K3ClientTask() {
     PRINTF("tid %x: delay %d, iter %d\r\n", mytid, reply.t, i);
   }
 
+  //Tell the idle interface we've finished
+  K3IdleRequest ireq = K3_TASK_FINISH;
+  K3IdleResponse ires;
+  Send(ii_tid, &ireq, sizeof(ireq), &ires, sizeof(ires));
+
+  Exit();
+}
+
+void K3IdleInterface(){
+  int numClients;
+  tid_t requestor;
+
+  //Register
+  RegisterAs(K3IdleInterfaceID);
+
+  //Receive number we are waiting for
+  Receive(&requestor, &numClients, sizeof(numClients));
+  Reply(requestor, &numClients, sizeof(numClients));
+  assert(numClients == 4);
+
+  K3IdleRequest ireq;
+  K3IdleResponse ires = K3_NOT_FINISHED;
+
+  while(numClients > 0){
+    Receive(&requestor, &ireq, sizeof(ireq));
+    switch(ireq){
+      case K3_TASK_FINISH:
+        numClients--;
+        Reply(requestor, &ireq, sizeof(ireq));
+        break;
+      case K3_QUERY_FOR_EXIT:
+        Reply(requestor, &ires, sizeof(ires));
+        break;
+    }
+  }
+
+  //We can Exit
+  ires = K3_FINISHED;
+  Receive(&requestor, &ireq, sizeof(ireq)); //This has to be the idleTask
+  Reply(requestor, &ires, sizeof(ires));
   Exit();
 }
 
 void K3IdleTask() {
-  int i;
-  while (1) {
-    for (i = 0; i < 10000000; i++) {
-      (void)i;
+  int mytid = MyTid();
+  int cs_tid = WhoIs(CLOCKSERVER_ID);
+  int ii_tid = WhoIs(K3IdleInterfaceID);
+
+  K3IdleRequest ireq = K3_QUERY_FOR_EXIT;
+  K3IdleResponse ires;
+
+  //Get the starting time and ackowledge ready
+  int startTime, endTime, prevTime, curTime;
+  unsigned int t3prev, t3cur;
+  long t3total = 0;
+  startTime = prevTime = Time(cs_tid, mytid);
+  t3prev = 5020;
+
+  while (true) {
+    curTime = Time(cs_tid, mytid);
+    t3cur = *(unsigned int*)(TIMER3_BASE | VAL_OFFSET);
+
+    //Only when interrupt has actually happened
+    if(curTime != prevTime){
+      t3total += t3prev;  //ran from t3prev to 0 but missed timing
+      prevTime = curTime;
+      Send(ii_tid, &ireq, sizeof(ireq), &ires, sizeof(ires));
+      if(ires == K3_FINISHED){
+        break;
+      }
+    }else{
+      t3total += t3prev - t3cur;  //Compute delta
     }
-    PRINTF("ping\r\n");
+
+    t3prev = t3cur;
   }
+
+  endTime = Time(cs_tid, mytid);
+  PRINTF("Idle ran for: %d:%d\n\r", (t3total/5020), (endTime - startTime));
+  PRINTF("Percentage Idle: %d%c\n\r", (t3total/5020)*100/(endTime - startTime), 37);
+  Create(2, &ClockServerStop);
+  Create(1, &NameServerStop);
+
+  Exit();
 }
+
 
 /**
  * Time line of events:
@@ -100,22 +177,29 @@ void K3FirstUserTask() {
   // create the clock server
   Create(31, &ClockServer);
   
+  //IdleTask & Interface
   Create(0, &K3IdleTask);
+  tid_t idleInt = Create(1, &K3IdleInterface);
 
   Create(6, &K3ClientTask);
   Create(5, &K3ClientTask);
   Create(4, &K3ClientTask);
   Create(3, &K3ClientTask);
 
+  //Send to idle interface how many client tasks are running
+  int res, numClients = 4;
+  Send(idleInt, &numClients, sizeof(numClients), &res, sizeof(res));
+
+  //Kick off user tasks
   tid_t t6, t5, t4, t3;
   Receive(&t6, &req, sizeof(req));
-  assert(t6 == 5);
+  assert(t6 == 6);
   Receive(&t5, &req, sizeof(req));
-  assert(t5 == 6);
+  assert(t5 == 7);
   Receive(&t4, &req, sizeof(req));
-  assert(t4 == 7);
+  assert(t4 == 8);
   Receive(&t3, &req, sizeof(req));
-  assert(t3 == 8);
+  assert(t3 == 9);
   
   reply.n = 20; reply.t = 10;
   Reply(t6, &reply, sizeof(reply));
