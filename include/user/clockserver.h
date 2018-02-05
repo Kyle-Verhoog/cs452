@@ -43,12 +43,17 @@ typedef struct CSNReply {
   // uint32_t  ticks;
 } CSNReply;
 
+int DelayCS(tid_t tid, uint32_t ticks);
 
-int Delay(int tid, uint32_t ticks);
+int Delay(tid_t cs_tid, tid_t tid, uint32_t ticks);
 
-int DelayUntil(int tid, int ticks);
+int DelayUntilCS(tid_t tid, uint32_t ticks);
 
-int Time(int tid);
+int DelayUntil(tid_t cs_tid, tid_t tid, uint32_t ticks);
+
+int TimeCS(tid_t tid);
+
+int Time(tid_t cs_tid, tid_t tid);
 
 void ClockServerStop();
 

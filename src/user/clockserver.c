@@ -1,9 +1,14 @@
 #include <user/clockserver.h>
 
 
-int Delay(int tid, uint32_t ticks) {
+int DelayCS(int tid, uint32_t ticks) {
   int cs_tid = WhoIs(CLOCKSERVER_ID);
   assert(IS_VALID_TID(cs_tid));
+  return Delay(cs_tid, tid, ticks);
+}
+
+int Delay(int cs_tid, int tid, uint32_t ticks) {
+  assert(IS_VALID_TID(tid));
 
   CSReq req;
   req.tid   = tid;
@@ -16,9 +21,14 @@ int Delay(int tid, uint32_t ticks) {
   return reply;
 }
 
-int DelayUntil(int tid, int ticks) {
+int DelayUntilCS(tid_t tid, uint32_t ticks) {
   int cs_tid = WhoIs(CLOCKSERVER_ID);
   assert(IS_VALID_TID(cs_tid));
+  return DelayUntil(cs_tid, tid, ticks);
+}
+
+int DelayUntil(tid_t cs_tid, tid_t tid, uint32_t ticks) {
+  assert(IS_VALID_TID(tid));
 
   CSReq req;
   req.tid   = tid;
@@ -31,9 +41,15 @@ int DelayUntil(int tid, int ticks) {
   return reply;
 }
 
-int Time(int tid) {
+
+int TimeCS(tid_t tid) {
   int cs_tid = WhoIs(CLOCKSERVER_ID);
-  assert(cs_tid > 0);
+  assert(IS_VALID_TID(cs_tid));
+  return Time(cs_tid, tid);
+}
+
+int Time(tid_t cs_tid, tid_t tid) {
+  assert(IS_VALID_TID(tid));
 
   CSReq req;
   req.tid   = tid;
@@ -67,7 +83,6 @@ void ClockServerNotifier() {
   CSReq req;
   CSNReply reply;
 
-  assert(MyTid() == 3);
   req.type = CSREQ_UPDATE;
   cs_tid = WhoIs(CLOCKSERVER_ID);
   assert(cs_tid > 0);
@@ -109,6 +124,8 @@ void ClockServer() {
   csq_init(&csq);
   ticks = 0;
   nreply.tids = reply_tids;
+
+  Create(31, &ClockServerNotifier);
 
   // init timer 3
   *(int*)(CS_TIMER_LOAD) = CS_TIMER_VALUE;

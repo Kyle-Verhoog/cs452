@@ -2,7 +2,7 @@
 #include <defines.h>
 
 // TODO error checking
-void NameServerTask() {
+void NameServer() {
   RegisterNS();
   NSrecord NameServer[NAMESERVER_SIZE];
 
@@ -62,7 +62,7 @@ int WhoIs(int n) {
   return reply;
 }
 
-void StopNameServer() {
+void NameServerStop() {
   int ns_tid = GetNS();
 
   NSreq rec;

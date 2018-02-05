@@ -1,4 +1,4 @@
-#include <interrupt_matrix.h>
+#include <task/interrupt_matrix.h>
 
 void im_init(interrupt_matrix *im){
 	init_circularBuffer(&(im->TC3UI));
@@ -10,7 +10,7 @@ int im_push(interrupt_matrix *im, TaskDescriptor * td, InterruptEvent ie){
 			return push_circularBuffer(&(im->TC3UI), (unsigned int)td);
 			break;
 		default:
-			//KASSERT(0 && "Bad InterruptEvent Specified.");
+			KASSERT(0 && "Bad InterruptEvent Specified.");
 			break;
 	}
 	return -1;
@@ -22,7 +22,7 @@ TaskDescriptor * im_top(interrupt_matrix *im, InterruptEvent ie){
 			return (TaskDescriptor *)top_circularBuffer(&(im->TC3UI));
 			break;
 		default:
-			//KASSERT(0 && "Bad InterruptEvent Specified.");
+			KASSERT(0 && "Bad InterruptEvent Specified.");
 			break;
 	}
 	return NULL;	
@@ -34,7 +34,7 @@ int im_pop(interrupt_matrix *im, InterruptEvent ie){
 			return pop_circularBuffer(&(im->TC3UI));
 			break;
 		default:
-			//KASSERT(0 && "Bad InterruptEvent Specified.");
+			KASSERT(0 && "Bad InterruptEvent Specified.");
 			break;
 	}
 	return -1;	
@@ -46,8 +46,9 @@ unsigned int im_eventsize(interrupt_matrix *im, InterruptEvent ie){
 			return (im->TC3UI).size;
 			break;
 		default:
-			//KASSERT(0 && "Bad InterruptEvent Specified.");
+			KASSERT(0 && "Bad InterruptEvent Specified.");
 			break;
 	}
 	return -1;
 }
+

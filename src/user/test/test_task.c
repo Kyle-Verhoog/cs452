@@ -156,7 +156,7 @@ void IdleTask(){
   PRINTF("Press a key to quit:\n\r");
   bwgetc(COM2);
   ClockServerStop();
-  StopNameServer();
+  NameServerStop();
   Exit();
 }
 
@@ -236,7 +236,7 @@ void TestClockInterrupt(){
   PRINTF("ALL WAITERS HAVE FINISHED WAITING!\n\r");
 
   //Send to Nameserver to exit
-  StopNameServer();
+  NameServerStop();
   
   Exit();
 }
@@ -246,10 +246,10 @@ void CSTestTask() {
 
   while(true) {
     PRINTF("I'm waiting 1\n\r");
-    Delay(tid, 100);
-    int t = Time(tid);
+    DelayCS(tid, 100);
+    int t = TimeCS(tid);
     PRINTF("I'm waiting 2\n\r");
-    DelayUntil(tid, t + 500);
+    DelayUntilCS(tid, t + 500);
   }
 }
 
@@ -261,9 +261,8 @@ void TestTask() {
   PRINTF("Starting Test:\n\r");
 
   //Create the nameserver
-  Create(31, &NameServerTask);
+  Create(31, &NameServer);
   Create(31, &ClockServer);
-  Create(31, &ClockServerNotifier);
   Create(5, &CSTestTask);
 
 

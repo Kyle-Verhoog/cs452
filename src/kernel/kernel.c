@@ -1,4 +1,4 @@
-#include <kernel.h>
+#include <kernel/kernel.h>
 
 /**
  * Saves the old SP to the new kernel stack and sets SP to the kernel stack.
@@ -32,7 +32,6 @@ unsigned int kernel_stack_base = KERNEL_STACK_BASE;
 unsigned int user_stack_base = USER_STACK_BASE;
 
 void initialize() {
-  SANITY();
   DBLOG_INIT("Initializing", "");
 
   init_irq(&im_tasks);
@@ -55,17 +54,18 @@ void initialize() {
   void *task;
 
 #ifdef KTEST
-  priority = 2;
-  task = &TestTask;
+  priority = 0;
+  // task = &TestTask;
+  task = &K3FirstUserTask;
   //task = &InitClock;
 #else
-  priority = 3;
+  priority = 0;
   #ifdef METRIC_64
     task = &K2InitMetricTask;
   #elif METRIC_4
     task = &K2InitMetricTask;
   #else
-    task=&InitClock;
+    task = &K3FirstUserTask;
   #endif
 #endif
 
@@ -95,8 +95,7 @@ TaskDescriptor* schedule() {
 }
 
 TaskRequest activate(TaskDescriptor* td) {
-  if(td->it){
-    //KASSERT(0);
+  if(td->it) {
     PUSH_STACK("r0-r12, lr");
     WRITE_SPSR(td->psr);
     

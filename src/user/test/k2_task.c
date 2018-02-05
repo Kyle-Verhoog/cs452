@@ -7,7 +7,7 @@ void InitTask() {
   bwsetfifo(COM1, OFF);
 
   //Create the nameserver
-  Create(31, &NameServerTask);
+  Create(31, &NameServer);
 
   //Kick off the rpc Server
   Create(30, &RPCServer);
@@ -36,7 +36,7 @@ void StopServer() {
   Send(serverTid, &req, sizeof(RPCreq), &reply, sizeof(int));
 
   //Send to Nameserver to exit
-  StopNameServer();
+  NameServerStop();
 
   Exit();
 }
