@@ -8,7 +8,7 @@ void cb_sanity() {
   init_circularBuffer(&cb, buffer, BUFFER_SIZE);
 
   int i;
-  for(i = 0; i < BUFF_SIZE; i++) {
+  for(i = 0; i < BUFFER_SIZE; i++) {
     push_circularBuffer(&cb, i);
   }
 
