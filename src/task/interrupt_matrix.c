@@ -1,7 +1,7 @@
 #include <task/interrupt_matrix.h>
 
 void im_init(interrupt_matrix *im){
-	init_circularBuffer(&(im->TC3UI));
+	init_circularBuffer(&(im->TC3UI), im->buffer_TC3UI, 256); //TODO: MAKE DEFINE
 }
 
 int im_push(interrupt_matrix *im, TaskDescriptor * td, InterruptEvent ie){

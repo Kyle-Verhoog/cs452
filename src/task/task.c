@@ -2,7 +2,7 @@
 #include <ts7200.h>
 
 void tt_init( TidTracker *tt) {
-  init_circularBuffer(&tt->cb);
+  init_circularBuffer(&tt->cb, tt->buffer_tid, 256); // TODO: MAKE DEFINE
   int i = 0;
   for(i = 0; i < MAX_TASK; i++) {
     push_circularBuffer(&tt->cb, i);
@@ -38,7 +38,7 @@ void td_init(TaskDescriptor *td) {
   td->stack_base = 0;
   td->parent = NULL;
   td->priority = 1;
-  init_circularBuffer(&td->send_q);
+  init_circularBuffer(&td->send_q, td->buffer_q, 256); // TODO: MAKE DEFINE
 }
 
 /**
@@ -51,4 +51,6 @@ void td_copy( TaskDescriptor *td1,  TaskDescriptor *td2) {
   td1->task = td2->task;
   td1->status = td2->status;
   td1->stack_base = td2->stack_base;
+
+  //Need to copy buffer_q and circular buffer contents
 }

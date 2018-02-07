@@ -2,7 +2,7 @@
 
 #define RPC_SERVER_NAME 42
 
-void InitTask() {
+void InitK2Task() {
   bwsetfifo(COM2, OFF);
   bwsetfifo(COM1, OFF);
 
@@ -181,10 +181,11 @@ void RPCClient2() {
 
 void RPCServer() {
   int finish = false;
+  int buffer[256];  // TODO: Make Define
   CircularBuffer cb;
   RPCmatch match; //currently on-going match
 
-  init_circularBuffer(&cb);
+  init_circularBuffer(&cb, buffer, 256); // TODO: MAKE DEFINE
   ResetMatch(&match);
   RegisterAs(RPC_SERVER_NAME);
 

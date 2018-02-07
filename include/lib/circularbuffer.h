@@ -6,17 +6,19 @@
 #define ECB_FULL 1
 #define ECB_EMPTY 2
 
-typedef struct CircularBuffer {
+#include <types.h>
 
-  unsigned int buffer[CIRCULAR_BUFFER_SIZE];
+typedef struct CircularBuffer {
+  uint32_t *buffer;
   unsigned int buffer_start;
   unsigned int buffer_end;
 
   unsigned int size;
+  unsigned int max_size;
 
 } CircularBuffer;
 
-void init_circularBuffer(CircularBuffer *buffer);
+void init_circularBuffer(CircularBuffer *cb, uint32_t *buffer, unsigned int max_size);
 int push_circularBuffer(CircularBuffer *buffer, unsigned int val);
 unsigned int top_circularBuffer(CircularBuffer *buffer);
 int pop_circularBuffer(CircularBuffer *buffer);

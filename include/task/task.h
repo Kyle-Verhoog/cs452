@@ -60,12 +60,14 @@ typedef struct TaskDescriptor {
   struct TaskDescriptor *next;
   int priority;
 
+  int buffer_q[256];    // TODO: CREATE A DEFINE
   CircularBuffer send_q;
 
   uint32_t ret; //Return value
 } TaskDescriptor;
 
 typedef struct TidTracker {
+  int buffer_tid[256];  // TODO: CREATE A DEFINE
   CircularBuffer cb;
 } TidTracker;
 

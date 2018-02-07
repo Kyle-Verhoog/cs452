@@ -18,5 +18,5 @@ void ktd_create(TaskDescriptor* volatile td, uint32_t tid, void *task,
   td->priority = priority;
   td->next = NULL;
   td->ret = 0;
-  init_circularBuffer(&(td->send_q));
+  init_circularBuffer(&(td->send_q), td->buffer_q, 256);  //TODO: MAKE DEFINE
 }

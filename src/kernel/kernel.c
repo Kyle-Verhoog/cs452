@@ -55,9 +55,7 @@ void initialize() {
 
 #ifdef KTEST
   priority = 0;
-  // task = &TestTask;
-  task = &K3FirstUserTask;
-  //task = &InitClock;
+  task = &TestTask;
 #else
   priority = 0;
   #ifdef METRIC_64

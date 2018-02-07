@@ -3,10 +3,9 @@
 
 #include <types.h>
 #include <kernel/syscalls.h>
-#include <user/nameserver.h>
-#include <user/clockserver.h>
-#include <user/test/k1_task.h>
-#include <user/test/messaging.h>
+#include <io/io.h>
+#include <user/test/test_defines.h>
+#include <taskid_test.h>
 
 void TestTask();
 

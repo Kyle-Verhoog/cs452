@@ -49,7 +49,7 @@ typedef struct RPCresult {
 } RPCresult;
 
 //All Tasks
-void InitTask();
+void InitK2Task();
 void RPCClient();
 void RPCClient2();
 void RPCServer();
