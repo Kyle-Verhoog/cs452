@@ -23,7 +23,7 @@ int main(void) {
   priority_queue_tests();
   PTEST_END();
 
-  PTEST_START("NameServer");
+  PTEST_START("nameserver");
   nameserver_tests();
   PTEST_END();
 

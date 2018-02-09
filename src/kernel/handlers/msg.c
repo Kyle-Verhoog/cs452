@@ -9,7 +9,8 @@ void send_handler(TaskDescriptor *std) {
 
   TaskDescriptor *rtd = &tasks[stid];
 
-  KASSERT(rtd->status != UNINIT && rtd->status != ZOMBIE);
+  KASSERT(rtd->status != UNINIT);
+  KASSERT(rtd->status != ZOMBIE);
   if (rtd->status == SND_BL) {
     // 1. copy message to receiver
     // 2. copy sender tid to receiver

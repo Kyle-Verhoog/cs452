@@ -92,8 +92,6 @@ TaskDescriptor* schedule() {
   int ret;
   TaskDescriptor *td = NULL;
 
-  //PRINTF("Tasks Left:%d\n\r", MAX_TASK - tid_tracker.cb.size);
-
   ret = pq_pop(&pq_tasks, &td);
   KASSERT(ret == 0 && td != NULL);
 
@@ -204,6 +202,7 @@ void create(TaskDescriptor *td) {
 
   asm("ldr %0, [%1, #4];":"=r"(priority):"r"(td->sp));
   asm("ldr %0, [%1, #8];":"=r"(task):"r"(td->sp));
+  KASSERT(IS_VALID_PRIORITY(priority));
 
   //TODO: FIX THIS ONCE SCHEDULING IS DONE
   if (tid < 0) {

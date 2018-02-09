@@ -139,16 +139,6 @@
 //   Exit();
 // }
 
-// void GetNameServer() {
-//   uint32_t mytid = MyTid();
-//   RegisterAs(42);
-//   uint32_t tid = WhoIs(42);
-//   assert(mytid == tid);
-//   (void)mytid;
-//   (void)tid;
-//   Exit();
-// }
-
 // void IdleTask(){
 //   PRINTF("Press a key to quit:\n\r");
 //   bwgetc(COM2);
@@ -254,6 +244,10 @@ void TestTask() {
   tid_t req;
   int ret;
   RUN_TEST_SYNC(req, ret, TaskIdTest);
+  RUN_TEST_SYNC(req, ret, TaskIdTest);
+  RUN_TEST_SYNC(req, ret, NameServerTest);
+  RUN_TEST_SYNC(req, ret, NameServerTest);
+  RUN_TEST_SYNC(req, ret, ScheduleTest);
   RUN_TEST_SYNC(req, ret, ScheduleTest);
 
   Exit();

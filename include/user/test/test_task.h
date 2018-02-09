@@ -6,8 +6,10 @@
 #include <io/io.h>
 #include <user/test/test_defines.h>
 #include <taskid_test.h>
+#include <user/test/nameserver_test.h>
 #include <schedule_test.h>
 
 void TestTask();
 
 #endif /*TEST_TASKS_H*/
+
