@@ -56,7 +56,7 @@ void td_copy( TaskDescriptor *td1,  TaskDescriptor *td2) {
 }
 
 #ifdef TASK_METRICS
-  TaskSummary TASK_SUMMARY[128];
+  TaskSummary TASK_SUMMARY[2056];
   int SUMMARY_HEAD;
 
   void tm_init(){
@@ -80,6 +80,8 @@ void td_copy( TaskDescriptor *td1,  TaskDescriptor *td2) {
   }
 
   void tm_addSummary(TaskDescriptor *td){
+    KASSERT(SUMMARY_HEAD != 2056);
+
     TASK_SUMMARY[SUMMARY_HEAD].tid = td->tid;
     TASK_SUMMARY[SUMMARY_HEAD].priority = td->priority;
     TASK_SUMMARY[SUMMARY_HEAD].start_time = td->start_time;
