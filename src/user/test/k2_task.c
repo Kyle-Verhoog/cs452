@@ -1,6 +1,7 @@
 #include <user/test/k2_task.h>
 
 #define RPC_SERVER_NAME 42
+#define RPC_BUFFER_SIZE 64
 
 void InitK2Task() {
   bwsetfifo(COM2, OFF);
@@ -181,11 +182,11 @@ void RPCClient2() {
 
 void RPCServer() {
   int finish = false;
-  tid_t buffer[256];  // TODO: Make Define
+  tid_t buffer[RPC_BUFFER_SIZE];
   CircularBuffer cb;
   RPCmatch match; //currently on-going match
 
-  init_circularBuffer(&cb, buffer, 256); // TODO: MAKE DEFINE
+  init_circularBuffer(&cb, buffer, RPC_BUFFER_SIZE);
   ResetMatch(&match);
   RegisterAs(RPC_SERVER_NAME);
 

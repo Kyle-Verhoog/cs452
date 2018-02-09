@@ -1,7 +1,6 @@
 #ifndef CIRCULAR_BUFFER_H
 #define CIRCULAR_BUFFER_H
 
-#define CIRCULAR_BUFFER_SIZE 256
 #define ECB_NONE 0
 #define ECB_FULL 1
 #define ECB_EMPTY 2

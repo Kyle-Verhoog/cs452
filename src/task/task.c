@@ -2,7 +2,7 @@
 #include <ts7200.h>
 
 void tt_init( TidTracker *tt) {
-  init_circularBuffer(&tt->cb, tt->buffer_tid, 256); // TODO: MAKE DEFINE
+  init_circularBuffer(&tt->cb, tt->buffer_tid, MAX_TASK);
   int i = 0;
   for(i = 0; i < MAX_TASK; i++) {
     push_circularBuffer(&tt->cb, i);
@@ -10,7 +10,7 @@ void tt_init( TidTracker *tt) {
 }
 
 tid_t tt_get(TidTracker *tt) {
-  if(tt->cb.buffer_end == tt->cb.buffer_start) {
+  if(tt_size(tt) == 0) {
     return -2;
   }
   tid_t tid = top_circularBuffer(&tt->cb);
@@ -38,7 +38,7 @@ void td_init(TaskDescriptor *td) {
   td->stack_base = 0;
   td->parent = NULL;
   td->priority = 1;
-  init_circularBuffer(&td->send_q, td->buffer_q, 256); // TODO: MAKE DEFINE
+  init_circularBuffer(&td->send_q, td->buffer_q, MAX_TASK);
 }
 
 /**
@@ -56,6 +56,7 @@ void td_copy( TaskDescriptor *td1,  TaskDescriptor *td2) {
 }
 
 #ifdef TASK_METRICS
+  // TODO: MAKE THIS STATIC ARRAY BETTER
   TaskSummary TASK_SUMMARY[2056];
   int SUMMARY_HEAD;
 

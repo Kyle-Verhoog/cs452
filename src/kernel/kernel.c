@@ -74,7 +74,7 @@ void initialize() {
 #endif //KTEST
 
   tid_t tid = tt_get(&tid_tracker);
-  TaskDescriptor* volatile td = &tasks[(tid & 0xffff)];
+  TaskDescriptor* volatile td = &tasks[TID_ID(tid)];
 
   DBLOG_START("creating task %x", tid);
   ktd_create(td, tid, task, priority, READY, NULL);

@@ -18,7 +18,7 @@ void ktd_create(TaskDescriptor* volatile td, tid_t tid, void *task,
   td->priority = priority;
   td->next = NULL;
   td->ret = 0;
-  init_circularBuffer(&(td->send_q), td->buffer_q, 256);  //TODO: MAKE DEFINE
+  init_circularBuffer(&(td->send_q), td->buffer_q, MAX_TASK);
 
 #ifdef TASK_METRICS
   td->start_time = *(int *)TM_CLOCK_VAL;

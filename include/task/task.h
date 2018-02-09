@@ -73,7 +73,7 @@ typedef struct TaskDescriptor {
   struct TaskDescriptor *next;
   int priority;
 
-  tid_t buffer_q[256];    // TODO: CREATE A DEFINE
+  tid_t buffer_q[MAX_TASK];
   CircularBuffer send_q;
 
   uint32_t ret; //Return value
@@ -96,7 +96,7 @@ typedef struct TaskSummary{
 } TaskSummary;
 
 typedef struct TidTracker {
-  tid_t buffer_tid[256];  // TODO: CREATE A DEFINE
+  tid_t buffer_tid[MAX_TASK];
   CircularBuffer cb;
 } TidTracker;
 
