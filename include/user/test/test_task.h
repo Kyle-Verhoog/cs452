@@ -8,6 +8,7 @@
 #include <taskid_test.h>
 #include <user/test/taskid_test.h>
 #include <user/test/clockserver_test.h>
+#include <user/test/context_switch_test.h>
 #include <user/test/nameserver_test.h>
 #include <schedule_test.h>
 
