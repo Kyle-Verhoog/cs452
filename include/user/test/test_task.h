@@ -6,6 +6,7 @@
 #include <io/io.h>
 #include <user/test/test_defines.h>
 #include <taskid_test.h>
+#include <schedule_test.h>
 
 void TestTask();
 

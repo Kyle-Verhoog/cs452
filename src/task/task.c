@@ -52,5 +52,25 @@ void td_copy( TaskDescriptor *td1,  TaskDescriptor *td2) {
   td1->status = td2->status;
   td1->stack_base = td2->stack_base;
 
-  //Need to copy buffer_q and circular buffer contents
+  //TODO: Need to copy buffer_q and circular buffer contents
 }
+
+#ifdef TASK_METRICS
+  void tm_init(){
+    *(int *)TM_CLOCK_LDR = TM_CLOCK_VALUE;
+    *(int *)TM_CLOCK_CTRL = TM_CLOCK_FLAGS;
+  }
+
+  void tm_delta(int st, int et, TaskDescriptor *td){
+    int delta;
+    if(et > st){  //handle wrap around
+      delta = st + TM_CLOCK_VALUE - et;
+    }
+    else{
+      delta = st - et;
+    }
+
+    td->running_time += delta;
+  }
+#endif //TASK_METRICS
+

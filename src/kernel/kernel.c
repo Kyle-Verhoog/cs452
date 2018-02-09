@@ -50,6 +50,12 @@ void initialize() {
   im_init(&im_tasks);
   DBLOG_S();
 
+#ifdef TASK_METRICS
+  DBLOG_START("init task metrics", "");
+  tm_init();
+  DBLOG_S();
+#endif //TASK_METRICS
+
   int priority;
   void *task;
 
@@ -65,7 +71,7 @@ void initialize() {
   #else
     task = &K3FirstUserTask;
   #endif
-#endif
+#endif //KTEST
 
   tid_t tid = tt_get(&tid_tracker);
   TaskDescriptor* volatile td = &tasks[(tid & 0xffff)];
@@ -268,6 +274,9 @@ void handle(TaskDescriptor *td, TaskRequest req) {
     break;
   case TR_EXIT:
     // TODO: uninitialize the task descriptor
+#ifdef TASK_METRICS //TODO: MOVE THIS
+    PRINTF("Task %d ran for:%d ticks.\n\r", td->tid, td->running_time);
+#endif //TASK_METICS
     td->status = ZOMBIE;
     tt_return(td->tid, &tid_tracker);
     break;
@@ -313,24 +322,37 @@ __attribute__((naked)) int main(void) {
   initialize();
 
   while (true) {
+#ifdef TASK_METRICS
+    int st, et; //start & end time
+#endif //TASK_METRICS
+
     //get a task from scheduler
     TaskDescriptor* td = schedule();
 
     if (!td && no_tasks()) break;
-
     if (!td) continue;
+
+#ifdef TASK_METRICS
+    st = *(int *)TM_CLOCK_VAL;
+#endif //TASK_METRICS
 
     //activate task
     TaskRequest req = activate(td);
 
     //Handle the swi
     handle(td, req);
+
+#ifdef TASK_METRICS
+    et = *(int *)TM_CLOCK_VAL;
+    tm_delta(st, et, td);
+#endif //TASK_METRICS
   }
 
   cleanup_irq();
+
 #ifdef CACHE
   DISABLE_ALL_CACHE();
-#endif
+#endif //CACHE
 
   KERNEL_EXIT();
   return 0; // should not be reachable!

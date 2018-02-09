@@ -254,7 +254,7 @@ void TestTask() {
   tid_t req;
   int ret;
   RUN_TEST_SYNC(req, ret, TaskIdTest);
-  RUN_TEST_SYNC(req, ret, TaskIdTest);
+  RUN_TEST_SYNC(req, ret, ScheduleTest);
 
   Exit();
 }

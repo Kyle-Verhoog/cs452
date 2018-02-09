@@ -4,11 +4,23 @@
 #include <types.h>
 #include <asm.h>
 #include <circularbuffer.h>
+#include <ts7200.h>
 
 // TODO: these are copies of the ones in kernel.h, we should figure out where
 //       to put them centrally.
 
 #define MAX_TASK 16
+
+#ifdef DEBUG
+  #define TASK_METRICS
+  #ifdef TASK_METRICS
+    #define TM_CLOCK_LDR (TIMER2_BASE | LDR_OFFSET)
+    #define TM_CLOCK_VAL (TIMER2_BASE | VAL_OFFSET)
+    #define TM_CLOCK_CTRL (TIMER2_BASE | CTRL_OFFSET)
+    #define TM_CLOCK_FLAGS (ENABLE_MASK | CLKSEL_MASK)
+    #define TM_CLOCK_VALUE 0xffff
+  #endif //TASK_METRICS
+#endif //DEBUG
 
 typedef enum TaskStatus { // a task is...
   ACTIVE  = 0,            //  active, currently running
@@ -64,6 +76,13 @@ typedef struct TaskDescriptor {
   CircularBuffer send_q;
 
   uint32_t ret; //Return value
+
+#ifdef TASK_METRICS
+  int start_time;  //Time Task is initialized
+  int running_time;//Time Task is active
+  int end_time;    //Time Task End
+#endif //TASK_METRICS
+
 } TaskDescriptor;
 
 typedef struct TidTracker {
@@ -80,5 +99,10 @@ int tt_size(TidTracker *tt);
  * Initialize a task descriptor to be uninitialized.
  */
 void td_init(TaskDescriptor *td);
+
+#ifdef TASK_METRICS
+  void tm_init(); //Task Metrics initialization
+  void tm_delta(int st, int et, TaskDescriptor *td);
+#endif //TASK_METRICS
 
 #endif /* TASK_H */
