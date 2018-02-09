@@ -1,13 +1,13 @@
 #include <user/clockserver.h>
 
 
-int DelayCS(int tid, uint32_t ticks) {
+int DelayCS(tid_t tid, uint32_t ticks) {
   int cs_tid = WhoIs(CLOCKSERVER_ID);
   assert(IS_VALID_TID(cs_tid));
   return Delay(cs_tid, tid, ticks);
 }
 
-int Delay(int cs_tid, int tid, uint32_t ticks) {
+int Delay(tid_t cs_tid, tid_t tid, uint32_t ticks) {
   assert(IS_VALID_TID(tid));
 
   CSReq req;
@@ -43,7 +43,7 @@ int DelayUntil(tid_t cs_tid, tid_t tid, uint32_t ticks) {
 
 
 int TimeCS(tid_t tid) {
-  int cs_tid = WhoIs(CLOCKSERVER_ID);
+  tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
   assert(IS_VALID_TID(cs_tid));
   return Time(cs_tid, tid);
 }
@@ -79,7 +79,8 @@ void ClockServerStop() {
  * Note: this is a notifier, and should be given max priority.
  */
 void ClockServerNotifier() {
-  int i, ureply, cs_tid;
+  int i, ureply;
+  tid_t cs_tid;
   CSReq req;
   CSNReply reply;
 

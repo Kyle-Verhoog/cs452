@@ -6,7 +6,7 @@
 #include <circularbuffer.h>
 
 typedef struct interrupt_matrix{
-	int buffer_TC3UI[256];	// TODO: MAKE DEFINE
+	tid_t buffer_TC3UI[256];	// TODO: MAKE DEFINE
 	CircularBuffer TC3UI;
 } interrupt_matrix;
 

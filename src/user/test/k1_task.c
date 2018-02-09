@@ -1,7 +1,7 @@
 #include <k1_task.h>
 
 void taskOne() {
-  int tid = MyTid();
+  tid_t tid = MyTid();
 
   PRINTF("T1 - %x: START\r\n", tid);
   Pass();
@@ -16,7 +16,7 @@ void taskOne() {
 
 
 void taskTwo() {
-  int tid = MyTid();
+  tid_t tid = MyTid();
   PRINTF("T2 - %x: START\r\n", tid);
 
   PRINTF("T2 - %x: MADE NEW TASK: %x\n\r",tid, Create(5, &taskTwo));
@@ -33,8 +33,8 @@ void taskTwo() {
 **/
 
 void OtherTask() {
-  int tid = MyTid();
-  int parentTid = MyParentTid();
+  tid_t tid = MyTid();
+  tid_t parentTid = MyParentTid();
 
   PRINTF("Tid: %x, parentTid: %x\n\r", tid, parentTid);
   Pass();

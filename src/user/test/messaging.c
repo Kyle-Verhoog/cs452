@@ -16,7 +16,7 @@ void SimpleSender() {
 
 void SimpleReceiver() {
   Pass();
-  int tid;
+  tid_t tid;
   int msg;
   Receive(&tid, &msg, sizeof(int));
   assert(tid == 1);

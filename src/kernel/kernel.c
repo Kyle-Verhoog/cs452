@@ -67,7 +67,7 @@ void initialize() {
   #endif
 #endif
 
-  int tid = tt_get(&tid_tracker);
+  tid_t tid = tt_get(&tid_tracker);
   TaskDescriptor* volatile td = &tasks[(tid & 0xffff)];
 
   DBLOG_START("creating task %x", tid);
@@ -192,7 +192,7 @@ TaskRequest activate(TaskDescriptor* td) {
 
 void create(TaskDescriptor *td) {
   //Get the arguments r0 (priority) r1 (function pointer)
-  int tid = tt_get(&tid_tracker);
+  tid_t tid = tt_get(&tid_tracker);
   int priority;
   void *task;
 
@@ -200,13 +200,13 @@ void create(TaskDescriptor *td) {
   asm("ldr %0, [%1, #8];":"=r"(task):"r"(td->sp));
 
   //TODO: FIX THIS ONCE SCHEDULING IS DONE
-  if (tid < 0 /*|| (tid & 0xffff) >= 10*/) {
+  if (tid < 0) {
     td->ret = -2;
     KASSERT(false && "Out of Tids");
   }
   //else if(bad priority)
   else {
-    TaskDescriptor *newTask = &tasks[(tid & 0xffff)];
+    TaskDescriptor *newTask = &tasks[TID_ID(tid)];
     ktd_create(newTask, tid, task, priority, READY, td);
     pq_push(&pq_tasks, priority, newTask);
     td->ret = tid;

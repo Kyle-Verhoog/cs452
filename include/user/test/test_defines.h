@@ -4,7 +4,7 @@
 #include <messaging.h>
 
 #define RUN_TEST_SYNC(req, ret, test) PRINTF("STARTING "STR(test)"\n\r"); \
-								Create(31, &test); \
+								Create(20, &test); \
 								Receive(&req, &ret, sizeof(ret)); \
 	  							Reply(req, &ret, sizeof(ret)); \
 	  							PRINTF("ENDING "STR(test)"\n\r");

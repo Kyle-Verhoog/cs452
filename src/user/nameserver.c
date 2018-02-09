@@ -7,21 +7,21 @@ void NameServer() {
   NSrecord NameServer[NAMESERVER_SIZE];
 
   while(true) {
-    int requestor;
+    tid_t requestor;
     NSreq request;
 
     Receive(&requestor, &request, sizeof(NSreq));
 
     switch(request.type) {
     case WhoIs_t:
-      Reply(requestor, &NameServer[request.name].tid, sizeof(int));
+      Reply(requestor, &NameServer[request.name].tid, sizeof(tid_t));
       break;
     case RegisterAs_t:
       NameServer[request.name].tid = requestor; // request.tid;
-      Reply(requestor, &NameServer[request.name].tid, sizeof(int));
+      Reply(requestor, &NameServer[request.name].tid, sizeof(tid_t));
       break;
     case Stop_t:
-      Reply(requestor, &requestor, sizeof(int));
+      Reply(requestor, &requestor, sizeof(tid_t));
       Exit();
     default:
       assert(0);
@@ -31,7 +31,7 @@ void NameServer() {
 }
 
 int RegisterAs(int n) {
-  int ns_tid = GetNS();
+  tid_t ns_tid = GetNS();
   if (ns_tid < 0) {
     assert(0);
     // TODO: error checking
@@ -46,8 +46,8 @@ int RegisterAs(int n) {
   return reply;
 }
 
-int WhoIs(int n) {
-  int ns_tid = GetNS();
+tid_t WhoIs(int n) {
+  tid_t ns_tid = GetNS();
   
   // TODO: error checking
   assert(ns_tid > 0);
@@ -63,7 +63,7 @@ int WhoIs(int n) {
 }
 
 void NameServerStop() {
-  int ns_tid = GetNS();
+  tid_t ns_tid = GetNS();
 
   NSreq rec;
   rec.type = Stop_t;

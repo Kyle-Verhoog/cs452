@@ -9,16 +9,16 @@ void tt_init( TidTracker *tt) {
   }
 }
 
-int tt_get(TidTracker *tt) {
+tid_t tt_get(TidTracker *tt) {
   if(tt->cb.buffer_end == tt->cb.buffer_start) {
     return -2;
   }
-  int tid = top_circularBuffer(&tt->cb);
+  tid_t tid = top_circularBuffer(&tt->cb);
   pop_circularBuffer(&tt->cb);
   return tid;
 }
 
-void tt_return(int tid,  TidTracker *tt) {
+void tt_return(tid_t tid,  TidTracker *tt) {
   tid += (1 << 16);
 
   push_circularBuffer(&tt->cb, tid);

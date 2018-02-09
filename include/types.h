@@ -9,7 +9,7 @@ typedef enum InterruptEvent{
 	IE_TC3UI = 51
 } InterruptEvent;
 
-typedef int tid_t;
+typedef int32_t tid_t;
 #define TID_ID(tid) (tid & 0xffff)
 typedef short int tid_id_t;
 typedef short int tid_ver_t;

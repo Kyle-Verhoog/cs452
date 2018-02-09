@@ -4,7 +4,7 @@ void send_handler(TaskDescriptor *std) {
   // get the receiver td from the sender td
   int i, stid;
   asm("ldr %0, [%1, #4];":"=r"(stid):"r"(std->sp));
-  stid = stid & 0xffff;
+  stid = TID_ID(stid);
   KASSERT(IS_VALID_ID(stid));
 
   TaskDescriptor *rtd = &tasks[stid];
@@ -17,7 +17,7 @@ void send_handler(TaskDescriptor *std) {
     // 4. set sender state to reply blocked
 
     int msg_len;
-    int *rtid;
+    tid_t *rtid;
     void *smsg, *rmsg;
 
     // load sender msg and msg_len
@@ -63,7 +63,8 @@ void send_handler(TaskDescriptor *std) {
 void receive_handler(TaskDescriptor *rtd) {
   CircularBuffer *cb = &(rtd->send_q);
 
-  int i, stid;
+  int i;
+  tid_t stid;
 
   // TODO: replace with proper size checking
   if (cb->size > 0) {
@@ -73,11 +74,12 @@ void receive_handler(TaskDescriptor *rtd) {
     // 4. set sender state to reply blocked
 
     int msg_len;
-    int *rtid;
+    tid_t *rtid;
     void *smsg, *rmsg;
 
     stid = top_circularBuffer(cb);
     pop_circularBuffer(cb);
+    stid = TID_ID(stid);
     KASSERT(IS_VALID_ID(stid));
 
     TaskDescriptor *std = &tasks[stid];
@@ -123,7 +125,8 @@ void reply_handler(TaskDescriptor *rtd) {
   // 2. sender's state is set to ready
   // 3. receiver's state is set to ready
 
-  int i, stid;
+  int i;
+  tid_t stid;
   void *rreply, *sreply;
   int msg_len;
 
@@ -131,7 +134,7 @@ void reply_handler(TaskDescriptor *rtd) {
   asm("ldr %0, [%1, #4];":"=r"(stid):"r"(rtd->sp));
   asm("ldr %0, [%1, #8];":"=r"(rreply):"r"(rtd->sp));
   asm("ldr %0, [%1, #12];":"=r"(msg_len):"r"(rtd->sp));
-  stid = stid & 0xffff;
+  stid = TID_ID(stid);
   KASSERT(IS_VALID_ID(stid));
   KASSERT(IS_VALID_USER_P(rtd->tid, rreply));
   KASSERT(msg_len > 0 && msg_len < 5000);

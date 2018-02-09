@@ -123,7 +123,7 @@
 // }
 
 // void TestTid() {
-//   int tid = MyTid();
+//   uint32_t tid = MyTid();
 //   PRINTF("MyTid - %x: \n\r", tid);
 
 //   Create(5, &TestTid);
@@ -140,9 +140,9 @@
 // }
 
 // void GetNameServer() {
-//   int mytid = MyTid();
+//   uint32_t mytid = MyTid();
 //   RegisterAs(42);
-//   int tid = WhoIs(42);
+//   uint32_t tid = WhoIs(42);
 //   assert(mytid == tid);
 //   (void)mytid;
 //   (void)tid;
@@ -158,7 +158,7 @@
 // }
 
 // void TickWaiter(){
-//   int tid = WhoIs((int)('T'+'C'+'I'));
+//   uint32_t tid = WhoIs((int)('T'+'C'+'I'));
 //   PRINTF("Waiting for Clock Interrupt!\n\r");
 //   int ret = AwaitEvent(IE_TC3UI);
 //   PRINTF("Clock Interrupt Replied - %d!\n\r", ret);
@@ -239,7 +239,7 @@
 // }
 
 // void CSTestTask() {
-//   int tid = MyTid();
+//   uint32_t tid = MyTid();
 
 //   while(true) {
 //     PRINTF("I'm waiting 1\n\r");
@@ -251,7 +251,9 @@
 // }
 
 void TestTask() {
-  int req, ret;
+  tid_t req;
+  int ret;
+  RUN_TEST_SYNC(req, ret, TaskIdTest);
   RUN_TEST_SYNC(req, ret, TaskIdTest);
 
   Exit();

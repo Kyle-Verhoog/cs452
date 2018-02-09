@@ -45,7 +45,7 @@ typedef enum InterruptType{
 } InterruptType;
 
 typedef struct TaskDescriptor {
-  int  tid; //Task id
+  tid_t  tid; //Task id
 
   uint32_t  sp;   //stack pointer
   uint32_t  stack_base; //stack base
@@ -60,20 +60,20 @@ typedef struct TaskDescriptor {
   struct TaskDescriptor *next;
   int priority;
 
-  int buffer_q[256];    // TODO: CREATE A DEFINE
+  tid_t buffer_q[256];    // TODO: CREATE A DEFINE
   CircularBuffer send_q;
 
   uint32_t ret; //Return value
 } TaskDescriptor;
 
 typedef struct TidTracker {
-  int buffer_tid[256];  // TODO: CREATE A DEFINE
+  tid_t buffer_tid[256];  // TODO: CREATE A DEFINE
   CircularBuffer cb;
 } TidTracker;
 
 void tt_init(TidTracker *tt);
-int tt_get(TidTracker *tt);
-void tt_return(int tid, TidTracker *tt);
+tid_t tt_get(TidTracker *tt);
+void tt_return(tid_t tid, TidTracker *tt);
 int tt_size(TidTracker *tt);
 
 /**

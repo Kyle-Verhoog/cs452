@@ -31,7 +31,7 @@ void StopServer() {
   int reply;
   RPCreq req;
   req.type = S_Close;
-  int serverTid = WhoIs(RPC_SERVER_NAME);
+  tid_t serverTid = WhoIs(RPC_SERVER_NAME);
 
   Send(serverTid, &req, sizeof(RPCreq), &reply, sizeof(int));
 
@@ -150,7 +150,7 @@ void RPCClient() {
   RPCresult result;
   Pass();
 
-  int serverTid = WhoIs(RPC_SERVER_NAME);
+  tid_t serverTid = WhoIs(RPC_SERVER_NAME);
 
   int replyOne;
   req.type = S_Signup;
@@ -166,8 +166,8 @@ void RPCClient() {
 void RPCClient2() {
   RPCreq req;
   RPCresult result;
-  //int tid = MyTid();
-  int serverTid = WhoIs(RPC_SERVER_NAME);
+  //tid_t tid = MyTid();
+  tid_t serverTid = WhoIs(RPC_SERVER_NAME);
 
   int replyOne;
   req.type = S_Signup;
@@ -181,7 +181,7 @@ void RPCClient2() {
 
 void RPCServer() {
   int finish = false;
-  int buffer[256];  // TODO: Make Define
+  tid_t buffer[256];  // TODO: Make Define
   CircularBuffer cb;
   RPCmatch match; //currently on-going match
 
@@ -190,7 +190,7 @@ void RPCServer() {
   RegisterAs(RPC_SERVER_NAME);
 
   while(true) {
-    int requestor;
+    tid_t requestor;
     RPCreq request;
 
     //wait for input

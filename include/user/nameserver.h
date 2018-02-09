@@ -12,7 +12,7 @@ typedef enum NSservice {
 
 typedef struct NSrecord {
   //int name;
-  int tid;
+  tid_t tid;
 } NSrecord;
 
 typedef struct NSreq {
@@ -23,7 +23,7 @@ typedef struct NSreq {
 
 int RegisterAs(int n);
 
-int WhoIs(int n);
+tid_t WhoIs(int n);
 
 void NameServer();
 

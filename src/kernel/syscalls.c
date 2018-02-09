@@ -26,7 +26,7 @@ int Create(int priority, void (*code)()) {
   //Expect from here r0 is set already as the return value
 }
 
-int MyTid() {
+tid_t MyTid() {
   //Call swi with myTid
   asm(
     "swi #3;"
@@ -35,7 +35,7 @@ int MyTid() {
   //Expect r0 set
 }
 
-int MyParentTid() {
+tid_t MyParentTid() {
   //Call swi with myTid
   asm(
     "swi #4;"
@@ -56,17 +56,17 @@ void Halt() {
   asm("swi #6;");
 }
 
-int Send(int tid, void *msg, int msg_len, void *reply, int reply_len) {
+int Send(tid_t tid, void *msg, int msg_len, void *reply, int reply_len) {
   asm("swi #7;");
   return 0; // TODO
 }
 
-int Receive(int *tid, void *msg, int msg_len) {
+int Receive(tid_t *tid, void *msg, int msg_len) {
   asm("swi #8;");
   return 0; // TODO
 }
 
-int Reply(int tid, void *reply, int reply_len) {
+int Reply(tid_t tid, void *reply, int reply_len) {
   asm("swi #9;");
   return 0; // TODO
 }

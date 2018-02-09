@@ -6,7 +6,8 @@
 int exit_flag;
 
 void K3ClientTask() {
-  int parent_tid, ii_tid, req, i;
+  int req, i;
+  tid_t parent_tid, ii_tid;
   K3Msg reply;
 
   // assignment spec indicates that we *immediately* send to the parent task
@@ -20,8 +21,8 @@ void K3ClientTask() {
   assert(reply.n >= 0 && reply.n <= 5000);
   assert(reply.t >= 0 && reply.t <= 1000000);
 
-  int mytid  = MyTid();
-  int cs_tid = WhoIs(CLOCKSERVER_ID);
+  tid_t mytid  = MyTid();
+  tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
   assert(IS_VALID_TID(mytid));
   assert(IS_VALID_TID(cs_tid));
 
@@ -74,9 +75,9 @@ void K3IdleInterface(){
 }
 
 void K3IdleTask() {
-  int mytid = MyTid();
-  int cs_tid = WhoIs(CLOCKSERVER_ID);
-  int ii_tid = WhoIs(K3IdleInterfaceID);
+  tid_t mytid = MyTid();
+  tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
+  tid_t ii_tid = WhoIs(K3IdleInterfaceID);
 
   K3IdleRequest ireq = K3_QUERY_FOR_EXIT;
   K3IdleResponse ires;
