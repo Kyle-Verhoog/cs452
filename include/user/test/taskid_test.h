@@ -7,4 +7,5 @@
 
 void TaskIdTest();
 
-#endif //TASK_ID_TEST_H
+#endif /* TASK_ID_TEST_H */
+

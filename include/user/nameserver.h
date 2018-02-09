@@ -2,24 +2,20 @@
 #define NAMESERVER_H
 
 #include <kernel/syscalls.h>
-#define NAMESERVER_SIZE 1024
+#include <lib/nameserver_store.h>
 
-typedef enum NSservice {
-  WhoIs_t = 0,
-  RegisterAs_t = 1,
-  Stop_t = 2
-} NSservice;
+#define NAMESERVER_SIZE 512
 
-typedef struct NSrecord {
-  //int name;
-  tid_t tid;
-} NSrecord;
+typedef enum NSService {
+  NS_WHOIS = 0,
+  NS_REGISTERAS = 1,
+  NS_STOP = 2
+} NSService;
 
-typedef struct NSreq {
-  NSservice type;
+typedef struct NSReq {
+  NSService type;
   int name;
-  //int tid;
-} NSreq;
+} NSReq;
 
 int RegisterAs(int n);
 
@@ -29,4 +25,4 @@ void NameServer();
 
 void NameServerStop();
 
-#endif /*NAMESERVER_H*/
+#endif /* NAMESERVER_H */

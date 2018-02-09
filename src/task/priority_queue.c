@@ -1,4 +1,4 @@
-#include <priority_queue.h>
+#include <task/priority_queue.h>
 
 void pq_init(priority_queue *pq) {
   pq->size  = 0;
@@ -9,6 +9,7 @@ void pq_init(priority_queue *pq) {
 }
 
 int pq_push(priority_queue *pq, int priority, TaskDescriptor *td) {
+  if (priority > NUM_PRIORITIES || priority < 0) return PQ_PRIORITY;
   tq_push(&pq->pqs[priority], td);
   pq->state |= 1 << priority;
   pq->size++;

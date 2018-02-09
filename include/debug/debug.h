@@ -71,4 +71,12 @@
 #define IS_VALID_TID(tid)
 #endif
 
+#ifdef DEBUG
+#define IS_VALID_PRIORITY(p) (p >= 0 && p < 32)
+#else
+#define IS_VALID_PRIORITY(p)
+#endif
+
+
+
 #endif /* DEBUG_H */
