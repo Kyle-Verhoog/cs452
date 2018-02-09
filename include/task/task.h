@@ -9,18 +9,19 @@
 // TODO: these are copies of the ones in kernel.h, we should figure out where
 //       to put them centrally.
 
-#define MAX_TASK 16
-
 #ifdef DEBUG
+  #include <io.h>
   #define TASK_METRICS
   #ifdef TASK_METRICS
-    #define TM_CLOCK_LDR (TIMER2_BASE | LDR_OFFSET)
-    #define TM_CLOCK_VAL (TIMER2_BASE | VAL_OFFSET)
-    #define TM_CLOCK_CTRL (TIMER2_BASE | CTRL_OFFSET)
+    #define TM_CLOCK_LDR (TIMER3_BASE | LDR_OFFSET)
+    #define TM_CLOCK_VAL (TIMER3_BASE | VAL_OFFSET)
+    #define TM_CLOCK_CTRL (TIMER3_BASE | CTRL_OFFSET)
     #define TM_CLOCK_FLAGS (ENABLE_MASK | CLKSEL_MASK)
-    #define TM_CLOCK_VALUE 0xffff
+    #define TM_CLOCK_VALUE 0xffffffff
   #endif //TASK_METRICS
 #endif //DEBUG
+
+#define MAX_TASK 16
 
 typedef enum TaskStatus { // a task is...
   ACTIVE  = 0,            //  active, currently running
@@ -85,6 +86,15 @@ typedef struct TaskDescriptor {
 
 } TaskDescriptor;
 
+typedef struct TaskSummary{
+  int tid;
+  int priority;
+
+  int start_time;
+  int running_time;
+  int end_time;
+} TaskSummary;
+
 typedef struct TidTracker {
   tid_t buffer_tid[256];  // TODO: CREATE A DEFINE
   CircularBuffer cb;
@@ -103,6 +113,8 @@ void td_init(TaskDescriptor *td);
 #ifdef TASK_METRICS
   void tm_init(); //Task Metrics initialization
   void tm_delta(int st, int et, TaskDescriptor *td);
+  void tm_addSummary(TaskDescriptor *td);
+  void tm_summarize();
 #endif //TASK_METRICS
 
 #endif /* TASK_H */

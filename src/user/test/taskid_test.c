@@ -1,7 +1,7 @@
 #include <user/test/taskid_test.h>
 
 void PrintMyTaskId(){
-	tid_t tid = MyTid();
+	// tid_t tid = MyTid();
 	// PRINTF("%x\n\r", tid);
 
 	Exit();

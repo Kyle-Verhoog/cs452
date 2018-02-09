@@ -56,9 +56,14 @@ void td_copy( TaskDescriptor *td1,  TaskDescriptor *td2) {
 }
 
 #ifdef TASK_METRICS
+  TaskSummary TASK_SUMMARY[128];
+  int SUMMARY_HEAD;
+
   void tm_init(){
     *(int *)TM_CLOCK_LDR = TM_CLOCK_VALUE;
     *(int *)TM_CLOCK_CTRL = TM_CLOCK_FLAGS;
+
+    SUMMARY_HEAD = 0;
   }
 
   void tm_delta(int st, int et, TaskDescriptor *td){
@@ -71,6 +76,29 @@ void td_copy( TaskDescriptor *td1,  TaskDescriptor *td2) {
     }
 
     td->running_time += delta;
+    td->end_time = et;
+  }
+
+  void tm_addSummary(TaskDescriptor *td){
+    TASK_SUMMARY[SUMMARY_HEAD].tid = td->tid;
+    TASK_SUMMARY[SUMMARY_HEAD].priority = td->priority;
+    TASK_SUMMARY[SUMMARY_HEAD].start_time = td->start_time;
+    TASK_SUMMARY[SUMMARY_HEAD].running_time = td->running_time;
+    TASK_SUMMARY[SUMMARY_HEAD].end_time = td->end_time;
+
+    SUMMARY_HEAD++;
+  }
+
+  void tm_summarize(){
+    int i;
+    for(i = 0; i < SUMMARY_HEAD; i++){
+      PRINTF("Task %x ran for %d of %d (%d%c) ticks.\n\r", 
+        TASK_SUMMARY[i].tid, 
+        TASK_SUMMARY[i].running_time,
+        (TASK_SUMMARY[i].start_time - TASK_SUMMARY[i].end_time),
+        TASK_SUMMARY[i].running_time*100 / (TASK_SUMMARY[i].start_time - TASK_SUMMARY[i].end_time),
+        37);
+    }
   }
 #endif //TASK_METRICS
 

@@ -1,11 +1,14 @@
 #include <interrupt.h>
 
-#define WAKE_PRIORITY_SIZE 1
+#define WAKE_PRIORITY_SIZE 2
 
-InterruptEvent WakePriority[64] = {51};
+InterruptEvent WakePriority[64] = {IE_TC1UI, IE_TC3UI};
 
 int get_interrupt_ret(InterruptEvent ie){
 	switch(ie){
+		case IE_TC1UI:
+			return *(int *)(TIMER1_BASE | VAL_OFFSET);
+			break;
 		case IE_TC3UI:
 			return *(int *)(TIMER3_BASE | VAL_OFFSET);
 			break;
@@ -27,6 +30,9 @@ void wakeall(interrupt_matrix *im, InterruptEvent ie){
 
 void clear_interrupt(InterruptEvent ie){
 	switch(ie){
+		case IE_TC1UI:
+			*(int *)(TIMER1_BASE | CLR_OFFSET) = 1;
+			break;
 		case IE_TC3UI:
 			*(int *)(TIMER3_BASE | CLR_OFFSET) = 1;
 			break;

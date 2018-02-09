@@ -6,6 +6,7 @@ typedef signed int int32_t;
 typedef unsigned int uint32_t;
 
 typedef enum InterruptEvent{
+	IE_TC1UI = 4,
 	IE_TC3UI = 51
 } InterruptEvent;
 

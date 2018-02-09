@@ -89,7 +89,7 @@ void ClockServerNotifier() {
   assert(cs_tid > 0);
 
   while (true) {
-    AwaitEvent(IE_TC3UI);
+    AwaitEvent(IE_TC1UI);
     Send(cs_tid, &req, sizeof(req), &reply, sizeof(reply));
     // PRINTF("%d\n\r", *(unsigned int*)(TIMER3_BASE | VAL_OFFSET));
     assert(reply.ntids >= -1 && reply.ntids <= CS_PROCESS_NUM);

@@ -95,7 +95,7 @@ void K3IdleTask() {
 
   while (true) {
     curTime = Time(cs_tid, mytid);
-    t3cur = *(unsigned int*)(TIMER3_BASE | VAL_OFFSET);
+    t3cur = *(unsigned int*)(TIMER1_BASE | VAL_OFFSET);
 
     //Only when interrupt has actually happened
     if(curTime != prevTime){

@@ -274,7 +274,7 @@ void handle(TaskDescriptor *td, TaskRequest req) {
   case TR_EXIT:
     // TODO: uninitialize the task descriptor
 #ifdef TASK_METRICS //TODO: MOVE THIS
-    PRINTF("Task %d ran for:%d ticks.\n\r", td->tid, td->running_time);
+    tm_addSummary(td);
 #endif //TASK_METICS
     td->status = ZOMBIE;
     tt_return(td->tid, &tid_tracker);
@@ -338,14 +338,18 @@ __attribute__((naked)) int main(void) {
     //activate task
     TaskRequest req = activate(td);
 
-    //Handle the swi
-    handle(td, req);
-
 #ifdef TASK_METRICS
     et = *(int *)TM_CLOCK_VAL;
     tm_delta(st, et, td);
 #endif //TASK_METRICS
+
+    //Handle the swi
+    handle(td, req);
   }
+
+#ifdef TASK_METRICS
+  tm_summarize();
+#endif //TASK_METRICS
 
   cleanup_irq();
 
