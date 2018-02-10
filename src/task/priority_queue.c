@@ -4,12 +4,12 @@ void pq_init(priority_queue *pq) {
   pq->size  = 0;
   pq->state = 0;
   int i;
-  for (i = 0; i < NUM_PRIORITIES; i++)
+  for (i = 0; i < MAX_PRIORITY; i++)
     tq_init(&pq->pqs[i]);
 }
 
 int pq_push(priority_queue *pq, int priority, TaskDescriptor *td) {
-  if (priority > NUM_PRIORITIES || priority < 0) return PQ_PRIORITY;
+  if (priority > MAX_PRIORITY || priority < 0) return PQ_PRIORITY;
   tq_push(&pq->pqs[priority], td);
   pq->state |= 1 << priority;
   pq->size++;
@@ -19,7 +19,7 @@ int pq_push(priority_queue *pq, int priority, TaskDescriptor *td) {
 int pq_dumb_pop(priority_queue *pq, TaskDescriptor **t) {
   if (pq->size < 1) return PQ_EMPTY;
   int i;
-  for (i = NUM_PRIORITIES-1; i >= 0; i--) {
+  for (i = MAX_PRIORITY-1; i >= 0; i--) {
     task_queue *tq = &pq->pqs[i];
     if (tq->size > 0) {
       tq_pop(tq, t);

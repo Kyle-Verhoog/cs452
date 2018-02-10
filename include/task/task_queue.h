@@ -3,7 +3,7 @@
 
 #include <task.h>
 
-#define TQ_SIZE 10
+#define TQ_SIZE MAX_TASK
 
 // task_queue error codes
 #define ETQ_NONE  0

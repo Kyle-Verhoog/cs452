@@ -67,7 +67,6 @@ void receive_handler(TaskDescriptor *rtd) {
   int i;
   tid_t stid;
 
-  // TODO: replace with proper size checking
   if (cb->size > 0) {
     // 1. copy message to receiver
     // 2. copy sender tid to receiver

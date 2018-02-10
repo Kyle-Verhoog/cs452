@@ -4,14 +4,11 @@
 #include <stdlib.h>
 #include <lib/clockserver_queue.h>
 #include <ts7200.h>
-#include <kernel/syscalls.h>
+#include <user/syscalls.h>
 #include <user/nameserver.h>
 
 #define TIMER2_ENABLE (1 << 19)
 
-// #define CS_TIMER_CLR   TIMER3_BASE + CLR_OFFSET
-// #define CS_TIMER_LOAD  TIMER3_BASE + LDR_OFFSET
-// #define CS_TIMER_CTRL  TIMER3_BASE + CTRL_OFFSET
 #define CS_TIMER_CLR   TIMER1_BASE + CLR_OFFSET
 #define CS_TIMER_LOAD  TIMER1_BASE + LDR_OFFSET
 #define CS_TIMER_CTRL  TIMER1_BASE + CTRL_OFFSET

@@ -22,7 +22,7 @@ int get_interrupt_ret(InterruptEvent ie){
 void wakeall(interrupt_matrix *im, InterruptEvent ie){
 	while(im_eventsize(im, ie) > 0){
 		TaskDescriptor *td = im_top(im, ie);
-		td->ret = get_interrupt_ret(ie); //TODO: Pass possible ret value to td->ret
+		td->ret = get_interrupt_ret(ie);
 		pq_push(&pq_tasks, td->priority, td);
 		im_pop(im, ie);
 	}

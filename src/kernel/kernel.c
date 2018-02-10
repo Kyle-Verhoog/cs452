@@ -64,13 +64,7 @@ void initialize() {
   task = &TestTask;
 #else
   priority = 0;
-  #ifdef METRIC_64
-    task = &K2InitMetricTask;
-  #elif METRIC_4
-    task = &K2InitMetricTask;
-  #else
-    task = &K3FirstUserTask;
-  #endif
+  task = &K3FirstUserTask;
 #endif //KTEST
 
   tid_t tid = tt_get(&tid_tracker);
@@ -84,7 +78,6 @@ void initialize() {
   DBLOG_S();
 }
 
-// Much TODO here
 TaskDescriptor* schedule() {
   if (pq_tasks.size == 0)
     return NULL;
@@ -112,9 +105,8 @@ TaskRequest activate(TaskDescriptor* td) {
     SET_CPSR(KERNEL_MODE);
     asm("ldmfd r8, {r0-r12, lr}");
     asm("SUBS pc, lr, #4");
-    //REVERSE_SWI();
   }else{
-    PUSH_STACK("r0-r12, lr"); // TODO: kernel lr
+    PUSH_STACK("r0-r12, lr");
     asm("mov r8, %0"::"r"(td->ret));
     PUSH_STACK("r8");
     WRITE_SPSR(td->psr);
@@ -204,12 +196,10 @@ void create(TaskDescriptor *td) {
   asm("ldr %0, [%1, #8];":"=r"(task):"r"(td->sp));
   KASSERT(IS_VALID_PRIORITY(priority));
 
-  //TODO: FIX THIS ONCE SCHEDULING IS DONE
   if (tid < 0) {
     td->ret = -2;
     KASSERT(false && "Out of Tids");
   }
-  //else if(bad priority)
   else {
     TaskDescriptor *newTask = &tasks[TID_ID(tid)];
     ktd_create(newTask, tid, task, priority, READY, td);
@@ -223,10 +213,6 @@ void get_tid(TaskDescriptor *td) {
 }
 
 void get_parentTid( TaskDescriptor *td) {
-  //Get the parent tid into user stack
-  // asm(
-  //   "str %0, [%1, #4]"::"r"(td->parent ? td->parent->tid : -1), "r"(td->sp)
-  // );
   td->ret = td->parent ? td->parent->tid : -1;
 }
 
@@ -272,8 +258,7 @@ void handle(TaskDescriptor *td, TaskRequest req) {
     pq_push(&pq_tasks, td->priority, td);
     break;
   case TR_EXIT:
-    // TODO: uninitialize the task descriptor
-#ifdef TASK_METRICS //TODO: MOVE THIS
+#ifdef TASK_METRICS
     tm_addSummary(td);
 #endif //TASK_METICS
     td->status = ZOMBIE;

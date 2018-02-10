@@ -2,7 +2,7 @@
 #define K3_TASK_H
 
 #include <io/io.h>
-#include <kernel/syscalls.h>
+#include <user/syscalls.h>
 #include <user/nameserver.h>
 #include <user/clockserver.h>
 

@@ -28,8 +28,11 @@
 #define SYSTEM_MODE 31 
 
 // The number of tasks in the system
-#define MAX_TASK 16
-#define NUM_TASKS 16
+#define MAX_TASK  16
+#define MAX_PRIORITY 32
+#define NS_MAX_ENTRY 64
+#define CSQ_MAX_SIZE MAX_TASK
+#define IRQ_MAX_SIZE MAX_TASK
 
 #endif // DEFINES_H
 

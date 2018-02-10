@@ -1,9 +1,9 @@
-#include <kernel/syscalls.h>
+#include <user/syscalls.h>
 #include <asm.h>
+
 /**
  * SysCalls (TODO: PASS ENUM LITERAL)
  */
-
 void Pass() {
   asm (
     "swi #0;"
@@ -58,17 +58,17 @@ void Halt() {
 
 int Send(tid_t tid, void *msg, int msg_len, void *reply, int reply_len) {
   asm("swi #7;");
-  return 0; // TODO
+  return 0; // TODO: #8
 }
 
 int Receive(tid_t *tid, void *msg, int msg_len) {
   asm("swi #8;");
-  return 0; // TODO
+  return 0; // TODO: #8
 }
 
 int Reply(tid_t tid, void *reply, int reply_len) {
   asm("swi #9;");
-  return 0; // TODO
+  return 0; // TODO: #8
 }
 
 void RegisterNS() {

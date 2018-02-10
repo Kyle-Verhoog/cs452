@@ -1,7 +1,7 @@
 #ifndef NAMESERVER_H
 #define NAMESERVER_H
 
-#include <kernel/syscalls.h>
+#include <user/syscalls.h>
 #include <lib/nameserver_store.h>
 
 #define NAMESERVER_SIZE 512

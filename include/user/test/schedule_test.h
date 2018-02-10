@@ -2,7 +2,7 @@
 #define SCHEDULE_TEST_H
 
 #include <io/io.h>
-#include <kernel/syscalls.h>
+#include <user/syscalls.h>
 #include <user/test/test_defines.h>
 
 void ScheduleTest();

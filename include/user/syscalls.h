@@ -1,7 +1,6 @@
 #ifndef SYSCALLS_H
 #define SYSCALLS_H
 
-#include <system.h>
 #include <types.h>
 
 void Assert();

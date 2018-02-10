@@ -3,8 +3,6 @@
 
 #include <stdlib.h>
 
-#define NS_NUM_ENTRIES 64
-
 #define NS_NONE   0
 #define NS_DNE   -1
 #define NS_EMPTY -2
@@ -13,7 +11,7 @@
 typedef int nskey_t;
 
 typedef struct nameserver_store {
-  tid_t entries[NS_NUM_ENTRIES];
+  tid_t entries[NS_MAX_ENTRY];
   int size;
 } nameserver_store;
 

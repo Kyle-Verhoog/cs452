@@ -91,7 +91,6 @@ void ClockServerNotifier() {
   while (true) {
     AwaitEvent(IE_TC1UI);
     Send(cs_tid, &req, sizeof(req), &reply, sizeof(reply));
-    // PRINTF("%d\n\r", *(unsigned int*)(TIMER3_BASE | VAL_OFFSET));
     assert(reply.ntids >= -1 && reply.ntids <= CS_PROCESS_NUM);
     assert(reply.tids != NULL);
     if (reply.ntids == CSN_EXIT_CODE) {

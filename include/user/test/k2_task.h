@@ -2,7 +2,7 @@
 #define K2_TASK_H
 #include <io.h>
 #include <ts7200.h>
-#include <kernel/syscalls.h>
+#include <user/syscalls.h>
 #include <user/nameserver.h>
 #include <lib/circularbuffer.h>
 

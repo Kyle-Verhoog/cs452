@@ -2,15 +2,13 @@
 #define PRIORITY_QUEUE_H
 #include <task/task_queue.h>
 
-#define NUM_PRIORITIES 32
-
 #define PQ_NONE      0
 #define PQ_ENOTFOUND 1
 #define PQ_EMPTY     2
 #define PQ_PRIORITY  3
 
 typedef struct priority_queue {
-  task_queue pqs[NUM_PRIORITIES];
+  task_queue pqs[MAX_PRIORITY];
   int size;
   int state;
 } priority_queue;

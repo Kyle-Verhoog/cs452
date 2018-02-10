@@ -3,8 +3,6 @@
 
 #include <stdlib.h>
 
-#define CSQ_SIZE 50
-
 #define CSQ_NONE    0
 #define CSQ_E_FULL  1
 #define CSQ_E_EMPTY 2
@@ -23,7 +21,7 @@ void csq_node_init(csq_node *csqn, tid_t id);
 
 typedef struct clockserver_queue {
   int size;
-  csq_node nodes[NUM_TASKS];
+  csq_node nodes[CSQ_MAX_SIZE];
   csq_node *head;
 } cs_queue;
 

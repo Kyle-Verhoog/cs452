@@ -1,7 +1,7 @@
 #ifndef USER_TASKS_H
 #define USER_TASKS_H
 #include <io.h>
-#include <kernel/syscalls.h>
+#include <user/syscalls.h>
 
 //Tasks
 void taskOne();

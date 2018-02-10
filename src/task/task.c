@@ -41,20 +41,6 @@ void td_init(TaskDescriptor *td) {
   init_circularBuffer(&td->send_q, td->buffer_q, MAX_TASK);
 }
 
-/**
- * Copies the values of td2 into td1
- */
-void td_copy( TaskDescriptor *td1,  TaskDescriptor *td2) {
-  td1->tid = td2->tid;
-  td1->sp = td2->sp;
-  td1->psr = td2->psr;
-  td1->task = td2->task;
-  td1->status = td2->status;
-  td1->stack_base = td2->stack_base;
-
-  //TODO: Need to copy buffer_q and circular buffer contents
-}
-
 #ifdef TASK_METRICS
   // TODO: MAKE THIS STATIC ARRAY BETTER
   TaskSummary TASK_SUMMARY[2056];
