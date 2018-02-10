@@ -9,9 +9,9 @@
 #include <user/test/clockserver_test.h>
 #include <user/test/context_switch_test.h>
 #include <user/test/nameserver_test.h>
-#include <schedule_test.h>
+#include <user/test/messaging_test.h>
+#include <user/test/schedule_test.h>
 
 void TestTask();
 
 #endif /*TEST_TASKS_H*/
-

@@ -4,6 +4,8 @@ void TestTask() {
   tid_t req;
   int ret;
   RUN_TEST_SYNC(req, ret, ContextSwitchTest);
+  RUN_TEST_SYNC(req, ret, MessagingTest);
+  RUN_TEST_SYNC(req, ret, MessagingTest);
   RUN_TEST_SYNC(req, ret, TaskIdTest);
   RUN_TEST_SYNC(req, ret, TaskIdTest);
   RUN_TEST_SYNC(req, ret, NameServerTest);
