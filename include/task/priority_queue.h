@@ -7,6 +7,7 @@
 #define PQ_NONE      0
 #define PQ_ENOTFOUND 1
 #define PQ_EMPTY     2
+#define PQ_PRIORITY  3
 
 typedef struct priority_queue {
   task_queue pqs[NUM_PRIORITIES];

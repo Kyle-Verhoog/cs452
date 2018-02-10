@@ -55,7 +55,7 @@ void Sender4() {
 }
 
 void Receiver4() {
-  int requestor;
+  tid_t requestor;
   int msg;
   int res = 0;
 
@@ -92,7 +92,7 @@ void Sender64() {
 }
 
 void Receiver64() {
-  int requestor;
+  tid_t requestor;
   char msg[64];
   char res[64] = STRING_64;
 

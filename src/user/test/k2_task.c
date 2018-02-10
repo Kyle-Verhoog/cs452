@@ -1,8 +1,9 @@
 #include <user/test/k2_task.h>
 
 #define RPC_SERVER_NAME 42
+#define RPC_BUFFER_SIZE 64
 
-void InitTask() {
+void InitK2Task() {
   bwsetfifo(COM2, OFF);
   bwsetfifo(COM1, OFF);
 
@@ -31,7 +32,7 @@ void StopServer() {
   int reply;
   RPCreq req;
   req.type = S_Close;
-  int serverTid = WhoIs(RPC_SERVER_NAME);
+  tid_t serverTid = WhoIs(RPC_SERVER_NAME);
 
   Send(serverTid, &req, sizeof(RPCreq), &reply, sizeof(int));
 
@@ -150,7 +151,7 @@ void RPCClient() {
   RPCresult result;
   Pass();
 
-  int serverTid = WhoIs(RPC_SERVER_NAME);
+  tid_t serverTid = WhoIs(RPC_SERVER_NAME);
 
   int replyOne;
   req.type = S_Signup;
@@ -166,8 +167,8 @@ void RPCClient() {
 void RPCClient2() {
   RPCreq req;
   RPCresult result;
-  //int tid = MyTid();
-  int serverTid = WhoIs(RPC_SERVER_NAME);
+  //tid_t tid = MyTid();
+  tid_t serverTid = WhoIs(RPC_SERVER_NAME);
 
   int replyOne;
   req.type = S_Signup;
@@ -181,15 +182,16 @@ void RPCClient2() {
 
 void RPCServer() {
   int finish = false;
+  tid_t buffer[RPC_BUFFER_SIZE];
   CircularBuffer cb;
   RPCmatch match; //currently on-going match
 
-  init_circularBuffer(&cb);
+  init_circularBuffer(&cb, buffer, RPC_BUFFER_SIZE);
   ResetMatch(&match);
   RegisterAs(RPC_SERVER_NAME);
 
   while(true) {
-    int requestor;
+    tid_t requestor;
     RPCreq request;
 
     //wait for input

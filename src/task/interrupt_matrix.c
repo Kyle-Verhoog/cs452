@@ -1,11 +1,15 @@
 #include <task/interrupt_matrix.h>
 
 void im_init(interrupt_matrix *im){
-	init_circularBuffer(&(im->TC3UI));
+	init_circularBuffer(&(im->TC1UI), im->buffer_TC1UI, IRQ_BUFFER_SIZE);
+	init_circularBuffer(&(im->TC3UI), im->buffer_TC3UI, IRQ_BUFFER_SIZE);
 }
 
 int im_push(interrupt_matrix *im, TaskDescriptor * td, InterruptEvent ie){
 	switch(ie){
+		case IE_TC1UI:
+			return push_circularBuffer(&(im->TC1UI), (unsigned int)td);
+			break;
 		case IE_TC3UI:
 			return push_circularBuffer(&(im->TC3UI), (unsigned int)td);
 			break;
@@ -18,6 +22,9 @@ int im_push(interrupt_matrix *im, TaskDescriptor * td, InterruptEvent ie){
 
 TaskDescriptor * im_top(interrupt_matrix *im, InterruptEvent ie){
 	switch(ie){
+		case IE_TC1UI:
+			return (TaskDescriptor *)top_circularBuffer(&(im->TC1UI));
+			break;
 		case IE_TC3UI:
 			return (TaskDescriptor *)top_circularBuffer(&(im->TC3UI));
 			break;
@@ -30,6 +37,9 @@ TaskDescriptor * im_top(interrupt_matrix *im, InterruptEvent ie){
 
 int im_pop(interrupt_matrix *im, InterruptEvent ie){
 	switch(ie){
+		case IE_TC1UI:
+			return pop_circularBuffer(&(im->TC1UI));
+			break;
 		case IE_TC3UI:
 			return pop_circularBuffer(&(im->TC3UI));
 			break;
@@ -42,6 +52,9 @@ int im_pop(interrupt_matrix *im, InterruptEvent ie){
 
 unsigned int im_eventsize(interrupt_matrix *im, InterruptEvent ie){
 	switch(ie){
+		case IE_TC1UI:
+			return (im->TC1UI).size;
+			break;
 		case IE_TC3UI:
 			return (im->TC3UI).size;
 			break;

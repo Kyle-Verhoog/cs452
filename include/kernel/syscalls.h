@@ -2,6 +2,7 @@
 #define SYSCALLS_H
 
 #include <system.h>
+#include <types.h>
 
 void Assert();
 
@@ -11,15 +12,15 @@ void Block();
 
 int Create(int priority, void (*code)());
 
-int MyTid();
+tid_t MyTid();
 
-int MyParentTid();
+tid_t MyParentTid();
 
-int Send(int tid, void *msg, int msg_len, void *reply, int reply_len);
+int Send(tid_t tid, void *msg, int msg_len, void *reply, int reply_len);
 
-int Receive(int *tid, void *msg, int msg_len);
+int Receive(tid_t *tid, void *msg, int msg_len);
 
-int Reply(int tid, void *reply, int reply_len);
+int Reply(tid_t tid, void *reply, int reply_len);
 
 void Halt();
 

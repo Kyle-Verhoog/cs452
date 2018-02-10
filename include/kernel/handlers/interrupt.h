@@ -4,7 +4,7 @@
 #include <kernel.h>
 #include <interrupt_matrix.h>
 
-#define VIC1_ENABLED 0
+#define VIC1_ENABLED (1 << 4)
 #define VIC2_ENABLED (1 << 19)
 
 void init_irq( interrupt_matrix *im );

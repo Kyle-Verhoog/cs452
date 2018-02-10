@@ -3,7 +3,7 @@
 
 void ns_register(TaskDescriptor *td) {
   // int t;
-  KASSERT(IS_VALID_ID(td->tid));
+  KASSERT(IS_VALID_TID(td->tid));
   KASSERT(IS_VALID_USER_P(td->tid, td->sp));
   // asm("ldr %0, [%1, #4];":"=r"(t):"r"(td->sp));
   // KASSERT(IS_VALID_ID(t));

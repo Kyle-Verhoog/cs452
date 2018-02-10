@@ -32,8 +32,8 @@ typedef struct RPCreq {
 } RPCreq;
 
 typedef struct RPCmatch {
-  int tidOne;
-  int tidTwo;
+  tid_t tidOne;
+  tid_t tidTwo;
   int ready;
 
   //Game State
@@ -45,11 +45,11 @@ typedef struct RPCmatch {
 
 typedef struct RPCresult {
   RPCfinish gameResult;
-  int playerOfFocus;
+  tid_t playerOfFocus;
 } RPCresult;
 
 //All Tasks
-void InitTask();
+void InitK2Task();
 void RPCClient();
 void RPCClient2();
 void RPCServer();

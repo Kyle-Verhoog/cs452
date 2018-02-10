@@ -3,7 +3,7 @@
 
 #include <kernel.h>
 
-uint32_t nameserver_tid;
+tid_t nameserver_tid;
 
 void ns_register(TaskDescriptor *td);
 

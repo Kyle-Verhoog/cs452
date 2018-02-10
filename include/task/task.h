@@ -4,9 +4,22 @@
 #include <types.h>
 #include <asm.h>
 #include <circularbuffer.h>
+#include <ts7200.h>
 
 // TODO: these are copies of the ones in kernel.h, we should figure out where
 //       to put them centrally.
+
+#ifdef DEBUG
+  #include <io.h>
+  #define TASK_METRICS
+  #ifdef TASK_METRICS
+    #define TM_CLOCK_LDR (TIMER3_BASE | LDR_OFFSET)
+    #define TM_CLOCK_VAL (TIMER3_BASE | VAL_OFFSET)
+    #define TM_CLOCK_CTRL (TIMER3_BASE | CTRL_OFFSET)
+    #define TM_CLOCK_FLAGS (ENABLE_MASK | CLKSEL_MASK)
+    #define TM_CLOCK_VALUE 0xffffffff
+  #endif //TASK_METRICS
+#endif //DEBUG
 
 #define MAX_TASK 16
 
@@ -45,7 +58,7 @@ typedef enum InterruptType{
 } InterruptType;
 
 typedef struct TaskDescriptor {
-  int  tid; //Task id
+  tid_t  tid; //Task id
 
   uint32_t  sp;   //stack pointer
   uint32_t  stack_base; //stack base
@@ -60,23 +73,48 @@ typedef struct TaskDescriptor {
   struct TaskDescriptor *next;
   int priority;
 
+  tid_t buffer_q[MAX_TASK];
   CircularBuffer send_q;
 
   uint32_t ret; //Return value
+
+#ifdef TASK_METRICS
+  int start_time;  //Time Task is initialized
+  int running_time;//Time Task is active
+  int end_time;    //Time Task End
+#endif //TASK_METRICS
+
 } TaskDescriptor;
 
+typedef struct TaskSummary{
+  int tid;
+  int priority;
+
+  int start_time;
+  int running_time;
+  int end_time;
+} TaskSummary;
+
 typedef struct TidTracker {
+  tid_t buffer_tid[MAX_TASK];
   CircularBuffer cb;
 } TidTracker;
 
 void tt_init(TidTracker *tt);
-int tt_get(TidTracker *tt);
-void tt_return(int tid, TidTracker *tt);
+tid_t tt_get(TidTracker *tt);
+void tt_return(tid_t tid, TidTracker *tt);
 int tt_size(TidTracker *tt);
 
 /**
  * Initialize a task descriptor to be uninitialized.
  */
 void td_init(TaskDescriptor *td);
+
+#ifdef TASK_METRICS
+  void tm_init(); //Task Metrics initialization
+  void tm_delta(int st, int et, TaskDescriptor *td);
+  void tm_addSummary(TaskDescriptor *td);
+  void tm_summarize();
+#endif //TASK_METRICS
 
 #endif /* TASK_H */

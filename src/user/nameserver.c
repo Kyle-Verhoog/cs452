@@ -1,74 +1,75 @@
 #include <user/nameserver.h>
 #include <defines.h>
 
-// TODO error checking
+
 void NameServer() {
+  int ret;
   RegisterNS();
-  NSrecord NameServer[NAMESERVER_SIZE];
+
+  nameserver_store store;
+  nss_init(&store);
+
+  tid_t requestor;
+  NSReq request;
 
   while(true) {
-    int requestor;
-    NSreq request;
-
-    Receive(&requestor, &request, sizeof(NSreq));
+    Receive(&requestor, &request, sizeof(NSReq));
 
     switch(request.type) {
-    case WhoIs_t:
-      Reply(requestor, &NameServer[request.name].tid, sizeof(int));
-      break;
-    case RegisterAs_t:
-      NameServer[request.name].tid = requestor; // request.tid;
-      Reply(requestor, &NameServer[request.name].tid, sizeof(int));
-      break;
-    case Stop_t:
-      Reply(requestor, &requestor, sizeof(int));
-      Exit();
-    default:
-      assert(0);
-      break;
+      case NS_WHOIS:
+        ret = nss_get(&store, request.name);
+        // assert(ret >= 0);
+        Reply(requestor, &ret, sizeof(ret));
+        break;
+      case NS_REGISTERAS:
+        ret = nss_set(&store, request.name, requestor);
+        // assert(ret == 0);
+        Reply(requestor, &ret, sizeof(ret));
+        break;
+      case NS_STOP:
+        Reply(requestor, &requestor, sizeof(tid_t));
+        Exit();
+      default:
+        assert(0);
+        break;
     }
   }
 }
 
 int RegisterAs(int n) {
-  int ns_tid = GetNS();
-  if (ns_tid < 0) {
+  tid_t ns_tid = GetNS();
+  if (ns_tid < 0)
     assert(0);
-    // TODO: error checking
-  }
-  NSreq rec;
-  rec.type = RegisterAs_t;
+
+  NSReq rec;
+  rec.type = NS_REGISTERAS;
   rec.name = n;
 
   int reply;
-  Send(ns_tid, &rec, sizeof(NSreq), &reply, sizeof(NSrecord));
-
+  Send(ns_tid, &rec, sizeof(NSReq), &reply, sizeof(reply));
   return reply;
 }
 
-int WhoIs(int n) {
-  int ns_tid = GetNS();
-  
-  // TODO: error checking
+tid_t WhoIs(int n) {
+  tid_t ns_tid = GetNS();
   assert(ns_tid > 0);
 
-  NSreq rec;
-  rec.type = WhoIs_t;
+  NSReq rec;
+  rec.type = NS_WHOIS;
   rec.name = n;
 
   int reply;
-  Send(ns_tid, &rec, sizeof(NSreq), &reply, sizeof(NSrecord));
-
+  Send(ns_tid, &rec, sizeof(NSReq), &reply, sizeof(reply));
   return reply;
 }
 
 void NameServerStop() {
-  int ns_tid = GetNS();
+  tid_t ns_tid = GetNS();
 
-  NSreq rec;
-  rec.type = Stop_t;
+  NSReq rec;
+  rec.type = NS_STOP;
 
   int reply;
-  Send(ns_tid, &rec, sizeof(NSreq), &reply, sizeof(int));
+  Send(ns_tid, &rec, sizeof(NSReq), &reply, sizeof(int));
   Exit();
 }

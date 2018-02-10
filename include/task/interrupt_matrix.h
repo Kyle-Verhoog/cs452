@@ -5,7 +5,13 @@
 #include <task.h>
 #include <circularbuffer.h>
 
+#define IRQ_BUFFER_SIZE 128
+
 typedef struct interrupt_matrix{
+	tid_t buffer_TC1UI[IRQ_BUFFER_SIZE];
+	CircularBuffer TC1UI;
+
+	tid_t buffer_TC3UI[IRQ_BUFFER_SIZE];
 	CircularBuffer TC3UI;
 } interrupt_matrix;
 

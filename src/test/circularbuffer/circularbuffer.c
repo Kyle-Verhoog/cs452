@@ -1,17 +1,20 @@
 #include <test/circularbuffer.h>
 
+#define BUFFER_SIZE 256
+
 void cb_sanity() {
+  int buffer[BUFFER_SIZE];
   CircularBuffer cb;
-  init_circularBuffer(&cb);
+  init_circularBuffer(&cb, buffer, BUFFER_SIZE);
 
   int i;
-  for(i = 0; i < CIRCULAR_BUFFER_SIZE; i++) {
+  for(i = 0; i < BUFFER_SIZE; i++) {
     push_circularBuffer(&cb, i);
   }
 
-  for(i = CIRCULAR_BUFFER_SIZE - 1; i >= 0; i--) {
+  for(i = BUFFER_SIZE - 1; i >= 0; i--) {
     int n = top_circularBuffer(&cb);
-    assert(CIRCULAR_BUFFER_SIZE-1 - i == n);
+    assert(BUFFER_SIZE-1 - i == n);
     pop_circularBuffer(&cb);
   }
 }

@@ -50,14 +50,18 @@ void initialize() {
   im_init(&im_tasks);
   DBLOG_S();
 
+#ifdef TASK_METRICS
+  DBLOG_START("init task metrics", "");
+  tm_init();
+  DBLOG_S();
+#endif //TASK_METRICS
+
   int priority;
   void *task;
 
 #ifdef KTEST
   priority = 0;
-  // task = &TestTask;
-  task = &K3FirstUserTask;
-  //task = &InitClock;
+  task = &TestTask;
 #else
   priority = 0;
   #ifdef METRIC_64
@@ -67,10 +71,10 @@ void initialize() {
   #else
     task = &K3FirstUserTask;
   #endif
-#endif
+#endif //KTEST
 
-  int tid = tt_get(&tid_tracker);
-  TaskDescriptor* volatile td = &tasks[(tid & 0xffff)];
+  tid_t tid = tt_get(&tid_tracker);
+  TaskDescriptor* volatile td = &tasks[TID_ID(tid)];
 
   DBLOG_START("creating task %x", tid);
   ktd_create(td, tid, task, priority, READY, NULL);
@@ -87,8 +91,6 @@ TaskDescriptor* schedule() {
 
   int ret;
   TaskDescriptor *td = NULL;
-
-  //PRINTF("Tasks Left:%d\n\r", MAX_TASK - tid_tracker.cb.size);
 
   ret = pq_pop(&pq_tasks, &td);
   KASSERT(ret == 0 && td != NULL);
@@ -194,21 +196,22 @@ TaskRequest activate(TaskDescriptor* td) {
 
 void create(TaskDescriptor *td) {
   //Get the arguments r0 (priority) r1 (function pointer)
-  int tid = tt_get(&tid_tracker);
+  tid_t tid = tt_get(&tid_tracker);
   int priority;
   void *task;
 
   asm("ldr %0, [%1, #4];":"=r"(priority):"r"(td->sp));
   asm("ldr %0, [%1, #8];":"=r"(task):"r"(td->sp));
+  KASSERT(IS_VALID_PRIORITY(priority));
 
   //TODO: FIX THIS ONCE SCHEDULING IS DONE
-  if (tid < 0 /*|| (tid & 0xffff) >= 10*/) {
+  if (tid < 0) {
     td->ret = -2;
     KASSERT(false && "Out of Tids");
   }
   //else if(bad priority)
   else {
-    TaskDescriptor *newTask = &tasks[(tid & 0xffff)];
+    TaskDescriptor *newTask = &tasks[TID_ID(tid)];
     ktd_create(newTask, tid, task, priority, READY, td);
     pq_push(&pq_tasks, priority, newTask);
     td->ret = tid;
@@ -270,6 +273,9 @@ void handle(TaskDescriptor *td, TaskRequest req) {
     break;
   case TR_EXIT:
     // TODO: uninitialize the task descriptor
+#ifdef TASK_METRICS //TODO: MOVE THIS
+    tm_addSummary(td);
+#endif //TASK_METICS
     td->status = ZOMBIE;
     tt_return(td->tid, &tid_tracker);
     break;
@@ -315,24 +321,41 @@ __attribute__((naked)) int main(void) {
   initialize();
 
   while (true) {
+#ifdef TASK_METRICS
+    int st, et; //start & end time
+#endif //TASK_METRICS
+
     //get a task from scheduler
     TaskDescriptor* td = schedule();
 
     if (!td && no_tasks()) break;
-
     if (!td) continue;
+
+#ifdef TASK_METRICS
+    st = *(int *)TM_CLOCK_VAL;
+#endif //TASK_METRICS
 
     //activate task
     TaskRequest req = activate(td);
+
+#ifdef TASK_METRICS
+    et = *(int *)TM_CLOCK_VAL;
+    tm_delta(st, et, td);
+#endif //TASK_METRICS
 
     //Handle the swi
     handle(td, req);
   }
 
+#ifdef TASK_METRICS
+  tm_summarize();
+#endif //TASK_METRICS
+
   cleanup_irq();
+
 #ifdef CACHE
   DISABLE_ALL_CACHE();
-#endif
+#endif //CACHE
 
   KERNEL_EXIT();
   return 0; // should not be reachable!
