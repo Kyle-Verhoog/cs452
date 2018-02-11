@@ -5,6 +5,12 @@ typedef int bool;
 typedef signed int int32_t;
 typedef unsigned int uint32_t;
 
+#ifndef X86
+typedef uint32_t size_t;
+#else
+#include <stddef.h>
+#endif
+
 typedef enum InterruptEvent{
 	IE_TC1UI = 4,
 	IE_TC3UI = 51

@@ -1,5 +1,5 @@
 #include <task/interrupt_matrix.h>
-
+/*
 void im_init(interrupt_matrix *im){
 	init_circularBuffer(&(im->TC1UI), im->buffer_TC1UI, IRQ_MAX_SIZE);
 	init_circularBuffer(&(im->TC3UI), im->buffer_TC3UI, IRQ_MAX_SIZE);
@@ -64,4 +64,4 @@ unsigned int im_eventsize(interrupt_matrix *im, InterruptEvent ie){
 	}
 	return -1;
 }
-
+*/

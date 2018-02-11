@@ -4,6 +4,7 @@
 #include <test/priority_queue.h>
 #include <test/nameserver.h>
 #include <test/clockserver_queue.h>
+#include <test/circular_buffer.h>
 
 int main(void) {
   PRINTF("\n");
@@ -15,6 +16,10 @@ int main(void) {
   circular_buffer_tests();
   PTEST_END();
   
+  PTEST_START("circular_buffer");
+  cbuf_tests();
+  PTEST_END();
+
   PTEST_START("task_queue");
   task_queue_tests();
   PTEST_END();

@@ -1,7 +1,7 @@
 #ifndef HANDLER_NAMESERVER_H
 #define HANDLER_NAMESERVER_H
 
-#include <kernel.h>
+#include <kernel/kernel.h>
 
 tid_t nameserver_tid;
 

@@ -1,5 +1,5 @@
-#ifndef TEST_CIRCULAR_BUFFER_H
-#define TEST_CIRCULAR_BUFFER_H
+#ifndef TEST_CIRCULARBUFFER_H
+#define TEST_CIRCULARBUFFER_H
 
 #include <test/test.h>
 #include <lib/circularbuffer.h>
