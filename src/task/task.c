@@ -1,11 +1,14 @@
 #include <task/task.h>
-#include <ts7200.h>
 
-void tt_init( TidTracker *tt) {
+void tt_init(TidTracker *tt) {
   init_circularBuffer(&tt->cb, tt->buffer_tid, MAX_TASK);
+  // tid_cb_init(&tt->cb);
   int i = 0;
+  int r;
   for(i = 0; i < MAX_TASK; i++) {
     push_circularBuffer(&tt->cb, i);
+    // r = tid_cb_push(&tt->cb, i);
+    // KASSERT(r == 0);
   }
 }
 
@@ -13,15 +16,24 @@ tid_t tt_get(TidTracker *tt) {
   if(tt_size(tt) == 0) {
     return -2;
   }
+  // tid_t tid;
+  // int r;
+  // r = tid_cb_pop(&tt->cb, &tid);
+  // KASSERT(r == 0);
+
   tid_t tid = top_circularBuffer(&tt->cb);
   pop_circularBuffer(&tt->cb);
+
   return tid;
 }
 
 void tt_return(tid_t tid,  TidTracker *tt) {
+  int r;
   tid += (1 << 16);
 
   push_circularBuffer(&tt->cb, tid);
+  // r = tid_cb_push(&tt->cb, tid);
+  // KASSERT(r == 0);
 }
 
 int tt_size(TidTracker *tt) {
@@ -38,7 +50,8 @@ void td_init(TaskDescriptor *td) {
   td->stack_base = 0;
   td->parent = NULL;
   td->priority = 1;
-  init_circularBuffer(&td->send_q, td->buffer_q, MAX_TASK);
+  tid_cb_init(&td->send_q);
+  // init_circularBuffer(&td->send_q, td->buffer_q, MAX_TASK);
 }
 
 #ifdef TASK_METRICS

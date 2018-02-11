@@ -2,7 +2,7 @@
 
 void send_handler(TaskDescriptor *std) {
   // get the receiver td from the sender td
-  int i, stid;
+  int i, stid, r;
   asm("ldr %0, [%1, #4];":"=r"(stid):"r"(std->sp));
   stid = TID_ID(stid);
   KASSERT(IS_VALID_ID(stid));
@@ -54,7 +54,9 @@ void send_handler(TaskDescriptor *std) {
     // 2. set sender state to receive blocked
 
     // 1.
-    push_circularBuffer(&(rtd->send_q), std->tid);
+    // push_circularBuffer(&(rtd->send_q), std->tid);
+    r = tid_cb_push(&(rtd->send_q), std->tid);
+    KASSERT(r == 0);
 
     // 2.
     std->status = RCV_BL;
@@ -62,9 +64,10 @@ void send_handler(TaskDescriptor *std) {
 }
 
 void receive_handler(TaskDescriptor *rtd) {
-  CircularBuffer *cb = &(rtd->send_q);
+  // CircularBuffer *cb = &(rtd->send_q);
+  tid_cb *cb = &(rtd->send_q);
 
-  int i;
+  int i, r;
   tid_t stid;
 
   if (cb->size > 0) {
@@ -77,8 +80,11 @@ void receive_handler(TaskDescriptor *rtd) {
     tid_t *rtid;
     void *smsg, *rmsg;
 
-    stid = top_circularBuffer(cb);
-    pop_circularBuffer(cb);
+    // stid = top_circularBuffer(cb);
+    // pop_circularBuffer(cb);
+    r = tid_cb_pop(cb, &stid);
+    KASSERT(r == 0);
+
     stid = TID_ID(stid);
     KASSERT(IS_VALID_ID(stid));
 

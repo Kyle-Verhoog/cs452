@@ -1,6 +1,7 @@
 #include <test/circular_buffer.h>
 
-CIRCULAR_BUFFER(int_cb, int, 5);
+CIRCULAR_BUFFER_DEC(int_cb, int, 5);
+CIRCULAR_BUFFER_DEF(int_cb, int, 5);
 
 void int_cbuf() {
   int_cb cb;
@@ -24,9 +25,11 @@ void int_cbuf_top_1() {
   r = int_cb_push(&cb, 5);
   assert(cb.size == 1);
   r = int_cb_top(&cb, &ret);
+  assert(r == 0);
   assert(ret == 5);
   assert(cb.size == 1);
   r = int_cb_top(&cb, &ret);
+  assert(r == 0);
   assert(ret == 5);
 }
 
@@ -97,7 +100,7 @@ void int_cbuf_pop_2() {
   assert(r == CB_E_EMPTY);
 }
 
-int_cbuf_reuse() {
+void int_cbuf_reuse() {
   int r, ret;
   int_cb cb;
   int_cb_init(&cb);
@@ -147,7 +150,8 @@ int_cbuf_reuse() {
 }
 
 
-CIRCULAR_BUFFER(char_cb, char, 10);
+CIRCULAR_BUFFER_DEC(char_cb, char, 10);
+CIRCULAR_BUFFER_DEF(char_cb, char, 10);
 
 void char_cbuf() {
   char_cb cb;
@@ -221,7 +225,8 @@ void char_cbuf_test() {
 }
 
 
-CIRCULAR_BUFFER(ptr_cb, int*, 3);
+CIRCULAR_BUFFER_DEC(ptr_cb, int*, 3);
+CIRCULAR_BUFFER_DEF(ptr_cb, int*, 3);
 
 void ptr_cb_test() {
   int r;

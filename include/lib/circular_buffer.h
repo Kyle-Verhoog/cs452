@@ -9,14 +9,19 @@
 
 // s/\s*\\$/\=repeat(' ', 60-col('.')).'\'
 
-#define CIRCULAR_BUFFER(NAME, T, SIZE)                     \
+#define CIRCULAR_BUFFER_DEC(NAME, T, SIZE)                 \
 typedef struct NAME {                                      \
   T buf[SIZE];                                             \
   uint32_t start;                                          \
   uint32_t end;                                            \
   uint32_t size;                                           \
 } NAME;                                                    \
-                                                           \
+void NAME##_init(NAME *cb);                                \
+int NAME##_push(NAME *cb, T val);                          \
+int NAME##_top(NAME *cb, T *ret);                          \
+int NAME##_pop(NAME *cb, T *ret);                          \
+
+#define CIRCULAR_BUFFER_DEF(NAME, T, SIZE)                 \
 void NAME##_init(NAME *cb) {                               \
   cb->start = 0;                                           \
   cb->end   = 0;                                           \

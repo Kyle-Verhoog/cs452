@@ -1,13 +1,10 @@
 #ifndef TASK_H
 #define TASK_H
-#include <defines.h>
-#include <types.h>
-#include <asm.h>
-#include <circularbuffer.h>
 #include <ts7200.h>
-
-// TODO: these are copies of the ones in kernel.h, we should figure out where
-//       to put them centrally.
+#include <stdlib.h>
+#include <asm/asm.h>
+#include <task/tid_buffer.h>
+#include <circularbuffer.h>
 
 #ifdef DEBUG
   #include <io.h>
@@ -21,7 +18,6 @@
   #endif //TASK_METRICS
 #endif //DEBUG
 
-#define MAX_TASK 16
 
 typedef enum TaskStatus { // a task is...
   ACTIVE  = 0,            //  active, currently running
@@ -57,6 +53,7 @@ typedef enum InterruptType{
   IT_IRQ = 1
 } InterruptType;
 
+
 typedef struct TaskDescriptor {
   tid_t  tid; //Task id
 
@@ -73,8 +70,11 @@ typedef struct TaskDescriptor {
   struct TaskDescriptor *next;
   int priority;
 
-  tid_t buffer_q[MAX_TASK];
-  CircularBuffer send_q;
+
+  // tid_t buffer_q[MAX_TASK];
+  // CircularBuffer send_q;
+
+  tid_cb send_q;
 
   uint32_t ret; //Return value
 
@@ -98,6 +98,7 @@ typedef struct TaskSummary{
 typedef struct TidTracker {
   tid_t buffer_tid[MAX_TASK];
   CircularBuffer cb;
+  // tid_cb cb;
 } TidTracker;
 
 void tt_init(TidTracker *tt);

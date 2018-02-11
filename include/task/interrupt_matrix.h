@@ -2,8 +2,8 @@
 #define INTERRUPT_MATRIX_H
 #include <defines.h>
 #include <system.h>
-#include <task.h>
-#include <circularbuffer.h>
+#include <task/task.h>
+#include <lib/circularbuffer.h>
 
 typedef struct interrupt_matrix{
 	tid_t buffer_TC1UI[IRQ_MAX_SIZE];

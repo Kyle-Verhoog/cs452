@@ -1,5 +1,5 @@
-#ifndef CIRCULAR_BUFFER_H
-#define CIRCULAR_BUFFER_H
+#ifndef CIRCULARBUFFER_H
+#define CIRCULARBUFFER_H
 
 #define ECB_NONE 0
 #define ECB_FULL 1
