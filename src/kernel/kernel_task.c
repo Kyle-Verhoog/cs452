@@ -1,7 +1,5 @@
 #include <kernel/kernel_task.h>
 
-// extern int tid_cb_init(tid_cb *cb);
-
 void ktd_create(TaskDescriptor* volatile td, tid_t tid, void *task,
                 int priority,
                 TaskStatus status, TaskDescriptor *parent) {
@@ -20,7 +18,6 @@ void ktd_create(TaskDescriptor* volatile td, tid_t tid, void *task,
   td->priority = priority;
   td->next = NULL;
   td->ret = 0;
-  // init_circularBuffer(&(td->send_q), td->buffer_q, MAX_TASK);
   tid_cb_init(&(td->send_q));
 
 #ifdef TASK_METRICS

@@ -1,4 +1,4 @@
-#include <interrupt.h>
+#include <kernel/handlers/interrupt.h>
 
 #define WAKE_PRIORITY_SIZE 2
 
@@ -20,11 +20,13 @@ int get_interrupt_ret(InterruptEvent ie){
 }
 
 void wakeall(interrupt_matrix *im, InterruptEvent ie){
+  int r;
 	while(im_eventsize(im, ie) > 0){
-		TaskDescriptor *td = im_top(im, ie);
+		TaskDescriptor *td;
+    r = im_pop(im, ie, &td);
+    KASSERT(r == 0);
 		td->ret = get_interrupt_ret(ie);
 		pq_push(&pq_tasks, td->priority, td);
-		im_pop(im, ie);
 	}
 }
 
