@@ -11,6 +11,8 @@ void Block();
 
 int Create(int priority, void (*code)());
 
+int CreateArgs(int priority, void (*code)(), void *args);
+
 tid_t MyTid();
 
 tid_t MyParentTid();

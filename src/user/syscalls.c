@@ -83,3 +83,13 @@ int AwaitEvent( int eventid ){
   asm("swi #13;");
 }
 
+int CreateArgs(int priority, void (*code)(), void *args) {
+  //r0 = priority, r1 = code, r2 = args
+  //Call swi with create
+  asm(
+    "swi #14;"
+  );
+
+  //Expect from here r0 is set already as the return value
+}
+

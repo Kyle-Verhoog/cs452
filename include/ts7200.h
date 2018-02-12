@@ -26,7 +26,7 @@
 #define VAL_OFFSET  0x00000004  // 16/32 bits, RO
 #define CTRL_OFFSET 0x00000008  // 3 bits, RW
 #define ENABLE_MASK 0x00000080
-#define MODE_MASK 0x00000040
+#define MODE_MASK   0x00000040
 #define CLKSEL_MASK 0x00000008
 #define CLR_OFFSET  0x0000000c  // no data, WO
 
@@ -65,7 +65,7 @@
 #define BRDH_MASK 0xff  // MSB of baud rate divisor
 #define UART_LCRL_OFFSET  0x10  // low 8 bits
 #define BRDL_MASK 0xff  // LSB of baud rate divisor
-#define UART_CTLR_OFFSET  0x14  // low 8 bits
+#define UART_CTRL_OFFSET  0x14  // low 8 bits
 #define UARTEN_MASK 0x1
 #define MSIEN_MASK  0x8 // modem status int
 #define RIEN_MASK 0x10  // receive int
@@ -107,5 +107,20 @@
 #define VIC_SOFTINTCLEAR_OFFSET 0x1c
 #define VIC_PROTECTION_OFFSET 0x20
 #define VIC_VECTADDR_OFFSET 0x30
+
+// interrupts
+#define VIC_TC1UI (1 << 4)
+#define VIC_TC2UI (1 << 5)
+#define VIC_UART1RXINTR1 23
+#define VIC_UART1TXINTR1 24
+#define VIC_UART2RXINTR2 25
+#define VIC_UART2TXINTR2 26
+#define VIC_UART3RXINTR3 27
+#define VIC_UART3TXINTR3 28
+
+#define VIC_TC3UI (1 << 19)
+#define VIC_INT_UART1 20
+#define VIC_INT_UART2 22
+#define VIC_INT_UART3 23
 
 #endif //TS_7200_H

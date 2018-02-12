@@ -1,7 +1,7 @@
 #ifndef HANDLER_MSG_H
 #define HANDLER_MSG_H
 
-#include <kernel.h>
+#include <kernel/kernel.h>
 
 void send_handler(TaskDescriptor *std);
 

@@ -13,7 +13,8 @@ typedef uint32_t size_t;
 
 typedef enum InterruptEvent{
 	IE_TC1UI = 4,
-	IE_TC3UI = 51
+	IE_TC3UI = 51,
+  IE_UART2 = 54,
 } InterruptEvent;
 
 typedef int32_t tid_t;

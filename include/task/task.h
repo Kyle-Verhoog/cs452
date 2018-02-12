@@ -8,7 +8,7 @@
 
 #ifdef DEBUG
   #include <io.h>
-  #define TASK_METRICS
+  // #define TASK_METRICS
   #ifdef TASK_METRICS
     #define TM_CLOCK_LDR (TIMER3_BASE | LDR_OFFSET)
     #define TM_CLOCK_VAL (TIMER3_BASE | VAL_OFFSET)
@@ -20,14 +20,14 @@
 
 
 typedef enum TaskStatus { // a task is...
-  ACTIVE  = 0,            //  active, currently running
-  READY   = 1,            //  ready to be run
-  BLOCKED = 2,            //  blocked, waiting for something
-  UNINIT  = 3,            //  not yet initialized
-  ZOMBIE  = 4,            //  dead... but still alive?
-  RCV_BL  = 5,
-  SND_BL  = 6,
-  RPL_BL  = 7,
+  TS_ACTIVE  = 0,            //  active, currently running
+  TS_READY   = 1,            //  ready to be run
+  TS_BLOCKED = 2,            //  blocked, waiting for something
+  TS_UNINIT  = 3,            //  not yet initialized
+  TS_ZOMBIE  = 4,            //  dead... but still alive?
+  TS_RCV_BL  = 5,
+  TS_SND_BL  = 6,
+  TS_RPL_BL  = 7,
 } TaskStatus;
 
 //Kernel Handles Task Request
@@ -46,6 +46,7 @@ typedef enum TaskRequest {
   TR_NS_GET         = 11,
   TR_IRQ            = 12,
   TR_AWAIT_EVENT    = 13,
+  TR_CREATE_W_ARGS  = 14,
 } TaskRequest;
 
 typedef enum InterruptType{
@@ -72,7 +73,7 @@ typedef struct TaskDescriptor {
 
   tid_cb send_q;
 
-  uint32_t ret; //Return value
+  int ret; //Return value
 
 #ifdef TASK_METRICS
   int start_time;  //Time Task is initialized

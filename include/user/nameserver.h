@@ -4,8 +4,6 @@
 #include <user/syscalls.h>
 #include <lib/nameserver_store.h>
 
-#define NAMESERVER_SIZE 512
-
 typedef enum NSService {
   NS_WHOIS = 0,
   NS_REGISTERAS = 1,

@@ -71,7 +71,7 @@ void initialize() {
   TaskDescriptor* volatile td = &tasks[TID_ID(tid)];
 
   DBLOG_START("creating task %x", tid);
-  ktd_create(td, tid, task, priority, READY, NULL);
+  ktd_create(td, tid, task, priority, TS_READY, NULL);
   DBLOG_S();
   DBLOG_START("pushing task %x to queue", tid);
   pq_push(&pq_tasks, priority, td);
@@ -105,7 +105,7 @@ TaskRequest activate(TaskDescriptor* td) {
     SET_CPSR(KERNEL_MODE);
     asm("ldmfd r8, {r0-r12, lr}");
     asm("SUBS pc, lr, #4");
-  }else{
+  } else {
     PUSH_STACK("r0-r12, lr");
     asm("mov r8, %0"::"r"(td->ret));
     PUSH_STACK("r8");
@@ -186,28 +186,6 @@ TaskRequest activate(TaskDescriptor* td) {
   asm("ACTIVATE_END:");
 }
 
-void create(TaskDescriptor *td) {
-  //Get the arguments r0 (priority) r1 (function pointer)
-  tid_t tid = tt_get(&tid_tracker);
-  int priority;
-  void *task;
-
-  asm("ldr %0, [%1, #4];":"=r"(priority):"r"(td->sp));
-  asm("ldr %0, [%1, #8];":"=r"(task):"r"(td->sp));
-  KASSERT(IS_VALID_PRIORITY(priority));
-
-  if (tid < 0) {
-    td->ret = -2;
-    KASSERT(false && "Out of Tids");
-  }
-  else {
-    TaskDescriptor *newTask = &tasks[TID_ID(tid)];
-    ktd_create(newTask, tid, task, priority, READY, td);
-    pq_push(&pq_tasks, priority, newTask);
-    td->ret = tid;
-  }
-}
-
 void get_tid(TaskDescriptor *td) {
   td->ret = td->tid;
 }
@@ -225,11 +203,15 @@ void handle(TaskDescriptor *td, TaskRequest req) {
     pq_push(&pq_tasks, td->priority, td);
     break;
   case TR_BLOCK:
-    td->status = BLOCKED;
+    td->status = TS_BLOCKED;
     pq_push(&pq_tasks, td->priority, td);
     break;
   case TR_CREATE:
     create(td);
+    pq_push(&pq_tasks, td->priority, td);
+    break;
+  case TR_CREATE_W_ARGS:
+    create_w_args(td);
     pq_push(&pq_tasks, td->priority, td);
     break;
   case TR_MY_TID:
@@ -261,7 +243,7 @@ void handle(TaskDescriptor *td, TaskRequest req) {
 #ifdef TASK_METRICS
     tm_addSummary(td);
 #endif //TASK_METICS
-    td->status = ZOMBIE;
+    td->status = TS_ZOMBIE;
     tt_return(td->tid, &tid_tracker);
     break;
   case TR_IRQ:

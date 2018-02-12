@@ -11,6 +11,7 @@
 #include <user/test/nameserver_test.h>
 #include <user/test/messaging_test.h>
 #include <user/test/schedule_test.h>
+#include <user/test/create_args.h>
 
 void TestTask();
 

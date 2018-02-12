@@ -38,7 +38,7 @@ void td_init(TaskDescriptor *td) {
   td->sp =  0;
   td->psr = 0;
   td->task = NULL;
-  td->status = UNINIT;
+  td->status = TS_UNINIT;
   td->it = IT_SWI;
   td->stack_base = 0;
   td->parent = NULL;

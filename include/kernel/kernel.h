@@ -4,7 +4,7 @@
 #include <defines.h>
 #include <system.h>
 #include <ts7200.h>
-#include <asm.h>
+#include <asm/asm.h>
 #include <kernel_task.h>
 
 #include <user/test/k2_task.h>
@@ -22,6 +22,7 @@
 //Debug - set DEBUG through the gcc option (-D DEBUG)
 #include <debug.h>
 
+#include <kernel/handlers/create.h>
 #include <kernel/handlers/msg.h>
 #include <kernel/handlers/nameserver.h>
 #include <kernel/handlers/interrupt.h>

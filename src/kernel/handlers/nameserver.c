@@ -12,6 +12,6 @@ void ns_register(TaskDescriptor *td) {
 
 void ns_get(TaskDescriptor *td) {
   KASSERT(td != NULL);
-  KASSERT(td->status != ZOMBIE && td->status != UNINIT);
+  KASSERT(td->status != TS_ZOMBIE && td->status != TS_UNINIT);
   td->ret = nameserver_tid;
 }

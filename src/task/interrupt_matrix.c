@@ -40,7 +40,7 @@ int im_pop(interrupt_matrix *im, InterruptEvent ie, TaskDescriptor **td){
 	return -1;	
 }
 
-unsigned int im_eventsize(interrupt_matrix *im, InterruptEvent ie){
+int im_eventsize(interrupt_matrix *im, InterruptEvent ie){
 	switch(ie){
 		case IE_TC1UI:
 			return (im->TC1UI).size;

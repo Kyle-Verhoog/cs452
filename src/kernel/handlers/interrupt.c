@@ -57,9 +57,6 @@ bool is_interrupt_asserted(InterruptEvent bit){
 }
 
 void init_irq(interrupt_matrix *im){
-  //Initialize Interrupt Matrix
-  im_init(im);
-
   //Set the IRQ Stack Base
   SET_CPSR(IRQ_MODE);
   WRITE_SP(IRQ_STACK_BASE);

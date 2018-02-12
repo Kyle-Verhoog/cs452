@@ -9,9 +9,9 @@ void send_handler(TaskDescriptor *std) {
 
   TaskDescriptor *rtd = &tasks[stid];
 
-  KASSERT(rtd->status != UNINIT);
-  KASSERT(rtd->status != ZOMBIE);
-  if (rtd->status == SND_BL) {
+  KASSERT(rtd->status != TS_UNINIT);
+  KASSERT(rtd->status != TS_ZOMBIE);
+  if (rtd->status == TS_SND_BL) {
     // 1. copy message to receiver
     // 2. copy sender tid to receiver
     // 3. set receiver state to ready, re-add to queue
@@ -44,11 +44,11 @@ void send_handler(TaskDescriptor *std) {
     *rtid = std->tid;
 
     // 3.
-    rtd->status = READY;
+    rtd->status = TS_READY;
     pq_push(&pq_tasks, rtd->priority, rtd);
 
     // 4.
-    std->status = RPL_BL;
+    std->status = TS_RPL_BL;
   } else {
     // 1. add to receiver send queue
     // 2. set sender state to receive blocked
@@ -58,7 +58,7 @@ void send_handler(TaskDescriptor *std) {
     KASSERT(r == 0);
 
     // 2.
-    std->status = RCV_BL;
+    std->status = TS_RCV_BL;
   }
 }
 
@@ -87,7 +87,7 @@ void receive_handler(TaskDescriptor *rtd) {
 
     TaskDescriptor *std = &tasks[stid];
 
-    KASSERT(std->status != UNINIT && std->status != ZOMBIE);
+    KASSERT(std->status != TS_UNINIT && std->status != TS_ZOMBIE);
 
     // load sender msg and msg_len
     asm("ldr %0, [%1, #8];":"=r"(smsg):"r"(std->sp));
@@ -112,13 +112,13 @@ void receive_handler(TaskDescriptor *rtd) {
     *rtid = std->tid;
 
     // 3.
-    rtd->status = READY;
+    rtd->status = TS_READY;
     pq_push(&pq_tasks, rtd->priority, rtd);
 
     // 4.
-    std->status = RPL_BL;
+    std->status = TS_RPL_BL;
   } else {
-    rtd->status = SND_BL;
+    rtd->status = TS_SND_BL;
   }
 }
 
@@ -153,10 +153,10 @@ void reply_handler(TaskDescriptor *rtd) {
   }
 
   // 2.
-  std->status = READY;
+  std->status = TS_READY;
   pq_push(&pq_tasks, std->priority, std);
 
   // 3.
-  rtd->status = READY;
+  rtd->status = TS_READY;
   pq_push(&pq_tasks, rtd->priority, rtd);
 }
