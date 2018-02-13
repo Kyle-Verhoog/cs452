@@ -6,11 +6,13 @@
 #include <user/syscalls.h>
 #include <io/io.h>
 #include <debug/debug.h>
+#include <lib/circular_buffer.h>
 
 typedef struct IONotifierArgs {
   int inter;
   int tid;
   int uart;
+  int emask;
 } IONotifierArgs;
 
 typedef struct IOServerArgs {
@@ -26,5 +28,7 @@ typedef struct IOServerNotifierRequest {
 */
 
 void IOServerUART2();
+
+CIRCULAR_BUFFER_DEC(io_cb, char, 512);
 
 #endif

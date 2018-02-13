@@ -1,5 +1,6 @@
 #include <user/ioserver.h>
 
+CIRCULAR_BUFFER_DEF(io_cb, char, 512);
 
 void IOServerNotifier(void *args) {
   int r;
@@ -7,13 +8,16 @@ void IOServerNotifier(void *args) {
   myargs = (IONotifierArgs *)args;
   int req = myargs->inter;
   int rep;
+  int volatile *ictrl = (int *)(myargs->uart + UART_CTRL_OFFSET);
+  int emask = myargs->emask;
 
-  SANITY();
+  // SANITY();
   while (true) {
+    *ictrl |= emask;
     AwaitEvent(req);
-    SANITY();
+    // SANITY();
     r = Send(myargs->tid, &req, sizeof(req), &rep, sizeof(rep));
-    SANITY();
+    // SANITY();
     assert(r == 0);
     assert(rep == 0);
   }
@@ -59,46 +63,51 @@ void IOServerUART2() {
 
   mytid = MyTid();
 
-  notargs.uart  = UART2_BASE;
-  notargs.tid   = mytid;
+  notargs.uart = UART2_BASE;
+  notargs.tid  = mytid;
   
   notargs.inter = IE_UART2_RX;
   r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
   notargs.inter = IE_UART2_TX;
+  notargs.emask = 0x20;
   r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
   notargs.inter = IE_UART2_RT;
+  notargs.emask = 0x40;
   r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
   notargs.inter = IE_UART2_MI;
   r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
 
   *(int *)(UART2_BASE + UART_CTRL_OFFSET) = 0x59;
-  // int t = *(int *)(UART2_BASE + UART_LCRH_OFFSET);
-  // t = t & ~FEN_MASK;
-  // *(int *)(UART2_BASE + UART_LCRH_OFFSET) = t;
-
-  // *(int *)(UART2_BASE + UART_CTRL_OFFSET) = 0x10;
-  SANITY();
+  
+  // SANITY();
   tid_t req_tid;
   int req;
   int rep = 0;
+  int volatile *data, *flags;
+  char c;
+  io_cb recv_buf;
   while (true) {
-    SANITY();
+    // SANITY();
     Receive(&req_tid, &req, sizeof(req));
     switch (req) {
       case IE_UART2_RX:
-        assert(0 && "RECEIVE");
+        PRINTF("RX\r\n");
         break;
       case IE_UART2_TX:
-        SANITY();
-        // *(int *)(UART2_BASE + UART_CTRL_OFFSET) = 0x79;
-        // *(int *)(UART2_BASE + UART_CTRL_OFFSET) &= ~0x20;
-        // *(int *)(UART2_BASE + UART_CTRL_OFFSET) = 0x20;
+        PRINTF("TX\r\n");
         break;
       case IE_UART2_RT:
-        assert(0 && "RECEIVE TIMEOUT");
+        data  = (int *)(UART2_BASE + UART_DATA_OFFSET);
+        flags = (int *)(UART2_BASE + UART_FLAG_OFFSET);
+
+        while (!(*flags & RXFE_MASK)) {
+          c = *data;
+          io_cb_push(&recv_buf, c);
+          PRINTF("RT %c\r\n", c);
+        }
         break;
       case IE_UART2_MI:
-        assert(0 && "MODEM");
+        PRINTF("MI\r\n");
         break;
       default:
         assert(0 && "INVALID INTERRUPT");
