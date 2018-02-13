@@ -8,9 +8,12 @@ void IOServerNotifier(void *args) {
   int req = myargs->inter;
   int rep;
 
+  SANITY();
   while (true) {
     AwaitEvent(req);
+    SANITY();
     r = Send(myargs->tid, &req, sizeof(req), &rep, sizeof(rep));
+    SANITY();
     assert(r == 0);
     assert(rep == 0);
   }
@@ -49,7 +52,7 @@ void IOServerTX(void *args) {
 }
 */
 
-void IOServerNotifiersTest() {
+void IOServerUART2() {
   tid_t mytid;
   int r;
   IONotifierArgs notargs;
@@ -68,21 +71,31 @@ void IOServerNotifiersTest() {
   notargs.inter = IE_UART2_MI;
   r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
 
+  *(int *)(UART2_BASE + UART_CTRL_OFFSET) = 0x59;
+  // int t = *(int *)(UART2_BASE + UART_LCRH_OFFSET);
+  // t = t & ~FEN_MASK;
+  // *(int *)(UART2_BASE + UART_LCRH_OFFSET) = t;
+
+  // *(int *)(UART2_BASE + UART_CTRL_OFFSET) = 0x10;
+  SANITY();
   tid_t req_tid;
   int req;
   int rep = 0;
   while (true) {
+    SANITY();
     Receive(&req_tid, &req, sizeof(req));
     switch (req) {
       case IE_UART2_RX:
         assert(0 && "RECEIVE");
         break;
       case IE_UART2_TX:
-        assert(0 && "TRANSMIT");
+        SANITY();
+        // *(int *)(UART2_BASE + UART_CTRL_OFFSET) = 0x79;
+        // *(int *)(UART2_BASE + UART_CTRL_OFFSET) &= ~0x20;
+        // *(int *)(UART2_BASE + UART_CTRL_OFFSET) = 0x20;
         break;
       case IE_UART2_RT:
         assert(0 && "RECEIVE TIMEOUT");
-        break;
         break;
       case IE_UART2_MI:
         assert(0 && "MODEM");

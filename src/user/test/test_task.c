@@ -15,5 +15,6 @@ void TestTask() {
   RUN_TEST_SYNC(req, ret, ClockServerTest);
   RUN_TEST_SYNC(req, ret, ClockServerTest);
   RUN_TEST_SYNC(req, ret, CreateArgsTest);
+  RUN_TEST_SYNC(req, ret, IOServerTest);
   Exit();
 }

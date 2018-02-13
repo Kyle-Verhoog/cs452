@@ -39,16 +39,22 @@ void wakebuffer(interrupt_matrix *im, InterruptEvent ie){
 void wakeall(interrupt_matrix *im, InterruptEvent ie){
 	switch(ie){
 		case IE_UART2:
+      SANITY();
+      // int i = *(int *)(UART2_BASE | UART_INTR_OFFSET);
 			if(*(int *)(UART2_BASE | UART_INTR_OFFSET) & 1){
+        SANITY();
 				wakebuffer(im, IE_UART2_MI);	
 			}
 			if((*(int *)(UART2_BASE | UART_INTR_OFFSET) >> 1) & 1){
+        SANITY();
 				wakebuffer(im, IE_UART2_RX);	
 			}
 			if((*(int *)(UART2_BASE | UART_INTR_OFFSET) >> 2) & 1){
+        SANITY();
 				wakebuffer(im, IE_UART2_TX);	
 			}
 			if((*(int *)(UART2_BASE | UART_INTR_OFFSET) >> 3) & 1){
+        SANITY();
 				wakebuffer(im, IE_UART2_RT);	
 			}
 			break;
@@ -68,6 +74,9 @@ void clear_interrupt(InterruptEvent ie){
 			break;
 		case IE_UART2:
 			*(int *)(UART2_BASE | UART_INTR_OFFSET) = 1;
+      // int t;
+      // t = *(int *)(UART2_BASE + UART_CTRL_OFFSET);
+      *(int *)(UART2_BASE + UART_CTRL_OFFSET) = 1;
 			break;
 		default:
 			KASSERT(0 && "Bad InterruptEvent Specified.");
@@ -117,11 +126,12 @@ void event_wake(interrupt_matrix *im){
     int i;
     for( i = 0; i < WAKE_PRIORITY_SIZE; ++i){
     	if(is_interrupt_asserted(WakePriority[i])){
-    		clear_interrupt(WakePriority[i]);
     		if(im_eventsize(im, WakePriority[i]) > 0){
     			wakeall(im, WakePriority[i]);
+    		  clear_interrupt(WakePriority[i]);
     			return;
     		}
+    		clear_interrupt(WakePriority[i]);
     	}
     }
 }

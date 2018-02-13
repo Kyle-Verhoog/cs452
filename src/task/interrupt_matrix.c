@@ -18,6 +18,7 @@ int im_push(interrupt_matrix *im, TaskDescriptor * td, InterruptEvent ie){
       		return im_cb_push(&(im->TC3UI), td);
 			break;
 		case IE_UART2_RX:
+        SANITY();
 	  		return im_cb_push(&(im->UART2_RX), td);
 			break;
 		case IE_UART2_TX:
@@ -92,6 +93,9 @@ int im_eventsize(interrupt_matrix *im, InterruptEvent ie){
 		case IE_UART2_MI:
 			return (im->UART2_MI).size;
 			break;
+    case IE_UART2:
+      return (im->UART2_RX).size + (im->UART2_RT).size + (im->UART2_TX).size + (im->UART2_MI).size;
+      break;
 		default:
 			KASSERT(0 && "Bad InterruptEvent Specified.");
 			break;

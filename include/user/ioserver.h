@@ -23,5 +23,6 @@ typedef struct IOServerNotifierRequest {
 } IOSNReq;
 */
 
+void IOServerUART2();
 
 #endif

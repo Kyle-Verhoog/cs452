@@ -120,8 +120,8 @@
 #define VIC_UART3TXINTR3 (1 << 28)
 
 #define VIC_TC3UI (1 << 19)
-#define VIC_INT_UART1 20
-#define VIC_INT_UART2 22
-#define VIC_INT_UART3 23
+#define VIC_INT_UART1 (1 << 20)
+#define VIC_INT_UART2 (1 << 22)
+#define VIC_INT_UART3 (1 << 23)
 
 #endif //TS_7200_H
