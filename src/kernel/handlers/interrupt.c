@@ -1,17 +1,23 @@
 #include <kernel/handlers/interrupt.h>
 
-#define WAKE_PRIORITY_SIZE 2
+#define WAKE_PRIORITY_SIZE 3
 
-InterruptEvent WakePriority[64] = {IE_TC1UI, IE_TC3UI};
+InterruptEvent WakePriority[64] = {IE_TC1UI, IE_TC3UI, IE_UART2};
 
 int get_interrupt_ret(InterruptEvent ie){
 	switch(ie){
 		case IE_TC1UI:
 			return *(int *)(TIMER1_BASE | VAL_OFFSET);
-			break;
 		case IE_TC3UI:
 			return *(int *)(TIMER3_BASE | VAL_OFFSET);
-			break;
+		case IE_UART2_TX:
+			return 0;
+		case IE_UART2_RX:
+			return 0;
+		case IE_UART2_MI:
+			return 0;
+		case IE_UART2_RT:
+			return 0;
 		default:
 			KASSERT(0 && "Bad InterruptEvent Specified.");
 	}
@@ -19,14 +25,36 @@ int get_interrupt_ret(InterruptEvent ie){
 	return -1;
 }
 
-void wakeall(interrupt_matrix *im, InterruptEvent ie){
-  int r;
+void wakebuffer(interrupt_matrix *im, InterruptEvent ie){
+	int r;
 	while(im_eventsize(im, ie) > 0){
 		TaskDescriptor *td;
-    r = im_pop(im, ie, &td);
-    KASSERT(r == 0);
+	    r = im_pop(im, ie, &td);
+	    KASSERT(r == 0);
 		td->ret = get_interrupt_ret(ie);
 		pq_push(&pq_tasks, td->priority, td);
+	}
+}
+
+void wakeall(interrupt_matrix *im, InterruptEvent ie){
+	switch(ie){
+		case IE_UART2:
+			if(*(int *)(UART2_BASE | UART_INTR_OFFSET) & 1){
+				wakebuffer(im, IE_UART2_MI);	
+			}
+			if((*(int *)(UART2_BASE | UART_INTR_OFFSET) >> 1) & 1){
+				wakebuffer(im, IE_UART2_RX);	
+			}
+			if((*(int *)(UART2_BASE | UART_INTR_OFFSET) >> 2) & 1){
+				wakebuffer(im, IE_UART2_TX);	
+			}
+			if((*(int *)(UART2_BASE | UART_INTR_OFFSET) >> 3) & 1){
+				wakebuffer(im, IE_UART2_RT);	
+			}
+			break;
+		default:
+			wakebuffer(im, ie);
+			break;
 	}
 }
 
@@ -37,6 +65,9 @@ void clear_interrupt(InterruptEvent ie){
 			break;
 		case IE_TC3UI:
 			*(int *)(TIMER3_BASE | CLR_OFFSET) = 1;
+			break;
+		case IE_UART2:
+			*(int *)(UART2_BASE | UART_INTR_OFFSET) = 1;
 			break;
 		default:
 			KASSERT(0 && "Bad InterruptEvent Specified.");

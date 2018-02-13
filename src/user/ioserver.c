@@ -9,7 +9,7 @@ void IOServerNotifier(void *args) {
 
   while (true) {
     AwaitEvent(myargs->inter);
-    r = Send(myargs->tid, );
+    //r = Send(myargs->tid, );
     assert(r == 0);
   }
 }
@@ -28,7 +28,7 @@ void IOServerRX(void *args) {
   assert(r == 0);
 
   while (true) {
-    r = Receive(&req_tid, );
+    //r = Receive(&req_tid, );
     assert(r == 0);
 
   }
