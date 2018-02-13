@@ -1,8 +1,13 @@
 #include <kernel/handlers/interrupt.h>
 
-#define WAKE_PRIORITY_SIZE 3
+#define WAKE_PRIORITY_SIZE 6
 
-InterruptEvent WakePriority[64] = {IE_TC1UI, IE_TC3UI, IE_UART2};
+InterruptEvent WakePriority[64] = {IE_TC1UI, 
+								IE_TC3UI, 
+								IE_UART2_TX, 
+								IE_UART2_RX, 
+								IE_UART2_RT, 
+								IE_UART2_MI};
 
 int get_interrupt_ret(InterruptEvent ie){
 	switch(ie){
@@ -25,7 +30,15 @@ int get_interrupt_ret(InterruptEvent ie){
 	return -1;
 }
 
-void wakebuffer(interrupt_matrix *im, InterruptEvent ie){
+void remove_assert(interrupt_matrix *im, InterruptEvent ie){
+	im->stored_flag[ie] = 0;
+}
+
+void store_assert(interrupt_matrix *im, InterruptEvent ie){
+	im->stored_flag[ie] = 1;
+}
+
+void wakeall(interrupt_matrix *im, InterruptEvent ie){
 	int r;
 	while(im_eventsize(im, ie) > 0){
 		TaskDescriptor *td;
@@ -33,34 +46,6 @@ void wakebuffer(interrupt_matrix *im, InterruptEvent ie){
 	    KASSERT(r == 0);
 		td->ret = get_interrupt_ret(ie);
 		pq_push(&pq_tasks, td->priority, td);
-	}
-}
-
-void wakeall(interrupt_matrix *im, InterruptEvent ie){
-	switch(ie){
-		case IE_UART2:
-      SANITY();
-      // int i = *(int *)(UART2_BASE | UART_INTR_OFFSET);
-			if(*(int *)(UART2_BASE | UART_INTR_OFFSET) & 1){
-        SANITY();
-				wakebuffer(im, IE_UART2_MI);	
-			}
-			if((*(int *)(UART2_BASE | UART_INTR_OFFSET) >> 1) & 1){
-        SANITY();
-				wakebuffer(im, IE_UART2_RX);	
-			}
-			if((*(int *)(UART2_BASE | UART_INTR_OFFSET) >> 2) & 1){
-        SANITY();
-				wakebuffer(im, IE_UART2_TX);	
-			}
-			if((*(int *)(UART2_BASE | UART_INTR_OFFSET) >> 3) & 1){
-        SANITY();
-				wakebuffer(im, IE_UART2_RT);	
-			}
-			break;
-		default:
-			wakebuffer(im, ie);
-			break;
 	}
 }
 
@@ -72,28 +57,67 @@ void clear_interrupt(InterruptEvent ie){
 		case IE_TC3UI:
 			*(int *)(TIMER3_BASE | CLR_OFFSET) = 1;
 			break;
-		case IE_UART2:
+		case IE_UART2_TX:
+			*(int *)(UART2_BASE + UART_CTRL_OFFSET) &= ~(1 << 5);
+			break;
+		case IE_UART2_RX:
+			*(int *)(UART2_BASE + UART_CTRL_OFFSET) &= ~(1 << 4);
+			break;
+		case IE_UART2_RT:
+			*(int *)(UART2_BASE + UART_CTRL_OFFSET) &= ~(1 << 6);
+			break;
+		case IE_UART2_MI:
+			*(int *)(UART2_BASE + UART_CTRL_OFFSET) &= ~(1 << 3);
 			*(int *)(UART2_BASE | UART_INTR_OFFSET) = 1;
-      // int t;
-      // t = *(int *)(UART2_BASE + UART_CTRL_OFFSET);
-      *(int *)(UART2_BASE + UART_CTRL_OFFSET) = 1;
 			break;
 		default:
 			KASSERT(0 && "Bad InterruptEvent Specified.");
 	}
 }
 
+bool is_interrupt_stored(interrupt_matrix *im, InterruptEvent ie){
+	return im->stored_flag[ie];
+}
+
 bool is_interrupt_asserted(InterruptEvent bit){
 	int IRQstatus;
+	int result;
 
 	if(bit < 32){
 		IRQstatus = *(int *)(VIC1_BASE | VIC_IRQSTATUS_OFFSET);
-	}else{
-		IRQstatus = *(int *)(VIC2_BASE | VIC_IRQSTATUS_OFFSET);
+		result = (IRQstatus >> bit) & 1;
+	}else if(bit < 64){
 		bit -= 32;
+		IRQstatus = *(int *)(VIC2_BASE | VIC_IRQSTATUS_OFFSET);
+		result = (IRQstatus >> bit) & 1;
+	}else{
+		switch(bit){
+			case IE_UART2_TX:
+				bit = IE_UART2 - 32;
+				IRQstatus = *(int *)(VIC2_BASE | VIC_IRQSTATUS_OFFSET);
+				result = ((IRQstatus >> bit) & 1) && *(int *)(UART2_BASE | UART_INTR_OFFSET) & 0x4;			
+				break;
+			case IE_UART2_RX:
+				bit = IE_UART2 - 32;
+				IRQstatus = *(int *)(VIC2_BASE | VIC_IRQSTATUS_OFFSET);
+				result = ((IRQstatus >> bit) & 1) && *(int *)(UART2_BASE | UART_INTR_OFFSET) & 0x2;
+				break;
+			case IE_UART2_RT:
+				bit = IE_UART2 - 32;
+				IRQstatus = *(int *)(VIC2_BASE | VIC_IRQSTATUS_OFFSET);
+				result = ((IRQstatus >> bit) & 1) && *(int *)(UART2_BASE | UART_INTR_OFFSET) & 0x8;
+				break;
+			case IE_UART2_MI:
+				bit = IE_UART2 - 32;
+				IRQstatus = *(int *)(VIC2_BASE | VIC_IRQSTATUS_OFFSET);
+				result = ((IRQstatus >> bit) & 1) && *(int *)(UART2_BASE | UART_INTR_OFFSET) & 0x1;
+				break;
+			default:
+				KASSERT(0 && "Bad InterruptEvent Specified.");
+				break;
+		}
 	}
-
-	return (IRQstatus >> bit) & 1;
+	return result;
 }
 
 void init_irq(interrupt_matrix *im){
@@ -125,13 +149,17 @@ void event_register(interrupt_matrix *im, TaskDescriptor *td){
 void event_wake(interrupt_matrix *im){
     int i;
     for( i = 0; i < WAKE_PRIORITY_SIZE; ++i){
-    	if(is_interrupt_asserted(WakePriority[i])){
+    	if(is_interrupt_asserted(WakePriority[i]) ||
+    		is_interrupt_stored(im, WakePriority[i])){
     		if(im_eventsize(im, WakePriority[i]) > 0){
     			wakeall(im, WakePriority[i]);
-    		  clear_interrupt(WakePriority[i]);
+    		  	clear_interrupt(WakePriority[i]);
+    		  	remove_assert(im, WakePriority[i]);
     			return;
+    		}else{
+    			store_assert(im, WakePriority[i]);
+    			clear_interrupt(WakePriority[i]);	
     		}
-    		clear_interrupt(WakePriority[i]);
     	}
     }
 }

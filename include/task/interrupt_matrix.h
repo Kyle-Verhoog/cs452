@@ -8,10 +8,13 @@
 typedef struct interrupt_matrix{
   im_cb TC1UI;
   im_cb TC3UI;
+
   im_cb UART2_RX;
   im_cb UART2_TX;
   im_cb UART2_RT;
   im_cb UART2_MI;
+
+  bool stored_flag[1024];
 } interrupt_matrix;
 
 void im_init(interrupt_matrix *im);

@@ -4,6 +4,8 @@
 #include <ts7200.h>
 #include <defines.h>
 #include <user/syscalls.h>
+#include <io/io.h>
+#include <debug/debug.h>
 
 typedef struct IONotifierArgs {
   int inter;
