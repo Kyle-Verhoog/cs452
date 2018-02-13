@@ -43,6 +43,7 @@
 #define IRDA_BASE 0x808b0000
 #define UART1_BASE  0x808c0000
 #define UART2_BASE  0x808d0000
+#define UART3_BASE  0x808e0000
 
 // All the below registers for UART1
 // First nine registers (up to Ox28) for UART 2
@@ -111,12 +112,12 @@
 // interrupts
 #define VIC_TC1UI (1 << 4)
 #define VIC_TC2UI (1 << 5)
-#define VIC_UART1RXINTR1 23
-#define VIC_UART1TXINTR1 24
-#define VIC_UART2RXINTR2 25
-#define VIC_UART2TXINTR2 26
-#define VIC_UART3RXINTR3 27
-#define VIC_UART3TXINTR3 28
+#define VIC_UART1RXINTR1 (1 << 23)
+#define VIC_UART1TXINTR1 (1 << 24)
+#define VIC_UART2RXINTR2 (1 << 25)
+#define VIC_UART2TXINTR2 (1 << 26)
+#define VIC_UART3RXINTR3 (1 << 27)
+#define VIC_UART3TXINTR3 (1 << 28)
 
 #define VIC_TC3UI (1 << 19)
 #define VIC_INT_UART1 20

@@ -8,6 +8,7 @@
 typedef struct IONotifierArgs {
   int inter;
   int tid;
+  int uart;
 } IONotifierArgs;
 
 typedef struct IOServerArgs {
@@ -15,6 +16,12 @@ typedef struct IOServerArgs {
   int flags;
   tid_t parent_tid;
 } IOServerArgs;
+
+/*
+typedef struct IOServerNotifierRequest {
+  int inttype;
+} IOSNReq;
+*/
 
 
 #endif

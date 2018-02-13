@@ -15,6 +15,15 @@ typedef enum InterruptEvent{
 	IE_TC1UI = 4,
 	IE_TC3UI = 51,
   IE_UART2 = 54,
+  IE_UART2_RX = 541,
+  IE_UART2_TX = 542,
+  IE_UART2_RT = 543,
+  IE_UART2_MI = 544,
+  IE_UART3 = 55,
+  IE_UART3_RX = 551,
+  IE_UART3_TX = 552,
+  IE_UART3_RT = 553,
+  IE_UART3_MI = 554,
 } InterruptEvent;
 
 typedef int32_t tid_t;

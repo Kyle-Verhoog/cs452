@@ -32,6 +32,9 @@ unsigned int kernel_stack_base = KERNEL_STACK_BASE;
 unsigned int user_stack_base = USER_STACK_BASE;
 
 void initialize() {
+  bwsetfifo(COM1, OFF);
+  bwsetspeed(COM1, 115200);
+
   DBLOG_INIT("Initializing", "");
 
   init_irq(&im_tasks);
