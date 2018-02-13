@@ -6,7 +6,8 @@
 #include <io/io.h>
 #include <user/nameserver.h>
 #include <user/clockserver.h>
+#include <clock.h>
 
-void timer_interface();
+void TimerInterface();
 
 #endif //TIMER_INTERFACE_H
