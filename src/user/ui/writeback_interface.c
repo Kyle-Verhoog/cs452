@@ -1,30 +1,42 @@
 #include <writeback_interface.h>
 
 void WritebackInterface(){
-	int in_tid = WhoIs(1);
-	int out_tid = WhoIs(1);
+	int reply;
+	int in_tid = WhoIs(READERSERVICE_UART2_ID);
+
+	tid_t reader;
+	char c;
 
 	//Keep track of Cursor - all other tasks should move cursor back here after use
 	int cur_row = 1;
 	int cur_col = 1;
 
+	RSProtocol rsp;
+	rsp.rr_req = RR_CHAR;
+
 	//Move cursor to starting location
 
+	//Register to ReaderService
+	Send(in_tid, &rsp, sizeof(rsp), &reply, sizeof(reply));
+	assert(reply == 0);
+
 	while(true){
-		char c = Getc(in_tid, COM2);
+		Receive(&reader, &c, sizeof(c));
+		Reply(reader, &reply, sizeof(reply));
 
 		switch(c){
 			case BACKSPACE:
 				//Move cursor back twice
-				Putc(out_tid, COM2, ' '); //Write Empty space
+				PRINTF("%c", c);
 				//Move cursor back once
 				break;
-			case CARRIGE_RETURN:
+			case CARRIAGE_RETURN:
 				//Clear the line
 				cur_col = 1;
+				PRINTF("\n\r", c);
 				break;
 			default:
-				Putc(out_tid, COM2, c);
+				PRINTF("%c", c);
 				break;
 		}
 	}

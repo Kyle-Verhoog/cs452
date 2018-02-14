@@ -16,7 +16,7 @@ void IdleTask() {
 void IOTask() {
   char c;
   tid_t ios_tid;
-  ios_tid = WhoIs(IOSERVER_ID);
+  ios_tid = WhoIs(IOSERVER_UART2_ID);
   assert(ios_tid > 0);
 
   while (true) {

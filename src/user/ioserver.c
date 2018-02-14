@@ -30,7 +30,7 @@ void IOServerUART2() {
 
   mytid = MyTid();
 
-  r = RegisterAs(IOSERVER_ID);
+  r = RegisterAs(IOSERVER_UART2_ID);
   assert(r == 0);
 
   notargs.uart = UART2_BASE;

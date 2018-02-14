@@ -81,7 +81,7 @@ bool is_interrupt_stored(interrupt_matrix *im, InterruptEvent ie){
 
 bool is_interrupt_asserted(InterruptEvent bit){
 	int IRQstatus;
-	int result;
+	int result = 0;
 
 	if(bit < 32){
 		IRQstatus = *(int *)(VIC1_BASE | VIC_IRQSTATUS_OFFSET);

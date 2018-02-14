@@ -35,7 +35,12 @@
 
 // User Task ID defines
 #define CLOCKSERVER_ID 2
-#define IOSERVER_ID    3
+#define IOSERVER_UART1_ID 3
+#define IOSERVER_UART2_ID 4
+#define READERSERVICE_UART2_ID 6
+
+//Commands
+#define COMMAND_SIZE 256
 
 #endif // DEFINES_H
 

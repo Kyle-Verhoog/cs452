@@ -43,12 +43,12 @@ void Stall() {
     */
 
     // Note: r1, r2, r3 used by compiler
-    asm("mov %0, r4":"=r"(reg):);
-    assert(reg == i/10 && "r4");
-    asm("mov %0, r5":"=r"(reg):);
-    assert(reg == i%(i+1) && "r5");
-    asm("mov %0, r6":"=r"(reg):);
-    assert(reg == i/12 && "r6");
+    // asm("mov %0, r4":"=r"(reg):);
+    // assert(reg == i/10 && "r4");
+    // asm("mov %0, r5":"=r"(reg):);
+    // assert(reg == i%(i+1) && "r5");
+    // asm("mov %0, r6":"=r"(reg):);
+    // //assert(reg == i/12 && "r6");
     asm("mov %0, r7":"=r"(reg):);
     assert(reg == i+7 && "r7");
     asm("mov %0, r8":"=r"(reg):);

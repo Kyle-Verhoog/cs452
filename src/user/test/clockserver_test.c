@@ -15,7 +15,7 @@ void TimeTest() {
   for (i = 0; i < 10000; i++)
     (void)i;
   tf = TimeCS(tid);
-  assert(tf > ti);
+  assert(tf >= ti);
   Exit();
 }
 

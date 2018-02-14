@@ -6,8 +6,11 @@
 #include <user/nameserver.h>
 #include <user/clockserver.h>
 #include <user/test/test_defines.h>
+#include <readerservice.h>
 #include <timer_interface.h>
+#include <writeback_interface.h>
+#include <train_msg.h>
 
 void UITest();
 
-#endif //
+#endif //UI_TEST_H

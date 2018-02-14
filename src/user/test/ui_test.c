@@ -9,18 +9,23 @@ void IdleUITest() {
 }
 
 void UITest() {
-  int i, mytid;
-  stay_alive = 1;
-  mytid = MyTid();
+  //int i, mytid;
+  //stay_alive = 1;
+  //mytid = MyTid();
   Create(31, &NameServer);
   Create(31, &ClockServer);
+  Create(31, &IOServerUART2);
+  Create(31, &ReaderServiceUART2);
+
   Create(21, &TimerInterface);
+  Create(21, &WritebackInterface);
+  Create(21, &TrainMsg);
   Create(0, &IdleUITest);
   
-  DelayCS(mytid, 1000);
-  for (i = 0; i < 100000; i++) (void)i;
-  Create(21, &ClockServerStop);
-  stay_alive = 0;
-  Create(20, &NameServerStop);
+  // DelayCS(mytid, 1000);
+  // for (i = 0; i < 100000; i++) (void)i;
+  // Create(21, &ClockServerStop);
+  // stay_alive = 0;
+  // Create(20, &NameServerStop);
   COMPLETE_TEST();
 }

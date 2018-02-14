@@ -11,6 +11,8 @@ typedef uint32_t size_t;
 #include <stddef.h>
 #endif
 
+#define INTERRUPT_SIZE 1024
+
 typedef enum InterruptEvent{
 	IE_TC1UI = 4,
 	IE_TC3UI = 51,

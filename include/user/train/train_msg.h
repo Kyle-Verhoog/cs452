@@ -1,5 +1,5 @@
-#ifndef WRITEBACK_INTERFACE_H
-#define WRITEBACK_INTERFACE_H
+#ifndef TRAIN_MSG_H
+#define TRAIN_MSG_H
 
 #include <ts7200.h>
 #include <defines.h>
@@ -7,7 +7,8 @@
 #include <io/io.h>
 #include <ascii.h>
 #include <readerservice.h>
+#include <train_defines.h>
 
-void WritebackInterface();
+void TrainMsg();
 
-#endif //WRITEBACK_INTERFACE_H
+#endif //TRAIN_MSG_H

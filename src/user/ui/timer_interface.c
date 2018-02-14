@@ -17,7 +17,7 @@ void TimerInterface(){
 			add_dsec(&clk, diff/10);
 			//Move the cursor to position
 			//Print to Terminal
-			PRINTF("%d:%d:%d\n\r", clk.min, clk.sec, clk.dsec);
+			//PRINTF("%d:%d:%d\n\r", clk.min, clk.sec, clk.dsec);
 			prev_ti += (diff/10)*10;	//Try to be as accurate as possible
 		}
 	}
