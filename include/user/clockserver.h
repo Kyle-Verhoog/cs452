@@ -15,8 +15,6 @@
 #define CS_TIMER_FLAGS ENABLE_MASK | CLKSEL_MASK | MODE_MASK
 #define CS_TIMER_VALUE 5020
 
-#define CLOCKSERVER_ID 2
-
 #define CS_SUCCESS  0
 #define CS_E_TID   -1
 #define CS_E_DELAY -2

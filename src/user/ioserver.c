@@ -23,39 +23,6 @@ void IOServerNotifier(void *args) {
   }
 }
 
-/*
-void IOServerRX(void *args) {
-  int r;
-  tid_t mytid, req_tid;
-  IOServerArgs *myargs;
-  IONotifierArgs notargs;
-  myargs = (IOServerArgs *)args;
-
-  mytid = MyTid();
-  assert(IS_VALID_ID(mytid));
-
-  r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
-  assert(r == 0);
-
-  while (true) {
-    assert(r == 0);
-
-  }
-}
-
-void IOServerTX(void *args) {
-  int r;
-  tid_t mytid;
-  IOServerArgs *myargs;
-  IONotifierArgs notargs;
-  myargs = (IOServerArgs *)args;
-
-  mytid = MyTid();
-  assert(IS_VALID_ID(mytid));
-  r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
-}
-*/
-
 void IOServerUART2() {
   tid_t mytid;
   int r;
@@ -63,33 +30,50 @@ void IOServerUART2() {
 
   mytid = MyTid();
 
+  r = RegisterAs(IOSERVER_ID);
+  assert(r == 0);
+
   notargs.uart = UART2_BASE;
   notargs.tid  = mytid;
   
-  notargs.inter = IE_UART2_RX;
-  r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
-  notargs.inter = IE_UART2_TX;
-  notargs.emask = 0x20;
-  r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
+  // notargs.inter = IE_UART2_RX;
+  // r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
+  // notargs.inter = IE_UART2_TX;
+  // notargs.emask = 0x20;
+  // r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
   notargs.inter = IE_UART2_RT;
   notargs.emask = 0x40;
   r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
-  notargs.inter = IE_UART2_MI;
-  r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
+  // notargs.inter = IE_UART2_MI;
+  // r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
 
-  *(int *)(UART2_BASE + UART_CTRL_OFFSET) = 0x59;
+  // TODO: configuration, set speed, fifo, etc
+  //*(int *)(UART2_BASE + UART_CTRL_OFFSET) = 0x59;
+  *(int *)(UART2_BASE + UART_CTRL_OFFSET) = 0x41;
   
   // SANITY();
-  tid_t req_tid;
+  tid_t req_tid, queued_tid;
   int req;
   int rep = 0;
   int volatile *data, *flags;
   char c;
   io_cb recv_buf;
+
+  io_cb_init(&recv_buf);
+  queued_tid = -1;
   while (true) {
     // SANITY();
     Receive(&req_tid, &req, sizeof(req));
     switch (req) {
+      case IO_GETC:
+        if (recv_buf.size > 0) {
+          r = io_cb_pop(&recv_buf, &c);
+          assert(r == 0);
+          Reply(req_tid, &c, sizeof(c));
+        } else {
+          queued_tid = req_tid;
+        }
+        continue;
       case IE_UART2_RX:
         PRINTF("RX\r\n");
         break;
@@ -102,8 +86,15 @@ void IOServerUART2() {
 
         while (!(*flags & RXFE_MASK)) {
           c = *data;
-          io_cb_push(&recv_buf, c);
-          PRINTF("RT %c\r\n", c);
+          r = io_cb_push(&recv_buf, c);
+          assert(r == 0 && "io buffer overflow");
+        }
+
+        if (queued_tid > 0 && recv_buf.size > 0) {
+          r = io_cb_pop(&recv_buf, &c);
+          assert(r == 0);
+          Reply(queued_tid, &c, sizeof(c));
+          queued_tid = -1;
         }
         break;
       case IE_UART2_MI:
@@ -115,4 +106,18 @@ void IOServerUART2() {
     }
     Reply(req_tid, &rep, sizeof(rep));
   }
+}
+
+
+char GetC(tid_t ios_tid) {
+  int r;
+  assert(ios_tid > 0);
+
+  int req;
+  char rep;
+
+  req = IO_GETC;
+  r = Send(ios_tid, &req, sizeof(req), &rep, sizeof(rep));
+  assert(r == 0);
+  return rep;
 }

@@ -36,7 +36,7 @@ void send_handler(TaskDescriptor *std) {
     KASSERT(rmsg != NULL);
 
     // 1.
-    for (i = 0; i < msg_len; i++) {
+    for (i = 0; i < msg_len; ++i) {
       *((char *)(rmsg+i)) = *((char *)(smsg+i));
     }
 
@@ -104,7 +104,7 @@ void receive_handler(TaskDescriptor *rtd) {
     KASSERT(rmsg != NULL);
 
     // 1.
-    for (i = 0; i < msg_len; i++) {
+    for (i = 0; i < msg_len; ++i) {
       *((char *)(rmsg+i)) = *((char *)(smsg+i));
     }
 
@@ -148,7 +148,7 @@ void reply_handler(TaskDescriptor *rtd) {
   KASSERT(IS_VALID_USER_P(std->tid, sreply));
 
   // 1.
-  for (i = 0; i < msg_len; i++) {
+  for (i = 0; i < msg_len; ++i) {
     *((char *)(sreply + i)) = *((char *)(rreply + i));
   }
 

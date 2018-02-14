@@ -32,5 +32,10 @@
 #define CSQ_MAX_SIZE MAX_TASK
 #define IRQ_MAX_SIZE MAX_TASK
 
+
+// User Task ID defines
+#define CLOCKSERVER_ID 2
+#define IOSERVER_ID    3
+
 #endif // DEFINES_H
 
