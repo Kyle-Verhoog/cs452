@@ -30,3 +30,4 @@ void TrainMsg(){
 
 	Exit();
 }
+

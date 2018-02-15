@@ -28,7 +28,7 @@ void ClockServerTest() {
   Create(25, &TimeTest);
   Create(25, &TimeTest);
   Create(0, &IdleTest);
-  DelayCS(mytid, 100);
+  DelayCS(mytid, 50);
   stay_alive = 0;
   Create(21, &ClockServerStop);
   for (i = 0; i < 10000; i++) (void)i;

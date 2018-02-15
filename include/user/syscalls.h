@@ -31,7 +31,7 @@ void RegisterNS();
 
 int GetNS();
 
-int AwaitEvent( int eventid );
+int AwaitEvent(InterruptEvent eventid);
 
 #ifdef DEBUG
 #include <io.h>

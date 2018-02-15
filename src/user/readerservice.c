@@ -22,7 +22,7 @@ void NotifyCommand(tid_t *list, int size, char *data, int datasize){
 void ReaderServiceUART2Notifier(){
 	int reply;
 	tid_t reader = MyParentTid();
-	tid_t ios_tid = WhoIs(IOSERVER_UART2_ID);
+	tid_t ios_tid = WhoIs(IOSERVER_UART2_RX_ID);
 	RSProtocol rsp;
 
 	rsp.rr_req = RR_WRITE;
