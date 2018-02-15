@@ -9,7 +9,7 @@ void im_init(interrupt_matrix *im){
   im_cb_init(&(im->UART2_MI));
 
   int i;
-  for(i = 0; i < INTERRUPT_SIZE; i++ ){	//TODO: MAKE DEFINE FOR SIZE OF ARRAY
+  for(i = 0; i < INTERRUPT_SIZE; i++ ){
   	im->stored_flag[i] = 0;
   }
 }

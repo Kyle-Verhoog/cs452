@@ -34,5 +34,7 @@ void bwformat ( int channel, const volatile char *fmt, va_list va );
 
 void bwprintf( int channel, const volatile char *format, ... );
 
+char c2x( char ch );
+
 
 #endif /* BWIO_H */

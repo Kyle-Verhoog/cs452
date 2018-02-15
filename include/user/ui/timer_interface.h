@@ -3,7 +3,7 @@
 
 #include <defines.h>
 #include <user/syscalls.h>
-#include <io/io.h>
+#include <io.h>
 #include <user/nameserver.h>
 #include <user/clockserver.h>
 #include <clock.h>

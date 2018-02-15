@@ -29,8 +29,8 @@ void IOTask() {
       Exit();
     }
     else {
-      PutC(tios_tid, c);
-      PRINTF("%c\r\n", c);
+      print(tios_tid, "%c\n\r", c);
+      PRINTF("%c\n\r", c);
     }
   }
 }

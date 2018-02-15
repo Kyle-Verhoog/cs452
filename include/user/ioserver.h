@@ -5,9 +5,10 @@
 #include <defines.h>
 #include <user/syscalls.h>
 #include <user/clockserver.h>
-#include <io/io.h>
+#include <user/uio.h>
 #include <debug/debug.h>
 #include <lib/circular_buffer.h>
+
 
 typedef struct IOServerArgs {
   InterruptEvent ie_base;

@@ -10,8 +10,10 @@
 #else
 
 #include <defines.h>
-#include <io/bwio.h>
+#include <kernel/bwio.h>
+#include <user/uio.h>
 
+// tid_t UART2_TX;
 #define PRINTF(...) bwprintf(LOG_COM, __VA_ARGS__)
 
 #endif

@@ -2,7 +2,7 @@
 #define TEST_TASKS_H
 
 #include <types.h>
-#include <io/io.h>
+#include <io.h>
 #include <user/syscalls.h>
 #include <user/test/test_defines.h>
 #include <user/test/taskid_test.h>

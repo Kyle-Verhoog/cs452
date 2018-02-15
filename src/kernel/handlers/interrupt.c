@@ -35,7 +35,7 @@ void remove_assert(interrupt_matrix *im, InterruptEvent ie){
 }
 
 void store_assert(interrupt_matrix *im, InterruptEvent ie){
-	im->stored_flag[ie] = 1;
+	im->stored_flag[ie]++;
 }
 
 void wakeall(interrupt_matrix *im, InterruptEvent ie){

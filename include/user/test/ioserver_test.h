@@ -4,6 +4,7 @@
 #include <user/syscalls.h>
 #include <user/test/test_defines.h>
 #include <user/ioserver.h>
+#include <user/uio.h>
 
 void IOServerTest();
 
