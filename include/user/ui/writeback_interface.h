@@ -4,7 +4,7 @@
 #include <ts7200.h>
 #include <defines.h>
 #include <user/syscalls.h>
-#include <io/io.h>
+#include <io.h>
 #include <ascii.h>
 #include <readerservice.h>
 

@@ -2,6 +2,9 @@
 
 CIRCULAR_BUFFER_DEF(io_cb, char, 512);
 
+
+tid_t UART2_TX;
+
 void IOServerNotifier(void *args) {
   // SANITY();
   int r, rep, emask;
@@ -122,6 +125,8 @@ void IOServerTX(void *args) {
   ie_base   = arg->ie_base;
 
   mytid = MyTid();
+
+  UART2_TX = mytid;
 
   r = RegisterAs(ns_id);
   assert(r == 0);
@@ -258,18 +263,17 @@ void IOServerUART1() {
 
   // Enable the UART and interrupts
   // Enable fifo
-  *(int *)(UART2_BASE + UART_LCRH_OFFSET) |= FEN_MASK | STP2_MASK;
+  *(int *)(UART1_BASE + UART_LCRH_OFFSET) |= FEN_MASK | STP2_MASK;
 
   // Set speed to 115200 bps
-  *(int *)(UART2_BASE + UART_LCRM_OFFSET) = 0x0;
-  *(int *)(UART2_BASE + UART_LCRL_OFFSET) = 0xbf;
+  *(int *)(UART1_BASE + UART_LCRM_OFFSET) = 0x0;
+  *(int *)(UART1_BASE + UART_LCRL_OFFSET) = 0xbf;
 
   // Enable UART
-  *(int *)(UART2_BASE + UART_CTRL_OFFSET) = UARTEN_MASK | RTIEN_MASK | TIEN_MASK;
+  *(int *)(UART1_BASE + UART_CTRL_OFFSET) = UARTEN_MASK | RTIEN_MASK | TIEN_MASK;
 
   Exit();
 }
-
 
 
 char GetC(tid_t ios_tid) {
@@ -286,6 +290,7 @@ char GetC(tid_t ios_tid) {
   assert(r == 0);
   return rep;
 }
+
 
 int PutC(tid_t ios_tid, char c) {
   int r;
