@@ -14,20 +14,37 @@ void IdleUITest() {
   Exit();
 }
 
+void ClearScreen(){
+  tid_t writer = WhoIs(WRITERSERVICE_UART2_ID);
+  char *command = "\033[2J";
+  int size = 6;
+  Cursor c;
+
+  c.row = 1;
+  c.col = 1;
+
+  WriteCommandUART2(writer, command, size, &c);
+  Exit();
+}
+
 void UITest() {
-  //int i, mytid;
+  int i, mytid;
   ui_alive = 1;
-  //mytid = MyTid();
+  mytid = MyTid();
+  Create(1, &IdleUITest);
   Create(31, &NameServer);
   Create(31, &ClockServer);
   Create(30, &IOServerUART2);
-  //Create(31, &WriterServiceUART2);
-  Create(25, &ReaderServiceUART2);
 
-  //Create(25, &TimerInterface);
+  DelayCS(mytid, 100);
+
+  Create(29, &WriterServiceUART2);
+  Create(29, &ReaderServiceUART2);
+
+  Create(28, &ClearScreen);
+  Create(25, &TimerInterface);
   //Create(25, &WritebackInterface);
   //Create(25, &TrainMsg);
-  Create(1, &IdleUITest);
   
   // DelayCS(mytid, 1000);
   // for (i = 0; i < 100000; i++) (void)i;

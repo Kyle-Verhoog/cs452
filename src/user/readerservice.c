@@ -25,8 +25,8 @@ void ReaderServiceUART2(){
 	assert(rx_tid >= 0);
 	tid_t tx_tid = WhoIs(IOSERVER_UART2_TX_ID);
 	assert(tx_tid >= 0);
-	//tid_t writer = WhoIs(WRITERSERVICE_UART2_ID);
-	//assert(writer >= 0);
+	tid_t writer = WhoIs(WRITERSERVICE_UART2_ID);
+	assert(writer >= 0);
 
 	char command[COMMAND_SIZE];
 	int csize = 0;
@@ -34,25 +34,23 @@ void ReaderServiceUART2(){
 	while(true){
 		//Get and Writeback
 		command[csize] = GetC(rx_tid);
-		assert(command[csize] == 'a');
-		PutC(tx_tid, command[csize]);
-		//WriteCharUART2(writer, command[csize]);
+		WriteCharUART2(writer, command[csize]);
 
-		// switch(command[csize]){
-		// 	case BACKSPACE:
-		// 		if(csize >= 2){
-		// 			csize -= 2;
-		// 		}else{
-		// 			csize = 0;
-		// 		}
-		// 		break;
-		// 	case CARRIAGE_RETURN:
-		// 		if(csize > 0){
-		// 			parse_and_send(command, csize);	
-		// 		}				
-		// 		csize = 0;
-		// 	default:
-		// 		csize++;
-		// }
+		switch(command[csize]){
+			case BACKSPACE:
+				if(csize >= 2){
+					csize -= 2;
+				}else{
+					csize = 0;
+				}
+				break;
+			case CARRIAGE_RETURN:
+				if(csize > 0){
+					parse_and_send(command, csize);	
+				}				
+				csize = 0;
+			default:
+				csize++;
+		}
 	}
 }

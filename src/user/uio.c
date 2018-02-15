@@ -75,7 +75,7 @@ char a2i(char ch, const volatile char **src, int base, int *nump) {
   return ch;
 }
 
-void ui2a(unsigned int num, unsigned int base, volatile char *bf) {
+void uint2a(unsigned int num, unsigned int base, volatile char *bf) {
   int n = 0;
   int dgt;
   unsigned int d = 1;
@@ -93,12 +93,12 @@ void ui2a(unsigned int num, unsigned int base, volatile char *bf) {
   *bf = 0;
 }
 
-void i2a(int num, volatile char *bf) {
+void int2a(int num, volatile char *bf) {
   if(num < 0) {
     num = -num;
     *bf++ = '-';
   }
-  ui2a(num, 10, bf);
+  uint2a(num, 10, bf);
 }
 
 void format(tid_t ios_tid, const volatile char *fmt, va_list va) {
@@ -141,15 +141,15 @@ void format(tid_t ios_tid, const volatile char *fmt, va_list va) {
           putw(ios_tid, w, 0, va_arg(va, char*));
           break;
         case 'u':
-          ui2a(va_arg(va, unsigned int), 10, bf);
+          uint2a(va_arg(va, unsigned int), 10, bf);
           putw(ios_tid, w, lz, bf);
           break;
         case 'd':
-          i2a(va_arg(va, int), bf);
+          int2a(va_arg(va, int), bf);
           putw(ios_tid, w, lz, bf);
           break;
         case 'x':
-          ui2a(va_arg(va, unsigned int), 16, bf);
+          uint2a(va_arg(va, unsigned int), 16, bf);
           putw(ios_tid, w, lz, bf);
           break;
         case '%':

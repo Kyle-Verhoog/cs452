@@ -41,7 +41,7 @@ void move_cursor(tid_t tx_tid, int r, int c){
 
 	int i;
 	for(i = 0; i < rsize + csize + 6; i++){
-		PutC(tx_tid, command[i]);
+		PutC(tx_tid, command[i-1]);
 	}
 }
 
@@ -71,7 +71,9 @@ void PushCharToUART2(tid_t tx_tid, WRProtocol *wrp, Cursor *cursor){
 
 void PushCommandToUART2(tid_t tx_tid, WRProtocol *wrp, Cursor *original){
 	//Push command to ioserver
+	SANITY();
 	move_cursor(tx_tid, wrp->cursor.row, wrp->cursor.col);
+	SANITY();
 	int i;
 	for(i = 0; i < wrp->size; i++){
 		PutC(tx_tid, wrp->data[i]);

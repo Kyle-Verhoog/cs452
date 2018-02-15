@@ -159,26 +159,71 @@ void IOServerTX(void *args) {
   not_tid = -1;
   rep = 0;
 
-  while (true) {
-    // SANITY();
-    Receive(&req_tid, &req, sizeof(req));
-    switch (req.type) {
-      case IO_PUTC:
-        // SANITY();
-        assert(req.len == sizeof(char));
-        r = io_cb_push(&tran_buf, req.msg[0]);
-        rep_notif = true;
-        Reply(req_tid, &rep, sizeof(rep));
-        break;
-      case IO_TX:
-        // SANITY();
-        not_tid = req_tid;
+  // while (true) {
+  //   // SANITY();
+  //   Receive(&req_tid, &req, sizeof(req));
+  //   switch (req.type) {
+  //     case IO_PUTC:
+  //       // SANITY();
+  //       assert(req.len == sizeof(char));
+  //       r = io_cb_push(&tran_buf, req.msg[0]);
+  //       rep_notif = true;
+  //       Reply(req_tid, &rep, sizeof(rep));
+  //       break;
+  //     case IO_TX:
+  //       // SANITY();
+  //       not_tid = req_tid;
 
-        while (tran_buf.size > 0 && !(*flags & TXFF_MASK)) {
-          rep_notif = true;
+  //       while (tran_buf.size > 0 && !(*flags & TXFF_MASK)) {
+  //         rep_notif = true;
+  //         r = io_cb_pop(&tran_buf, &c);
+  //         assert(r == 0 && "io buffer overflow");
+  //         *data = c;
+  //       }
+  //       break;
+  //     case IO_MI:
+  //       PRINTF("MI\r\n");
+  //       break;
+  //     default:
+  //       assert(0 && "INVALID INTERRUPT");
+  //       break;
+  //   }
+
+  //   if (rep_notif && not_tid > -1) {
+  //     // SANITY();
+  //     Reply(not_tid, &rep, sizeof(rep));
+  //     rep_notif = false;
+  //   }
+  // }
+
+  bool tx_ready = 0;
+  while(true){
+    Receive(&req_tid, &req, sizeof(req));
+    switch(req.type){
+      case IO_PUTC:
+        r = io_cb_push(&tran_buf, req.msg[0]);
+        Reply(req_tid, &rep, sizeof(rep));
+        if(!tx_ready) break;
+        //fall through if ready
+      case IO_TX:
+        tx_ready = true;
+        if(req.type == IO_TX) not_tid = req_tid;
+        // while (tran_buf.size > 0 && !(*flags & (TXFF_MASK | TXBUSY_MASK))) {
+        //   r = io_cb_pop(&tran_buf, &c);
+        //   assert(r == 0 && "io buffer overflow");
+        //   *data = c;
+        //   tx_ready = false;
+        // }
+        if(tran_buf.size > 0){
           r = io_cb_pop(&tran_buf, &c);
           assert(r == 0 && "io buffer overflow");
-          *data = c;
+          *data = c;  
+          tx_ready = false;
+        }
+        
+        if(!tx_ready){
+          Reply(not_tid, &rep, sizeof(rep));
+          not_tid = -1;
         }
         break;
       case IO_MI:
@@ -187,12 +232,6 @@ void IOServerTX(void *args) {
       default:
         assert(0 && "INVALID INTERRUPT");
         break;
-    }
-
-    if (rep_notif && not_tid > -1) {
-      // SANITY();
-      Reply(not_tid, &rep, sizeof(rep));
-      rep_notif = false;
     }
   }
 }

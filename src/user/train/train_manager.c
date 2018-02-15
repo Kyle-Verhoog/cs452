@@ -2,7 +2,7 @@
 
 void TrainManager(){
 	int reply = 0;
-	int r = RegisterAs(READERSERVICE_UART2_ID);
+	int r = RegisterAs(TRAIN_MANAGER_ID);
   	assert(r == 0);
 
 	while(true){

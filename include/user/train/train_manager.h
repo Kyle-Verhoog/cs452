@@ -5,7 +5,7 @@
 #include <defines.h>
 #include <train_defines.h>
 #include <user/syscalls.h>
-#include <io/io.h>
+#include <io.h>
 #include <ascii.h>
 #include <ioserver.h>
 #include <writerservice.h>
