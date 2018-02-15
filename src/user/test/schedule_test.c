@@ -46,18 +46,18 @@ void TaskCompleter(){
 }
 
 void ScheduleCreator(){
-	Create(0, &TaskP0);
-	Create(1, &TaskP1);
-	Create(2, &TaskP2);
-	Create(3, &TaskP3);
-	Create(4, &TaskP4);
-	Create(5, &TaskP5);
-	Create(6, &TaskP6);
-	Create(7, &TaskP7);
-	Create(8, &TaskP8);
-	Create(9, &TaskP9);
+	Create(22, &TaskP0);
+	Create(23, &TaskP1);
+	Create(24, &TaskP2);
+	Create(25, &TaskP3);
+	Create(26, &TaskP4);
+	Create(27, &TaskP5);
+	Create(28, &TaskP6);
+	Create(29, &TaskP7);
+	Create(30, &TaskP8);
+	Create(31, &TaskP9);
 
-	Create(0, &TaskCompleter);
+	Create(22, &TaskCompleter);
 
 	Exit();
 }

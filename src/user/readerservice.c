@@ -1,21 +1,65 @@
 #include<readerservice.h>
 
+void ReaderServiceUART2Register(RSProtocol *rsp){
+	int reply;
+	int in_tid = WhoIs(READERSERVICE_UART2_ID);
+
+	Send(in_tid, rsp, sizeof(RSProtocol), &reply, sizeof(int));
+	assert(reply == 0);
+}
+
+void ReadChar(char *c){
+	int reply;
+	tid_t reader;
+	RSResponse rsr;
+
+	Receive(&reader, &rsr, sizeof(rsr));
+
+	//COPY FIRST!!
+	*c = *rsr.data;
+
+	Reply(reader, &reply, sizeof(reply));
+}
+
+void ReadCommand(char *command, int *size){
+	int reply = 0;
+	tid_t reader;
+	RSResponse rsr;
+
+	Receive(&reader, &rsr, sizeof(rsr));
+
+	//COPY FIRST!
+	int i;
+	for(i = 0; i < rsr.size; i++){
+		command[i] = rsr.data[i];
+	}
+	*size = rsr.size;
+
+	Reply(reader, &reply, sizeof(reply));
+}
+
 void NotifyChar(tid_t *list, int size, char data){
 	int reply;
 	int i;
 
+	RSResponse rsr;
+	rsr.data = &data;
+	rsr.size = 1;
 	for(i = 0; i < size; i++){
-		Send(list[i], &data, sizeof(data), &reply, sizeof(reply));
+		Send(list[i], &rsr, sizeof(rsr), &reply, sizeof(reply));
 	}
 }
 
 void NotifyCommand(tid_t *list, int size, char *data, int datasize){
 	int reply;
 	int i;
+
+	RSResponse rsr;
+	rsr.data = data;
+	rsr.size = datasize;
+
 	for(i = 0; i < size; i++){
-		//Send size of data, then data
-		Send(list[i], &datasize, sizeof(datasize), &reply, sizeof(reply));
-		Send(list[i], data, datasize, &reply, sizeof(reply));	
+		Send(list[i], &rsr, sizeof(rsr), &reply, sizeof(reply));
 	}
 }
 
@@ -90,6 +134,8 @@ void ReaderServiceUART2(){
 				}
 				Reply(req_tid, &reply, sizeof(reply));
 				break;
+			default:
+				assert(0 && "Bad request");
 		}
 	}	
 }

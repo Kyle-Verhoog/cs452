@@ -7,6 +7,7 @@
 #include <io/io.h>
 #include <ascii.h>
 #include <readerservice.h>
+#include <writerservice.h>
 
 void WritebackInterface();
 

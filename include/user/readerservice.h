@@ -19,6 +19,14 @@ typedef struct RSProtocol{
 	char data;
 }RSProtocol;
 
-void ReaderServiceUART2();
+typedef struct RSResponse{
+	char *data;
+	int size;
+}RSResponse;
 
-#endif //TIMER_INTERFACE_H
+void ReaderServiceUART2();
+void ReaderServiceUART2Register(RSProtocol *rsp);
+void ReadChar(char *c);
+void ReadCommand(char *command, int *size);
+
+#endif //READER_SERVICE_H

@@ -7,6 +7,7 @@
 #include <user/clockserver.h>
 #include <user/test/test_defines.h>
 #include <readerservice.h>
+#include <writerservice.h>
 #include <timer_interface.h>
 #include <writeback_interface.h>
 #include <train_msg.h>

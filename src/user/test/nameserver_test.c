@@ -60,7 +60,7 @@ void NameServerTest() {
   Create(24, &DuplicateRegisterTest);
   Create(23, &WhoIsTest);
 
-  Create(5, &NameServerStop);
+  Create(21, &NameServerStop);
 
   COMPLETE_TEST();
 }

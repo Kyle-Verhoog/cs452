@@ -27,12 +27,12 @@ void ClockServerTest() {
   Create(31, &ClockServer);
   Create(25, &TimeTest);
   Create(25, &TimeTest);
-  Create(0, &IdleTest);
+  Create(1, &IdleTest);
   DelayCS(mytid, 100);
   stay_alive = 0;
-  Create(21, &ClockServerStop);
+  Create(3, &ClockServerStop);
   for (i = 0; i < 10000; i++) (void)i;
-  Create(20, &NameServerStop);
+  Create(2, &NameServerStop);
   COMPLETE_TEST();
 }
 

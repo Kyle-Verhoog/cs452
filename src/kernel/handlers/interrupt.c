@@ -142,8 +142,15 @@ void event_register(interrupt_matrix *im, TaskDescriptor *td){
 	volatile InterruptEvent eventid;
 	asm("ldr %0, [%1, #4];":"=r"(eventid):"r"(td->sp));
 
-	//Add waiting task to matrix
-	im_push(im, td, eventid);
+	if(is_interrupt_stored(im, eventid)){
+		td->ret = get_interrupt_ret(eventid);
+		pq_push(&pq_tasks, td->priority, td);
+		remove_assert(im, eventid);
+		SANITY();
+	}else{
+		//Add waiting task to matrix
+		im_push(im, td, eventid);
+	}
 }
 
 void event_wake(interrupt_matrix *im){

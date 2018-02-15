@@ -1,9 +1,9 @@
 #include <ui_test.h>
 
-int stay_alive;
+int ui_alive;
 void IdleUITest() {
-  while (stay_alive) {
-    (void)stay_alive;
+  while (ui_alive) {
+    (void)ui_alive;
   }
   Exit();
 }
@@ -16,11 +16,12 @@ void UITest() {
   Create(31, &ClockServer);
   Create(31, &IOServerUART2);
   Create(31, &ReaderServiceUART2);
+  Create(31, &WriterServiceUART2);
 
-  Create(21, &TimerInterface);
-  Create(21, &WritebackInterface);
-  Create(21, &TrainMsg);
-  Create(0, &IdleUITest);
+  Create(25, &TimerInterface);
+  Create(25, &WritebackInterface);
+  Create(25, &TrainMsg);
+  Create(1, &IdleUITest);
   
   // DelayCS(mytid, 1000);
   // for (i = 0; i < 100000; i++) (void)i;
