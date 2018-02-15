@@ -38,11 +38,9 @@ void IOTask() {
 
 void IOServerTest() {
   stay_alive = 1;
-  PRINTF("UART2_TX %x", UART2_TX);
   Create(31, &NameServer);
   Create(31, &ClockServer);
   Create(30, &IOServerUART2); // NOTE: priority has to be < priority of IOServer
-  PRINTF("UART2_TX %x", UART2_TX);
   Create(26, &IOTask);
   Create(25, &IdleTask);
   Create(23, &NameServerStop);

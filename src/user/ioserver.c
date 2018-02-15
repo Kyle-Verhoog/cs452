@@ -3,8 +3,6 @@
 CIRCULAR_BUFFER_DEF(io_cb, char, 512);
 
 
-tid_t UART2_TX;
-
 void IOServerNotifier(void *args) {
   // SANITY();
   int r, rep, emask;
@@ -126,8 +124,6 @@ void IOServerTX(void *args) {
 
   mytid = MyTid();
 
-  UART2_TX = mytid;
-
   r = RegisterAs(ns_id);
   assert(r == 0);
 
@@ -137,10 +133,14 @@ void IOServerTX(void *args) {
   notargs.ie    = ie_base + IE_UART_TX_OFFSET;
   notargs.emask = TIEN_MASK; //0x20;
   r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
-  // notargs.type  = IO_MI;
-  // notargs.ie    = ie_base + IE_UART_MI_OFFSET;
-  // notargs.emask =
-  // r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
+
+  // if we are using UART1 (to the train), create a notifier for MI
+  // if (uart_base == UART1_BASE) {
+  //   notargs.type  = IO_MI;
+  //   notargs.ie    = ie_base + IE_UART_MI_OFFSET;
+  //   notargs.emask = MSIEN_MASK; //0x8;
+  //   r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
+  // }
 
   // SANITY();
   tid_t req_tid;
@@ -168,11 +168,6 @@ void IOServerTX(void *args) {
         assert(req.len == sizeof(char));
         r = io_cb_push(&tran_buf, req.msg[0]);
         rep_notif = true;
-        // while (!(*flags & TXFF_MASK) && tran_buf.size > 0) {
-        //   r = io_cb_pop(&tran_buf, &c);
-        //   assert(r == 0 && "io buffer overflow");
-        //   *data = c;
-        // }
         Reply(req_tid, &rep, sizeof(rep));
         break;
       case IO_TX:
@@ -182,7 +177,6 @@ void IOServerTX(void *args) {
         while (tran_buf.size > 0 && !(*flags & TXFF_MASK)) {
           rep_notif = true;
           r = io_cb_pop(&tran_buf, &c);
-          PRINTF("%c\r\n", c);
           assert(r == 0 && "io buffer overflow");
           *data = c;
         }
@@ -226,8 +220,6 @@ void IOServerUART2() {
 
   // TODO: arg.flags
   // Enable the UART and interrupts
-  // *(int *)(UART2_BASE + UART_CTRL_OFFSET) = 0x61;
-  // *(int *)(UART2_BASE + UART_CTRL_OFFSET) = UARTEN_MASK | RTIEN_MASK | TIEN_MASK;
   // Enable fifo
   *(int *)(UART2_BASE + UART_LCRH_OFFSET) |= FEN_MASK;
 
@@ -258,19 +250,19 @@ void IOServerUART1() {
   r = CreateArgs(31, &IOServerRX, (void *)&arg);
 
   // Create the TX server
-  // arg.ns_id = IOSERVER_UART1_TX_ID;
-  // r = CreateArgs(31, &IOServerTX, (void *)&arg);
+  arg.ns_id = IOSERVER_UART1_TX_ID;
+  r = CreateArgs(31, &IOServerTX, (void *)&arg);
 
   // Enable the UART and interrupts
   // Enable fifo
   *(int *)(UART1_BASE + UART_LCRH_OFFSET) |= FEN_MASK | STP2_MASK;
 
-  // Set speed to 115200 bps
+  // Set speed to 2400 bps
   *(int *)(UART1_BASE + UART_LCRM_OFFSET) = 0x0;
   *(int *)(UART1_BASE + UART_LCRL_OFFSET) = 0xbf;
 
   // Enable UART
-  *(int *)(UART1_BASE + UART_CTRL_OFFSET) = UARTEN_MASK | RTIEN_MASK | TIEN_MASK;
+  *(int *)(UART1_BASE + UART_CTRL_OFFSET) = UARTEN_MASK | RTIEN_MASK | TIEN_MASK | MSIEN_MASK;
 
   Exit();
 }
