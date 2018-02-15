@@ -150,76 +150,76 @@ void int_cbuf_reuse() {
 }
 
 
-CIRCULAR_BUFFER_DEC(char_cb, char, 10);
-CIRCULAR_BUFFER_DEF(char_cb, char, 10);
+CIRCULAR_BUFFER_DEC(tchar_cb, char, 10);
+CIRCULAR_BUFFER_DEF(tchar_cb, char, 10);
 
 void char_cbuf() {
-  char_cb cb;
-  char_cb_init(&cb);
+  tchar_cb cb;
+  tchar_cb_init(&cb);
   assert(cb.size == 0);
 }
 
 void char_cbuf_test() {
   int r;
   char c;
-  char_cb cb;
-  char_cb_init(&cb);
+  tchar_cb cb;
+  tchar_cb_init(&cb);
 
-  r = char_cb_push(&cb, 't');
+  r = tchar_cb_push(&cb, 't');
   assert(r == 0);
-  r = char_cb_push(&cb, 'e');
+  r = tchar_cb_push(&cb, 'e');
   assert(r == 0);
-  r = char_cb_push(&cb, 's');
+  r = tchar_cb_push(&cb, 's');
   assert(r == 0);
-  r = char_cb_push(&cb, 't');
+  r = tchar_cb_push(&cb, 't');
   assert(r == 0);
-  r = char_cb_push(&cb, 'i');
+  r = tchar_cb_push(&cb, 'i');
   assert(r == 0);
-  r = char_cb_push(&cb, 'n');
+  r = tchar_cb_push(&cb, 'n');
   assert(r == 0);
-  r = char_cb_push(&cb, 'g');
+  r = tchar_cb_push(&cb, 'g');
   assert(r == 0);
-  r = char_cb_push(&cb, '.');
+  r = tchar_cb_push(&cb, '.');
   assert(r == 0);
-  r = char_cb_push(&cb, '.');
+  r = tchar_cb_push(&cb, '.');
   assert(r == 0);
-  r = char_cb_push(&cb, '\0');
+  r = tchar_cb_push(&cb, '\0');
   assert(r == 0);
-  r = char_cb_push(&cb, '\0');
+  r = tchar_cb_push(&cb, '\0');
   assert(cb.size == 10);
   assert(r == CB_E_FULL);
 
-  r = char_cb_pop(&cb, &c);
+  r = tchar_cb_pop(&cb, &c);
   assert(r == 0);
   assert(c == 't');
-  r = char_cb_pop(&cb, &c);
+  r = tchar_cb_pop(&cb, &c);
   assert(r == 0);
   assert(c == 'e');
-  r = char_cb_pop(&cb, &c);
+  r = tchar_cb_pop(&cb, &c);
   assert(r == 0);
   assert(c == 's');
-  r = char_cb_pop(&cb, &c);
+  r = tchar_cb_pop(&cb, &c);
   assert(r == 0);
   assert(c == 't');
-  r = char_cb_pop(&cb, &c);
+  r = tchar_cb_pop(&cb, &c);
   assert(r == 0);
   assert(c == 'i');
-  r = char_cb_pop(&cb, &c);
+  r = tchar_cb_pop(&cb, &c);
   assert(r == 0);
   assert(c == 'n');
-  r = char_cb_pop(&cb, &c);
+  r = tchar_cb_pop(&cb, &c);
   assert(r == 0);
   assert(c == 'g');
-  r = char_cb_pop(&cb, &c);
+  r = tchar_cb_pop(&cb, &c);
   assert(r == 0);
   assert(c == '.');
-  r = char_cb_pop(&cb, &c);
+  r = tchar_cb_pop(&cb, &c);
   assert(r == 0);
   assert(c == '.');
-  r = char_cb_pop(&cb, &c);
+  r = tchar_cb_pop(&cb, &c);
   assert(r == 0);
   assert(c == '\0');
-  r = char_cb_pop(&cb, &c);
+  r = tchar_cb_pop(&cb, &c);
   assert(r == CB_E_EMPTY);
   assert(cb.size == 0);
 }

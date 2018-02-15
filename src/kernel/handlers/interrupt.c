@@ -139,34 +139,36 @@ void cleanup_irq(){
 
 void event_register(interrupt_matrix *im, TaskDescriptor *td){
 	//Get the eventId from r0 user stack
-	volatile InterruptEvent eventid;
-	asm("ldr %0, [%1, #4];":"=r"(eventid):"r"(td->sp));
+	volatile InterruptEvent ie;
+	asm("ldr %0, [%1, #4];":"=r"(ie):"r"(td->sp));
 
-	if(is_interrupt_stored(im, eventid)){
-		td->ret = get_interrupt_ret(eventid);
-		pq_push(&pq_tasks, td->priority, td);
-		remove_assert(im, eventid);
-		SANITY();
-	}else{
-		//Add waiting task to matrix
-		im_push(im, td, eventid);
-	}
+  if (is_interrupt_stored(im, ie)) {
+  	td->ret = get_interrupt_ret(ie);
+    pq_push(&pq_tasks, td->priority, td);
+    remove_assert(im, ie);
+  } else {
+    //Add waiting task to matrix
+    im_push(im, td, ie);
+  }
 }
 
 void event_wake(interrupt_matrix *im){
-    int i;
-    for( i = 0; i < WAKE_PRIORITY_SIZE; ++i){
-    	if(is_interrupt_asserted(WakePriority[i]) ||
-    		is_interrupt_stored(im, WakePriority[i])){
-    		if(im_eventsize(im, WakePriority[i]) > 0){
-    			wakeall(im, WakePriority[i]);
-    		  	clear_interrupt(WakePriority[i]);
-    		  	remove_assert(im, WakePriority[i]);
-    			return;
-    		}else{
-    			store_assert(im, WakePriority[i]);
-    			clear_interrupt(WakePriority[i]);	
-    		}
-    	}
+  int i;
+  InterruptEvent ie;
+
+  for( i = 0; i < WAKE_PRIORITY_SIZE; ++i){
+    ie = WakePriority[i];
+    if(is_interrupt_asserted(ie) ||
+        is_interrupt_stored(im, ie)){
+      if(im_eventsize(im, ie) > 0){
+        wakeall(im, ie);
+        clear_interrupt(ie);
+        remove_assert(im, ie);
+        return;
+      }else{
+        store_assert(im, ie);
+        clear_interrupt(ie);
+      }
     }
+  }
 }
