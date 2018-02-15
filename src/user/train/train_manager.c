@@ -14,10 +14,13 @@ void TrainManager(){
 
 		switch(tmp.trc){
 			case TR_TRAIN:
+				assert(0 && "TR_TRAIN");
 				break;
 			case TR_REVERSE:
+				assert(0 && "TR_REVERSE");
 				break;
 			case TR_SWITCH:
+				assert(0 && "TR_SWITCH");
 				break;
 			default:
 				assert(0 && "Bad Train Command");

@@ -9,7 +9,6 @@
 #include <ascii.h>
 #include <ioserver.h>
 #include <writerservice.h>
-#include <readerservice.h>
 
 typedef struct TMProtocol{
 	TR_Command trc;
