@@ -27,10 +27,15 @@ void IOTask() {
       assert(0 && "EXIT");
       stay_alive = 0;
       Exit();
+    } else if (c == 'z') {
+      int i;
+      for (i = 0; i < 1000; i++)
+        PutC(tios_tid, c);
     }
     else {
-      print(tios_tid, "%c\n\r", c);
+      // print(tios_tid, "%c\n\r", c);
       PRINTF("%c\n\r", c);
+      PutC(tios_tid, c);
     }
   }
 }

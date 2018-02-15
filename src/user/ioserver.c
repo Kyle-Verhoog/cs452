@@ -203,15 +203,16 @@ void IOServerTX(void *args) {
       case IO_PUTC:
         // SANITY();
         c = req.msg[0];
+        assert(req.len == sizeof(char));
 
-        if (!tx_ready) {
-          assert(req.len == sizeof(char));
-          r = io_cb_push(&tran_buf, req.msg[0]);
-          assert(r == 0);
-        } else {
+        if (tx_ready) {
           *data = c;
           tx_ready = false;
+          assert(not_tid > 0);
           Reply(not_tid, &rep, sizeof(rep));
+        } else {
+          r = io_cb_push(&tran_buf, req.msg[0]);
+          assert(r == 0);
         }
         Reply(req_tid, &rep, sizeof(rep));
         if(!tx_ready) break;
@@ -331,7 +332,7 @@ int PutC(tid_t ios_tid, char c) {
   assert(ios_tid > 0);
 
   IOServerReq req;
-  char rep;
+  int rep;
 
   req.type = IO_PUTC;
   req.msg[0] = c;
