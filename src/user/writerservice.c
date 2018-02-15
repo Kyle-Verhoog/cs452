@@ -1,6 +1,6 @@
 #include<writerservice.h>
 
-void WriteChar(tid_t writer, char c){
+void WriteCharUART2(tid_t writer, char c){
 	int reply;
 	WRProtocol wrp;
 	wrp.wr_req = WR_CHAR;
@@ -10,7 +10,7 @@ void WriteChar(tid_t writer, char c){
 	Send(writer, &wrp, sizeof(wrp), &reply, sizeof(reply));
 }
 
-void WriteCommand(tid_t writer, char *command, int size, Cursor *cursor){
+void WriteCommandUART2(tid_t writer, char *command, int size, Cursor *cursor){
 	int reply;
 	WRProtocol wrp;
 	wrp.wr_req = WR_COMMAND;
@@ -22,7 +22,7 @@ void WriteCommand(tid_t writer, char *command, int size, Cursor *cursor){
 	Send(writer, &wrp, sizeof(wrp), &reply, sizeof(reply));
 }
 
-void move_cursor(tid_t ios_tid, int r, int c){
+void move_cursor(tid_t tx_tid, int r, int c){
 	char command[COMMAND_SIZE];
 	char *ptr = command;
 	int rsize;
@@ -39,65 +39,44 @@ void move_cursor(tid_t ios_tid, int r, int c){
 	ptr+=csize;
 	*ptr++ = 'H';
 
-	// int i;
-	// for(i = 0; i < rsize + csize + 6; i++){
-	// 	PutC(ios_tid, command[i]);
-	// }
-
-	*ptr++ = '\0';
-	PRINTF(command);
+	int i;
+	for(i = 0; i < rsize + csize + 6; i++){
+		PutC(tx_tid, command[i]);
+	}
 }
 
-void PushCharToIO(tid_t ios_tid, WRProtocol *wrp, Cursor *cursor){
+void PushCharToUART2(tid_t tx_tid, WRProtocol *wrp, Cursor *cursor){
 	char c = *wrp->data;
 
-	// switch(c){
-	// 	case BACKSPACE:
-	// 		cursor->col -= 1;
-	// 		PutC(ios_tid, c);
-	// 		PutC(ios_tid, ' ');
-	// 		PutC(ios_tid, c);
-	// 		break;
-	// 	case CARRIAGE_RETURN:
-	// 		cursor->col = 1;
-	// 		cursor->row += 1;
-	// 		PutC(ios_tid, '\n');	//TODO: Perhaps clear line instead
-	// 		PutC(ios_tid, '\r');
-	// 		break;
-	// 	default:
-	// 		cursor->col += 1;
-	// 		PutC(ios_tid, c);
-	// 		break;
-	// }
 	switch(c){
 		case BACKSPACE:
 			cursor->col -= 1;
-			PRINTF("%c %c", BACKSPACE, BACKSPACE);
+			PutC(tx_tid, c);
+			PutC(tx_tid, ' ');
+			PutC(tx_tid, c);
 			break;
 		case CARRIAGE_RETURN:
 			cursor->col = 1;
 			cursor->row += 1;
-			PRINTF("\n\r");
+			PutC(tx_tid, '\n');	//TODO: Perhaps clear line instead
+			PutC(tx_tid, '\r');
 			break;
 		default:
+			SANITY();
 			cursor->col += 1;
-			PRINTF("%c", c);
+			PutC(tx_tid, c);
 			break;
 	}
 }
 
-void PushCommandToIO(tid_t ios_tid, WRProtocol *wrp, Cursor *original){
+void PushCommandToUART2(tid_t tx_tid, WRProtocol *wrp, Cursor *original){
 	//Push command to ioserver
-	// move_cursor(wrp->cursor.row, wrp->cursor.col);
-	// int i;
-	// for(i = 0; i < wrp->size; i++){
-	// 	PutC(ios_tid, wrp->data[i]);
-	// }
-	// move_cursor(original->row, original->col);
-
-	move_cursor(ios_tid, wrp->cursor.row, wrp->cursor.col);
-	PRINTF(wrp->data);
-	move_cursor(ios_tid, original->row, original->col);
+	move_cursor(tx_tid, wrp->cursor.row, wrp->cursor.col);
+	int i;
+	for(i = 0; i < wrp->size; i++){
+		PutC(tx_tid, wrp->data[i]);
+	}
+	move_cursor(tx_tid, original->row, original->col);
 }
 
 void WriterServiceUART2(){
@@ -106,7 +85,8 @@ void WriterServiceUART2(){
 	int r = RegisterAs(WRITERSERVICE_UART2_ID);
 	assert(r == 0);
 
-	tid_t ios_tid = WhoIs(IOSERVER_UART2_ID);
+	tid_t tx_tid = WhoIs(IOSERVER_UART2_TX_ID);
+	assert(tx_tid >= 0);
 
 	Cursor cursor;
 	cursor.row = 1;
@@ -122,11 +102,11 @@ void WriterServiceUART2(){
 		//Handle Request
 		switch(wrp.wr_req){
 			case WR_CHAR:
-				PushCharToIO(ios_tid, &wrp, &cursor);
+				PushCharToUART2(tx_tid, &wrp, &cursor);
 				Reply(req_tid, &reply, sizeof(reply));
 				break;
 			case WR_COMMAND:
-				PushCommandToIO(ios_tid, &wrp, &cursor);
+				PushCommandToUART2(tx_tid, &wrp, &cursor);
 				Reply(req_tid, &reply, sizeof(reply));
 				break;
 			default:

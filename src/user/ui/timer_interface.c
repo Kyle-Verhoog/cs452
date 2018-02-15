@@ -4,6 +4,8 @@ void TimerInterface(){
 	Clock clk;
 	tid_t my_tid = MyTid();
 	tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
+	assert(cs_tid >= 0);
+
 	clk_init(&clk);
 
 	int prev_ti, cur_ti;

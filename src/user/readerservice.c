@@ -1,141 +1,58 @@
 #include<readerservice.h>
 
-void ReaderServiceUART2Register(RSProtocol *rsp){
-	int reply;
-	int in_tid = WhoIs(READERSERVICE_UART2_ID);
-
-	Send(in_tid, rsp, sizeof(RSProtocol), &reply, sizeof(int));
-	assert(reply == 0);
-}
-
-void ReadChar(char *c){
-	int reply;
-	tid_t reader;
-	RSResponse rsr;
-
-	Receive(&reader, &rsr, sizeof(rsr));
-
-	//COPY FIRST!!
-	*c = *rsr.data;
-
-	Reply(reader, &reply, sizeof(reply));
-}
-
-void ReadCommand(char *command, int *size){
-	int reply = 0;
-	tid_t reader;
-	RSResponse rsr;
-
-	Receive(&reader, &rsr, sizeof(rsr));
-
-	//COPY FIRST!
-	int i;
-	for(i = 0; i < rsr.size; i++){
-		command[i] = rsr.data[i];
+void parse_and_send(char *command, int size){
+	if(command[0] == 'q'){
+		//Quit
 	}
-	*size = rsr.size;
-
-	Reply(reader, &reply, sizeof(reply));
-}
-
-void NotifyChar(tid_t *list, int size, char data){
-	int reply;
-	int i;
-
-	RSResponse rsr;
-	rsr.data = &data;
-	rsr.size = 1;
-	for(i = 0; i < size; i++){
-		Send(list[i], &rsr, sizeof(rsr), &reply, sizeof(reply));
+	else if(command[0] == 'r' && command[1]=='v'){
+		//Reverse
 	}
-}
-
-void NotifyCommand(tid_t *list, int size, char *data, int datasize){
-	int reply;
-	int i;
-
-	RSResponse rsr;
-	rsr.data = data;
-	rsr.size = datasize;
-
-	for(i = 0; i < size; i++){
-		Send(list[i], &rsr, sizeof(rsr), &reply, sizeof(reply));
+	else if(command[0] == 't' && command[1]=='r'){
+		//Move Train
 	}
-}
-
-void ReaderServiceUART2Notifier(){
-	int reply;
-	tid_t reader = MyParentTid();
-	tid_t ios_tid = WhoIs(IOSERVER_UART2_RX_ID);
-	RSProtocol rsp;
-
-	rsp.rr_req = RR_WRITE;
-
-	while(true){
-		rsp.data = GetC(ios_tid);
-		Send(reader, &rsp, sizeof(rsp), &reply, sizeof(reply));
-		assert(reply == 0);
+	else if(command[0] == 's' && command[1]=='w'){
+		//Switch
+	}
+	else{
+		//Bad Command
 	}
 }
 
 void ReaderServiceUART2(){
-	int reply = 0;
-
-	int wCharSize = 0;
-	int wCommandSize = 0;
-	tid_t wait_char[MAX_TASK];
-	tid_t wait_command[MAX_TASK];
-
 	int r = RegisterAs(READERSERVICE_UART2_ID);
-	assert(r == 0);
+  	assert(r == 0);
+	tid_t rx_tid = WhoIs(IOSERVER_UART2_RX_ID);
+	assert(rx_tid >= 0);
+	tid_t tx_tid = WhoIs(IOSERVER_UART2_TX_ID);
+	assert(tx_tid >= 0);
+	//tid_t writer = WhoIs(WRITERSERVICE_UART2_ID);
+	//assert(writer >= 0);
 
-	Create(31, &ReaderServiceUART2Notifier);
-	
 	char command[COMMAND_SIZE];
 	int csize = 0;
 
 	while(true){
-		tid_t req_tid;
-		RSProtocol rsp;
+		//Get and Writeback
+		command[csize] = GetC(rx_tid);
+		assert(command[csize] == 'a');
+		PutC(tx_tid, command[csize]);
+		//WriteCharUART2(writer, command[csize]);
 
-		//Receive a request
-		Receive(&req_tid, &rsp, sizeof(rsp));
-
-		//Handle Request
-		switch(rsp.rr_req){
-			case RR_CHAR:
-				//TODO: We may miss input if user tries to type before listener is registered
-				wait_char[wCharSize] = req_tid;
-				wCharSize++;
-				Reply(req_tid, &reply, sizeof(reply));
-				break;
-			case RR_COMMAND:
-				wait_command[wCommandSize] = req_tid;
-				wCommandSize++;
-				Reply(req_tid, &reply, sizeof(reply));
-				break;
-			case RR_WRITE:
-				NotifyChar(wait_char, wCharSize, rsp.data);
-				command[csize] = rsp.data;
-				csize++;
-				if(rsp.data == BACKSPACE){
-					if(csize >= 2){
-						csize -= 2;
-					}else{
-						csize = 0;
-					}
-				}
-				else if(rsp.data == CARRIAGE_RETURN){
-					//Unblock waiting on command (-ignore /n input)
-					if(csize - 1 > 0){
-						NotifyCommand(wait_command, wCommandSize, command, csize - 1);	
-					}
-					csize = 0;
-				}
-				Reply(req_tid, &reply, sizeof(reply));
-				break;
-			default:
-				assert(0 && "Bad request");
-		}
-	}	
+		// switch(command[csize]){
+		// 	case BACKSPACE:
+		// 		if(csize >= 2){
+		// 			csize -= 2;
+		// 		}else{
+		// 			csize = 0;
+		// 		}
+		// 		break;
+		// 	case CARRIAGE_RETURN:
+		// 		if(csize > 0){
+		// 			parse_and_send(command, csize);	
+		// 		}				
+		// 		csize = 0;
+		// 	default:
+		// 		csize++;
+		// }
+	}
 }

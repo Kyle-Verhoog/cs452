@@ -27,8 +27,8 @@ typedef struct WRProtocol{
 }WRProtocol;
 
 void WriterServiceUART2();
-void WriteChar(tid_t writer, char c);
-void WriteCommand(tid_t writer, char *command, int size, Cursor *cursor);
+void WriteCharUART2(tid_t writer, char c);
+void WriteCommandUART2(tid_t writer, char *command, int size, Cursor *cursor);
 
 #define MAX_DIGITS 10
 

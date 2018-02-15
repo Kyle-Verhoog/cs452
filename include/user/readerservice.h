@@ -7,6 +7,7 @@
 #include <io/io.h>
 #include <ascii.h>
 #include <ioserver.h>
+#include <writerservice.h>
 
 typedef enum ReadRequest{
 	RR_CHAR = 0,
