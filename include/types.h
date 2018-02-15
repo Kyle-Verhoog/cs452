@@ -16,6 +16,12 @@ typedef uint32_t size_t;
 typedef enum InterruptEvent{
 	IE_TC1UI = 4,
 	IE_TC3UI = 51,
+  IE_UART1 = 52,
+  IE_UART1_BASE = 520, // Note: these values are special! Do not change!!
+  IE_UART1_RX   = 521,
+  IE_UART1_TX   = 522,
+  IE_UART1_RT   = 523,
+  IE_UART1_MI   = 524,
   IE_UART2 = 54,
   IE_UART2_BASE = 540, // Note: these values are special! Do not change!!
   IE_UART2_RX   = 541,
