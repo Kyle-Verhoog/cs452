@@ -148,15 +148,15 @@ void IOServerTX(void *args) {
   int rep;
   int volatile *data, *flags;
   char c;
-  bool rep_notif;
   tid_t not_tid;
+  bool tx_ready;
   io_cb tran_buf;
 
   io_cb_init(&tran_buf);
   data  = (int *)(uart_base + UART_DATA_OFFSET);
   flags = (int *)(uart_base + UART_FLAG_OFFSET);
-  rep_notif = false;
-  not_tid = -1;
+  not_tid  = -1;
+  tx_ready = false;
   rep = 0;
 
   // while (true) {
@@ -201,29 +201,32 @@ void IOServerTX(void *args) {
     Receive(&req_tid, &req, sizeof(req));
     switch(req.type){
       case IO_PUTC:
-        r = io_cb_push(&tran_buf, req.msg[0]);
+        // SANITY();
+        c = req.msg[0];
+
+        if (!tx_ready) {
+          assert(req.len == sizeof(char));
+          r = io_cb_push(&tran_buf, req.msg[0]);
+          assert(r == 0);
+        } else {
+          *data = c;
+          tx_ready = false;
+          Reply(not_tid, &rep, sizeof(rep));
+        }
         Reply(req_tid, &rep, sizeof(rep));
         if(!tx_ready) break;
         //fall through if ready
       case IO_TX:
+        // SANITY();
+        not_tid = req_tid;
         tx_ready = true;
-        if(req.type == IO_TX) not_tid = req_tid;
-        // while (tran_buf.size > 0 && !(*flags & (TXFF_MASK | TXBUSY_MASK))) {
-        //   r = io_cb_pop(&tran_buf, &c);
-        //   assert(r == 0 && "io buffer overflow");
-        //   *data = c;
-        //   tx_ready = false;
-        // }
-        if(tran_buf.size > 0){
-          r = io_cb_pop(&tran_buf, &c);
-          assert(r == 0 && "io buffer overflow");
-          *data = c;  
+
+        if (tran_buf.size > 0) {
           tx_ready = false;
-        }
-        
-        if(!tx_ready){
-          Reply(not_tid, &rep, sizeof(rep));
-          not_tid = -1;
+          r = io_cb_pop(&tran_buf, &c);
+          assert(r == 0);
+          *data = c;
+          Reply(req_tid, &rep, sizeof(rep));
         }
         break;
       case IO_MI:
