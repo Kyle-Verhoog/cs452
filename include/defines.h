@@ -1,7 +1,7 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
-#define LOG_COM 0
+#define LOG_COM 1
 
 #ifndef NULL
 #define NULL  0

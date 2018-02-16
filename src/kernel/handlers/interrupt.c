@@ -1,33 +1,47 @@
 #include <kernel/handlers/interrupt.h>
 
-#define WAKE_PRIORITY_SIZE 6
+#define WAKE_PRIORITY_SIZE 10
 
-InterruptEvent WakePriority[64] = {IE_TC1UI, 
-								IE_TC3UI, 
-								IE_UART2_TX, 
-								IE_UART2_RX, 
-								IE_UART2_RT, 
-								IE_UART2_MI};
+InterruptEvent WakePriority[64] = {
+  IE_TC1UI,
+  IE_TC3UI,
+  IE_UART1_TX,
+  IE_UART1_RX,
+  IE_UART1_RT,
+  IE_UART1_MI,
+  IE_UART2_TX,
+  IE_UART2_RX,
+  IE_UART2_RT,
+  IE_UART2_MI,
+};
 
 int get_interrupt_ret(InterruptEvent ie){
-	switch(ie){
-		case IE_TC1UI:
-			return *(int *)(TIMER1_BASE | VAL_OFFSET);
-		case IE_TC3UI:
-			return *(int *)(TIMER3_BASE | VAL_OFFSET);
-		case IE_UART2_TX:
-			return 0;
-		case IE_UART2_RX:
-			return 0;
-		case IE_UART2_MI:
-			return 0;
-		case IE_UART2_RT:
-			return 0;
-		default:
-			KASSERT(0 && "Bad InterruptEvent Specified.");
-	}
+  switch(ie){
+    case IE_TC1UI:
+      return *(int *)(TIMER1_BASE | VAL_OFFSET);
+    case IE_TC3UI:
+      return *(int *)(TIMER3_BASE | VAL_OFFSET);
+    case IE_UART2_TX:
+      return 0;
+    case IE_UART2_RX:
+      return 0;
+    case IE_UART2_MI:
+      return 0;
+    case IE_UART2_RT:
+      return 0;
+    case IE_UART1_TX:
+      return 0;
+    case IE_UART1_RX:
+      return 0;
+    case IE_UART1_MI:
+      return 0;
+    case IE_UART1_RT:
+      return 0;
+    default:
+      KASSERT(0 && "Bad InterruptEvent Specified.");
+  }
 
-	return -1;
+  return -1;
 }
 
 void remove_assert(interrupt_matrix *im, InterruptEvent ie){
@@ -70,6 +84,19 @@ void clear_interrupt(InterruptEvent ie){
 			*(int *)(UART2_BASE + UART_CTRL_OFFSET) &= ~(1 << 3);
 			*(int *)(UART2_BASE | UART_INTR_OFFSET) = 1;
 			break;
+    case IE_UART1_TX:
+      *(int *)(UART1_BASE + UART_CTRL_OFFSET) &= ~(1 << 5);
+      break;
+    case IE_UART1_RX:
+      *(int *)(UART1_BASE + UART_CTRL_OFFSET) &= ~(1 << 4);
+      break;
+    case IE_UART1_RT:
+      *(int *)(UART1_BASE + UART_CTRL_OFFSET) &= ~(1 << 6);
+      break;
+    case IE_UART1_MI:
+      *(int *)(UART1_BASE + UART_CTRL_OFFSET) &= ~(1 << 3);
+      *(int *)(UART1_BASE | UART_INTR_OFFSET) = 1;
+      break;
 		default:
 			KASSERT(0 && "Bad InterruptEvent Specified.");
 	}
@@ -112,10 +139,30 @@ bool is_interrupt_asserted(InterruptEvent bit){
 				IRQstatus = *(int *)(VIC2_BASE | VIC_IRQSTATUS_OFFSET);
 				result = ((IRQstatus >> bit) & 1) && *(int *)(UART2_BASE | UART_INTR_OFFSET) & 0x1;
 				break;
-			default:
-				KASSERT(0 && "Bad InterruptEvent Specified.");
-				break;
-		}
+      case IE_UART1_TX:
+        bit = IE_UART1 - 32;
+        IRQstatus = *(int *)(VIC2_BASE | VIC_IRQSTATUS_OFFSET);
+        result = ((IRQstatus >> bit) & 1) && *(int *)(UART1_BASE | UART_INTR_OFFSET) & 0x4;			
+        break;
+      case IE_UART1_RX:
+        bit = IE_UART1 - 32;
+        IRQstatus = *(int *)(VIC2_BASE | VIC_IRQSTATUS_OFFSET);
+        result = ((IRQstatus >> bit) & 1) && *(int *)(UART1_BASE | UART_INTR_OFFSET) & 0x2;
+        break;
+      case IE_UART1_RT:
+        bit = IE_UART1 - 32;
+        IRQstatus = *(int *)(VIC2_BASE | VIC_IRQSTATUS_OFFSET);
+        result = ((IRQstatus >> bit) & 1) && *(int *)(UART1_BASE | UART_INTR_OFFSET) & 0x8;
+        break;
+      case IE_UART1_MI:
+        bit = IE_UART1 - 32;
+        IRQstatus = *(int *)(VIC2_BASE | VIC_IRQSTATUS_OFFSET);
+        result = ((IRQstatus >> bit) & 1) && *(int *)(UART1_BASE | UART_INTR_OFFSET) & 0x1;
+        break;
+      default:
+        KASSERT(0 && "Bad InterruptEvent Specified.");
+        break;
+    }
 	}
 	return result;
 }

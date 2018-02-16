@@ -1,6 +1,6 @@
 #include <user/ioserver.h>
 
-CIRCULAR_BUFFER_DEF(io_cb, char, 512);
+CIRCULAR_BUFFER_DEF(io_cb, volatile char, 512);
 
 
 void IOServerNotifier(void *args) {
@@ -22,6 +22,7 @@ void IOServerNotifier(void *args) {
   server_tid = myargs->tid;
 
   while (true) {
+    // SANITY();
     *ictrl |= emask;
     AwaitEvent(ie);
     // SANITY();
@@ -52,26 +53,27 @@ void IOServerRX(void *args) {
 
   notargs.uart  = uart_base;
   notargs.tid   = mytid;
-  notargs.type  = IO_RT;
-  notargs.ie    = ie_base + IE_UART_RT_OFFSET;
-  notargs.emask = RTIEN_MASK; // 0x40;
+  notargs.type  = IO_RX;
+  notargs.ie    = ie_base + IE_UART_RX_OFFSET;
+  notargs.emask = RIEN_MASK;
   r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
 
   tid_t req_tid, queued_tid;
   IOServerReq req;
-  int rep = 0;
-  int volatile *data, *flags;
+  int rep;
+  int volatile *data;
   char c;
   io_cb recv_buf;
 
   io_cb_init(&recv_buf);
+  rep = 0;
   queued_tid = -1;
-  data  = (int *)(UART2_BASE + UART_DATA_OFFSET);
-  flags = (int *)(UART2_BASE + UART_FLAG_OFFSET);
+  data = (int *)(uart_base + UART_DATA_OFFSET);
 
   while (true) {
     // SANITY();
     Receive(&req_tid, &req, sizeof(req));
+    // SANITY();
     switch (req.type) {
       case IO_GETC:
         // SANITY();
@@ -80,32 +82,30 @@ void IOServerRX(void *args) {
           assert(r == 0);
           Reply(req_tid, &c, sizeof(c));
         } else {
+          if (queued_tid != -1)
+            assert(queued_tid == req_tid && "detected multiple getc-ers");
           queued_tid = req_tid;
         }
-        continue;
+        break;
       case IO_RT:
-        // SANITY();
-        while (!(*flags & RXFE_MASK)) {
-          c = *data;
-          r = io_cb_push(&recv_buf, c);
-          assert(r == 0 && "io buffer overflow");
-        }
-
+        assert(0);
+        break;
+      case IO_RX:
+        c = *data;
+        r = io_cb_push(&recv_buf, c);
+        assert(r == 0 && "io buffer overflow");
         if (queued_tid > 0 && recv_buf.size > 0) {
           r = io_cb_pop(&recv_buf, &c);
           assert(r == 0);
           Reply(queued_tid, &c, sizeof(c));
           queued_tid = -1;
         }
-        break;
-      case IO_RX:
-        assert(0 && "TODO");
+        Reply(req_tid, &rep, sizeof(rep));
         break;
       default:
         assert(0 && "INVALID RT INTERRUPT");
         break;
     }
-    Reply(req_tid, &rep, sizeof(rep));
   }
 }
 
@@ -114,6 +114,7 @@ void IOServerTX(void *args) {
   tid_t mytid;
   int r;
   int uart_base, ns_id;
+  bool cts_en;
   IONotifierArgs notargs;
   InterruptEvent ie_base;
 
@@ -121,6 +122,7 @@ void IOServerTX(void *args) {
   uart_base = arg->uart_base;
   ns_id     = arg->ns_id;
   ie_base   = arg->ie_base;
+  cts_en    = arg->cts_en;
 
   mytid = MyTid();
 
@@ -135,28 +137,29 @@ void IOServerTX(void *args) {
   r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
 
   // if we are using UART1 (to the train), create a notifier for MI
-  // if (uart_base == UART1_BASE) {
-  //   notargs.type  = IO_MI;
-  //   notargs.ie    = ie_base + IE_UART_MI_OFFSET;
-  //   notargs.emask = MSIEN_MASK; //0x8;
-  //   r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
-  // }
+  if (cts_en) {
+    notargs.type  = IO_MI;
+    notargs.ie    = ie_base + IE_UART_MI_OFFSET;
+    notargs.emask = MSIEN_MASK; //0x8;
+    r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
+  }
 
   // SANITY();
   tid_t req_tid;
   IOServerReq req;
   int rep;
-  int volatile *data, *flags;
+  int *data;
   char c;
-  bool rep_notif;
   tid_t not_tid;
+  bool tx_ready;
+  int cts_count;
   io_cb tran_buf;
 
   io_cb_init(&tran_buf);
   data  = (int *)(uart_base + UART_DATA_OFFSET);
-  flags = (int *)(uart_base + UART_FLAG_OFFSET);
-  rep_notif = false;
-  not_tid = -1;
+  not_tid  = -1;
+  tx_ready = true;
+  cts_count = 2;
   rep = 0;
 
   // while (true) {
@@ -201,33 +204,53 @@ void IOServerTX(void *args) {
     Receive(&req_tid, &req, sizeof(req));
     switch(req.type){
       case IO_PUTC:
-        r = io_cb_push(&tran_buf, req.msg[0]);
+        // SANITY();
+        c = req.msg;
+        r = io_cb_push(&tran_buf, c);
+        assert(req.len == sizeof(char));
+
+        if (tx_ready && (!cts_en || (cts_en && cts_count > 1))) {
+          r = io_cb_pop(&tran_buf, &c);
+          assert(r == 0);
+          *data = c;
+          tx_ready = false;
+          cts_count = 0;
+          assert(not_tid > 0);
+          Reply(not_tid, &rep, sizeof(rep));
+        }
+
         Reply(req_tid, &rep, sizeof(rep));
         if(!tx_ready) break;
         //fall through if ready
       case IO_TX:
+        // SANITY();
+        not_tid = req_tid;
         tx_ready = true;
-        if(req.type == IO_TX) not_tid = req_tid;
-        // while (tran_buf.size > 0 && !(*flags & (TXFF_MASK | TXBUSY_MASK))) {
-        //   r = io_cb_pop(&tran_buf, &c);
-        //   assert(r == 0 && "io buffer overflow");
-        //   *data = c;
-        //   tx_ready = false;
-        // }
-        if(tran_buf.size > 0){
+
+        if (tran_buf.size > 0 && (!cts_en || (cts_en && cts_count > 1))) {
           r = io_cb_pop(&tran_buf, &c);
-          assert(r == 0 && "io buffer overflow");
-          *data = c;  
+          assert(r == 0);
+          *data = c;
           tx_ready = false;
-        }
-        
-        if(!tx_ready){
-          Reply(not_tid, &rep, sizeof(rep));
-          not_tid = -1;
+          cts_count = 0;
+          Reply(req_tid, &rep, sizeof(rep));
         }
         break;
       case IO_MI:
         PRINTF("MI\r\n");
+        cts_count++;
+
+        if (tx_ready && tran_buf.size > 0 && cts_count > 1) {
+          r = io_cb_pop(&tran_buf, &c);
+          assert(r == 0);
+          *data = c;
+          tx_ready = false;
+          cts_count = 0;
+          assert(not_tid > 0);
+          Reply(not_tid, &rep, sizeof(rep));
+        }
+
+        Reply(req_tid, &rep, sizeof(rep));
         break;
       default:
         assert(0 && "INVALID INTERRUPT");
@@ -248,6 +271,16 @@ void IOServerUART2() {
   // these don't change for initializing the servers
   arg.uart_base = UART2_BASE;
   arg.ie_base   = IE_UART2_BASE;
+  arg.cts_en    = false;
+
+  // TODO: arg.flags
+  // Enable the UART and interrupts
+  // Enable fifo
+  *(int *)(UART2_BASE + UART_LCRH_OFFSET) &= ~FEN_MASK;
+
+  // Set speed to 115200 bps
+  *(int *)(UART2_BASE + UART_LCRM_OFFSET) = 0x0;
+  *(int *)(UART2_BASE + UART_LCRL_OFFSET) = 0x3;
 
   // Create the RX server
   arg.ns_id = IOSERVER_UART2_RX_ID;
@@ -257,25 +290,13 @@ void IOServerUART2() {
   arg.ns_id = IOSERVER_UART2_TX_ID;
   r = CreateArgs(31, &IOServerTX, (void *)&arg);
 
-  // TODO: arg.flags
-  // Enable the UART and interrupts
-  // Enable fifo
-  *(int *)(UART2_BASE + UART_LCRH_OFFSET) |= FEN_MASK;
-
-  // Set speed to 115200 bps
-  *(int *)(UART2_BASE + UART_LCRM_OFFSET) = 0x0;
-  *(int *)(UART2_BASE + UART_LCRL_OFFSET) = 0x3;
 
   // Enable UART
-  *(int *)(UART2_BASE + UART_CTRL_OFFSET) = UARTEN_MASK | RTIEN_MASK | TIEN_MASK;
+  *(int *)(UART2_BASE + UART_CTRL_OFFSET) = UARTEN_MASK | RIEN_MASK | TIEN_MASK;
 
   Exit();
 }
 
-/**
- * NOTE: for the IO servers to be initialized properly, this task must be given
- *       priority strictly less than that given to IOServerRX and IOServerTX
- */
 void IOServerUART1() {
   IOServerArgs arg;
   int r;
@@ -283,6 +304,16 @@ void IOServerUART1() {
   // these don't change for initializing the servers
   arg.uart_base = UART1_BASE;
   arg.ie_base   = IE_UART1_BASE;
+  arg.cts_en    = true;
+
+  // Set speed to 2400 bps
+  *(int *)(UART1_BASE + UART_LCRM_OFFSET) = 0x0;
+  *(int *)(UART1_BASE + UART_LCRL_OFFSET) = 0xbf; // (7.3728MHz / (16*baud)) - 1
+
+  //*(int *)(UART1_BASE + UART_LCRH_OFFSET) = 0;
+  *(int *)(UART1_BASE + UART_LCRH_OFFSET) |= STP2_MASK;
+  *(int *)(UART1_BASE + UART_LCRH_OFFSET) &= ~FEN_MASK;
+
 
   // Create the RX server
   arg.ns_id = IOSERVER_UART1_RX_ID;
@@ -292,17 +323,8 @@ void IOServerUART1() {
   arg.ns_id = IOSERVER_UART1_TX_ID;
   r = CreateArgs(31, &IOServerTX, (void *)&arg);
 
-  // Enable the UART and interrupts
-  // Enable fifo
-  *(int *)(UART1_BASE + UART_LCRH_OFFSET) |= FEN_MASK | STP2_MASK;
-
-  // Set speed to 2400 bps
-  *(int *)(UART1_BASE + UART_LCRM_OFFSET) = 0x0;
-  *(int *)(UART1_BASE + UART_LCRL_OFFSET) = 0xbf;
-
   // Enable UART
-  *(int *)(UART1_BASE + UART_CTRL_OFFSET) = UARTEN_MASK | RTIEN_MASK | TIEN_MASK | MSIEN_MASK;
-
+  *(int *)(UART1_BASE + UART_CTRL_OFFSET) = UARTEN_MASK | RIEN_MASK | TIEN_MASK | MSIEN_MASK;
   Exit();
 }
 
@@ -328,10 +350,10 @@ int PutC(tid_t ios_tid, char c) {
   assert(ios_tid > 0);
 
   IOServerReq req;
-  char rep;
+  int rep;
 
   req.type = IO_PUTC;
-  req.msg[0] = c;
+  req.msg = c;
   req.len = 1;
 
   // SANITY();

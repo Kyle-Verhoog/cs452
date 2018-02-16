@@ -7,6 +7,10 @@ void im_init(interrupt_matrix *im){
   im_cb_init(&(im->UART2_TX));
   im_cb_init(&(im->UART2_RT));
   im_cb_init(&(im->UART2_MI));
+  im_cb_init(&(im->UART1_RX));
+  im_cb_init(&(im->UART1_TX));
+  im_cb_init(&(im->UART1_RT));
+  im_cb_init(&(im->UART1_MI));
 
   int i;
   for(i = 0; i < INTERRUPT_SIZE; i++ ){
@@ -34,6 +38,18 @@ int im_push(interrupt_matrix *im, TaskDescriptor * td, InterruptEvent ie){
 		case IE_UART2_MI:
 	  		return im_cb_push(&(im->UART2_MI), td);
 			break;
+    case IE_UART1_RX:
+      return im_cb_push(&(im->UART1_RX), td);
+      break;
+    case IE_UART1_TX:
+      return im_cb_push(&(im->UART1_TX), td);
+      break;
+    case IE_UART1_RT:
+      return im_cb_push(&(im->UART1_RT), td);
+      break;
+    case IE_UART1_MI:
+      return im_cb_push(&(im->UART1_MI), td);
+      break;
 		default:
 			KASSERT(0 && "Bad InterruptEvent Specified.");
 			break;
@@ -70,6 +86,22 @@ int im_pop(interrupt_matrix *im, InterruptEvent ie, TaskDescriptor **td){
 			r = im_cb_pop(&(im->UART2_MI), td);
 		    KASSERT(r == 0);
 		    return r;
+    case IE_UART1_RX:
+        r = im_cb_pop(&(im->UART1_RX), td);
+        KASSERT(r == 0);
+        return r;
+    case IE_UART1_TX:
+        r = im_cb_pop(&(im->UART1_TX), td);
+        KASSERT(r == 0);
+        return r;	
+    case IE_UART1_RT:
+        r = im_cb_pop(&(im->UART1_RT), td);
+        KASSERT(r == 0);
+        return r;
+    case IE_UART1_MI:
+        r = im_cb_pop(&(im->UART1_MI), td);
+        KASSERT(r == 0);
+        return r;
 		default:
 			KASSERT(0 && "Bad InterruptEvent Specified.");
 			break;
@@ -97,6 +129,18 @@ int im_eventsize(interrupt_matrix *im, InterruptEvent ie){
 		case IE_UART2_MI:
 			return (im->UART2_MI).size;
 			break;
+    case IE_UART1_RX:
+      return (im->UART1_RX).size;
+      break;
+    case IE_UART1_TX:
+      return (im->UART1_TX).size;
+      break;
+    case IE_UART1_RT:
+      return (im->UART1_RT).size;
+      break;
+    case IE_UART1_MI:
+      return (im->UART1_MI).size;
+      break;
 		default:
 			KASSERT(0 && "Bad InterruptEvent Specified.");
 			break;
