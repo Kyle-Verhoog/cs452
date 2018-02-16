@@ -7,12 +7,12 @@ void init_switch(tid_t tx2_writer, tid_t sw_handler, SW_Switch *slist){
 	Cursor c;
 	c.row = SWITCH_TABLE_ROW;
 	c.col = SWITCH_TABLE_COL;
-
+	
 	//draw the ui table
 	char *table = SWITCH_TABLE_STRING;
 	WriteStringUART2(tx2_writer, table, &c);
-	c.row+=3;
-	c.col+=9;
+	 c.row += 1;
+	 c.col += 13;
 
 	//Send Commands to SwitchHandler
 	sw.dir = SW_CURVE;
