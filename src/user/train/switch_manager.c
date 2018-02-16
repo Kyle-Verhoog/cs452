@@ -43,7 +43,7 @@ void init_switch(tid_t tx2_writer, tid_t sw_handler, SW_Switch *slist){
 void UpdateSwitchTable(tid_t tx2_writer, SW_Switch *table, int sw, SW_Switch dir){
 	Cursor c;
 	c.row = SWITCH_TABLE_ROW + sw;
-	c.col = SWITCH_TABLE_COL + 9;
+	c.col = SWITCH_TABLE_COL + 13;
 
 	if(sw >= SPECIAL_SWITCH_SIZE_LOW){
 		c.row++;

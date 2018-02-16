@@ -5,7 +5,7 @@ void parse_and_send(tid_t tm, char *command, int size){
 	int reply;
 
 	if(command[0] == 'q'){
-		//Quit
+    assert(0 && "we've been up for 26 hours and counting and do not feel like implementing a clean exit. sorry.");
 	}
 	else if(command[0] == 'r' && command[1]=='v'){
 		//Reverse
