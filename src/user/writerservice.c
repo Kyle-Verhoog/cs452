@@ -22,6 +22,25 @@ void WriteCommandUART2(tid_t writer, char *command, int size, Cursor *cursor){
 	Send(writer, &wrp, sizeof(wrp), &reply, sizeof(reply));
 }
 
+void WriteStringUART2(tid_t writer, char *command, Cursor *cursor){
+	int reply;
+	WRProtocol wrp;
+	wrp.wr_req = WR_COMMAND;
+	wrp.data = command;
+	wrp.size = 0;
+	wrp.cursor.row = cursor->row;
+	wrp.cursor.col = cursor->col;
+
+	while(true){
+		if(command[wrp.size] == '\0'){
+			break;
+		}
+		wrp.size++;
+	}
+
+	Send(writer, &wrp, sizeof(wrp), &reply, sizeof(reply));
+}
+
 void move_cursor(tid_t tx_tid, int r, int c){
 	char command[COMMAND_SIZE];
 	char *ptr = command;
@@ -62,7 +81,6 @@ void PushCharToUART2(tid_t tx_tid, WRProtocol *wrp, Cursor *cursor){
 			PutC(tx_tid, '\r');
 			break;
 		default:
-			SANITY();
 			cursor->col += 1;
 			PutC(tx_tid, c);
 			break;
@@ -71,9 +89,7 @@ void PushCharToUART2(tid_t tx_tid, WRProtocol *wrp, Cursor *cursor){
 
 void PushCommandToUART2(tid_t tx_tid, WRProtocol *wrp, Cursor *original){
 	//Push command to ioserver
-	SANITY();
 	move_cursor(tx_tid, wrp->cursor.row, wrp->cursor.col);
-	SANITY();
 	int i;
 	for(i = 0; i < wrp->size; i++){
 		PutC(tx_tid, wrp->data[i]);

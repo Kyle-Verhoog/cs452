@@ -15,16 +15,12 @@ typedef enum TR_Command{
 	TR_TRAIN = 1,
 	TR_REVERSE = 2,
 	TR_SWITCH = 3,
+	TR_SENSOR = 4,
 } TR_Command;
 
 typedef enum TR_Direction{
 	TR_FORWARD = -1,
 	TR_BACKWARD = 1
 } TR_Direction;
-
-typedef enum TR_Switch{
-	TR_STRAIGHT = 33,
-	TR_CURVE = 34
-} TR_Switch;
 
 #endif //TRAIN_DEFINES_H

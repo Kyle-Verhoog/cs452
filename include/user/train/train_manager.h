@@ -10,10 +10,13 @@
 #include <ioserver.h>
 #include <writerservice.h>
 
+//Train Servers
+#include <switch_manager.h>
+
 typedef struct TMProtocol{
 	TR_Command trc;
-	int arg1;
-	int arg2;
+	char *command;
+	int size;
 }TMProtocol;
 
 void TrainManager();

@@ -12,6 +12,10 @@
 #include <writeback_interface.h>
 #include <train_msg.h>
 
+//Train Services
+#include <train_manager.h>
+#include <switch_manager.h>
+
 void UITest();
 
 #endif //UI_TEST_H

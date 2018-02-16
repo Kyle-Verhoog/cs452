@@ -6,7 +6,7 @@ void IdleUITest() {
   while (ui_alive) {
     (void)ui_alive;
     i++;
-    if (i > 15000) {
+    if (i > 1500000) {
       PRINTF("ping\r\n");
       i = 0;
     }
@@ -37,11 +37,12 @@ void UITest() {
   Create(30, &IOServerUART2);
 
   DelayCS(mytid, 100);
-
+  Create(29, &SwitchManager);
+  Create(29, &TrainManager);
   Create(29, &WriterServiceUART2);
   Create(29, &ReaderServiceUART2);
 
-  Create(28, &ClearScreen);
+  //Create(28, &ClearScreen);
   Create(25, &TimerInterface);
   //Create(25, &WritebackInterface);
   //Create(25, &TrainMsg);
