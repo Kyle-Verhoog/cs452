@@ -1,7 +1,7 @@
 #include <user/test/ioserver_test.h>
 
 int stay_alive;
-void IdleTask() {
+void IOIdleTask() {
   int i = 0;
   while(stay_alive) {
     i++;
@@ -31,6 +31,13 @@ void IOTask() {
       assert(0 && "EXIT");
     } else if (c == 'g') {
       PutC(tios_tid1, 96);
+    } else if (c == 'z') {
+      char test[4];
+      test[0] = 't';
+      test[1] = 'e';
+      test[2] = 's';
+      test[3] = 't';
+      PutStr(tios_tid2, test, 4);
     } else {
       PutC(tios_tid2, c);
     }
@@ -44,8 +51,8 @@ void IOServerTest() {
   Create(31, &ClockServer);
   Create(30, &IOServerUART2); // NOTE: priority has to be < priority of IOServer
   Create(30, &IOServerUART1); // NOTE: priority has to be < priority of IOServer
-  Create(26, &IOTask);
-  Create(25, &IdleTask);
+  // Create(26, &IOTask);
+  Create(25, &IOIdleTask);
   Create(23, &NameServerStop);
   Create(23, &ClockServerStop);
   COMPLETE_TEST();

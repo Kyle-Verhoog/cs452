@@ -19,12 +19,13 @@ typedef struct IOServerArgs {
 } IOServerArgs;
 
 typedef enum IOServerRequestType {
-  IO_GETC = 0,
-  IO_PUTC = 1,
-  IO_TX   = 2,
-  IO_RX   = 3,
-  IO_RT   = 4,
-  IO_MI   = 5,
+  IO_GETC   = 0,
+  IO_PUTC   = 1,
+  IO_TX     = 2,
+  IO_RX     = 3,
+  IO_RT     = 4,
+  IO_MI     = 5,
+  IO_PUTSTR = 6,
 } IOServerReqType;
 
 typedef struct IONotifierArgs {
@@ -36,7 +37,7 @@ typedef struct IONotifierArgs {
 } IONotifierArgs;
 
 typedef struct IOServerRequest {
-  char msg;
+  char *msg;
   int  len;
   IOServerReqType type; // Note: the type must be the last (first) element!
 } IOServerReq;
@@ -46,6 +47,7 @@ void IOServerUART1();
 
 char GetC(tid_t ios_tid);
 int PutC(tid_t ios_tid, char c);
+int PutStr(tid_t ios_tid, char *c, int len);
 
 CIRCULAR_BUFFER_DEC(io_cb, volatile char, 512);
 

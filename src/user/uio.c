@@ -8,7 +8,7 @@ int putc(tid_t ios_tid, char c) {
   char rep;
 
   req.type = IO_PUTC;
-  req.msg = c;
+  req.msg = &c;
   req.len = 1;
 
   // SANITY();
