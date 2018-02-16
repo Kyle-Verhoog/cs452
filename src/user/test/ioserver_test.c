@@ -29,7 +29,7 @@ void IOTask() {
       Exit();
     } else if (c == 'z') {
       int i;
-      for (i = 0; i < 1000; i++)
+      for (i = 0; i < 11000; i++)
         PutC(tios_tid, c);
     }
     else {

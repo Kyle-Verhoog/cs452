@@ -36,7 +36,7 @@ typedef struct IONotifierArgs {
 } IONotifierArgs;
 
 typedef struct IOServerRequest {
-  char *msg;
+  char msg;
   int   len;
   IOServerReqType type; // Note: the type must be the last (first) element!
 } IOServerReq;
@@ -46,6 +46,6 @@ void IOServerUART2();
 char GetC(tid_t ios_tid);
 int PutC(tid_t ios_tid, char c);
 
-CIRCULAR_BUFFER_DEC(io_cb, char, 512);
+CIRCULAR_BUFFER_DEC(io_cb, volatile char, 512);
 
 #endif

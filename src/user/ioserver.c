@@ -1,6 +1,6 @@
 #include <user/ioserver.h>
 
-CIRCULAR_BUFFER_DEF(io_cb, char, 512);
+CIRCULAR_BUFFER_DEF(io_cb, volatile char, 512);
 
 
 void IOServerNotifier(void *args) {
@@ -59,15 +59,15 @@ void IOServerRX(void *args) {
 
   tid_t req_tid, queued_tid;
   IOServerReq req;
-  int rep = 0;
-  int volatile *data, *flags;
+  int rep;
+  int volatile *data;
   char c;
   io_cb recv_buf;
 
   io_cb_init(&recv_buf);
+  rep = 0;
   queued_tid = -1;
-  data  = (int *)(uart_base + UART_DATA_OFFSET);
-  flags = (int *)(uart_base + UART_FLAG_OFFSET);
+  data = (int *)(uart_base + UART_DATA_OFFSET);
 
   while (true) {
     // SANITY();
@@ -140,12 +140,11 @@ void IOServerTX(void *args) {
     r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
   }
 
-
   // SANITY();
   tid_t req_tid;
   IOServerReq req;
   int rep;
-  int volatile *data, *flags;
+  int *data;
   char c;
   tid_t not_tid;
   bool tx_ready;
@@ -154,7 +153,6 @@ void IOServerTX(void *args) {
 
   io_cb_init(&tran_buf);
   data  = (int *)(uart_base + UART_DATA_OFFSET);
-  flags = (int *)(uart_base + UART_FLAG_OFFSET);
   not_tid  = -1;
   tx_ready = false;
   cts_count = 0;
@@ -203,15 +201,16 @@ void IOServerTX(void *args) {
     switch(req.type){
       case IO_PUTC:
         // SANITY();
-        c = req.msg[0];
+        c = req.msg;
         r = io_cb_push(&tran_buf, c);
         assert(req.len == sizeof(char));
 
-        if (tx_ready) {
+        if (tx_ready && (!cts_en || (cts_en && cts_count > 1))) {
           r = io_cb_pop(&tran_buf, &c);
           assert(r == 0);
           *data = c;
           tx_ready = false;
+          cts_count = 0;
           assert(not_tid > 0);
           Reply(not_tid, &rep, sizeof(rep));
         }
@@ -224,18 +223,28 @@ void IOServerTX(void *args) {
         not_tid = req_tid;
         tx_ready = true;
 
-        //if (tran_buf.size > 0 && (!cts_en || (cts_en && cts_count > 1))) {
-        if (tran_buf.size) {
-          tx_ready = false;
+        if (tran_buf.size > 0 && (!cts_en || (cts_en && cts_count > 1))) {
           r = io_cb_pop(&tran_buf, &c);
           assert(r == 0);
           *data = c;
+          tx_ready = false;
+          cts_count = 0;
           Reply(req_tid, &rep, sizeof(rep));
         }
         break;
       case IO_MI:
-        PRINTF("MI\r\n");
         cts_count++;
+
+        if (tx_ready && tran_buf.size > 0 && cts_count > 1) {
+          r = io_cb_pop(&tran_buf, &c);
+          assert(r == 0);
+          *data = c;
+          tx_ready = false;
+          cts_count = 0;
+          assert(not_tid > 0);
+          Reply(not_tid, &rep, sizeof(rep));
+        }
+
         Reply(req_tid, &rep, sizeof(rep));
         break;
       default:
@@ -259,14 +268,6 @@ void IOServerUART2() {
   arg.ie_base   = IE_UART2_BASE;
   arg.cts_en    = false;
 
-  // Create the RX server
-  arg.ns_id = IOSERVER_UART2_RX_ID;
-  r = CreateArgs(31, &IOServerRX, (void *)&arg);
-
-  // Create the TX server
-  arg.ns_id = IOSERVER_UART2_TX_ID;
-  r = CreateArgs(31, &IOServerTX, (void *)&arg);
-
   // TODO: arg.flags
   // Enable the UART and interrupts
   // Enable fifo
@@ -275,6 +276,15 @@ void IOServerUART2() {
   // Set speed to 115200 bps
   *(int *)(UART2_BASE + UART_LCRM_OFFSET) = 0x0;
   *(int *)(UART2_BASE + UART_LCRL_OFFSET) = 0x3;
+
+  // Create the RX server
+  arg.ns_id = IOSERVER_UART2_RX_ID;
+  r = CreateArgs(31, &IOServerRX, (void *)&arg);
+
+  // Create the TX server
+  arg.ns_id = IOSERVER_UART2_TX_ID;
+  r = CreateArgs(31, &IOServerTX, (void *)&arg);
+
 
   // Enable UART
   *(int *)(UART2_BASE + UART_CTRL_OFFSET) = UARTEN_MASK | RIEN_MASK | TIEN_MASK;
@@ -343,7 +353,7 @@ int PutC(tid_t ios_tid, char c) {
   int rep;
 
   req.type = IO_PUTC;
-  req.msg[0] = c;
+  req.msg = c;
   req.len = 1;
 
   // SANITY();
