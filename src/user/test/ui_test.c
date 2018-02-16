@@ -34,14 +34,16 @@ void UITest() {
   Create(1, &IdleUITest);
   Create(31, &NameServer);
   Create(31, &ClockServer);
+  Create(30, &IOServerUART1);
   Create(30, &IOServerUART2);
+  Create(30, &WriterServiceUART1);
+  Create(30, &WriterServiceUART2);
 
   DelayCS(mytid, 100);
   Create(29, &SwitchManager);
   Create(29, &TrainManager);
   Create(29, &SensorManager);
   Create(29, &RailwayManager);
-  Create(30, &WriterServiceUART2);
   Create(30, &ReaderServiceUART2);
 
   //Create(28, &ClearScreen);

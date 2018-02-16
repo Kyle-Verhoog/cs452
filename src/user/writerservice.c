@@ -1,5 +1,15 @@
 #include<writerservice.h>
 
+void WriteCommandUART1(tid_t writer, char *command, int size){
+	int reply;
+	WRProtocol wrp;
+	wrp.wr_req = WR_COMMAND;
+	wrp.data = command;
+	wrp.size = size;
+
+	Send(writer, &wrp, sizeof(wrp), &reply, sizeof(reply));
+}
+
 void WriteCharUART2(tid_t writer, char c){
 	int reply;
 	WRProtocol wrp;
@@ -87,6 +97,13 @@ void PushCharToUART2(tid_t tx_tid, WRProtocol *wrp, Cursor *cursor){
 	}
 }
 
+void PushCommandToUART1(tid_t tx_tid, WRProtocol *wrp){
+	int i;
+	for(i = 0; i < wrp->size; i++){
+		PutC(tx_tid, wrp->data[i]);
+	}
+}
+
 void PushCommandToUART2(tid_t tx_tid, WRProtocol *wrp, Cursor *original){
 	//Push command to ioserver
 	move_cursor(tx_tid, wrp->cursor.row, wrp->cursor.col);
@@ -95,6 +112,36 @@ void PushCommandToUART2(tid_t tx_tid, WRProtocol *wrp, Cursor *original){
 		PutC(tx_tid, wrp->data[i]);
 	}
 	move_cursor(tx_tid, original->row, original->col);
+}
+
+void WriterServiceUART1(){
+	int reply = 0;
+	int r = RegisterAs(WRITERSERVICE_UART1_ID);
+	assert(r == 0);
+
+	tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
+	assert(tx_tid >= 0);
+
+	while(true){
+		tid_t req_tid;
+		WRProtocol wrp;
+		
+		//Receive a request
+		Receive(&req_tid, &wrp, sizeof(wrp));
+
+		//Handle Request
+		switch(wrp.wr_req){
+			case WR_COMMAND:
+				PushCommandToUART1(tx_tid, &wrp);
+				Reply(req_tid, &reply, sizeof(reply));
+				break;
+			default:
+				assert(0 && "Bad Request");
+				break;
+		}
+	}
+
+	Exit();
 }
 
 void WriterServiceUART2(){

@@ -26,7 +26,10 @@ typedef struct WRProtocol{
 	Cursor cursor;
 }WRProtocol;
 
+void WriterServiceUART1();
 void WriterServiceUART2();
+
+void WriteCommandUART1(tid_t writer, char *command, int size);
 void WriteCharUART2(tid_t writer, char c);
 void WriteCommandUART2(tid_t writer, char *command, int size, Cursor *cursor);
 void WriteStringUART2(tid_t writer, char *command, Cursor *cursor);

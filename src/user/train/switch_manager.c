@@ -1,7 +1,7 @@
 #include <switch_manager.h>
 
 
-void init_switch(tid_t tx1_tid, tid_t tx2_tid, tid_t sw_handler, SW_Switch *slist){
+void init_switch(tid_t tx2_writer, tid_t sw_handler, SW_Switch *slist){
 	int reply = 0;
 	SWProtocol sw;
 	Cursor c;
@@ -10,7 +10,7 @@ void init_switch(tid_t tx1_tid, tid_t tx2_tid, tid_t sw_handler, SW_Switch *slis
 
 	//draw the ui table
 	char *table = SWITCH_TABLE_STRING;
-	//WriteStringUART2(tx2_tid, table, &c); //TODO: IMPL THIS
+	WriteStringUART2(tx2_writer, table, &c);
 	c.row+=3;
 	c.col+=9;
 
@@ -21,7 +21,7 @@ void init_switch(tid_t tx1_tid, tid_t tx2_tid, tid_t sw_handler, SW_Switch *slis
 		slist[i] = SW_CURVE;
 		sw.sw = i;
 		Send(sw_handler, &sw, sizeof(sw), &reply, sizeof(reply));
-		//WriteStringUART2(tx2_tid, "C", &c); //TODO: IMPL THIS
+		WriteStringUART2(tx2_writer, "C", &c);
 		c.row++;
 	}
 
@@ -32,15 +32,15 @@ void init_switch(tid_t tx1_tid, tid_t tx2_tid, tid_t sw_handler, SW_Switch *slis
 		sw.sw = i;
 		Send(sw_handler, &sw, sizeof(sw), &reply, sizeof(reply));
 		if(i%2){
-			//WriteStringUART2(tx2_tid, "C", &c); //TODO: IMPL THIS	
+			WriteStringUART2(tx2_writer, "C", &c);	
 		}else{
-			//WriteStringUART2(tx2_tid, "S", &c); //TODO: IMPL THIS	
+			WriteStringUART2(tx2_writer, "S", &c);
 		}
 		c.row++;
 	}
 }
 
-void UpdateSwitchTable(SW_Switch *table, int sw, SW_Switch dir){
+void UpdateSwitchTable(tid_t tx2_writer, SW_Switch *table, int sw, SW_Switch dir){
 	Cursor c;
 	c.row = SWITCH_TABLE_ROW + sw;
 	c.col = SWITCH_TABLE_COL + 9;
@@ -51,16 +51,16 @@ void UpdateSwitchTable(SW_Switch *table, int sw, SW_Switch dir){
 
 	table[sw] = dir;
 	if(dir == SW_CURVE){
-		//WriteStringUART2(tx2_tid, "C", &c); //TODO: IMPL THIS	
+		WriteStringUART2(tx2_writer, "C", &c);	
 	}
 	else{
-		//WriteStringUART2(tx2_tid, "S", &c); //TODO: IMPL THIS	
+		WriteStringUART2(tx2_writer, "S", &c);
 	}
 }
 
 void SwitchHandler(void *args){
 	int reply = 0;
-	tid_t tx1_tid = (tid_t)args;
+	tid_t tx1_writer = (tid_t)args;
 	tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
 	tid_t my_tid = MyTid();
 
@@ -81,9 +81,9 @@ void SwitchHandler(void *args){
 		sw_command[0] = sw.dir;
 		sw_command[1] = sw.sw;
 
-		//WriteCommandUART1(tx1_tid, sw_command, 2);	//TODO: IMPL THIS
-		//WriteCommandUART1(tx1_tid, sol_command, 1);	//TODO: IMPL THIS
-		PRINTF("SWITCHING SWITCHES: %d", sw.sw);
+		WriteCommandUART1(tx1_writer, sw_command, 2);
+		WriteCommandUART1(tx1_writer, sol_command, 1);
+
 		Delay(cs_tid, my_tid, 15);	//delay 150 ms
 	}
 
@@ -95,19 +95,16 @@ void SwitchManager(){
 
 	int reply = 0;
 	int r = RegisterAs(SWITCH_MANAGER_ID);
-  	assert(r == 0);
-  	tid_t rx1_tid = WhoIs(IOSERVER_UART1_RX_ID);
-  	//assert(rx1_tid >= 0);
-  	tid_t tx1_tid = WhoIs(IOSERVER_UART1_TX_ID);
-  	//assert(tx1_tid >= 0);
-  	tid_t rx2_tid = WhoIs(IOSERVER_UART2_RX_ID);
-  	//assert(rx2_tid >= 0);
-  	tid_t tx2_tid = WhoIs(IOSERVER_UART2_TX_ID);
-  	//assert(tx2_tid >= 0);
+  assert(r == 0);
+  tid_t tx1_writer = WhoIs(WRITERSERVICE_UART1_ID);
+  tid_t tx2_writer = WhoIs(WRITERSERVICE_UART2_ID);
 
-  	tid_t sw_handler = CreateArgs(19, &SwitchHandler, (void *)&tx1_tid);
+  assert(tx1_writer >= 0);
+  assert(tx2_writer >= 0);
 
-  	init_switch(tx1_tid, tx2_tid, sw_handler, SwitchList);
+  	tid_t sw_handler = CreateArgs(19, &SwitchHandler, (void *)&tx1_writer);
+
+  	init_switch(tx2_writer, sw_handler, SwitchList);
 
   	while(true){
   		tid_t req_tid;
@@ -121,7 +118,7 @@ void SwitchManager(){
   		Send(sw_handler, &sw, sizeof(sw), &reply, sizeof(reply));
 
   		//Update the UI and table
-  		UpdateSwitchTable(SwitchList, sw.sw, sw.dir);
+  		UpdateSwitchTable(tx2_writer, SwitchList, sw.sw, sw.dir);
   	}
   Exit();
 }
