@@ -15,6 +15,7 @@ typedef struct IOServerArgs {
   int uart_base;
   int ns_id;
   int flags;
+  bool cts_en;
 } IOServerArgs;
 
 typedef enum IOServerRequestType {
