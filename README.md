@@ -2,6 +2,10 @@
 
 
 # NOTE TO TAs:
+**Our kernel 4 submission is in a branch: kernel4**
+
+**The kernel 4 doc is located at docs/k4.pdf.**
+
 **Our kernel 3 submission is in a branch: kernel3**
 
 **The kernel 3 doc is located at docs/k3.pdf.**
