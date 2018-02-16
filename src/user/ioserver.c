@@ -1,6 +1,6 @@
 #include <user/ioserver.h>
 
-CIRCULAR_BUFFER_DEF(io_cb, volatile char, 512);
+CIRCULAR_BUFFER_DEF(io_cb, volatile char, IO_SERVER_BUFFER_SIZE);
 
 
 void IOServerNotifier(void *args) {
@@ -218,7 +218,6 @@ void IOServerTX(void *args) {
         }
         break;
       case IO_MI:
-        PRINTF("MI\r\n");
         cts_count++;
 
         if (tx_ready && tran_buf.size > 0 && cts_count > 1) {

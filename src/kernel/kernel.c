@@ -32,8 +32,8 @@ unsigned int kernel_stack_base = KERNEL_STACK_BASE;
 unsigned int user_stack_base = USER_STACK_BASE;
 
 void initialize() {
-  bwsetfifo(COM1, OFF);
-  bwsetspeed(COM1, 115200);
+  // bwsetfifo(COM1, OFF);
+  // bwsetspeed(COM1, 115200);
 
   DBLOG_INIT("Initializing", "");
 
@@ -44,19 +44,19 @@ void initialize() {
     td_init(&tasks[i]);
   }
 
-  DBLOG_START("init task queue", "");
+  // DBLOG_START("init task queue", "");
   tt_init(&tid_tracker);
   pq_init(&pq_tasks);
-  DBLOG_S();
+  // DBLOG_S();
 
-  DBLOG_START("init interrupt matrix", "");
+  // DBLOG_START("init interrupt matrix", "");
   im_init(&im_tasks);
-  DBLOG_S();
+  // DBLOG_S();
 
 #ifdef TASK_METRICS
-  DBLOG_START("init task metrics", "");
+  // DBLOG_START("init task metrics", "");
   tm_init();
-  DBLOG_S();
+  // DBLOG_S();
 #endif //TASK_METRICS
 
   int priority;
@@ -73,12 +73,12 @@ void initialize() {
   tid_t tid = tt_get(&tid_tracker);
   TaskDescriptor* volatile td = &tasks[TID_ID(tid)];
 
-  DBLOG_START("creating task %x", tid);
+  // DBLOG_START("creating task %x", tid);
   ktd_create(td, tid, task, priority, TS_READY, NULL);
-  DBLOG_S();
-  DBLOG_START("pushing task %x to queue", tid);
+  // DBLOG_S();
+  // DBLOG_START("pushing task %x to queue", tid);
   pq_push(&pq_tasks, priority, td);
-  DBLOG_S();
+  // DBLOG_S();
 }
 
 TaskDescriptor* schedule() {

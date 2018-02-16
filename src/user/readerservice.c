@@ -53,7 +53,7 @@ void ReaderServiceUART2(){
 	while(true){
 		//Get and Writeback
 		command[csize] = GetC(rx_tid);
-		//WriteCharUART2(writer, command[csize]);
+		WriteCharUART2(writer, command[csize]);
 
 		switch(command[csize]){
 			case BACKSPACE:

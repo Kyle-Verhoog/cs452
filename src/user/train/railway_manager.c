@@ -61,13 +61,23 @@ void parse_rv(tid_t tm_tid, RWProtocol *rwp){
 
 //<switch> <dir>
 void parse_sw(tid_t sw_tid, RWProtocol *rwp){
-	int args[2];
+  int args[2];
 	int reply;
-	parse_args(rwp->command, rwp->size, args);
+
+  int arg1;
+  char swd;
+  char *r;
+  if ((r = parse_i32(rwp->command, &arg1)) == 0 || arg1 < 0) {
+    assert(0);
+  }
+
+  if ((r = parse_c(r, &swd)) == 0 || (swd != 'S' && swd != 'C')) {
+    assert(0);
+  }
 
 	SWProtocol sw;
-	sw.sw = args[0];
-	sw.dir = args[1] == 'C' ? SW_CURVE : SW_STRAIGHT; 
+	sw.sw = arg1;
+	sw.dir = swd == 'C' ? SW_CURVE : SW_STRAIGHT;
 	Send(sw_tid, &sw, sizeof(sw), &reply, sizeof(reply));
 }
 

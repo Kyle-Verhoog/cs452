@@ -24,6 +24,9 @@ int bwsetfifo( int channel, int state ) {
   case COM2:
     line = (int *)( UART2_BASE + UART_LCRH_OFFSET );
     break;
+  case COM3:
+    line = (int *)( UART3_BASE + UART_LCRH_OFFSET );
+    break;
   default:
     return -1;
     break;
@@ -32,7 +35,7 @@ int bwsetfifo( int channel, int state ) {
   if (channel == COM1) {
     buf = state ? buf | STP2_MASK | FEN_MASK : buf | STP2_MASK;
   }
-  if (channel == COM2) {
+  if (channel == COM2 || channel == COM3) {
     buf = state ? buf | FEN_MASK : buf & ~FEN_MASK;
   }
   *line = buf;
@@ -49,6 +52,10 @@ int bwsetspeed( int channel, int speed ) {
   case COM2:
     high = (int *)( UART2_BASE + UART_LCRM_OFFSET );
     low = (int *)( UART2_BASE + UART_LCRL_OFFSET );
+    break;
+  case COM3:
+    high = (int *)( UART3_BASE + UART_LCRM_OFFSET );
+    low = (int *)( UART3_BASE + UART_LCRL_OFFSET );
     break;
   default:
     return -1;
@@ -78,6 +85,10 @@ int bwputc( int channel, char c ) {
   case COM2:
     flags = (int *)( UART2_BASE + UART_FLAG_OFFSET );
     data = (int *)( UART2_BASE + UART_DATA_OFFSET );
+    break;
+  case COM3:
+    flags = (int *)( UART3_BASE + UART_FLAG_OFFSET );
+    data = (int *)( UART3_BASE + UART_DATA_OFFSET );
     break;
   default:
     return -1;

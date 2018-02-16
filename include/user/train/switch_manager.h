@@ -27,7 +27,7 @@ void SwitchManager();
 #define SWITCH_TABLE_ROW 3
 #define SWITCH_TABLE_COL 1
 #define SWITCH_TABLE_STRING \
-"+--------+--------+\n\r\
+"\033[2J+--------+--------+\n\r\
 | SWITCH | STATUS |\n\r\
 +-----------------+\n\r\
 |  1     |        |\n\r\

@@ -10,6 +10,9 @@
 #include <lib/circular_buffer.h>
 
 
+#define IO_SERVER_BUFFER_SIZE 2048
+
+
 typedef struct IOServerArgs {
   InterruptEvent ie_base;
   int uart_base;
@@ -49,6 +52,6 @@ char GetC(tid_t ios_tid);
 int PutC(tid_t ios_tid, char c);
 int PutStr(tid_t ios_tid, char *c, int len);
 
-CIRCULAR_BUFFER_DEC(io_cb, volatile char, 512);
+CIRCULAR_BUFFER_DEC(io_cb, volatile char, IO_SERVER_BUFFER_SIZE);
 
 #endif

@@ -4,6 +4,13 @@ void TimerInterface(){
 	Clock clk;
 	tid_t my_tid = MyTid();
 	tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
+	tid_t ws_tid = WhoIs(WRITERSERVICE_UART2_ID);
+  char buf[20];
+  int size, offset;
+  Cursor cur;
+  cur.row = 1;
+  cur.col = 40;
+  offset = 0;
 	assert(cs_tid >= 0);
 
 	clk_init(&clk);
@@ -17,9 +24,15 @@ void TimerInterface(){
 
 		if(diff >= 10){
 			add_dsec(&clk, diff/10);
-			//Move the cursor to position
-			//Print to Terminal
-			//PRINTF("%d:%d:%d\n\r", clk.min, clk.sec, clk.dsec);
+      i2a(clk.min, &size, buf);
+      offset += size;
+      buf[offset++] = ':';
+      i2a(clk.sec, &size, buf+offset);
+      offset += size;
+      buf[offset++] = ':';
+      i2a(clk.dsec, &size, buf+offset);
+      offset += size;
+      // WriteCommandUART2(ws_tid, buf, offset, &cur);
 			prev_ti += (diff/10)*10;	//Try to be as accurate as possible
 		}
 	}

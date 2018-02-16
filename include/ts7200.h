@@ -39,6 +39,7 @@
 
 #define COM1  0
 #define COM2  1
+#define COM3  2
 
 #define IRDA_BASE 0x808b0000
 #define UART1_BASE  0x808c0000

@@ -7,6 +7,7 @@
 #include <user/nameserver.h>
 #include <user/clockserver.h>
 #include <clock.h>
+#include <writerservice.h>
 
 void TimerInterface();
 

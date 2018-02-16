@@ -57,9 +57,7 @@ void move_cursor(tid_t tx_tid, int r, int c){
 	int rsize;
 	int csize;
 
-	*ptr++ = '\0';
-	*ptr++ = '3';
-	*ptr++ = '3';
+	*ptr++ = '\033';
 	*ptr++ = '[';
 	ui2a(r, 10, &rsize, ptr);
 	ptr += rsize;
@@ -68,27 +66,29 @@ void move_cursor(tid_t tx_tid, int r, int c){
 	ptr+=csize;
 	*ptr++ = 'H';
 
-	// int i;
-	// for(i = 0; i < rsize + csize + 6; i++){
-	// 	PutC(tx_tid, command[i]);
-	// }
+  PutStr(tx_tid, command, rsize+csize+4);
 }
 
 void PushCharToUART2(tid_t tx_tid, WRProtocol *wrp, Cursor *cursor){
 	char c = *wrp->data;
+  char str[5];
+  char *ptr;
+  ptr = str;
 
 	switch(c){
 		case BACKSPACE:
 			cursor->col -= 1;
-			PutC(tx_tid, c);
-			PutC(tx_tid, ' ');
-			PutC(tx_tid, c);
+      *ptr++ = c;
+      *ptr++ = ' ';
+      *ptr++ = c;
+      PutStr(tx_tid, str, 3);
 			break;
 		case CARRIAGE_RETURN:
 			cursor->col = 1;
 			cursor->row += 1;
-			PutC(tx_tid, '\n');	//TODO: Perhaps clear line instead
-			PutC(tx_tid, '\r');
+      *ptr++ = '\n';
+      *ptr++ = '\r';
+      PutStr(tx_tid, str, 2);
 			break;
 		default:
 			cursor->col += 1;
@@ -98,19 +98,13 @@ void PushCharToUART2(tid_t tx_tid, WRProtocol *wrp, Cursor *cursor){
 }
 
 void PushCommandToUART1(tid_t tx_tid, WRProtocol *wrp){
-	int i;
-	for(i = 0; i < wrp->size; i++){
-		PutC(tx_tid, wrp->data[i]);
-	}
+  PutStr(tx_tid, wrp->data, wrp->size);
 }
 
 void PushCommandToUART2(tid_t tx_tid, WRProtocol *wrp, Cursor *original){
 	//Push command to ioserver
 	move_cursor(tx_tid, wrp->cursor.row, wrp->cursor.col);
-	int i;
-	for(i = 0; i < wrp->size; i++){
-		PutC(tx_tid, wrp->data[i]);
-	}
+  PutStr(tx_tid, wrp->data, wrp->size);
 	move_cursor(tx_tid, original->row, original->col);
 }
 

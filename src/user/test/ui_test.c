@@ -3,11 +3,13 @@
 int ui_alive;
 void IdleUITest() {
   int i= 0;
+	tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
+	assert(tx_tid >= 0);
   while (ui_alive) {
     (void)ui_alive;
     i++;
-    if (i > 1500000) {
-      PRINTF("ping\r\n");
+    if (i > 1500000000) {
+      PutC(tx_tid, '.');
       i = 0;
     }
   }
@@ -57,7 +59,6 @@ void UITest() {
 
   //Create(28, &ClearScreen);
   Create(25, &TimerInterface);
-  //Create(25, &WritebackInterface);
   //Create(25, &TrainMsg);
   
   // DelayCS(mytid, 1000);

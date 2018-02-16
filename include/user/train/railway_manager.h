@@ -9,6 +9,7 @@
 #include <ascii.h>
 #include <ioserver.h>
 #include <writerservice.h>
+#include <lib/parse.h>
 
 //Train Servers
 #include <switch_manager.h>
