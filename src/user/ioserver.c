@@ -162,47 +162,10 @@ void IOServerTX(void *args) {
   cts_count = 2;
   rep = 0;
 
-  // while (true) {
-  //   // SANITY();
-  //   Receive(&req_tid, &req, sizeof(req));
-  //   switch (req.type) {
-  //     case IO_PUTC:
-  //       // SANITY();
-  //       assert(req.len == sizeof(char));
-  //       r = io_cb_push(&tran_buf, req.msg[0]);
-  //       rep_notif = true;
-  //       Reply(req_tid, &rep, sizeof(rep));
-  //       break;
-  //     case IO_TX:
-  //       // SANITY();
-  //       not_tid = req_tid;
-
-  //       while (tran_buf.size > 0 && !(*flags & TXFF_MASK)) {
-  //         rep_notif = true;
-  //         r = io_cb_pop(&tran_buf, &c);
-  //         assert(r == 0 && "io buffer overflow");
-  //         *data = c;
-  //       }
-  //       break;
-  //     case IO_MI:
-  //       PRINTF("MI\r\n");
-  //       break;
-  //     default:
-  //       assert(0 && "INVALID INTERRUPT");
-  //       break;
-  //   }
-
-  //   if (rep_notif && not_tid > -1) {
-  //     // SANITY();
-  //     Reply(not_tid, &rep, sizeof(rep));
-  //     rep_notif = false;
-  //   }
-  // }
-
-  bool tx_ready = 0;
-  while(true){
+  while (true) {
+    // SANITY();
     Receive(&req_tid, &req, sizeof(req));
-    switch(req.type){
+    switch (req.type) {
       case IO_PUTC:
         // SANITY();
         c = req.msg;
@@ -220,8 +183,7 @@ void IOServerTX(void *args) {
         }
 
         Reply(req_tid, &rep, sizeof(rep));
-        if(!tx_ready) break;
-        //fall through if ready
+        break;
       case IO_TX:
         // SANITY();
         not_tid = req_tid;
