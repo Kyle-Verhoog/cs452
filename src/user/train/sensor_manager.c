@@ -45,7 +45,7 @@ void SensorTimeout(){
 	tid_t sensor_man = MyParentTid();
 	tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
 	tid_t my_tid = MyTid();
-	int counter = -5;
+	volatile int counter = -5;
 
 	SMProtocol checker, timeout;
 	checker.smr = SM_CHECK;
@@ -63,12 +63,11 @@ void SensorTimeout(){
 
 		//Too much time has passed since data was retrieved
 		if(counter >= SENSOR_TIMEOUT){
-			//assert(0 && "Sensor data timed out");
-			//Send(sensor_man, &timeout, sizeof(timeout), &reply, sizeof(reply));
+			Send(sensor_man, &timeout, sizeof(timeout), &reply, sizeof(reply));
 			counter = 0;
 		}
 
-		Delay(cs_tid, my_tid, 1);
+		Delay(cs_tid, my_tid, 2);
 	}
 }
 

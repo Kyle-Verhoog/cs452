@@ -7,11 +7,6 @@ void IdleUITest() {
 	assert(tx_tid >= 0);
   while (ui_alive) {
     (void)ui_alive;
-    i++;
-    if (i > 1500000000) {
-      PutC(tx_tid, '.');
-      i = 0;
-    }
   }
   Exit();
 }
@@ -58,7 +53,7 @@ void UITest() {
   Create(30, &ReaderServiceUART2);
 
   //Create(28, &ClearScreen);
-  Create(25, &TimerInterface);
+  Create(19, &TimerInterface);
   //Create(25, &TrainMsg);
   
   // DelayCS(mytid, 1000);
