@@ -9,7 +9,7 @@ void TimerInterface(){
   int size, offset;
   Cursor cur;
   cur.row = 1;
-  cur.col = 40;
+  cur.col = 25;
   offset = 0;
 	assert(cs_tid >= 0);
 
@@ -24,6 +24,7 @@ void TimerInterface(){
 
 		if(diff >= 10){
 			add_dsec(&clk, diff/10);
+      offset = 0;
       i2a(clk.min, &size, buf);
       offset += size;
       buf[offset++] = ':';
@@ -32,7 +33,8 @@ void TimerInterface(){
       buf[offset++] = ':';
       i2a(clk.dsec, &size, buf+offset);
       offset += size;
-      // WriteCommandUART2(ws_tid, buf, offset, &cur);
+      assert(offset < 20);
+      WriteCommandUART2(ws_tid, buf, offset, &cur);
 			prev_ti += (diff/10)*10;	//Try to be as accurate as possible
 		}
 	}

@@ -148,7 +148,7 @@ void WriterServiceUART2(){
 	assert(tx_tid >= 0);
 
 	Cursor cursor;
-	cursor.row = 1;
+	cursor.row = 30;
 	cursor.col = 1;
 
 	while(true){

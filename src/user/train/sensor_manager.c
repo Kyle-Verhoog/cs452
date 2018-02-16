@@ -14,7 +14,7 @@ void UpdateSensorData(Sensor *slist, char byte, int scounter){
 	}
 }
 
-void PrintSensorData(Sensor *slist, sensor_cb *scb, int scounter){
+void PrintSensorData(tid_t ws_tid, Sensor *slist, sensor_cb *scb, int scounter){
 	int i;
 	int base = scounter*8;
 	char sensor[3];
@@ -36,7 +36,7 @@ void PrintSensorData(Sensor *slist, sensor_cb *scb, int scounter){
 	int ptr = i = (scb->end - 1 + CENSOR_DATA_RETENTION)%CENSOR_DATA_RETENTION;
 	for(i = 0; i < CENSOR_DATA_RETENTION; i++){
 		i2a(scb->buf[ptr], &size, sensor);
-		//WriteCommandUART2(tx2_tid, sensor, size, &c); //TODO: IMPL THIS	
+		WriteCommandUART2(ws_tid, sensor, size, &c);
 		c.row++;
 	}
 }
@@ -74,18 +74,18 @@ void SensorTimeout(){
 	}
 }
 
-void SensorReciever(void *args){
+void SensorReceiver(){
 	int reply = 0;
-	tid_t rx1_tid = (tid_t)args;
 	tid_t sensor_man = MyParentTid();
 	tid_t my_tid = MyTid();
 	tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
+	tid_t rx_tid = WhoIs(IOSERVER_UART1_RX_ID);
 	SMProtocol smp;
 	smp.smr = SM_READBYTE;
 
 	while(true){
-		//smp.byte = GetC(rx1_tid);
-		Delay(cs_tid, my_tid, 2);
+		smp.byte = GetC(rx_tid);
+		// Delay(cs_tid, my_tid, 2);
 		Send(sensor_man, &smp, sizeof(smp), &reply, sizeof(reply));
 	}
 
@@ -100,21 +100,17 @@ void SensorManager(){
 	int reply = 0;
 	int r = RegisterAs(SENSOR_MANAGER_ID);
   	assert(r == 0);
-  	tid_t rx1_tid = WhoIs(IOSERVER_UART1_RX_ID);
-  	//assert(rx1_tid >= 0);
-  	tid_t tx1_tid = WhoIs(IOSERVER_UART1_TX_ID);
-  	//assert(tx1_tid >= 0);
-  	tid_t rx2_tid = WhoIs(IOSERVER_UART2_RX_ID);
-  	//assert(rx2_tid >= 0);
-  	tid_t tx2_tid = WhoIs(IOSERVER_UART2_TX_ID);
-  	//assert(tx2_tid >= 0);
+  	tid_t ws_tid2 = WhoIs(WRITERSERVICE_UART2_ID);
+    assert(ws_tid2 >= 0);
+    tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
+    assert(tx_tid >= 0);
 
-  	CreateArgs(19, &SensorReciever, (void *)&rx1_tid);
+    Create(19, &SensorReceiver);
   	Create(19, &SensorTimeout);
   	int scounter = 0;
   	int recFlag = 0;
   	//Kick start sensor gathering data
-  	//PutC(tx1_tid, GET_ALL_SENSORS); //TODO: IMPL THIS
+  	PutC(tx_tid, GET_ALL_SENSORS);
   	while(true){
   		tid_t tid_req;
   		SMProtocol smp;
@@ -125,10 +121,10 @@ void SensorManager(){
   			case SM_READBYTE:
   				Reply(tid_req, &reply, sizeof(reply));
   				UpdateSensorData(SensorList, smp.byte, scounter);
-  				PrintSensorData(SensorList, &scb, scounter);
+  				PrintSensorData(ws_tid2, SensorList, &scb, scounter);
   				scounter = (scounter + 1) % (DECODER_SIZE*2);
   				if(scounter == 0){
-  					//PutC(tx1_tid, GET_ALL_SENSORS); //TODO: IMPL THIS
+  					PutC(tx_tid, GET_ALL_SENSORS);
   				}
   				if(scounter % 2 == 0){
   					recFlag = 1;
@@ -141,7 +137,7 @@ void SensorManager(){
   			case SM_RESET:
   				recFlag = 0;
   				scounter = 0;
-  				//PutC(tx1_tid, GET_ALL_SENSORS); //TODO: IMPL THIS
+  				PutC(tx_tid, GET_ALL_SENSORS);
   				Reply(tid_req, &reply, sizeof(reply));
   				break;
   			default:
