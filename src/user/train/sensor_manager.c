@@ -1,42 +1,41 @@
 #include <sensor_manager.h>
 #include <lib/circular_buffer.h>
 
-#define CENSOR_DATA_RETENTION 20
-
-CIRCULAR_BUFFER_DEC(sensor_cb, int, CENSOR_DATA_RETENTION);
-CIRCULAR_BUFFER_DEF(sensor_cb, int, CENSOR_DATA_RETENTION);
 
 void UpdateSensorData(Sensor *slist, char byte, int scounter){
-	int i;
-	for(i = 7; i >= 0; --i){
+	int i=7;
+	tid_t tx_tid = WhoIs(IOSERVER_UART2_TX_ID);
+	for(i = 7; i >= 0; i--){
 		slist[i + scounter*8] = byte & 1;
-		byte = byte >> 1;	
+		byte = byte >> 1;
+		assert(i + scounter*8 < 80);
+		assert(i + scounter*8 >= 0);
 	}
 }
 
-void PrintSensorData(tid_t ws_tid, Sensor *slist, sensor_cb *scb, int scounter){
+void PrintSensorData(tid_t ws_tid, Sensor *slist, rec_buffer *rb){
 	int i;
-	int base = scounter*8;
-	char sensor[3];
+	char sensor[4];
 	int size;
 
-	for(i = base; i < base + 8; i++){
+	for(i = 0; i < SENSOR_SIZE; i++){
 		if(slist[i]){
-			if(scb->size >= CENSOR_DATA_RETENTION){
-				sensor_cb_pop(scb, NULL);
-			}
-			sensor_cb_push(scb, i);
+			rec_buffer_add(rb, i);
 		}
 	}
 
 	Cursor c;	//TODO: MAKE DEFINES
 	c.row = 3;
-	c.col = 20;
+	c.col = 25;
 	//Print from Latest Sensor
-	int ptr = i = (scb->end - 1 + CENSOR_DATA_RETENTION)%CENSOR_DATA_RETENTION;
-	for(i = 0; i < CENSOR_DATA_RETENTION; i++){
-		i2a(scb->buf[ptr], &size, sensor);
-		WriteCommandUART2(ws_tid, sensor, size, &c);
+	for(i = 0; i < rb->num; i++){
+		int val = rec_buffer_get(rb, i);
+		sensor[0] = val/16 + 'A';
+		i2a(val%16 + 1, &size, sensor+1);
+		if(val%16 + 1 < 10){
+			sensor[2] = ' ';
+		}
+		WriteCommandUART2(ws_tid, sensor, 3, &c);
 		c.row++;
 	}
 }
@@ -53,7 +52,6 @@ void SensorTimeout(){
 	timeout.smr = SM_RESET;
 
 	while(true){
-
 		//Check if Sensor data is being retrieved
 		Send(sensor_man, &checker, sizeof(checker), &reply, sizeof(reply));
 		if(reply){
@@ -65,8 +63,8 @@ void SensorTimeout(){
 
 		//Too much time has passed since data was retrieved
 		if(counter >= SENSOR_TIMEOUT){
-			assert(0 && "Sensor data timed out");
-			Send(sensor_man, &timeout, sizeof(timeout), &reply, sizeof(reply));
+			//assert(0 && "Sensor data timed out");
+			//Send(sensor_man, &timeout, sizeof(timeout), &reply, sizeof(reply));
 			counter = 0;
 		}
 
@@ -94,8 +92,13 @@ void SensorReceiver(){
 
 void SensorManager(){
 	Sensor SensorList[SENSOR_SIZE];
-	sensor_cb scb;
-	sensor_cb_init(&scb);
+	int i;
+	for(i = 0; i < SENSOR_SIZE; i++){
+		SensorList[i] = 0;
+	}
+
+	rec_buffer rb;
+	rec_buffer_init(&rb);
 
 	int reply = 0;
 	int r = RegisterAs(SENSOR_MANAGER_ID);
@@ -121,10 +124,10 @@ void SensorManager(){
   			case SM_READBYTE:
   				Reply(tid_req, &reply, sizeof(reply));
   				UpdateSensorData(SensorList, smp.byte, scounter);
-  				PrintSensorData(ws_tid2, SensorList, &scb, scounter);
   				scounter = (scounter + 1) % (DECODER_SIZE*2);
   				if(scounter == 0){
   					PutC(tx_tid, GET_ALL_SENSORS);
+  					PrintSensorData(ws_tid2, SensorList, &rb);
   				}
   				if(scounter % 2 == 0){
   					recFlag = 1;

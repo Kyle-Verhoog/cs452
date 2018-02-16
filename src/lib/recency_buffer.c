@@ -1,4 +1,4 @@
-
+#include <recency_buffer.h>
 
 void rec_buffer_init(struct rec_buffer *rb) {
   int i;

@@ -9,9 +9,10 @@
 #include <ascii.h>
 #include <ioserver.h>
 #include <writerservice.h>
+#include <recency_buffer.h>
 
 #define GET_ALL_SENSORS 133
-#define SENSOR_TIMEOUT 5
+#define SENSOR_TIMEOUT 20
 
 typedef enum Sensor{
 	SEN_OFF = 0,
