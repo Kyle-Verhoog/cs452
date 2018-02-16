@@ -37,11 +37,12 @@ typedef struct IONotifierArgs {
 
 typedef struct IOServerRequest {
   char msg;
-  int   len;
+  int  len;
   IOServerReqType type; // Note: the type must be the last (first) element!
 } IOServerReq;
 
 void IOServerUART2();
+void IOServerUART1();
 
 char GetC(tid_t ios_tid);
 int PutC(tid_t ios_tid, char c);

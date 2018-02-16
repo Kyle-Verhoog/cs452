@@ -14,6 +14,11 @@ typedef struct interrupt_matrix{
   im_cb UART2_RT;
   im_cb UART2_MI;
 
+  im_cb UART1_RX;
+  im_cb UART1_TX;
+  im_cb UART1_RT;
+  im_cb UART1_MI;
+
   bool stored_flag[1024];
 } interrupt_matrix;
 

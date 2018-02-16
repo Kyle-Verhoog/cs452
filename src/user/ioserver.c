@@ -22,6 +22,7 @@ void IOServerNotifier(void *args) {
   server_tid = myargs->tid;
 
   while (true) {
+    // SANITY();
     *ictrl |= emask;
     AwaitEvent(ie);
     // SANITY();
@@ -72,6 +73,7 @@ void IOServerRX(void *args) {
   while (true) {
     // SANITY();
     Receive(&req_tid, &req, sizeof(req));
+    // SANITY();
     switch (req.type) {
       case IO_GETC:
         // SANITY();
@@ -80,6 +82,8 @@ void IOServerRX(void *args) {
           assert(r == 0);
           Reply(req_tid, &c, sizeof(c));
         } else {
+          if (queued_tid != -1)
+            assert(queued_tid == req_tid && "detected multiple getc-ers");
           queued_tid = req_tid;
         }
         break;
@@ -233,6 +237,7 @@ void IOServerTX(void *args) {
         }
         break;
       case IO_MI:
+        PRINTF("MI\r\n");
         cts_count++;
 
         if (tx_ready && tran_buf.size > 0 && cts_count > 1) {
@@ -292,10 +297,6 @@ void IOServerUART2() {
   Exit();
 }
 
-/**
- * NOTE: for the IO servers to be initialized properly, this task must be given
- *       priority strictly less than that given to IOServerRX and IOServerTX
- */
 void IOServerUART1() {
   IOServerArgs arg;
   int r;
@@ -305,6 +306,15 @@ void IOServerUART1() {
   arg.ie_base   = IE_UART1_BASE;
   arg.cts_en    = true;
 
+  // Enable fifo
+  *(int *)(UART1_BASE + UART_LCRH_OFFSET) = 0;
+  *(int *)(UART1_BASE + UART_LCRH_OFFSET) |= STP2_MASK;
+  *(int *)(UART1_BASE + UART_LCRH_OFFSET) &= ~FEN_MASK;
+
+  // Set speed to 2400 bps
+  *(int *)(UART1_BASE + UART_LCRM_OFFSET) = 0x0;
+  *(int *)(UART1_BASE + UART_LCRL_OFFSET) = 0xbf; // (7.3728MHz / (16*baud)) - 1
+
   // Create the RX server
   arg.ns_id = IOSERVER_UART1_RX_ID;
   r = CreateArgs(31, &IOServerRX, (void *)&arg);
@@ -313,20 +323,45 @@ void IOServerUART1() {
   arg.ns_id = IOSERVER_UART1_TX_ID;
   r = CreateArgs(31, &IOServerTX, (void *)&arg);
 
-  // Enable the UART and interrupts
-  // Enable fifo
-  *(int *)(UART1_BASE + UART_LCRH_OFFSET) |= STP2_MASK;
-  *(int *)(UART1_BASE + UART_LCRH_OFFSET) &= ~FEN_MASK;
-
-  // Set speed to 2400 bps
-  *(int *)(UART1_BASE + UART_LCRM_OFFSET) = 0x0;
-  *(int *)(UART1_BASE + UART_LCRL_OFFSET) = 0xbf;
-
   // Enable UART
   *(int *)(UART1_BASE + UART_CTRL_OFFSET) = UARTEN_MASK | RIEN_MASK | TIEN_MASK | MSIEN_MASK;
-
   Exit();
 }
+
+/**
+ * NOTE: for the IO servers to be initialized properly, this task must be given
+ *       priority strictly less than that given to IOServerRX and IOServerTX
+ */
+// void IOServerUART1() {
+//   IOServerArgs arg;
+//   int r;
+// 
+//   // Enable the UART and interrupts
+//   // Enable fifo
+//   *(int *)(UART1_BASE + UART_LCRH_OFFSET) |= STP2_MASK;
+//   *(int *)(UART1_BASE + UART_LCRH_OFFSET) &= ~FEN_MASK;
+// 
+//   // Set speed to 2400 bps
+//   *(int *)(UART1_BASE + UART_LCRM_OFFSET) = 0x0;
+//   *(int *)(UART1_BASE + UART_LCRL_OFFSET) = 0xbf;
+// 
+//   // these don't change for initializing the servers
+//   arg.uart_base = UART1_BASE;
+//   arg.ie_base   = IE_UART1_BASE;
+//   arg.cts_en    = true;
+// 
+//   // Create the RX server
+//   arg.ns_id = IOSERVER_UART1_RX_ID;
+//   r = CreateArgs(31, &IOServerRX, (void *)&arg);
+// 
+//   // Create the TX server
+//   arg.ns_id = IOSERVER_UART1_TX_ID;
+//   r = CreateArgs(31, &IOServerTX, (void *)&arg);
+// 
+//   // Enable UART
+//   *(int *)(UART1_BASE + UART_CTRL_OFFSET) = UARTEN_MASK | RIEN_MASK | TIEN_MASK | MSIEN_MASK;
+//   Exit();
+// }
 
 
 char GetC(tid_t ios_tid) {
