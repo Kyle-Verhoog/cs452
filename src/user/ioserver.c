@@ -112,7 +112,7 @@ void IOServerRX(void *args) {
 void IOServerTX(void *args) {
   IOServerArgs *arg;
   tid_t mytid;
-  int r;
+  int r, i;
   int uart_base, ns_id;
   bool cts_en;
   IONotifierArgs notargs;
@@ -150,6 +150,7 @@ void IOServerTX(void *args) {
   int rep;
   int *data;
   char c;
+  char *str;
   tid_t not_tid;
   bool tx_ready;
   int cts_count;
@@ -163,14 +164,32 @@ void IOServerTX(void *args) {
   rep = 0;
 
   while (true) {
-    // SANITY();
     Receive(&req_tid, &req, sizeof(req));
     switch (req.type) {
       case IO_PUTC:
-        // SANITY();
-        c = req.msg;
+        c = *(req.msg);
         r = io_cb_push(&tran_buf, c);
+        assert(r == 0);
         assert(req.len == sizeof(char));
+
+        if (tx_ready && (!cts_en || (cts_en && cts_count > 1))) {
+          r = io_cb_pop(&tran_buf, &c);
+          assert(r == 0);
+          *data = c;
+          tx_ready = false;
+          cts_count = 0;
+          assert(not_tid > 0);
+          Reply(not_tid, &rep, sizeof(rep));
+        }
+
+        Reply(req_tid, &rep, sizeof(rep));
+        break;
+      case IO_PUTSTR:
+        str = req.msg;
+        for (i = 0; i < req.len; ++i) {
+          r = io_cb_push(&tran_buf, str[i]);
+          assert(r == 0);
+        }
 
         if (tx_ready && (!cts_en || (cts_en && cts_count > 1))) {
           r = io_cb_pop(&tran_buf, &c);
@@ -315,12 +334,26 @@ int PutC(tid_t ios_tid, char c) {
   int rep;
 
   req.type = IO_PUTC;
-  req.msg = c;
+  req.msg = &c;
   req.len = 1;
 
-  // SANITY();
   r = Send(ios_tid, &req, sizeof(req), &rep, sizeof(rep));
-  // SANITY();
+  assert(r == 0);
+  return 0;
+}
+
+int PutStr(tid_t ios_tid, char *c, int len) {
+  int r;
+  assert(ios_tid > 0);
+
+  IOServerReq req;
+  int rep;
+
+  req.type = IO_PUTSTR;
+  req.msg = c;
+  req.len = len;
+
+  r = Send(ios_tid, &req, sizeof(req), &rep, sizeof(rep));
   assert(r == 0);
   return 0;
 }
