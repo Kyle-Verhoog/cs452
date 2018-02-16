@@ -1,7 +1,7 @@
 #include<readerservice.h>
 
 void parse_and_send(tid_t tm, char *command, int size){
-	TMProtocol tmp;
+	RWProtocol rwp;
 	int reply;
 
 	if(command[0] == 'q'){
@@ -9,24 +9,24 @@ void parse_and_send(tid_t tm, char *command, int size){
 	}
 	else if(command[0] == 'r' && command[1]=='v'){
 		//Reverse
-		tmp.trc = TR_REVERSE;
-		tmp.command = command+2;
-		tmp.size = size-2;
-		Send(tm, &tmp, sizeof(tmp), &reply, sizeof(reply));
+		rwp.rwc = RW_REVERSE;
+		rwp.command = command+2;
+		rwp.size = size-2;
+		Send(tm, &rwp, sizeof(rwp), &reply, sizeof(reply));
 	}
 	else if(command[0] == 't' && command[1]=='r'){
 		//Move Train
-		tmp.trc = TR_TRAIN;
-		tmp.command = command+2;
-		tmp.size = size-2;
-		Send(tm, &tmp, sizeof(tmp), &reply, sizeof(reply));
+		rwp.rwc = RW_TRAIN;
+		rwp.command = command+2;
+		rwp.size = size-2;
+		Send(tm, &rwp, sizeof(rwp), &reply, sizeof(reply));
 	}
 	else if(command[0] == 's' && command[1]=='w'){
 		//Switch
-		tmp.trc = TR_SWITCH;
-		tmp.command = command+2;
-		tmp.size = size-2;
-		Send(tm, &tmp, sizeof(tmp), &reply, sizeof(reply));
+		rwp.rwc = RW_SWITCH;
+		rwp.command = command+2;
+		rwp.size = size-2;
+		Send(tm, &rwp, sizeof(rwp), &reply, sizeof(reply));
 	}
 	else{
 		//Bad Command
@@ -44,8 +44,8 @@ void ReaderServiceUART2(){
 	assert(tx_tid >= 0);
 	tid_t writer = WhoIs(WRITERSERVICE_UART2_ID);
 	assert(writer >= 0);
-	tid_t tm = WhoIs(TRAIN_MANAGER_ID);
-	assert(tm >= 0);
+	tid_t rm = WhoIs(RAILWAY_MANAGER_ID);
+	assert(rm >= 0);
 
 	char command[COMMAND_SIZE];
 	int csize = 0;
@@ -65,7 +65,7 @@ void ReaderServiceUART2(){
 				break;
 			case CARRIAGE_RETURN:
 				if(csize > 0){
-					parse_and_send(tm, command, csize);	
+					parse_and_send(rm, command, csize);	
 				}				
 				csize = 0;
 				break;

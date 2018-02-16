@@ -13,8 +13,10 @@
 #include <train_msg.h>
 
 //Train Services
+#include <railway_manager.h>
 #include <train_manager.h>
 #include <switch_manager.h>
+#include <sensor_manager.h>
 
 void UITest();
 

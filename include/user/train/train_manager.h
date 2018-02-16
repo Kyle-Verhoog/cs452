@@ -10,13 +10,15 @@
 #include <ioserver.h>
 #include <writerservice.h>
 
-//Train Servers
-#include <switch_manager.h>
+typedef enum TM_Command{
+	TM_MOVE = 0,
+	TM_REVERSE = 1,
+}TM_Command;
 
 typedef struct TMProtocol{
-	TR_Command trc;
-	char *command;
-	int size;
+	TM_Command tmc;
+	char arg1;
+	char arg2;
 }TMProtocol;
 
 void TrainManager();

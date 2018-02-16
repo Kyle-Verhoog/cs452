@@ -1,7 +1,7 @@
 #include <switch_manager.h>
 
 
-void init_switch(tid_t tx1_tid, tid_t tx2_tid, tid_t sw_handler, TR_Switch *slist){
+void init_switch(tid_t tx1_tid, tid_t tx2_tid, tid_t sw_handler, SW_Switch *slist){
 	int reply = 0;
 	SWProtocol sw;
 	Cursor c;
@@ -15,10 +15,10 @@ void init_switch(tid_t tx1_tid, tid_t tx2_tid, tid_t sw_handler, TR_Switch *slis
 	c.col+=9;
 
 	//Send Commands to SwitchHandler
-	sw.dir = TR_CURVE;
+	sw.dir = SW_CURVE;
 	int i;
 	for(i = NORMAL_SWITCH_SIZE_LOW; i <= NORMAL_SWITCH_SIZE_HIGH; ++i){
-		slist[i] = TR_CURVE;
+		slist[i] = SW_CURVE;
 		sw.sw = i;
 		Send(sw_handler, &sw, sizeof(sw), &reply, sizeof(reply));
 		//WriteStringUART2(tx2_tid, "C", &c); //TODO: IMPL THIS
@@ -27,8 +27,8 @@ void init_switch(tid_t tx1_tid, tid_t tx2_tid, tid_t sw_handler, TR_Switch *slis
 
 	c.row++;
 	for(i = SPECIAL_SWITCH_SIZE_LOW; i <= SPECIAL_SWITCH_SIZE_HIGH; ++i){
-		slist[i] = TR_STRAIGHT+(i%2);
-		sw.dir = TR_STRAIGHT+(i%2);
+		slist[i] = SW_STRAIGHT+(i%2);
+		sw.dir = SW_STRAIGHT+(i%2);
 		sw.sw = i;
 		Send(sw_handler, &sw, sizeof(sw), &reply, sizeof(reply));
 		if(i%2){
@@ -40,7 +40,7 @@ void init_switch(tid_t tx1_tid, tid_t tx2_tid, tid_t sw_handler, TR_Switch *slis
 	}
 }
 
-void UpdateSwitchTable(TR_Switch *table, int sw, TR_Switch dir){
+void UpdateSwitchTable(SW_Switch *table, int sw, SW_Switch dir){
 	Cursor c;
 	c.row = SWITCH_TABLE_ROW + sw;
 	c.col = SWITCH_TABLE_COL + 9;
@@ -50,7 +50,7 @@ void UpdateSwitchTable(TR_Switch *table, int sw, TR_Switch dir){
 	}
 
 	table[sw] = dir;
-	if(dir == TR_CURVE){
+	if(dir == SW_CURVE){
 		//WriteStringUART2(tx2_tid, "C", &c); //TODO: IMPL THIS	
 	}
 	else{
@@ -69,11 +69,11 @@ void SwitchHandler(void *args){
   	char sol_command[1];
   	char sw_command[2];
 
-  	sol_command[0] = 32;
+  	sol_command[0] = TURN_SOLENOID_OFF;
 
 	while(true){
 		tid_t req_tid;
-  		SWProtocol sw;
+  	SWProtocol sw;
 
 		Receive(&req_tid, &sw, sizeof(sw));
 		Reply(req_tid, &reply, sizeof(reply));
@@ -86,10 +86,12 @@ void SwitchHandler(void *args){
 		PRINTF("SWITCHING SWITCHES: %d", sw.sw);
 		Delay(cs_tid, my_tid, 15);	//delay 150 ms
 	}
+
+  Exit();
 }
 
 void SwitchManager(){
-	TR_Switch SwitchList[SWITCH_SIZE];
+	SW_Switch SwitchList[SWITCH_SIZE];
 
 	int reply = 0;
 	int r = RegisterAs(SWITCH_MANAGER_ID);
@@ -103,7 +105,7 @@ void SwitchManager(){
   	tid_t tx2_tid = WhoIs(IOSERVER_UART2_TX_ID);
   	//assert(tx2_tid >= 0);
 
-  	tid_t sw_handler = CreateArgs(29, &SwitchHandler, (void *)&tx1_tid);
+  	tid_t sw_handler = CreateArgs(19, &SwitchHandler, (void *)&tx1_tid);
 
   	init_switch(tx1_tid, tx2_tid, sw_handler, SwitchList);
 
@@ -121,4 +123,5 @@ void SwitchManager(){
   		//Update the UI and table
   		UpdateSwitchTable(SwitchList, sw.sw, sw.dir);
   	}
+  Exit();
 }

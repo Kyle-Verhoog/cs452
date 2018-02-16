@@ -10,17 +10,19 @@
 #include <ioserver.h>
 #include <writerservice.h>
 
-typedef enum TR_Switch{
-	TR_STRAIGHT = 33,
-	TR_CURVE = 34
-} TR_Switch;
+typedef enum SW_Switch{
+	SW_STRAIGHT = 33,
+	SW_CURVE = 34
+} SW_Switch;
 
 typedef struct SWProtocol{
 	char sw;
-	TR_Switch dir;
+	SW_Switch dir;
 }SWProtocol;
 
 void SwitchManager();
+
+#define TURN_SOLENOID_OFF 32
 
 #define SWITCH_TABLE_ROW 3
 #define SWITCH_TABLE_COL 1

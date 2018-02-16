@@ -39,8 +39,10 @@ void UITest() {
   DelayCS(mytid, 100);
   Create(29, &SwitchManager);
   Create(29, &TrainManager);
-  Create(29, &WriterServiceUART2);
-  Create(29, &ReaderServiceUART2);
+  Create(29, &SensorManager);
+  Create(29, &RailwayManager);
+  Create(30, &WriterServiceUART2);
+  Create(30, &ReaderServiceUART2);
 
   //Create(28, &ClearScreen);
   Create(25, &TimerInterface);
