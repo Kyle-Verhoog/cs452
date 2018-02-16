@@ -158,8 +158,8 @@ void IOServerTX(void *args) {
   io_cb_init(&tran_buf);
   data  = (int *)(uart_base + UART_DATA_OFFSET);
   not_tid  = -1;
-  tx_ready = false;
-  cts_count = 0;
+  tx_ready = true;
+  cts_count = 2;
   rep = 0;
 
   // while (true) {
@@ -306,14 +306,14 @@ void IOServerUART1() {
   arg.ie_base   = IE_UART1_BASE;
   arg.cts_en    = true;
 
-  // Enable fifo
-  *(int *)(UART1_BASE + UART_LCRH_OFFSET) = 0;
-  *(int *)(UART1_BASE + UART_LCRH_OFFSET) |= STP2_MASK;
-  *(int *)(UART1_BASE + UART_LCRH_OFFSET) &= ~FEN_MASK;
-
   // Set speed to 2400 bps
   *(int *)(UART1_BASE + UART_LCRM_OFFSET) = 0x0;
   *(int *)(UART1_BASE + UART_LCRL_OFFSET) = 0xbf; // (7.3728MHz / (16*baud)) - 1
+
+  //*(int *)(UART1_BASE + UART_LCRH_OFFSET) = 0;
+  *(int *)(UART1_BASE + UART_LCRH_OFFSET) |= STP2_MASK;
+  *(int *)(UART1_BASE + UART_LCRH_OFFSET) &= ~FEN_MASK;
+
 
   // Create the RX server
   arg.ns_id = IOSERVER_UART1_RX_ID;
