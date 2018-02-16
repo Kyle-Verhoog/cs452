@@ -57,7 +57,7 @@ void move_cursor(tid_t tx_tid, int r, int c){
 	int rsize;
 	int csize;
 
-	*ptr = '\0';
+	*ptr++ = '\0';
 	*ptr++ = '3';
 	*ptr++ = '3';
 	*ptr++ = '[';
@@ -68,10 +68,10 @@ void move_cursor(tid_t tx_tid, int r, int c){
 	ptr+=csize;
 	*ptr++ = 'H';
 
-	int i;
-	for(i = 0; i < rsize + csize + 6; i++){
-		PutC(tx_tid, command[i-1]);
-	}
+	// int i;
+	// for(i = 0; i < rsize + csize + 6; i++){
+	// 	PutC(tx_tid, command[i]);
+	// }
 }
 
 void PushCharToUART2(tid_t tx_tid, WRProtocol *wrp, Cursor *cursor){

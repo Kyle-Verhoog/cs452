@@ -21,7 +21,7 @@ void init_switch(tid_t tx2_writer, tid_t sw_handler, SW_Switch *slist){
 		slist[i] = SW_CURVE;
 		sw.sw = i;
 		Send(sw_handler, &sw, sizeof(sw), &reply, sizeof(reply));
-		WriteStringUART2(tx2_writer, "C", &c);
+		//WriteStringUART2(tx2_writer, "C", &c);
 		c.row++;
 	}
 
@@ -32,9 +32,9 @@ void init_switch(tid_t tx2_writer, tid_t sw_handler, SW_Switch *slist){
 		sw.sw = i;
 		Send(sw_handler, &sw, sizeof(sw), &reply, sizeof(reply));
 		if(i%2){
-			WriteStringUART2(tx2_writer, "C", &c);	
+			//WriteStringUART2(tx2_writer, "C", &c);	
 		}else{
-			WriteStringUART2(tx2_writer, "S", &c);
+			//WriteStringUART2(tx2_writer, "S", &c);
 		}
 		c.row++;
 	}
@@ -102,7 +102,7 @@ void SwitchManager(){
   assert(tx1_writer >= 0);
   assert(tx2_writer >= 0);
 
-  	tid_t sw_handler = CreateArgs(19, &SwitchHandler, (void *)&tx1_writer);
+  	tid_t sw_handler = CreateArgs(19, &SwitchHandler, (void *)tx1_writer);
 
   	init_switch(tx2_writer, sw_handler, SwitchList);
 
