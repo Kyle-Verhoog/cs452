@@ -61,12 +61,11 @@ void parse_rv(tid_t tm_tid, RWProtocol *rwp){
 
 //<switch> <dir>
 void parse_sw(tid_t sw_tid, RWProtocol *rwp){
-  int args[2];
 	int reply;
-
   int arg1;
   char swd;
   char *r;
+
   if ((r = parse_i32(rwp->command, &arg1)) == 0 || arg1 < 0) {
     assert(0);
   }
@@ -95,9 +94,6 @@ void RailwayManager(){
   	// assert(rx_tid >= 0);
   	// tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
   	// assert(tx_tid >= 0);
-
-  	char command[4];
-  	int csize;
 
 	while(true){
 		tid_t tid_req;

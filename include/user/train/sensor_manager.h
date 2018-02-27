@@ -8,6 +8,7 @@
 #include <io.h>
 #include <ascii.h>
 #include <ioserver.h>
+#include <i2a.h>
 #include <writerservice.h>
 #include <recency_buffer.h>
 

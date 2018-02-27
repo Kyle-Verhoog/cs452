@@ -11,7 +11,9 @@
 #include <debug.h>
 #endif
 
+#include <asm.h>
 #include <defines.h>
+#include <ts7200.h>
 
 #define STR_HELPER(x) #x
 

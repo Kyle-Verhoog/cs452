@@ -4,7 +4,6 @@
 
 void UpdateSensorData(Sensor *slist, char byte, int scounter){
 	int i=7;
-	tid_t tx_tid = WhoIs(IOSERVER_UART2_TX_ID);
 	for(i = 7; i >= 0; i--){
 		slist[i + scounter*8] = byte & 1;
 		byte = byte >> 1;
@@ -76,8 +75,6 @@ void SensorTimeout(){
 void SensorReceiver(){
 	int reply = 0;
 	tid_t sensor_man = MyParentTid();
-	tid_t my_tid = MyTid();
-	tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
 	tid_t rx_tid = WhoIs(IOSERVER_UART1_RX_ID);
 	SMProtocol smp;
 	smp.smr = SM_READBYTE;

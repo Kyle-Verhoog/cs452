@@ -8,6 +8,7 @@
 #include <user/clockserver.h>
 #include <clock.h>
 #include <writerservice.h>
+#include <i2a.h>
 
 void TimerInterface();
 

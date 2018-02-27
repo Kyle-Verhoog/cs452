@@ -37,7 +37,7 @@ void initialize() {
 
   DBLOG_INIT("Initializing", "");
 
-  init_irq(&im_tasks);
+  interrupt_init();
 
   int i;
   for (i = 0; i < MAX_TASK; i++) {
@@ -321,7 +321,7 @@ __attribute__((naked)) int main(void) {
   tm_summarize();
 #endif //TASK_METRICS
 
-  cleanup_irq();
+  interrupt_cleanup();
 
 #ifdef CACHE
   DISABLE_ALL_CACHE();

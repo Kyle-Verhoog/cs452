@@ -50,5 +50,9 @@
 //Commands
 #define COMMAND_SIZE 256
 
+// Interrupt defines
+#define VIC1_ENABLED VIC_TC1UI
+#define VIC2_ENABLED VIC_TC3UI | VIC_INT_UART1 | VIC_INT_UART2
+
 #endif // DEFINES_H
 

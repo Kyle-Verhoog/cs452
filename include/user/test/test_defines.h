@@ -12,7 +12,7 @@
 #define COMPLETE_TEST() \
   int ret; \
   Send(0, &ret, sizeof(ret), &ret, sizeof(ret)); \
-	Exit();
-							
+  Exit();
+
 
 #endif //TEST_DEFINES_H
