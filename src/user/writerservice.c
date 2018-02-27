@@ -49,21 +49,13 @@ void WriteStringUART2(tid_t writer, char *command, Cursor *cursor){
 //====================================================================//
 
 void move_cursor(tid_t tx_tid, int r, int c){
-	char command[COMMAND_SIZE];
-	char *ptr = command;
-	int rsize;
-	int csize;
+  char command[COMMAND_SIZE];
+  int offset;
 
-	*ptr++ = '\033';
-	*ptr++ = '[';
-	ui2a(r, 10, &rsize, ptr);
-	ptr += rsize;
-	*ptr++ = ';';
-	ui2a(c, 10, &csize, ptr);
-	ptr+=csize;
-	*ptr++ = 'H';
+  offset = 0;
+  offset = buf_pack_f(command, "\033[%d;%dH", r, c);
 
-  PutStr(tx_tid, command, rsize+csize+4);
+  PutStr(tx_tid, command, offset);
 }
 
 void PushCharToUART2(tid_t tx_tid, WRProtocol *wrp, Cursor *cursor){

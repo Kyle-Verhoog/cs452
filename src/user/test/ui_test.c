@@ -2,7 +2,6 @@
 
 int ui_alive;
 void IdleUITest() {
-  int i= 0;
 	tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
 	assert(tx_tid >= 0);
   while (ui_alive) {
@@ -30,7 +29,7 @@ void SendGo(){
 }
 
 void UITest() {
-  int i, mytid;
+  int mytid;
   ui_alive = 1;
   mytid = MyTid();
   Create(31, &NameServer);

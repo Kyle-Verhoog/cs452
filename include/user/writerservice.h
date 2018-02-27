@@ -8,6 +8,7 @@
 #include <ascii.h>
 #include <ioserver.h>
 #include <i2a.h>
+#include <lib/buffer_pack.h>
 
 #define WRITEBACK_ROW 30
 #define WRITEBACK_COL 1
