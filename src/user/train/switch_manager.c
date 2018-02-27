@@ -5,12 +5,12 @@ void init_switch(tid_t tx2_writer, tid_t sw_handler, SW_Switch *slist){
 	int reply = 0;
 	SWProtocol sw;
 	Cursor c;
-	c.row = SWITCH_TABLE_ROW;
-	c.col = SWITCH_TABLE_COL;
-	
+	SET_CURSOR(c, SWITCH_TABLE_ROW, SWITCH_TABLE_COL);
+
 	//draw the ui table
 	char *table = SWITCH_TABLE_STRING;
 	WriteStringUART2(tx2_writer, table, &c);
+
 	 c.row += 1;
 	 c.col += 13;
 
@@ -42,8 +42,7 @@ void init_switch(tid_t tx2_writer, tid_t sw_handler, SW_Switch *slist){
 
 void UpdateSwitchTable(tid_t tx2_writer, SW_Switch *table, int sw, SW_Switch dir){
 	Cursor c;
-	c.row = SWITCH_TABLE_ROW + sw;
-	c.col = SWITCH_TABLE_COL + 13;
+	SET_CURSOR(c, SWITCH_TABLE_ROW + sw, SWITCH_TABLE_COL + 13);
 
 	if(sw >= SPECIAL_SWITCH_SIZE_LOW){
 		c.row++;
@@ -95,7 +94,7 @@ void SwitchManager(){
 	int reply = 0;
 	int r = RegisterAs(SWITCH_MANAGER_ID);
   assert(r == 0);
-  tid_t tx1_writer = WhoIs(WRITERSERVICE_UART1_ID);
+  tid_t tx1_writer = WhoIs(IOSERVER_UART1_TX_ID);
   tid_t tx2_writer = WhoIs(WRITERSERVICE_UART2_ID);
 
   assert(tx1_writer >= 0);

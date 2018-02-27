@@ -191,6 +191,10 @@ void IOServerTX(void *args) {
           assert(r == 0);
         }
 
+        if(cts_en){
+          bwprintf(COM2, "%d\n\r", tran_buf.size);
+        }
+
         if (tx_ready && (!cts_en || (cts_en && cts_count > 1))) {
           r = io_cb_pop(&tran_buf, &c);
           assert(r == 0);
@@ -209,6 +213,7 @@ void IOServerTX(void *args) {
         tx_ready = true;
 
         if (tran_buf.size > 0 && (!cts_en || (cts_en && cts_count > 1))) {
+          assert(0);
           r = io_cb_pop(&tran_buf, &c);
           assert(r == 0);
           *data = c;

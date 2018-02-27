@@ -9,6 +9,9 @@
 #include <debug/debug.h>
 #include <lib/circular_buffer.h>
 
+//TEST
+#include <i2a.h>
+#include <writerservice.h>
 
 #define IO_SERVER_BUFFER_SIZE 2048
 

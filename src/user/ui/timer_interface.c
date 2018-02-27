@@ -8,8 +8,7 @@ void TimerInterface(){
   char buf[25];
   int size, offset;
   Cursor cur;
-  cur.row = 1;
-  cur.col = 25;
+  SET_CURSOR(cur, 1, 25);
   offset = 0;
 	assert(cs_tid >= 0);
 

@@ -25,8 +25,8 @@ void PrintSensorData(tid_t ws_tid, Sensor *slist, rec_buffer *rb){
 	}
 
 	Cursor c;	//TODO: MAKE DEFINES
-	c.row = 3;
-	c.col = 25;
+	SET_CURSOR(c, 3, 25);
+
 	//Print from Latest Sensor
 	for(i = 0; i < rb->num; i++){
 		int val = rec_buffer_get(rb, i);
@@ -45,7 +45,8 @@ void SensorTimeout(){
 	tid_t sensor_man = MyParentTid();
 	tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
 	tid_t my_tid = MyTid();
-	volatile int counter = -5;
+	volatile int counter = 0;
+	volatile int count = 0;
 
 	SMProtocol checker, timeout;
 	checker.smr = SM_CHECK;
@@ -62,12 +63,13 @@ void SensorTimeout(){
 		}
 
 		//Too much time has passed since data was retrieved
-		if(counter >= SENSOR_TIMEOUT){
+		if(counter >= SENSOR_TIMEOUT && count < 4){
 			Send(sensor_man, &timeout, sizeof(timeout), &reply, sizeof(reply));
 			counter = 0;
+			count++;
 		}
 
-		Delay(cs_tid, my_tid, 2);
+		Delay(cs_tid, my_tid, SENSOR_WAIT);
 	}
 }
 
@@ -107,8 +109,11 @@ void SensorManager(){
     tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
     assert(tx_tid >= 0);
 
-    Create(19, &SensorReceiver);
-  	Create(19, &SensorTimeout);
+    Cursor c;
+    SET_CURSOR(c, 30, 20);
+
+    Create(30, &SensorReceiver);
+  	Create(30, &SensorTimeout);
   	int scounter = 0;
   	int recFlag = 0;
   	//Kick start sensor gathering data
@@ -141,6 +146,11 @@ void SensorManager(){
   				scounter = 0;
   				PutC(tx_tid, GET_ALL_SENSORS);
   				Reply(tid_req, &reply, sizeof(reply));
+
+  				WriteStringUART2(ws_tid2, "RESETTI", &c);
+  				SHIFT_CURSOR(c, 1, 0);
+  				break;
+  			case SM_HALT:
   				break;
   			default:
   				assert(0 && "Bad Sensor Command");
