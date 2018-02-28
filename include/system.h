@@ -60,6 +60,8 @@
          );
 
 
-extern void kpanic(const char *fmt, ...);
+void kpanic(const char *fmt, ...);
+void interrupt_cleanup();
+void interrupt_init();
 
 #endif /* SYSTEM_H */

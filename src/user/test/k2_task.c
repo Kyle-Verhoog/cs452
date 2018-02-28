@@ -182,7 +182,7 @@ void RPCClient2() {
 
 void RPCServer() {
   int finish = false;
-  tid_t buffer[RPC_BUFFER_SIZE];
+  uint32_t buffer[RPC_BUFFER_SIZE];
   CircularBuffer cb;
   RPCmatch match; //currently on-going match
 

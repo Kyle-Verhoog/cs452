@@ -60,6 +60,7 @@ void send_handler(TaskDescriptor *std) {
     // 2.
     std->status = TS_RCV_BL;
   }
+  std->ret = 0;
 }
 
 void receive_handler(TaskDescriptor *rtd) {
@@ -120,6 +121,7 @@ void receive_handler(TaskDescriptor *rtd) {
   } else {
     rtd->status = TS_SND_BL;
   }
+  rtd->ret = 0;
 }
 
 
@@ -158,5 +160,6 @@ void reply_handler(TaskDescriptor *rtd) {
 
   // 3.
   rtd->status = TS_READY;
+  rtd->ret = 0;
   pq_push(&pq_tasks, rtd->priority, rtd);
 }
