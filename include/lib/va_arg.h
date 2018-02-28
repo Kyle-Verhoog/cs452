@@ -16,6 +16,10 @@ typedef char *va_list;
 #define va_arg(ap, t) \
   (((ap) = (ap) + __va_argsiz(t)), *((t*) (void*) ((ap) - __va_argsiz(t))))
 
+#else
+
+#include <stdarg.h>
+
 #endif
 
 #endif /* VA_ARG_H */

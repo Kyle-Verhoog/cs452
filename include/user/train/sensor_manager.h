@@ -8,11 +8,14 @@
 #include <io.h>
 #include <ascii.h>
 #include <ioserver.h>
+#include <i2a.h>
 #include <writerservice.h>
 #include <recency_buffer.h>
 
 #define GET_ALL_SENSORS 133
-#define SENSOR_TIMEOUT 10
+
+#define SENSOR_TIMEOUT 0
+#define SENSOR_WAIT 1
 
 typedef enum Sensor{
 	SEN_OFF = 0,
@@ -22,7 +25,8 @@ typedef enum Sensor{
 typedef enum SM_Request{
 	SM_READBYTE = 0,
 	SM_CHECK = 1,
-	SM_RESET = 2 
+	SM_RESET = 2,
+	SM_HALT = 3
 } SM_Request;
 
 typedef struct SMProtocol{

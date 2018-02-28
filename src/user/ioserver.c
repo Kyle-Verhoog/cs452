@@ -1,4 +1,7 @@
 #include <user/ioserver.h>
+#ifdef TASK_METRICS
+  #include <task.h>
+#endif
 
 CIRCULAR_BUFFER_DEF(io_cb, volatile char, IO_SERVER_BUFFER_SIZE);
 
@@ -163,6 +166,15 @@ void IOServerTX(void *args) {
   cts_count = 2;
   rep = 0;
 
+  //Test Metrics
+#ifdef TASK_METRICS
+  int tstart, tend;
+if(cts_en){
+  tstart = *(int *)TM_CLOCK_VAL;
+  tend = *(int *)TM_CLOCK_VAL;
+}
+#endif //TASK_METRICS
+
   while (true) {
     Receive(&req_tid, &req, sizeof(req));
     switch (req.type) {
@@ -174,6 +186,13 @@ void IOServerTX(void *args) {
 
         if (tx_ready && (!cts_en || (cts_en && cts_count > 1))) {
           r = io_cb_pop(&tran_buf, &c);
+#ifdef TASK_METRICS
+          if(cts_en){
+            tend = *(int *)TM_CLOCK_VAL;
+            PRINTF("%d\n\r", (tstart - tend)/508);
+            tstart = tend;
+          }
+#endif //TASK_METRICS
           assert(r == 0);
           *data = c;
           tx_ready = false;
@@ -191,8 +210,19 @@ void IOServerTX(void *args) {
           assert(r == 0);
         }
 
+        // if(cts_en){
+        //   bwprintf(COM2, "%d\n\r", tran_buf.size);
+        // }
+
         if (tx_ready && (!cts_en || (cts_en && cts_count > 1))) {
           r = io_cb_pop(&tran_buf, &c);
+#ifdef TASK_METRICS
+          if(cts_en){
+            tend = *(int *)TM_CLOCK_VAL;
+            PRINTF("%d\n\r", (tstart - tend)/508);
+            tstart = tend;
+          }
+#endif //TASK_METRICS
           assert(r == 0);
           *data = c;
           tx_ready = false;
@@ -210,6 +240,13 @@ void IOServerTX(void *args) {
 
         if (tran_buf.size > 0 && (!cts_en || (cts_en && cts_count > 1))) {
           r = io_cb_pop(&tran_buf, &c);
+#ifdef TASK_METRICS
+          if(cts_en){
+            tend = *(int *)TM_CLOCK_VAL;
+            PRINTF("%d\n\r", (tstart - tend)/508);
+            tstart = tend;
+          }
+#endif //TASK_METRICS          
           assert(r == 0);
           *data = c;
           tx_ready = false;
@@ -222,6 +259,13 @@ void IOServerTX(void *args) {
 
         if (tx_ready && tran_buf.size > 0 && cts_count > 1) {
           r = io_cb_pop(&tran_buf, &c);
+#ifdef TASK_METRICS
+          if(cts_en){
+            tend = *(int *)TM_CLOCK_VAL;
+            PRINTF("%d\n\r", (tstart - tend)/508);
+            tstart = tend;
+          }
+#endif //TASK_METRICS          
           assert(r == 0);
           *data = c;
           tx_ready = false;

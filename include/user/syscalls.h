@@ -39,6 +39,8 @@ int AwaitEvent(InterruptEvent eventid);
 #define assert(exp)                                    \
   do {                                                 \
     if (__predict_false(!(exp))) {                     \
+*(int *)(VIC1_BASE + VIC_INTENCLEAR_OFFSET) = VIC1_ENABLED; \
+*(int *)(VIC2_BASE + VIC_INTENCLEAR_OFFSET) = VIC2_ENABLED; \
       PRINTF(                                          \
           "\033[31m"                                   \
           "USER TASK "                                 \
