@@ -107,7 +107,7 @@ void SensorManager(){
     assert(tx_tid >= 0);
 
     Cursor c;
-    SET_CURSOR(c, 30, 20);
+    // SET_CURSOR(c, 30, 20);
 
     Create(30, &SensorReceiver);
   	Create(30, &SensorTimeout);
@@ -128,7 +128,7 @@ void SensorManager(){
   				scounter = (scounter + 1) % (DECODER_SIZE*2);
   				if(scounter == 0){
   					PutC(tx_tid, GET_ALL_SENSORS);
-  					PrintSensorData(ws_tid2, SensorList, &rb);
+  					// PrintSensorData(ws_tid2, SensorList, &rb);
   				}
   				if(scounter % 2 == 0){
   					recFlag = 1;
@@ -144,8 +144,7 @@ void SensorManager(){
   				PutC(tx_tid, GET_ALL_SENSORS);
   				Reply(tid_req, &reply, sizeof(reply));
 
-  				WriteStringUART2(ws_tid2, "RESETTI", &c);
-  				SHIFT_CURSOR(c, 1, 0);
+  				// SHIFT_CURSOR(c, 1, 0);
   				break;
   			case SM_HALT:
   				break;

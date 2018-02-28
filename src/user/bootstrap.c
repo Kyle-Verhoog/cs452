@@ -11,8 +11,18 @@ void IdleTask() {
   Exit();
 }
 
-void Go(){
-  tid_t writer = WhoIs(WRITERSERVICE_UART1_ID);
+void ClearScreen(){
+  tid_t writer = WhoIs(WRITERSERVICE_UART2_ID);
+  Cursor c;
+  SET_CURSOR(c, 1, 1);
+
+  WriteStringUART2(writer, "\033[2J", &c);
+  Exit();
+}
+
+void SendGo(){
+  //tid_t writer = WhoIs(WRITERSERVICE_UART1_ID);
+  tid_t writer = WhoIs(IOSERVER_UART1_TX_ID);
   char command[1];
   command[0] = 96;
   WriteCommandUART1(writer, command, 1);
@@ -28,19 +38,18 @@ void Bootstrap() {
   Create(31, &ClockServer);
   Create(30, &IOServerUART1);
   Create(30, &IOServerUART2);
-  Create(30, &WriterServiceUART1);
-  Create(30, &WriterServiceUART2);
-  // Create(30, &Go);
 
-  DelayCS(mytid, 100);
+  Create(30, &WriterServiceUART2);
+  Create(30, &SendGo);
+
+  Create(31, &ClearScreen);
   Create(29, &SwitchManager);
   Create(29, &TrainManager);
   Create(29, &SensorManager);
   Create(29, &RailwayManager);
   Create(30, &ReaderServiceUART2);
 
-  //Create(28, &ClearScreen);
-  Create(19, &TimerInterface);
-  //Create(25, &TrainMsg);
+  // Create(19, &TimerInterface);
   Create(0, &IdleTask);
+  Exit();
 }

@@ -239,7 +239,6 @@ if(cts_en){
         tx_ready = true;
 
         if (tran_buf.size > 0 && (!cts_en || (cts_en && cts_count > 1))) {
-          assert(0);
           r = io_cb_pop(&tran_buf, &c);
 #ifdef TASK_METRICS
           if(cts_en){

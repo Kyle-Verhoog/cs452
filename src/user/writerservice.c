@@ -115,11 +115,11 @@ void WriterServiceUART2(){
 		//Handle Request
 		switch(wrp.wr_req){
 			case WR_CHAR:
-				//PushCharToUART2(tx_tid, &wrp, &cursor);
+				PushCharToUART2(tx_tid, &wrp, &cursor);
 				Reply(req_tid, &reply, sizeof(reply));
 				break;
 			case WR_COMMAND:
-				//PushCommandToUART2(tx_tid, &wrp, &cursor);
+				PushCommandToUART2(tx_tid, &wrp, &cursor);
 				Reply(req_tid, &reply, sizeof(reply));
 				break;
 			default:

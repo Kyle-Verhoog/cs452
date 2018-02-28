@@ -9,7 +9,7 @@
 #include <ioserver.h>
 #include <lib/buffer_pack.h>
 
-#define WRITEBACK_ROW 30
+#define WRITEBACK_ROW 1
 #define WRITEBACK_COL 1
 
 #define SET_CURSOR(c, x, y) c.row = x; \

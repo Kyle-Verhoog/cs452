@@ -7,13 +7,6 @@ void init_switch(tid_t tx2_writer, tid_t sw_handler, SW_Switch *slist){
 	Cursor c;
 	SET_CURSOR(c, SWITCH_TABLE_ROW, SWITCH_TABLE_COL);
 
-	//draw the ui table
-	char *table = SWITCH_TABLE_STRING;
-	WriteStringUART2(tx2_writer, table, &c);
-
-	 c.row += 1;
-	 c.col += 13;
-
 	//Send Commands to SwitchHandler
 	sw.dir = SW_CURVE;
 	int i;
@@ -21,40 +14,40 @@ void init_switch(tid_t tx2_writer, tid_t sw_handler, SW_Switch *slist){
 		slist[i] = SW_CURVE;
 		sw.sw = i;
 		Send(sw_handler, &sw, sizeof(sw), &reply, sizeof(reply));
-		WriteStringUART2(tx2_writer, "C", &c);
-		c.row++;
+		// WriteStringUART2(tx2_writer, "C", &c);
+		// c.row++;
 	}
 
-	c.row++;
+	// c.row++;
 	for(i = SPECIAL_SWITCH_SIZE_LOW; i <= SPECIAL_SWITCH_SIZE_HIGH; ++i){
 		slist[i] = SW_STRAIGHT+(i%2);
 		sw.dir = SW_STRAIGHT+(i%2);
 		sw.sw = i;
 		Send(sw_handler, &sw, sizeof(sw), &reply, sizeof(reply));
-		if(i%2){
-			WriteStringUART2(tx2_writer, "C", &c);	
-		}else{
-			WriteStringUART2(tx2_writer, "S", &c);
-		}
-		c.row++;
+		// if(i%2){
+		// 	WriteStringUART2(tx2_writer, "C", &c);	
+		// }else{
+		// 	WriteStringUART2(tx2_writer, "S", &c);
+		// }
+		// c.row++;
 	}
 }
 
 void UpdateSwitchTable(tid_t tx2_writer, SW_Switch *table, int sw, SW_Switch dir){
 	Cursor c;
-	SET_CURSOR(c, SWITCH_TABLE_ROW + sw, SWITCH_TABLE_COL + 13);
+	// SET_CURSOR(c, SWITCH_TABLE_ROW + sw, SWITCH_TABLE_COL + 13);
 
-	if(sw >= SPECIAL_SWITCH_SIZE_LOW){
-		c.row++;
-	}
+	// if(sw >= SPECIAL_SWITCH_SIZE_LOW){
+	// 	c.row++;
+	// }
 
 	table[sw] = dir;
-	if(dir == SW_CURVE){
-		WriteStringUART2(tx2_writer, "C", &c);	
-	}
-	else{
-		WriteStringUART2(tx2_writer, "S", &c);
-	}
+	// if(dir == SW_CURVE){
+	// 	WriteStringUART2(tx2_writer, "C", &c);	
+	// }
+	// else{
+	// 	WriteStringUART2(tx2_writer, "S", &c);
+	// }
 }
 
 void SwitchHandler(void *args){
