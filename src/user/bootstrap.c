@@ -15,6 +15,7 @@ void IdleTask() {
     if (i > 2000000) {
       // WriteStringUART2(writer, "\033[2J", &c);
       // PutC(tx_tid, '.');
+      // Pass();
       //WriteCharUART2(writer, '.');
       // WriteStringUART2(writer, ".", &c);
       i = 0;
@@ -30,6 +31,8 @@ void ClearScreen(){
   SET_CURSOR(c, 1, 1);
 
   WriteStringUART2(writer, "\033[2J", &c);
+  assert(writer == 15);
+
   Exit();
 }
 
@@ -47,20 +50,20 @@ void Bootstrap() {
   int mytid;
   ui_alive = 1;
   mytid = MyTid();
-  Create(31, &NameServer);
-  Create(31, &ClockServer);
-  // Create(30, &IOServerUART1);
-  Create(30, &IOServerUART2);
+  Create(31, &NameServer);  // 2
+  Create(31, &ClockServer); // 4
+  Create(30, &IOServerUART1); // 9
+  Create(30, &IOServerUART2); // 17
 
-  // Create(30, &WriterServiceUART2);
-  // Create(30, &SendGo);
+  Create(30, &WriterServiceUART2);
+  Create(30, &SendGo);
 
   // Create(31, &ClearScreen);
-  // Create(29, &SwitchManager);
-  // Create(29, &TrainManager);
-  // Create(29, &SensorManager);
-  // Create(29, &RailwayManager);
-  // Create(30, &ReaderServiceUART2);
+  Create(29, &SwitchManager);
+  Create(29, &TrainManager);
+  Create(29, &SensorManager);
+  Create(29, &RailwayManager);
+  Create(30, &ReaderServiceUART2);
 
   // Create(19, &TimerInterface);
   Create(0, &IdleTask);

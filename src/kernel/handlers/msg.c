@@ -7,6 +7,7 @@ void send_handler(TaskDescriptor *std) {
   stid = TID_ID(stid);
   KASSERT(IS_VALID_ID(stid));
 
+
   TaskDescriptor *rtd = &tasks[stid];
 
   KASSERT(rtd->status != TS_UNINIT);
