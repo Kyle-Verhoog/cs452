@@ -223,7 +223,10 @@ void IOServerTX(void *args) {
         assert(0 && "INVALID INTERRUPT");
         break;
     }
+
     // if we got here, then skip the transmit logic
+    if (txnot_tid != req_tid && iobi.btid != req_tid)
+      Reply(req_tid, &rep, sizeof(rep));
     continue;
 
 TX_CHAR:
@@ -241,12 +244,12 @@ TX_CHAR:
 
     // if the current requestor is not the tx notifier, or a blputc task then
     // reply back immediately
-    if (txnot_tid != req_tid /*&& iobi.btid != req_tid*/)
+    if (txnot_tid != req_tid && iobi.btid != req_tid)
       Reply(req_tid, &rep, sizeof(rep));
 
     // if btid is a valid value, then reply to the blocked putc
-    // if (iobr.btid != -1)
-    //   Reply(iobr.btid, &rep, sizeof(rep));
+    if (iobr.btid != -1)
+      Reply(iobr.btid, &rep, sizeof(rep));
   }
 }
 
