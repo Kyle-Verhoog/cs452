@@ -11,7 +11,9 @@
 #include <debug.h>
 #endif
 
+#include <asm.h>
 #include <defines.h>
+#include <ts7200.h>
 
 #define STR_HELPER(x) #x
 
@@ -58,6 +60,8 @@
          );
 
 
-extern void kpanic(const char *fmt, ...);
+void kpanic(const char *fmt, ...);
+void interrupt_cleanup();
+void interrupt_init();
 
 #endif /* SYSTEM_H */

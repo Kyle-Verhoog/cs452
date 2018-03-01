@@ -32,31 +32,19 @@ unsigned int kernel_stack_base = KERNEL_STACK_BASE;
 unsigned int user_stack_base = USER_STACK_BASE;
 
 void initialize() {
-  // bwsetfifo(COM1, OFF);
-  // bwsetspeed(COM1, 115200);
-
-  DBLOG_INIT("Initializing", "");
-
-  init_irq(&im_tasks);
+  interrupt_init();
 
   int i;
   for (i = 0; i < MAX_TASK; i++) {
     td_init(&tasks[i]);
   }
 
-  // DBLOG_START("init task queue", "");
   tt_init(&tid_tracker);
   pq_init(&pq_tasks);
-  // DBLOG_S();
-
-  // DBLOG_START("init interrupt matrix", "");
   im_init(&im_tasks);
-  // DBLOG_S();
 
 #ifdef TASK_METRICS
-  // DBLOG_START("init task metrics", "");
   tm_init();
-  // DBLOG_S();
 #endif //TASK_METRICS
 
   int priority;
@@ -67,18 +55,14 @@ void initialize() {
   task = &TestTask;
 #else
   priority = 0;
-  task = &K3FirstUserTask;
+  task = &Bootstrap;
 #endif //KTEST
 
   tid_t tid = tt_get(&tid_tracker);
   TaskDescriptor* volatile td = &tasks[TID_ID(tid)];
 
-  // DBLOG_START("creating task %x", tid);
   ktd_create(td, tid, task, priority, TS_READY, NULL);
-  // DBLOG_S();
-  // DBLOG_START("pushing task %x to queue", tid);
   pq_push(&pq_tasks, priority, td);
-  // DBLOG_S();
 }
 
 TaskDescriptor* schedule() {
@@ -95,10 +79,10 @@ TaskDescriptor* schedule() {
 }
 
 TaskRequest activate(TaskDescriptor* td) {
-  if(td->it) {
+  if (td->it) {
     PUSH_STACK("r0-r12, lr");
     WRITE_SPSR(td->psr);
-    
+
     SET_CPSR(SYSTEM_MODE);
     WRITE_SP(td->sp);
     POP_STACK("lr");
@@ -113,7 +97,7 @@ TaskRequest activate(TaskDescriptor* td) {
     asm("mov r8, %0"::"r"(td->ret));
     PUSH_STACK("r8");
     WRITE_SPSR(td->psr);
-    
+
     SET_CPSR(SYSTEM_MODE);
     WRITE_SP(td->sp);
     POP_STACK("lr");
@@ -123,7 +107,7 @@ TaskRequest activate(TaskDescriptor* td) {
     SET_CPSR(KERNEL_MODE);
     asm("ldmfd r8, {r0-r12, lr}");
     POP_STACK("r0");
-    REVERSE_SWI();  
+    REVERSE_SWI();
   }
 
   //=============================================================//
@@ -245,7 +229,7 @@ void handle(TaskDescriptor *td, TaskRequest req) {
   case TR_EXIT:
 #ifdef TASK_METRICS
     tm_addSummary(td);
-#endif //TASK_METICS
+#endif //TASK_METRICS
     td->status = TS_ZOMBIE;
     tt_return(td->tid, &tid_tracker);
     break;
@@ -321,7 +305,7 @@ __attribute__((naked)) int main(void) {
   tm_summarize();
 #endif //TASK_METRICS
 
-  cleanup_irq();
+  interrupt_cleanup();
 
 #ifdef CACHE
   DISABLE_ALL_CACHE();

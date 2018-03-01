@@ -13,6 +13,7 @@
 #ifdef KTEST
 #include <user/test/test_task.h>
 #endif
+#include <user/bootstrap.h>
 
 //Data Structures
 #include <circularbuffer.h>

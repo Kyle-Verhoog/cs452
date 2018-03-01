@@ -1,95 +1,90 @@
 #include <user/syscalls.h>
-#include <asm.h>
+#include <asm/asm.h>
 
 /**
  * SysCalls (TODO: PASS ENUM LITERAL)
  */
 void Pass() {
-  asm (
-    "swi #0;"
-  );
+  asm("swi #0");
 }
 
 void Block() {
-  asm (
-    "swi #1;"
-  );
+  asm("swi #1");
 }
 
 int Create(int priority, void (*code)()) {
   //r0 = priority, r1 = code
   //Call swi with create
-  asm(
-    "swi #2;"
-  );
-
-  //Expect from here r0 is set already as the return value
+  register uint32_t r0 __asm__("r0");
+  asm("swi #2");
+  return r0;
 }
 
 tid_t MyTid() {
   //Call swi with myTid
-  asm(
-    "swi #3;"
-  );
-
-  //Expect r0 set
+  register uint32_t r0 __asm__("r0");
+  asm("swi #3");
+  return r0;
 }
 
 tid_t MyParentTid() {
   //Call swi with myTid
-  asm(
-    "swi #4;"
-  );
-
-  //Expect r0 set
+  register uint32_t r0 __asm__("r0");
+  asm("swi #4");
+  return r0;
 }
 
 void Exit() {
-  asm("swi #5;");
+  asm("swi #5");
 }
 
 void Assert() {
-  asm("swi #6;");
+  asm("swi #6");
 }
 
 void Halt() {
-  asm("swi #6;");
+  asm("swi #6");
 }
 
 int Send(tid_t tid, void *msg, int msg_len, void *reply, int reply_len) {
-  asm("swi #7;");
-  return 0; // TODO: #8
+  register uint32_t r0 __asm__("r0");
+  asm("swi #7");
+  return r0;
 }
 
 int Receive(tid_t *tid, void *msg, int msg_len) {
-  asm("swi #8;");
-  return 0; // TODO: #8
+  register uint32_t r0 __asm__("r0");
+  asm("swi #8");
+  return r0;
 }
 
 int Reply(tid_t tid, void *reply, int reply_len) {
-  asm("swi #9;");
-  return 0; // TODO: #8
+  register uint32_t r0 __asm__("r0");
+  asm("swi #9");
+  return r0;
 }
 
 void RegisterNS() {
-  asm("swi #10;");
+  asm("swi #10");
 }
 
 int GetNS() {
-  asm("swi #11;");
+  register uint32_t r0 __asm__("r0");
+  asm("swi #11");
+  return r0;
 }
 
 int AwaitEvent(InterruptEvent eventid){
-  asm("swi #13;");
+  register uint32_t r0 __asm__("r0");
+  asm("swi #13");
+  return r0;
 }
 
 int CreateArgs(int priority, void (*code)(), void *args) {
   //r0 = priority, r1 = code, r2 = args
   //Call swi with create
-  asm(
-    "swi #14;"
-  );
-
-  //Expect from here r0 is set already as the return value
+  register uint32_t r0 __asm__("r0");
+  asm("swi #14");
+  return r0;
 }
 

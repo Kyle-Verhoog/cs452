@@ -167,23 +167,6 @@ bool is_interrupt_asserted(InterruptEvent bit){
 	return result;
 }
 
-void init_irq(interrupt_matrix *im){
-  //Set the IRQ Stack Base
-  SET_CPSR(IRQ_MODE);
-  WRITE_SP(IRQ_STACK_BASE);
-  SET_CPSR(KERNEL_MODE);
-
-  //Enable Hardware Interrupts
-  *(int *)(VIC1_BASE + VIC_INTENABLE_OFFSET) = VIC1_ENABLED;
-  *(int *)(VIC2_BASE + VIC_INTENABLE_OFFSET) = VIC2_ENABLED;
-}
-
-void cleanup_irq(){
-	//Disable Hardware Interrupts
-  *(int *)(VIC1_BASE + VIC_INTENCLEAR_OFFSET) = VIC1_ENABLED;
-  *(int *)(VIC2_BASE + VIC_INTENCLEAR_OFFSET) = VIC2_ENABLED;
-}
-
 void event_register(interrupt_matrix *im, TaskDescriptor *td){
 	//Get the eventId from r0 user stack
 	volatile InterruptEvent ie;

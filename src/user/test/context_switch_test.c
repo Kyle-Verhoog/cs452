@@ -49,10 +49,10 @@ void Stall() {
     // assert(reg == i%(i+1) && "r5");
     // asm("mov %0, r6":"=r"(reg):);
     // //assert(reg == i/12 && "r6");
-    asm("mov %0, r7":"=r"(reg):);
-    assert(reg == i+7 && "r7");
-    asm("mov %0, r8":"=r"(reg):);
-    assert(reg == i-212 && "r8");
+    // asm("mov %0, r7":"=r"(reg):);
+    // assert(reg == i+7 && "r7");
+    // asm("mov %0, r8":"=r"(reg):);
+    // assert(reg == i-212 && "r8");
     asm("mov %0, r9":"=r"(reg):);
     assert(reg == r9);
     asm("mov %0, r10":"=r"(reg):);
