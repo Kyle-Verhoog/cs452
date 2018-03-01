@@ -3,19 +3,13 @@
   #include <task.h>
 #endif
 
-CIRCULAR_BUFFER_DEF(io_cb, volatile char, IO_SERVER_BUFFER_SIZE);
-
-
 void IOServerNotifier(void *args) {
-  // SANITY();
   int r, rep, emask;
   IONotifierArgs *myargs;
   int volatile *ictrl;
   tid_t server_tid;
   IOServerReq req;
   InterruptEvent ie;
-
-  // SANITY();
 
   myargs = (IONotifierArgs *)args;
   ictrl    = (int *)(myargs->uart + UART_CTRL_OFFSET);
@@ -25,12 +19,9 @@ void IOServerNotifier(void *args) {
   server_tid = myargs->tid;
 
   while (true) {
-    // SANITY();
     *ictrl |= emask;
     AwaitEvent(ie);
-    // SANITY();
     r = Send(server_tid, &req, sizeof(req), &rep, sizeof(rep));
-    // SANITY();
     assert(r == 0);
     assert(rep == 0);
   }
@@ -61,47 +52,39 @@ void IOServerRX(void *args) {
   notargs.emask = RIEN_MASK;
   r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
 
-  tid_t req_tid, queued_tid;
+  tid_t req_tid;
   IOServerReq req;
   int rep;
   int volatile *data;
-  char c;
+  iobuf_item iobi;
   io_cb recv_buf;
 
   io_cb_init(&recv_buf);
   rep = 0;
-  queued_tid = -1;
   data = (int *)(uart_base + UART_DATA_OFFSET);
 
   while (true) {
-    // SANITY();
     Receive(&req_tid, &req, sizeof(req));
-    // SANITY();
+
     switch (req.type) {
       case IO_GETC:
-        // SANITY();
         if (recv_buf.size > 0) {
-          r = io_cb_pop(&recv_buf, &c);
+          r = io_cb_pop(&recv_buf, &iobi);
           assert(r == 0);
-          Reply(req_tid, &c, sizeof(c));
-        } else {
-          if (queued_tid != -1)
-            assert(queued_tid == req_tid && "detected multiple getc-ers");
-          queued_tid = req_tid;
+          Reply(req_tid, &iobi.c, sizeof(char));
         }
         break;
       case IO_RT:
         assert(0);
         break;
       case IO_RX:
-        c = *data;
-        r = io_cb_push(&recv_buf, c);
+        iobi.c = *data;
+        r = io_cb_push(&recv_buf, iobi);
         assert(r == 0 && "io buffer overflow");
-        if (queued_tid > 0 && recv_buf.size > 0) {
-          r = io_cb_pop(&recv_buf, &c);
+        if (recv_buf.size > 0) {
+          r = io_cb_pop(&recv_buf, &iobi);
           assert(r == 0);
-          Reply(queued_tid, &c, sizeof(c));
-          queued_tid = -1;
+          Reply(iobi.btid, &iobi.c, sizeof(char));
         }
         Reply(req_tid, &rep, sizeof(rep));
         break;
@@ -147,16 +130,15 @@ void IOServerTX(void *args) {
     r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
   }
 
-  // SANITY();
   tid_t req_tid;
   IOServerReq req;
   int rep;
   int *data;
-  char c;
   char *str;
   tid_t not_tid;
   bool tx_ready;
   int cts_count;
+  iobuf_item iobi;
   io_cb tran_buf;
 
   io_cb_init(&tran_buf);
@@ -167,34 +149,35 @@ void IOServerTX(void *args) {
   rep = 0;
 
   //Test Metrics
-#ifdef TASK_METRICS
-  int tstart, tend;
-if(cts_en){
-  tstart = *(int *)TM_CLOCK_VAL;
-  tend = *(int *)TM_CLOCK_VAL;
-}
-#endif //TASK_METRICS
+// #ifdef TASK_METRICS
+//   int tstart, tend;
+// if(cts_en){
+//   tstart = *(int *)TM_CLOCK_VAL;
+//   tend = *(int *)TM_CLOCK_VAL;
+// }
+// #endif //TASK_METRICS
 
   while (true) {
     Receive(&req_tid, &req, sizeof(req));
     switch (req.type) {
       case IO_PUTC:
-        c = *(req.msg);
-        r = io_cb_push(&tran_buf, c);
+        iobi.c = *(req.msg);
+        iobi.btid = -1;
+        r = io_cb_push(&tran_buf, iobi);
         assert(r == 0);
         assert(req.len == sizeof(char));
 
         if (tx_ready && (!cts_en || (cts_en && cts_count > 1))) {
-          r = io_cb_pop(&tran_buf, &c);
-#ifdef TASK_METRICS
-          if(cts_en){
-            tend = *(int *)TM_CLOCK_VAL;
-            PRINTF("%d\n\r", (tstart - tend)/508);
-            tstart = tend;
-          }
-#endif //TASK_METRICS
+          r = io_cb_pop(&tran_buf, &iobi);
+// #ifdef TASK_METRICS
+//           if(cts_en){
+//             tend = *(int *)TM_CLOCK_VAL;
+//             PRINTF("%d\n\r", (tstart - tend)/508);
+//             tstart = tend;
+//           }
+// #endif //TASK_METRICS
           assert(r == 0);
-          *data = c;
+          *data = iobi.c;
           tx_ready = false;
           cts_count = 0;
           assert(not_tid > 0);
@@ -206,25 +189,23 @@ if(cts_en){
       case IO_PUTSTR:
         str = req.msg;
         for (i = 0; i < req.len; ++i) {
-          r = io_cb_push(&tran_buf, str[i]);
+          iobi.c = str[i];
+          iobi.btid = -1;
+          r = io_cb_push(&tran_buf, iobi);
           assert(r == 0);
         }
 
-        // if(cts_en){
-        //   bwprintf(COM2, "%d\n\r", tran_buf.size);
-        // }
-
         if (tx_ready && (!cts_en || (cts_en && cts_count > 1))) {
-          r = io_cb_pop(&tran_buf, &c);
-#ifdef TASK_METRICS
-          if(cts_en){
-            tend = *(int *)TM_CLOCK_VAL;
-            PRINTF("%d\n\r", (tstart - tend)/508);
-            tstart = tend;
-          }
-#endif //TASK_METRICS
+          r = io_cb_pop(&tran_buf, &iobi);
+// #ifdef TASK_METRICS
+//           if(cts_en){
+//             tend = *(int *)TM_CLOCK_VAL;
+//             PRINTF("%d\n\r", (tstart - tend)/508);
+//             tstart = tend;
+//           }
+// #endif //TASK_METRICS
           assert(r == 0);
-          *data = c;
+          *data = iobi.c;
           tx_ready = false;
           cts_count = 0;
           assert(not_tid > 0);
@@ -234,21 +215,20 @@ if(cts_en){
         Reply(req_tid, &rep, sizeof(rep));
         break;
       case IO_TX:
-        // SANITY();
         not_tid = req_tid;
         tx_ready = true;
 
         if (tran_buf.size > 0 && (!cts_en || (cts_en && cts_count > 1))) {
-          r = io_cb_pop(&tran_buf, &c);
-#ifdef TASK_METRICS
-          if(cts_en){
-            tend = *(int *)TM_CLOCK_VAL;
-            PRINTF("%d\n\r", (tstart - tend)/508);
-            tstart = tend;
-          }
-#endif //TASK_METRICS          
+          r = io_cb_pop(&tran_buf, &iobi);
+// #ifdef TASK_METRICS
+//           if(cts_en){
+//             tend = *(int *)TM_CLOCK_VAL;
+//             PRINTF("%d\n\r", (tstart - tend)/508);
+//             tstart = tend;
+//           }
+// #endif //TASK_METRICS
           assert(r == 0);
-          *data = c;
+          *data = iobi.c;
           tx_ready = false;
           cts_count = 0;
           Reply(req_tid, &rep, sizeof(rep));
@@ -258,16 +238,16 @@ if(cts_en){
         cts_count++;
 
         if (tx_ready && tran_buf.size > 0 && cts_count > 1) {
-          r = io_cb_pop(&tran_buf, &c);
-#ifdef TASK_METRICS
-          if(cts_en){
-            tend = *(int *)TM_CLOCK_VAL;
-            PRINTF("%d\n\r", (tstart - tend)/508);
-            tstart = tend;
-          }
-#endif //TASK_METRICS          
+          r = io_cb_pop(&tran_buf, &iobi);
+// #ifdef TASK_METRICS
+//           if(cts_en){
+//             tend = *(int *)TM_CLOCK_VAL;
+//             PRINTF("%d\n\r", (tstart - tend)/508);
+//             tstart = tend;
+//           }
+// #endif //TASK_METRICS
           assert(r == 0);
-          *data = c;
+          *data = iobi.c;
           tx_ready = false;
           cts_count = 0;
           assert(not_tid > 0);
@@ -334,7 +314,6 @@ void IOServerUART1() {
   *(int *)(UART1_BASE + UART_LCRM_OFFSET) = 0x0;
   *(int *)(UART1_BASE + UART_LCRL_OFFSET) = 0xbf; // (7.3728MHz / (16*baud)) - 1
 
-  //*(int *)(UART1_BASE + UART_LCRH_OFFSET) = 0;
   *(int *)(UART1_BASE + UART_LCRH_OFFSET) |= STP2_MASK;
   *(int *)(UART1_BASE + UART_LCRH_OFFSET) &= ~FEN_MASK;
 
@@ -361,9 +340,7 @@ char GetC(tid_t ios_tid) {
   char rep;
 
   req.type = IO_GETC;
-  // SANITY();
   r = Send(ios_tid, &req, sizeof(req), &rep, sizeof(rep));
-  // SANITY();
   assert(r == 0);
   return rep;
 }

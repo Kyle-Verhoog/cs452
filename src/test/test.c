@@ -9,8 +9,8 @@
 
 int main(void) {
   PRINTF("\n");
-  PRINTF("+--------------------------+\n");
-  PRINTF("|    RUNNING UNIT TESTS    |\n");
+  PRINTF("+----------------------+---+\n");
+  PRINTF("|  RUNNING UNIT TESTS  | ☐ |\n");
   PRINTF("+----------------------+---+\n");
 
   PTEST_START("circularbuffer");
@@ -40,9 +40,14 @@ int main(void) {
   PTEST_START("cs_queue");
   clockserver_tests();
   PTEST_END();
+
+  PTEST_START("ioserver_buffer");
+  ioserver_buffer_tests();
+  PTEST_END();
+
   PRINTF("+----------------------+---+\n");
-  PRINTF("|    ALL TESTS PASSED ☻    |\n");
-  PRINTF("+--------------------------+\n");
+  PRINTF("|  ALL TESTS PASSED ☻  |   |\n");
+  PRINTF("+----------------------+---+\n");
 
   return 0;
 }

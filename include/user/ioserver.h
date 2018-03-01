@@ -7,13 +7,10 @@
 #include <user/clockserver.h>
 #include <user/uio.h>
 #include <debug/debug.h>
-#include <lib/circular_buffer.h>
+#include <lib/ioserver_buffer.h>
 
 //TEST
-#include <i2a.h>
 #include <writerservice.h>
-
-#define IO_SERVER_BUFFER_SIZE 2048
 
 
 typedef struct IOServerArgs {
@@ -48,6 +45,8 @@ typedef struct IOServerRequest {
   IOServerReqType type; // Note: the type must be the last (first) element!
 } IOServerReq;
 
+
+
 void IOServerUART2();
 void IOServerUART1();
 
@@ -55,6 +54,5 @@ char GetC(tid_t ios_tid);
 int PutC(tid_t ios_tid, char c);
 int PutStr(tid_t ios_tid, char *c, int len);
 
-CIRCULAR_BUFFER_DEC(io_cb, volatile char, IO_SERVER_BUFFER_SIZE);
 
 #endif
