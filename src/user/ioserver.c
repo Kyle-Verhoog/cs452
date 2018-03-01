@@ -52,7 +52,7 @@ void IOServerRX(void *args) {
   notargs.emask = RIEN_MASK;
   r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
 
-  tid_t req_tid;
+  tid_t req_tid, queued_tid;
   IOServerReq req;
   int rep;
   int volatile *data;
@@ -61,6 +61,7 @@ void IOServerRX(void *args) {
 
   io_cb_init(&recv_buf);
   rep = 0;
+  queued_tid = -1;
   data = (int *)(uart_base + UART_DATA_OFFSET);
 
   while (true) {
@@ -72,6 +73,10 @@ void IOServerRX(void *args) {
           r = io_cb_pop(&recv_buf, &iobi);
           assert(r == 0);
           Reply(req_tid, &iobi.c, sizeof(char));
+        } else {
+          if (queued_tid != -1)
+            assert(queued_tid == req_tid && "detected multiple getc-ers");
+          queued_tid = req_tid;
         }
         break;
       case IO_RT:
@@ -81,10 +86,11 @@ void IOServerRX(void *args) {
         iobi.c = *data;
         r = io_cb_push(&recv_buf, iobi);
         assert(r == 0 && "io buffer overflow");
-        if (recv_buf.size > 0) {
+        if (queued_tid > 0 && recv_buf.size > 0) {
           r = io_cb_pop(&recv_buf, &iobi);
           assert(r == 0);
-          Reply(iobi.btid, &iobi.c, sizeof(char));
+          Reply(queued_tid, &iobi.c, sizeof(char));
+          queued_tid = -1;
         }
         Reply(req_tid, &rep, sizeof(rep));
         break;
@@ -135,18 +141,21 @@ void IOServerTX(void *args) {
   int rep;
   int *data;
   char *str;
-  tid_t not_tid;
+  tid_t txnot_tid;
   bool tx_ready;
   int cts_count;
   iobuf_item iobi;
+  iobuf_item iobr;
   io_cb tran_buf;
 
   io_cb_init(&tran_buf);
-  data  = (int *)(uart_base + UART_DATA_OFFSET);
-  not_tid  = -1;
-  tx_ready = true;
+  iobi.btid = -1;
+  iobr.btid = -1;
+  txnot_tid = -1;
+  tx_ready  = true;
   cts_count = 2;
-  rep = 0;
+  rep  = 0;
+  data = (int *)(uart_base + UART_DATA_OFFSET);
 
   //Test Metrics
 // #ifdef TASK_METRICS
@@ -167,99 +176,77 @@ void IOServerTX(void *args) {
         assert(r == 0);
         assert(req.len == sizeof(char));
 
-        if (tx_ready && (!cts_en || (cts_en && cts_count > 1))) {
-          r = io_cb_pop(&tran_buf, &iobi);
-// #ifdef TASK_METRICS
-//           if(cts_en){
-//             tend = *(int *)TM_CLOCK_VAL;
-//             PRINTF("%d\n\r", (tstart - tend)/508);
-//             tstart = tend;
-//           }
-// #endif //TASK_METRICS
-          assert(r == 0);
-          *data = iobi.c;
-          tx_ready = false;
-          cts_count = 0;
-          assert(not_tid > 0);
-          Reply(not_tid, &rep, sizeof(rep));
-        }
+        if (tx_ready && (!cts_en || (cts_en && cts_count > 1)))
+          goto TX_CHAR;
 
-        Reply(req_tid, &rep, sizeof(rep));
+        break;
+      case IO_BLPUTC:
+        iobi.c = *(req.msg);
+        iobi.btid = req_tid;
+        r = io_cb_push(&tran_buf, iobi);
+        assert(r == 0);
+        assert(req.len == sizeof(char));
+
+        if (tx_ready && (!cts_en || (cts_en && cts_count > 1)))
+          goto TX_CHAR;
+
         break;
       case IO_PUTSTR:
         str = req.msg;
+        iobi.btid = -1;
         for (i = 0; i < req.len; ++i) {
           iobi.c = str[i];
-          iobi.btid = -1;
           r = io_cb_push(&tran_buf, iobi);
           assert(r == 0);
         }
 
-        if (tx_ready && (!cts_en || (cts_en && cts_count > 1))) {
-          r = io_cb_pop(&tran_buf, &iobi);
-// #ifdef TASK_METRICS
-//           if(cts_en){
-//             tend = *(int *)TM_CLOCK_VAL;
-//             PRINTF("%d\n\r", (tstart - tend)/508);
-//             tstart = tend;
-//           }
-// #endif //TASK_METRICS
-          assert(r == 0);
-          *data = iobi.c;
-          tx_ready = false;
-          cts_count = 0;
-          assert(not_tid > 0);
-          Reply(not_tid, &rep, sizeof(rep));
-        }
+        if (tx_ready && (!cts_en || (cts_en && cts_count > 1)))
+          goto TX_CHAR;
 
-        Reply(req_tid, &rep, sizeof(rep));
         break;
       case IO_TX:
-        not_tid = req_tid;
-        tx_ready = true;
+        txnot_tid = req_tid;
+        tx_ready  = true;
 
-        if (tran_buf.size > 0 && (!cts_en || (cts_en && cts_count > 1))) {
-          r = io_cb_pop(&tran_buf, &iobi);
-// #ifdef TASK_METRICS
-//           if(cts_en){
-//             tend = *(int *)TM_CLOCK_VAL;
-//             PRINTF("%d\n\r", (tstart - tend)/508);
-//             tstart = tend;
-//           }
-// #endif //TASK_METRICS
-          assert(r == 0);
-          *data = iobi.c;
-          tx_ready = false;
-          cts_count = 0;
-          Reply(req_tid, &rep, sizeof(rep));
-        }
+        if (tran_buf.size > 0 && (!cts_en || (cts_en && cts_count > 1)))
+          goto TX_CHAR;
+
         break;
       case IO_MI:
         cts_count++;
 
-        if (tx_ready && tran_buf.size > 0 && cts_count > 1) {
-          r = io_cb_pop(&tran_buf, &iobi);
-// #ifdef TASK_METRICS
-//           if(cts_en){
-//             tend = *(int *)TM_CLOCK_VAL;
-//             PRINTF("%d\n\r", (tstart - tend)/508);
-//             tstart = tend;
-//           }
-// #endif //TASK_METRICS
-          assert(r == 0);
-          *data = iobi.c;
-          tx_ready = false;
-          cts_count = 0;
-          assert(not_tid > 0);
-          Reply(not_tid, &rep, sizeof(rep));
-        }
+        if (tx_ready && tran_buf.size > 0 && cts_count > 1)
+          goto TX_CHAR;
 
-        Reply(req_tid, &rep, sizeof(rep));
         break;
       default:
         assert(0 && "INVALID INTERRUPT");
         break;
     }
+    // if we got here, then skip the transmit logic
+    continue;
+
+TX_CHAR:
+    r = io_cb_pop(&tran_buf, &iobr);
+    assert(r == 0);
+    *data = iobr.c;
+    tx_ready  = false;
+    cts_count = 0;
+
+    assert(txnot_tid > 0);
+
+    // in all cases, if we've gotten here we want to unblock the transmitter
+    // notifier
+    Reply(txnot_tid, &rep, sizeof(rep));
+
+    // if the current requestor is not the tx notifier, or a blputc task then
+    // reply back immediately
+    if (txnot_tid != req_tid /*&& iobi.btid != req_tid*/)
+      Reply(req_tid, &rep, sizeof(rep));
+
+    // if btid is a valid value, then reply to the blocked putc
+    // if (iobr.btid != -1)
+    //   Reply(iobr.btid, &rep, sizeof(rep));
   }
 }
 

@@ -135,6 +135,7 @@ void reply_handler(TaskDescriptor *rtd) {
   void *rreply, *sreply;
   int msg_len;
 
+
   // load the reply args
   asm("ldr %0, [%1, #4];":"=r"(stid):"r"(rtd->sp));
   asm("ldr %0, [%1, #8];":"=r"(rreply):"r"(rtd->sp));
@@ -147,6 +148,8 @@ void reply_handler(TaskDescriptor *rtd) {
   // load the reply arg from sender
   TaskDescriptor *std = &(tasks[stid]);
   asm("ldr %0, [%1, #16];":"=r"(sreply):"r"(std->sp));
+  KASSERT(rtd->status == TS_READY);
+  KASSERT(std->status == TS_RPL_BL);
   KASSERT(IS_VALID_USER_P(std->tid, sreply));
 
   // 1.

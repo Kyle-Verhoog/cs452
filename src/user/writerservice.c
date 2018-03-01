@@ -12,7 +12,12 @@ void WriteCharUART2(tid_t writer, char c){
 	wrp.data = &c;
 	wrp.size = 1;
 
-	Send(writer, &wrp, sizeof(wrp), &reply, sizeof(reply));
+  // PRINTF("%c", c);
+  // assert(0);
+  assert(IS_VALID_TID(writer));
+	int r = Send(writer, &wrp, sizeof(wrp), &reply, sizeof(reply));
+  assert(0);
+  assert(r == 0);
 }
 
 void WriteCommandUART2(tid_t writer, char *command, int size, Cursor *cursor){
@@ -80,6 +85,8 @@ void PushCharToUART2(tid_t tx_tid, WRProtocol *wrp, Cursor *cursor){
       PutStr(tx_tid, str, 2);
 			break;
 		default:
+      PRINTF("%c", c);
+      assert(0);
 			cursor->col += 1;
 			PutC(tx_tid, c);
 			break;
@@ -115,6 +122,8 @@ void WriterServiceUART2(){
 		//Handle Request
 		switch(wrp.wr_req){
 			case WR_CHAR:
+        PRINTF("%c", *(wrp.data));
+        assert(0);
 				PushCharToUART2(tx_tid, &wrp, &cursor);
 				Reply(req_tid, &reply, sizeof(reply));
 				break;

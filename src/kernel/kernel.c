@@ -54,8 +54,10 @@ void initialize() {
   priority = 0;
   task = &TestTask;
 #else
-  priority = 0;
-  task = &Bootstrap;
+  // priority = 0;
+  //task = &Bootstrap;
+  priority = 20;
+  task = &IOServerTest;
 #endif //KTEST
 
   tid_t tid = tt_get(&tid_tracker);

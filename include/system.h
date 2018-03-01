@@ -11,7 +11,7 @@
 #include <debug.h>
 #endif
 
-#include <asm.h>
+#include <asm/asm.h>
 #include <defines.h>
 #include <ts7200.h>
 
@@ -34,6 +34,8 @@
 #define KASSERT(exp) \
   do {                                                 \
     if (__predict_false(!(exp))) {                     \
+*(int *)(VIC1_BASE + VIC_INTENCLEAR_OFFSET) = VIC1_ENABLED; \
+*(int *)(VIC2_BASE + VIC_INTENCLEAR_OFFSET) = VIC2_ENABLED; \
       PRINTF(                                          \
           "\033[31m"                                   \
           "ASSERTION '"STR(exp)"' FAILED <%s:%d>\r\n"  \

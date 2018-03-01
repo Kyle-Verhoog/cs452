@@ -51,7 +51,7 @@ void IOServerTest() {
   Create(31, &ClockServer);
   Create(30, &IOServerUART2); // NOTE: priority has to be < priority of IOServer
   Create(30, &IOServerUART1); // NOTE: priority has to be < priority of IOServer
-  // Create(26, &IOTask);
+  Create(26, &IOTask);
   Create(25, &IOIdleTask);
   Create(23, &NameServerStop);
   Create(23, &ClockServerStop);
