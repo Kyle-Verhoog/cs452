@@ -184,6 +184,9 @@ void get_parentTid( TaskDescriptor *td) {
 void handle(TaskDescriptor *td, TaskRequest req) {
   switch (req) {
   case TR_ASSERT:
+#ifdef TASK_METRICS
+    tm_summarize();
+#endif //TASK_METRICS
     KABORT();
     break;
   case TR_PASS:
