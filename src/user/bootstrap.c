@@ -3,9 +3,22 @@
 int ui_alive;
 
 void IdleTask() {
-  tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
+  tid_t tx_tid = WhoIs(IOSERVER_UART2_TX_ID);
+  tid_t writer = WhoIs(WRITERSERVICE_UART2_ID);
   assert(tx_tid >= 0);
+  int i;
+  i = 0;
+  Cursor c;
+  SET_CURSOR(c, 1, 1);
   while (ui_alive) {
+    i++;
+    if (i > 2000000) {
+      // WriteStringUART2(writer, "\033[2J", &c);
+      // PutC(tx_tid, '.');
+      //WriteCharUART2(writer, '.');
+      // WriteStringUART2(writer, ".", &c);
+      i = 0;
+    }
     (void)ui_alive;
   }
   Exit();
@@ -36,18 +49,18 @@ void Bootstrap() {
   mytid = MyTid();
   Create(31, &NameServer);
   Create(31, &ClockServer);
-  Create(30, &IOServerUART1);
+  // Create(30, &IOServerUART1);
   Create(30, &IOServerUART2);
 
-  Create(30, &WriterServiceUART2);
-  Create(30, &SendGo);
+  // Create(30, &WriterServiceUART2);
+  // Create(30, &SendGo);
 
-  Create(31, &ClearScreen);
-  Create(29, &SwitchManager);
-  Create(29, &TrainManager);
-  Create(29, &SensorManager);
-  Create(29, &RailwayManager);
-  Create(30, &ReaderServiceUART2);
+  // Create(31, &ClearScreen);
+  // Create(29, &SwitchManager);
+  // Create(29, &TrainManager);
+  // Create(29, &SensorManager);
+  // Create(29, &RailwayManager);
+  // Create(30, &ReaderServiceUART2);
 
   // Create(19, &TimerInterface);
   Create(0, &IdleTask);

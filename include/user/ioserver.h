@@ -29,6 +29,7 @@ typedef enum IOServerRequestType {
   IO_RT     = 4,
   IO_MI     = 5,
   IO_PUTSTR = 6,
+  IO_BLPUTC = 7,
 } IOServerReqType;
 
 typedef struct IONotifierArgs {
