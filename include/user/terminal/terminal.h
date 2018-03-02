@@ -17,9 +17,10 @@ typedef struct TerminalCursor {
 } TCursor;
 
 typedef struct TerminalWindow {
+  int wid;
   TCursor cur;
-  int x;
-  int y;
+  int offsetx;
+  int offsety;
   int w;
   int h;
 } TWindow;
@@ -35,4 +36,12 @@ typedef struct TerminalDisplay {
 } TDisplay;
 
 void tdisp_init(TDisplay *td);
+
+void tdisp_add_window(TDisplay *td, int x, int y, int w, int h);
+
+void tdisp_focus_window(TDisplay *td, int wid);
+
+void tdisp_delete_window(TDisplay *td);
+
+void tdisp_writec(TDisplay *td, char c);
 #endif

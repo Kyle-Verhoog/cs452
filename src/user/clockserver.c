@@ -97,7 +97,7 @@ void ClockServerNotifier() {
       Exit();
     }
 
-    for (i = 0; i < reply.ntids; i++) {
+    for (i = 0; i < reply.ntids; ++i) {
       tid_t tid = reply.tids[i];
       assert(IS_VALID_TID(tid));
       ureply = 0;
@@ -114,7 +114,7 @@ void ClockServerNotifier() {
  */
 void ClockServer() {
   // init queue
-  cs_queue csq;  
+  cs_queue csq;
   tid_t reply_tids[CS_PROCESS_NUM];
   tid_t req_tid, id, not_tid;
   CSReq req;

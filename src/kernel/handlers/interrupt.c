@@ -3,14 +3,14 @@
 #define WAKE_PRIORITY_SIZE 10
 
 InterruptEvent WakePriority[64] = {
+  IE_UART2_TX,
+  IE_UART2_RX,
   IE_TC1UI,
   IE_TC3UI,
   IE_UART1_TX,
   IE_UART1_RX,
   IE_UART1_RT,
   IE_UART1_MI,
-  IE_UART2_TX,
-  IE_UART2_RX,
   IE_UART2_RT,
   IE_UART2_MI,
 };

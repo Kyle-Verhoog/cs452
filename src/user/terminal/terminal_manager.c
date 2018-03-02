@@ -13,12 +13,13 @@ void TerminalInputHandler() {
 
   while (true) {
     c = GetC(inpt_tid);
+    // PutC(tx_tid, c);
     req.data = &c;
     Send(tman_tid, &req, sizeof(req), &rep, sizeof(rep));
   }
 }
 
-void tdisp_print(TDisplay *td, tid_t tx_tid) {
+void print_tdisp(tid_t tx_tid, TDisplay *td) {
   char c;
   while (td->buffer.size > 0) {
     tdisp_cb_pop(&td->buffer, &c);
@@ -28,12 +29,13 @@ void tdisp_print(TDisplay *td, tid_t tx_tid) {
 
 void TerminalManager() {
   int r;
-  TDisplay term_disp;
+  char c;
+  TDisplay td;
   tid_t recv_tid, tx_tid;
   TManReq req;
   TManRep rep;
 
-  tdisp_init(&term_disp);
+  tdisp_init(&td);
   r = RegisterAs(TERMINAL_MANAGER_ID);
   assert(r == 0);
   tx_tid = WhoIs(TERMINAL_UART_TX);
@@ -43,13 +45,43 @@ void TerminalManager() {
 
   PutStr(tx_tid, "\033[2J", 5);
   PutStr(tx_tid, "\033[2J", 5);
+  int x, y;
+  x = 1;
+  y = 1;
 
   while (true) {
     Receive(&recv_tid, &req, sizeof(req));
 
     switch (req.type) {
       case TERM_IN:
-        PutC(tx_tid, *(req.data));
+        c = *(req.data);
+        switch (c) {
+          case 'q':
+            assert(0);
+            break;
+          case '+':
+            tdisp_add_window(&td, x, y, 20, 5);
+            y += 5;
+            break;
+          case '-':
+            tdisp_delete_window(&td);
+            break;
+          case '1':
+            tdisp_focus_window(&td, 0);
+            break;
+          case '2':
+            tdisp_focus_window(&td, 1);
+            break;
+          case '3':
+            tdisp_focus_window(&td, 2);
+            break;
+          default:
+            tdisp_writec(&td, c);
+            break;
+        }
+        print_tdisp(tx_tid, &td);
+
+        // PutC(tx_tid, *(req.data));
         // PutStr(tx_tid, req.data, 1);
         // PutStr(tx_tid, "\033[2J", 5);
         Reply(recv_tid, &rep, sizeof(rep));
