@@ -27,6 +27,7 @@ void init_switch(tid_t tx2_writer, tid_t pred_tid, tid_t sw_handler, Switch *sli
 			if(track[node].type == NODE_BRANCH){
 				slist[i].branch = &track[node];
 				slist[i].merge = &track[node+1];
+				// PRINTF(slist[i].branch->name);
 				node+=2;
 				break;
 			}
@@ -45,6 +46,7 @@ void init_switch(tid_t tx2_writer, tid_t pred_tid, tid_t sw_handler, Switch *sli
 			if(track[node].type == NODE_BRANCH){
 				slist[i].branch = &track[node];
 				slist[i].merge = &track[node+1];
+				// PRINTF(slist[i].branch->name);
 				node+=2;
 				break;
 			}
@@ -111,7 +113,6 @@ void SwitchHandler(void *args){
 
   Exit();
 }
-
 
 void SwitchManager(void * args){
   void *data;

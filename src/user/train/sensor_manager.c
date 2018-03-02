@@ -129,6 +129,17 @@ void init_subscribers(tid_cb *subscribers){
 	int i;
 	for(i = 0; i < SENSOR_SIZE + 1; i++){
 		tid_cb_init(&subscribers[i]);
+  }
+}
+
+void init_sensors(Sensor *list, track_node *t){
+	int i;
+	for(i = 0; i < TRACK_MAX; i++){
+		if(t[i].type == NODE_SENSOR){
+			list->state = SEN_OFF;
+			list->node = &t[i];
+			++list;
+		}
 	}
 }
 

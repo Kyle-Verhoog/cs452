@@ -1,5 +1,4 @@
 #include <railway_manager.h>
-#include <prediction_manager.h>
 
 //Non inclusive tail
 int str2int(char *args, int head, int tail, int base){
