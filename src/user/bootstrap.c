@@ -12,12 +12,8 @@ void IdleTask() {
   SET_CURSOR(c, 1, 1);
   while (ui_alive) {
     i++;
-    if (i > 2000000) {
-      // WriteStringUART2(writer, "\033[2J", &c);
-      // PutC(tx_tid, '.');
-      // Pass();
-      //WriteCharUART2(writer, '.');
-      // WriteStringUART2(writer, ".", &c);
+    if (i > 200000000) {
+      PutC(tx_tid, '.');
       i = 0;
     }
     (void)ui_alive;
@@ -57,7 +53,7 @@ void Bootstrap() {
 
   Create(30, &SendGo);
 
-  // Create(31, &ClearScreen);
+  Create(31, &ClearScreen);
   Create(29, &SwitchManager);
   Create(29, &TrainManager);
   Create(29, &SensorManager);
