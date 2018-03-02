@@ -4,14 +4,13 @@ CIRCULAR_BUFFER_DEF(tdisp_cb, char, TERMINAL_BUFFER_SIZE);
 CIRCULAR_BUFFER_DEF(wid_cb, int, MAX_WINDOWS);
 
 int tdisp_cb_pushui32(tdisp_cb *buf, unsigned int i) {
-  int n = 0;
-  int dgt, offset;
+  int n;
+  int dgt;
   char c;
   unsigned int d;
 
   d = 1;
-  offset = 0;
-
+  n = 0;
   while ((i / d) >= 10) d *= 10;
   while (d != 0) {
     dgt = i / d;
@@ -23,7 +22,7 @@ int tdisp_cb_pushui32(tdisp_cb *buf, unsigned int i) {
       ++n;
     }
   }
-  return offset;
+  return n;
 }
 
 void tcursor_init(TCursor *tc, int x, int y) {
@@ -31,23 +30,26 @@ void tcursor_init(TCursor *tc, int x, int y) {
   tc->y = y;
 }
 
-void twindow_init(TWindow *tw, int x, int y, int w, int h) {
+void twindow_init(TWindow *tw, int wid, int x, int y, int w, int h, tid_t tid) {
   tcursor_init(&tw->cur, 1, 1);
-  tw->wid = -1;
+  tw->wid = wid;
   tw->offsetx = x;
   tw->offsety = y;
   tw->w = w;
   tw->h = h;
+  tw->tid = tid;
 }
 
 void tdisp_init(TDisplay *td) {
   int i;
   td->num_active_windows = 0;
+  td->focused_window = 0;
   tcursor_init(&td->tdcur, -1, -1);
   tdisp_cb_init(&td->buffer);
   wid_cb_init(&td->avail_wids);
 
   for (i = 0; i < MAX_WINDOWS; ++i) {
+    twindow_init(&td->windows[i], -1, -1, -1, -1, -1, -1);
     td->active_windows[i] = 0;
     wid_cb_push(&td->avail_wids, i);
   }
@@ -58,11 +60,11 @@ char tdisp_pop(TDisplay *td) {
   char c;
 
   r = tdisp_cb_pop(&td->buffer, &c);
-  // assert(r == 0);
+  assert(r == 0);
   return c;
 }
 
-// set cursor relative to window
+// set td cursor relative to focused window
 void tdisp_set_cursor(TDisplay *td, int x, int y) {
   TWindow *window;
   int ret;
@@ -72,6 +74,9 @@ void tdisp_set_cursor(TDisplay *td, int x, int y) {
 
   x += window->offsetx;
   y += window->offsety;
+
+  assert(x >= window->offsetx && x <= window->offsetx + window->w);
+  assert(y >= window->offsety && y <= window->offsety + window->h);
 
   if (td->tdcur.x != x || td->tdcur.y != y) {
     ret = tdisp_cb_push(buf, '\033');
@@ -90,9 +95,7 @@ void tdisp_set_cursor(TDisplay *td, int x, int y) {
 void tdisp_reset_cursor(TDisplay *td) {
   TWindow *window;
   window = td->focused_window;
-  if (window->cur.x != td->tdcur.x || window->cur.y != td->tdcur.y) {
-    tdisp_set_cursor(td, window->cur.x, window->cur.y);
-  }
+  tdisp_set_cursor(td, window->cur.x, window->cur.y);
 }
 
 void tdisp_set_active_window(TDisplay *td, int wid) {
@@ -109,13 +112,23 @@ void tdisp_draw_window_outline(TDisplay *td) {
   w = window->w;
   h = window->h;
 
-  for (i = 0; i < h; ++i) {
-    if (i == 0 || i == h-1) {
+  for (i = 0; i <= h; ++i) {
+    if (i == 0 || i == h) {
       tdisp_set_cursor(td, 0, i);
       tdisp_cb_push(&td->buffer, '+');
-      for (j = 0; j < w-1; ++j)
-        tdisp_cb_push(&td->buffer, '-');
-      tdisp_set_cursor(td, w-1, i);
+      if (i == 0) {
+        int n;
+        if (window->tid == -1)
+          n = tdisp_cb_pushui32(&td->buffer, 0);
+        else
+          n = tdisp_cb_pushui32(&td->buffer, window->tid);
+        for (j = n; j < w-2; ++j)
+          tdisp_cb_push(&td->buffer, '-');
+      }
+      else {
+        for (j = 0; j < w-2; ++j)
+          tdisp_cb_push(&td->buffer, '-');
+      }
       tdisp_cb_push(&td->buffer, '+');
     }
     else {
@@ -136,33 +149,40 @@ void tdisp_clear_window(TDisplay *td) {
   h = window->h;
 
   // tdisp_set_cursor(td, window->offsetx, window->offsety);
-  for (i = 0; i < h; ++i) {
-    tdisp_set_cursor(td, 0, i);
-    for (j = 0; j < w; ++j) {
+  for (i = 1; i < h; ++i) {
+    tdisp_set_cursor(td, 1, i);
+    for (j = 0; j < w-2; ++j) {
       tdisp_cb_push(&td->buffer, ' ');
     }
   }
 }
 
 
-void tdisp_add_window(TDisplay *td, int x, int y, int w, int h) {
+int tdisp_add_window(TDisplay *td, int x, int y, int w, int h, tid_t tid) {
   int r, wid;
   TWindow *window;
-  // assert(td->avail_wids.size > 0);
+
+  if (td->avail_wids.size < 1) {
+    return -1;
+  }
 
   r = wid_cb_pop(&td->avail_wids, &wid);
-  // assert(r == 0);
+  assert(r == 0);
+  assert(wid >= 0 && wid <= MAX_WINDOWS);
   td->active_windows[wid] = 1;
+  td->task_window[TID_ID(tid)] = wid;
   window = &td->windows[wid];
-  twindow_init(window, x, y, w, h);
+  twindow_init(window, wid, x, y, w, h, tid);
   tdisp_set_active_window(td, wid);
-  // assert(wid >= 0 && wid <= MAX_WINDOWS);
   tdisp_draw_window_outline(td);
   tdisp_reset_cursor(td);
+  return wid;
 }
 
 void tdisp_focus_window(TDisplay *td, int wid) {
-  // assert(td->active_windows[wid]);
+  if (!td->active_windows[wid])
+    return;
+  assert(td->active_windows[wid]);
   TWindow *window;
   window = &td->windows[wid];
   td->focused_window = window;
@@ -178,6 +198,7 @@ void tdisp_delete_window(TDisplay *td) {
 
   tdisp_clear_window(td);
   td->active_windows[wid] = 0;
+  td->task_window[TID_ID(fwindow->tid)] = -1;
   r = wid_cb_push(&td->avail_wids, wid);
   td->focused_window = 0;
 
@@ -193,8 +214,49 @@ void tdisp_delete_window(TDisplay *td) {
 
 // writes a character to the active window
 void tdisp_writec(TDisplay *td, char c) {
+  TWindow *fwindow;
+  fwindow = td->focused_window;
+  if (fwindow == 0)
+    return;
+
   tdisp_reset_cursor(td);
   tdisp_cb_push(&td->buffer, c);
+
+  fwindow->cur.x++;
   td->tdcur.x++;
-  td->focused_window->cur.x++;
+
+  // wrap character if it goes beyond the boundry of the window
+  if (fwindow->cur.x >= fwindow->w-1) {
+    fwindow->cur.x = 1;
+    fwindow->cur.y++;
+    tdisp_set_cursor(td, 1, fwindow->cur.y);
+  }
 }
+
+int tdisp_get_task(TDisplay *td) {
+  if (td->focused_window == 0)
+    return -1;
+  return td->focused_window->tid;
+}
+
+int tdisp_focus_task_window(TDisplay *td, tid_t tid) {
+  tid_id_t id = TID_ID(tid);
+  if (id < 0 || 32 < id)
+    return -1;
+
+  int wid = td->task_window[id];
+  tdisp_focus_window(td, wid);
+
+  return 0;
+}
+
+void tdisp_write_task(TDisplay *td, tid_t tid, char c) {
+  assert(td->focused_window != 0);
+  int wid, r;
+  wid = td->focused_window->wid;
+  r = tdisp_focus_task_window(td, tid);
+  assert(r == 0);
+  tdisp_writec(td, c);
+  tdisp_focus_window(td, wid);
+}
+
