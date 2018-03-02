@@ -2,19 +2,44 @@
 
 int ui_alive;
 
-void IdleTask() {
+void IdleTask2() {
   int i;
-  tid_t tx_tid = WhoIs(IOSERVER_UART2_TX_ID);
-  assert(tx_tid >= 0);
+
+  tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+  assert(tm_tid >= 0);
+
+  TMRegister(tm_tid);
 
   i = 0;
   while (ui_alive) {
     i++;
-    if (i > 200000000) {
+    if (i > 20000000) {
+      TMPutC(tm_tid, ';');
       // PutC(tx_tid, '.');
       i = 0;
     }
-    (void)ui_alive;
+  }
+  Exit();
+}
+
+void IdleTask() {
+  int i;
+
+  tid_t tx_tid = WhoIs(IOSERVER_UART2_TX_ID);
+  tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+  assert(tx_tid >= 0);
+  assert(tm_tid >= 0);
+
+  TMRegister(tm_tid);
+
+  i = 0;
+  while (ui_alive) {
+    i++;
+    if (i > 20000000) {
+      TMPutC(tm_tid, '.');
+      // PutC(tx_tid, '.');
+      i = 0;
+    }
   }
   Exit();
 }
@@ -60,5 +85,6 @@ void Bootstrap() {
   //Create(30, &ReaderServiceUART2);
 
   Create(0, &IdleTask);
+  Create(0, &IdleTask2);
   Exit();
 }

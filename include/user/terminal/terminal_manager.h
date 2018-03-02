@@ -11,7 +11,8 @@
 
 typedef enum TerminalManagerRequestType {
   TERM_IN  = 0,
-  TERM_OUT = 1,
+  TERM_REG = 1,
+  TERM_OUT = 2,
 } TManReqType;
 
 typedef struct TerminalManagerRequest {
@@ -24,5 +25,13 @@ typedef struct TerminalManagerReply {
   TManReqType type;
 } TManRep;
 
+typedef struct WindowManager {
+  TDisplay td;
+  int x;
+  int y;
+} WManager;
+
 void TerminalManager();
+void TMRegister(tid_t tm_tid);
+void TMPutC(tid_t tm_tid, char c);
 #endif
