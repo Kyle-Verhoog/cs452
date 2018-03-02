@@ -42,7 +42,6 @@ void Bootstrap() {
   int mytid;
   ui_alive = 1;
   mytid = MyTid();
-<<<<<<< HEAD
   Create(31, &NameServer);  // 2
   Create(31, &ClockServer); // 4
   // Create(30, &IOServerUART1); // 9
@@ -58,6 +57,17 @@ void Bootstrap() {
   Create(29, &TrainManager);
   Create(29, &SensorManager);
   Create(29, &RailwayManager);
+  Create(30, &TerminalManager); // 17
+
+  // Create(30, &WriterServiceUART2);
+  // Create(30, &SendGo);
+
+  // Create(31, &ClearScreen);
+  // Create(29, &SwitchManager);
+  // Create(29, &TrainManager);
+  // Create(29, &SensorManager);
+  // Create(29, &RailwayManager);
+  //Create(30, &ReaderServiceUART2);
 
   // Create(19, &TimerInterface);
   // Create(0, &IdleTask);

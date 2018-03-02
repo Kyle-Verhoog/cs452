@@ -6,6 +6,7 @@
 #include <test/clockserver_queue.h>
 #include <test/circular_buffer.h>
 #include <test/buffer_pack.h>
+#include <test/terminal.h>
 
 int main(void) {
   PRINTF("\n");
@@ -43,6 +44,10 @@ int main(void) {
 
   PTEST_START("ioserver_buffer");
   ioserver_buffer_tests();
+  PTEST_END();
+
+  PTEST_START("terminal");
+  terminal_tests();
   PTEST_END();
 
   PRINTF("+----------------------+---+\n");

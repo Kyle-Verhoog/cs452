@@ -1,11 +1,12 @@
 #include<readerservice.h>
 
 void parse_and_send(tid_t tm, char *command, int size){
-	RWProtocol rwp;
-	int reply;
+  RWProtocol rwp;
+  int reply;
 
-	if(command[0] == 'q'){
+  if(command[0] == 'q'){
     assert(0 && "we've been up for 26 hours and counting and do not feel like implementing a clean exit. sorry.");
+<<<<<<< HEAD
 	}
 	else if(command[0] == 'r' && command[1]=='v'){
 		//Reverse
@@ -46,41 +47,41 @@ void parse_and_send(tid_t tm, char *command, int size){
 }
 
 void ReaderServiceUART2(){
-	int r = RegisterAs(READERSERVICE_UART2_ID);
-  	assert(r == 0);
-	tid_t rx_tid = WhoIs(IOSERVER_UART2_RX_ID);
-	assert(rx_tid >= 0);
-	tid_t tx_tid = WhoIs(IOSERVER_UART2_TX_ID);
-	assert(tx_tid >= 0);
-	tid_t writer = WhoIs(WRITERSERVICE_UART2_ID);
-	assert(writer >= 0);
-	tid_t rm = WhoIs(RAILWAY_MANAGER_ID);
-	assert(rm >= 0);
+  int r = RegisterAs(READERSERVICE_UART2_ID);
+  assert(r == 0);
+  tid_t rx_tid = WhoIs(IOSERVER_UART2_RX_ID);
+  assert(rx_tid >= 0);
+  tid_t tx_tid = WhoIs(IOSERVER_UART2_TX_ID);
+  assert(tx_tid >= 0);
+  tid_t writer = WhoIs(WRITERSERVICE_UART2_ID);
+  assert(writer >= 0);
+  tid_t rm = WhoIs(RAILWAY_MANAGER_ID);
+  assert(rm >= 0);
 
-	char command[COMMAND_SIZE];
-	int csize = 0;
+  char command[COMMAND_SIZE];
+  int csize = 0;
 
-	while(true){
-		//Get and Writeback
-		command[csize] = GetC(rx_tid);
-		WriteCharUART2(writer, command[csize]);
+  while(true){
+    //Get and Writeback
+    command[csize] = GetC(rx_tid);
+    WriteCharUART2(writer, command[csize]);
 
-		switch(command[csize]){
-			case BACKSPACE:
-				if(csize >= 2){
-					csize -= 2;
-				}else{
-					csize = 0;
-				}
-				break;
-			case CARRIAGE_RETURN:
-				if(csize > 0){
-					parse_and_send(rm, command, csize);	
-				}				
-				csize = 0;
-				break;
-			default:
-				csize++;
-		}
-	}
+    switch(command[csize]){
+      case BACKSPACE:
+        if(csize >= 2){
+          csize -= 2;
+        }else{
+          csize = 0;
+        }
+        break;
+      case CARRIAGE_RETURN:
+        if(csize > 0){
+          parse_and_send(rm, command, csize);
+        }
+        csize = 0;
+        break;
+      default:
+        csize++;
+    }
+  }
 }
