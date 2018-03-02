@@ -352,6 +352,22 @@ int PutC(tid_t ios_tid, char c) {
   return 0;
 }
 
+int BLPutC(tid_t ios_tid, char c) {
+  int r;
+  assert(ios_tid > 0);
+
+  IOServerReq req;
+  int rep;
+
+  req.type = IO_BLPUTC;
+  req.msg = &c;
+  req.len = 1;
+
+  r = Send(ios_tid, &req, sizeof(req), &rep, sizeof(rep));
+  assert(r == 0);
+  return 0;
+}
+
 int PutStr(tid_t ios_tid, char *c, int len) {
   int r;
   assert(ios_tid > 0);
