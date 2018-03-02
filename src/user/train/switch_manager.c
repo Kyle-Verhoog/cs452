@@ -1,29 +1,50 @@
 #include <switch_manager.h>
 
 
-void init_switch(tid_t tx2_writer, tid_t sw_handler, SW_Switch *slist){
+void init_switch(tid_t tx2_writer, tid_t sw_handler, Switch *slist, track_node *track){
 	int reply = 0;
-	SWProtocol sw;
+	SWProtocol swp;
 	Cursor c;
 	SET_CURSOR(c, SWITCH_TABLE_ROW, SWITCH_TABLE_COL);
 
 	//Send Commands to SwitchHandler
-	sw.dir = SW_CURVE;
+	swp.dir = SW_CURVE;
+	int node = 0;
 	int i;
 	for(i = NORMAL_SWITCH_SIZE_LOW; i <= NORMAL_SWITCH_SIZE_HIGH; ++i){
-		slist[i] = SW_CURVE;
-		sw.sw = i;
-		Send(sw_handler, &sw, sizeof(sw), &reply, sizeof(reply));
+		while(true){
+			if(track[node].type == NODE_BRANCH){
+				slist[i].branch = &track[node];
+				slist[i].merge = &track[node+1];
+				PRINTF(slist[i].branch->name);
+				node+=2;
+				break;
+			}
+			node++;
+		}
+		slist[i].state = SW_CURVE;
+		swp.sw = i;
+		Send(sw_handler, &swp, sizeof(swp), &reply, sizeof(reply));
 		// WriteStringUART2(tx2_writer, "C", &c);
 		// c.row++;
 	}
 
 	// c.row++;
 	for(i = SPECIAL_SWITCH_SIZE_LOW; i <= SPECIAL_SWITCH_SIZE_HIGH; ++i){
-		slist[i] = SW_STRAIGHT+(i%2);
-		sw.dir = SW_STRAIGHT+(i%2);
-		sw.sw = i;
-		Send(sw_handler, &sw, sizeof(sw), &reply, sizeof(reply));
+		while(true){
+			if(track[node].type == NODE_BRANCH){
+				slist[i].branch = &track[node];
+				slist[i].merge = &track[node+1];
+				PRINTF(slist[i].branch->name);
+				node+=2;
+				break;
+			}
+			node++;
+		}
+		slist[i].state = SW_STRAIGHT+(i%2);
+		swp.dir = SW_STRAIGHT+(i%2);
+		swp.sw = i;
+		Send(sw_handler, &swp, sizeof(swp), &reply, sizeof(reply));
 		// if(i%2){
 		// 	WriteStringUART2(tx2_writer, "C", &c);	
 		// }else{
@@ -34,14 +55,13 @@ void init_switch(tid_t tx2_writer, tid_t sw_handler, SW_Switch *slist){
 }
 
 void UpdateSwitchTable(tid_t tx2_writer, SW_Switch *table, int sw, SW_Switch dir){
-	// Cursor c;
 	// SET_CURSOR(c, SWITCH_TABLE_ROW + sw, SWITCH_TABLE_COL + 13);
 
 	// if(sw >= SPECIAL_SWITCH_SIZE_LOW){
 	// 	c.row++;
 	// }
 
-	table[sw] = dir;
+	table[sw].state = dir;
 	// if(dir == SW_CURVE){
 	// 	WriteStringUART2(tx2_writer, "C", &c);	
 	// }
@@ -81,8 +101,9 @@ void SwitchHandler(void *args){
   Exit();
 }
 
-void SwitchManager(){
-	SW_Switch SwitchList[SWITCH_SIZE];
+void SwitchManager(void * args){
+  track_node *track = (track_node *)args;
+	Switch switchList[SWITCH_SIZE];
 
 	int reply = 0;
 	int r = RegisterAs(SWITCH_MANAGER_ID);
@@ -95,7 +116,7 @@ void SwitchManager(){
 
   	tid_t sw_handler = CreateArgs(19, &SwitchHandler, (void *)tx1_writer);
 
-  	init_switch(tx2_writer, sw_handler, SwitchList);
+  	init_switch(tx2_writer, sw_handler, switchList, track);
 
   	while(true){
   		tid_t req_tid;
@@ -109,7 +130,7 @@ void SwitchManager(){
   		Send(sw_handler, &sw, sizeof(sw), &reply, sizeof(reply));
 
   		//Update the UI and table
-  		UpdateSwitchTable(tx2_writer, SwitchList, sw.sw, sw.dir);
+  		UpdateSwitchTable(tx2_writer, switchList, sw.sw, sw.dir);
   	}
   Exit();
 }

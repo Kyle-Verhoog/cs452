@@ -85,15 +85,14 @@ void RailwayManager(){
 	int r = RegisterAs(RAILWAY_MANAGER_ID);
   	assert(r == 0);
 
-  	tid_t tm_tid = WhoIs(TRAIN_MANAGER_ID);
-  	assert(tm_tid >= 0);
-  	tid_t sw_tid = WhoIs(SWITCH_MANAGER_ID);
-  	assert(sw_tid >= 0);
+  	track_node track[TRACK_MAX];
+  	init_tracka(track);
 
-  	// tid_t rx_tid = WhoIs(IOSERVER_UART1_RX_ID);
-  	// assert(rx_tid >= 0);
-  	// tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
-  	// assert(tx_tid >= 0);
+  	tid_t tm_tid = CreateArgs(29, &TrainManager, (void *)track);
+  	tid_t sw_tid = CreateArgs(29, &SwitchManager, (void *)track);
+  	CreateArgs(29, &SensorManager, (void *)track);
+  	assert(tm_tid >= 0);
+  	assert(sw_tid >= 0);
 
 	while(true){
 		tid_t tid_req;

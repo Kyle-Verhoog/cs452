@@ -11,16 +11,17 @@
 #include <i2a.h>
 #include <writerservice.h>
 #include <recency_buffer.h>
+#include <track_data.h>
 
 #define GET_ALL_SENSORS 133
 
-#define SENSOR_TIMEOUT 0
-#define SENSOR_WAIT 1
+#define SENSOR_TIMEOUT 4
+#define SENSOR_WAIT 4
 
-typedef enum Sensor{
+typedef enum SensorState{
 	SEN_OFF = 0,
 	SEN_ON = 1
-}Sensor;
+}SensorState;
 
 typedef enum SM_Request{
 	SM_READBYTE = 0,
@@ -29,11 +30,16 @@ typedef enum SM_Request{
 	SM_HALT = 3
 } SM_Request;
 
+typedef struct Sensor{
+	SensorState state;
+	track_node *node;
+}Sensor;
+
 typedef struct SMProtocol{
 	SM_Request smr;
 	char byte;
 }SMProtocol;
 
-void SensorManager();
+void SensorManager(void * args);
 
 #endif //SENSOR_MANAGER_H

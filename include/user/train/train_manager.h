@@ -11,6 +11,7 @@
 #include <writerservice.h>
 #include <types.h>
 #include <circular_buffer.h>
+#include <track_data.h>
 
 #define TRAIN_COMMAND_BUFFER_SIZE 64
 
@@ -59,7 +60,7 @@ typedef struct TrainDescriptor{
 } TrainDescriptor;
 
 void TMWriteTask(void *args);	//args - TrainDescriptor
-void TrainManager();
+void TrainManager(void * args);
 
 
 /****************

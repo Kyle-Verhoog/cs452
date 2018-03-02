@@ -9,18 +9,25 @@
 #include <ascii.h>
 #include <ioserver.h>
 #include <writerservice.h>
+#include <track_data.h>
 
-typedef enum SW_Switch{
+typedef enum SwitchState{
 	SW_STRAIGHT = 33,
 	SW_CURVE = 34
-} SW_Switch;
+} SwitchState;
 
 typedef struct SWProtocol{
 	char sw;
-	SW_Switch dir;
+	SwitchState dir;
 }SWProtocol;
 
-void SwitchManager();
+typedef struct Switch{
+	SwitchState state;
+	track_node *branch;
+	track_node *merge;
+}Switch;
+
+void SwitchManager(void * args);
 
 #define TURN_SOLENOID_OFF 32
 

@@ -10,10 +10,12 @@
 #include <ioserver.h>
 #include <writerservice.h>
 #include <lib/parse.h>
+#include <track_data.h>
 
 //Train Servers
 #include <switch_manager.h>
 #include <train_manager.h>
+#include <sensor_manager.h>
 
 typedef enum RW_Command{
 	RW_QUIT = -1,

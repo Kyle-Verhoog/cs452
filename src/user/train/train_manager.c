@@ -51,7 +51,8 @@ void TMWriteTask(void *args){
 	Exit();
 }
 
-void TrainManager(){
+void TrainManager(void *args){
+	track_node *track = (track_node *)args;
 	TrainDescriptor Trains[TRAIN_SIZE];
 	int i;
 	for(i = 0 ; i < TRAIN_SIZE; i++){
