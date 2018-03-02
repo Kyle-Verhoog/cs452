@@ -3,17 +3,15 @@
 int ui_alive;
 
 void IdleTask() {
-  tid_t tx_tid = WhoIs(IOSERVER_UART2_TX_ID);
-  tid_t writer = WhoIs(WRITERSERVICE_UART2_ID);
-  assert(tx_tid >= 0);
   int i;
+  tid_t tx_tid = WhoIs(IOSERVER_UART2_TX_ID);
+  assert(tx_tid >= 0);
+
   i = 0;
-  Cursor c;
-  SET_CURSOR(c, 1, 1);
   while (ui_alive) {
     i++;
     if (i > 200000000) {
-      PutC(tx_tid, '.');
+      // PutC(tx_tid, '.');
       i = 0;
     }
     (void)ui_alive;
@@ -33,7 +31,6 @@ void ClearScreen(){
 }
 
 void SendGo(){
-  //tid_t writer = WhoIs(WRITERSERVICE_UART1_ID);
   tid_t writer = WhoIs(IOSERVER_UART1_TX_ID);
   char command[1];
   command[0] = 96;
@@ -41,13 +38,12 @@ void SendGo(){
   Exit();
 }
 
-
 void Bootstrap() {
   int mytid;
   ui_alive = 1;
   mytid = MyTid();
-  Create(31, &NameServer);  // 2
-  Create(31, &ClockServer); // 4
+  Create(31, &NameServer);    // 2
+  Create(31, &ClockServer);   // 4
   Create(30, &IOServerUART1); // 9
   Create(30, &IOServerUART2); // 17
 
@@ -61,7 +57,6 @@ void Bootstrap() {
   Create(29, &RailwayManager);
   Create(30, &ReaderServiceUART2);
 
-  // Create(19, &TimerInterface);
   Create(0, &IdleTask);
   Exit();
 }

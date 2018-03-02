@@ -78,22 +78,24 @@ void IOServerRX(void *args) {
             assert(queued_tid == req_tid && "detected multiple getc-ers");
           queued_tid = req_tid;
         }
+
         break;
-      case IO_RT:
-        assert(0);
-        break;
+
       case IO_RX:
         iobi.c = *data;
         r = io_cb_push(&recv_buf, iobi);
         assert(r == 0 && "io buffer overflow");
+
         if (queued_tid > 0 && recv_buf.size > 0) {
           r = io_cb_pop(&recv_buf, &iobi);
           assert(r == 0);
           Reply(queued_tid, &iobi.c, sizeof(char));
           queued_tid = -1;
         }
+
         Reply(req_tid, &rep, sizeof(rep));
         break;
+
       default:
         assert(0 && "INVALID RT INTERRUPT");
         break;
@@ -178,8 +180,8 @@ void IOServerTX(void *args) {
 
         if (tx_ready && (!cts_en || (cts_en && cts_count > 1)))
           goto TX_CHAR;
-
         break;
+
       case IO_BLPUTC:
         iobi.c = *(req.msg);
         iobi.btid = req_tid;
@@ -191,6 +193,7 @@ void IOServerTX(void *args) {
           goto TX_CHAR;
 
         break;
+
       case IO_PUTSTR:
         str = req.msg;
         iobi.btid = -1;
@@ -204,6 +207,7 @@ void IOServerTX(void *args) {
           goto TX_CHAR;
 
         break;
+
       case IO_TX:
         txnot_tid = req_tid;
         tx_ready  = true;
@@ -212,6 +216,7 @@ void IOServerTX(void *args) {
           goto TX_CHAR;
 
         break;
+
       case IO_MI:
         cts_count++;
 
@@ -219,12 +224,14 @@ void IOServerTX(void *args) {
           goto TX_CHAR;
 
         break;
+
       default:
         assert(0 && "INVALID INTERRUPT");
         break;
     }
 
-    // if we got here, then skip the transmit logic
+    // if we got here, then skip the transmit logic and reply to the sender if
+    // the sender is not the tx-er or the blputc-er
     if (txnot_tid != req_tid && iobi.btid != req_tid)
       Reply(req_tid, &rep, sizeof(rep));
     continue;
