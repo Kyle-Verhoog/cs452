@@ -5,7 +5,7 @@
 void UpdateSensorData(Sensor *slist, char byte, int scounter){
 	int i=7;
 	for(i = 7; i >= 0; i--){
-		slist[i + scounter*8] = byte & 1;
+		slist[i + scounter*8].state = byte & 1;
 		byte = byte >> 1;
 		assert(i + scounter*8 < 80);
 		assert(i + scounter*8 >= 0);
@@ -18,7 +18,7 @@ void PrintSensorData(tid_t ws_tid, Sensor *slist, rec_buffer *rb){
 	int size;
 
 	for(i = 0; i < SENSOR_SIZE; i++){
-		if(slist[i]){
+		if(slist[i].state){
 			rec_buffer_add(rb, i);
 		}
 	}
@@ -45,7 +45,6 @@ void SensorTimeout(){
 	tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
 	tid_t my_tid = MyTid();
 	volatile int counter = 0;
-	volatile int count = 0;
 
 	SMProtocol checker, timeout;
 	checker.smr = SM_CHECK;
@@ -62,10 +61,9 @@ void SensorTimeout(){
 		}
 
 		//Too much time has passed since data was retrieved
-		if(counter >= SENSOR_TIMEOUT && count < 4){
+		if(counter >= SENSOR_TIMEOUT){
 			Send(sensor_man, &timeout, sizeof(timeout), &reply, sizeof(reply));
 			counter = 0;
-			count++;
 		}
 
 		Delay(cs_tid, my_tid, SENSOR_WAIT);
@@ -88,12 +86,21 @@ void SensorReceiver(){
 	Exit();
 }
 
-void SensorManager(){
-	Sensor SensorList[SENSOR_SIZE];
+void init_sensors(Sensor *list, track_node *t){
 	int i;
-	for(i = 0; i < SENSOR_SIZE; i++){
-		SensorList[i] = 0;
+	for(i = 0; i < TRACK_MAX; i++){
+		if(t[i].type == NODE_SENSOR){
+			list->state = SEN_OFF;
+			list->node = &t[i];
+			++list;
+		}
 	}
+}
+
+void SensorManager(void *args){
+	track_node *track = (track_node *)args;
+	Sensor sensorList[SENSOR_SIZE];
+	init_sensors(sensorList, track);
 
 	rec_buffer rb;
 	rec_buffer_init(&rb);
@@ -124,11 +131,11 @@ void SensorManager(){
   		switch(smp.smr){
   			case SM_READBYTE:
   				Reply(tid_req, &reply, sizeof(reply));
-  				UpdateSensorData(SensorList, smp.byte, scounter);
+  				UpdateSensorData(sensorList, smp.byte, scounter);
   				scounter = (scounter + 1) % (DECODER_SIZE*2);
   				if(scounter == 0){
   					PutC(tx_tid, GET_ALL_SENSORS);
-  					// PrintSensorData(ws_tid2, SensorList, &rb);
+  					PrintSensorData(ws_tid2, sensorList, &rb);
   				}
   				if(scounter % 2 == 0){
   					recFlag = 1;

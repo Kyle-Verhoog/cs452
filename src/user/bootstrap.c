@@ -43,9 +43,6 @@ void Bootstrap() {
   Create(30, &SendGo);
 
   Create(31, &ClearScreen);
-  Create(29, &SwitchManager);
-  Create(29, &TrainManager);
-  Create(29, &SensorManager);
   Create(29, &RailwayManager);
   Create(30, &ReaderServiceUART2);
 

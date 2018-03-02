@@ -96,7 +96,7 @@ void ControllerMetricTest(){
 	PRINTF("GO PROCESS TIME: %dms\n\r", metrics[0]/508);
 	PRINTF("SENSOR QUERY PROCESS TIME: %dms\n\r", metrics[1]/508);
 	PRINTF("MOVE TRAIN PROCESS TIME: %dms\n\r", metrics[2]/508);
-#endif TASK_METRICS
+#endif //TASK_METRICS
 
 	  //Enable Hardware Interrupts
   *(int *)(VIC1_BASE + VIC_INTENABLE_OFFSET) = VIC1_ENABLED;
