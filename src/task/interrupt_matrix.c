@@ -111,17 +111,17 @@ int im_pop(interrupt_matrix *im, InterruptEvent ie, TaskDescriptor **td){
 
 int im_eventsize(interrupt_matrix *im, InterruptEvent ie){
 	switch(ie){
+    case IE_UART2_RX:
+      return (im->UART2_RX).size;
+      break;
+    case IE_UART2_TX:
+      return (im->UART2_TX).size;
+      break;
 		case IE_TC1UI:
 			return (im->TC1UI).size;
 			break;
 		case IE_TC3UI:
 			return (im->TC3UI).size;
-			break;
-		case IE_UART2_RX:
-			return (im->UART2_RX).size;
-			break;			
-		case IE_UART2_TX:
-			return (im->UART2_TX).size;
 			break;
 		case IE_UART2_RT:
 			return (im->UART2_RT).size;

@@ -185,11 +185,21 @@ void get_parentTid( TaskDescriptor *td) {
 
 void handle(TaskDescriptor *td, TaskRequest req) {
   switch (req) {
-  case TR_ASSERT:
-#ifdef TASK_METRICS
-    tm_summarize();
-#endif //TASK_METRICS
-    KABORT();
+  case TR_IRQ:
+    event_wake(&im_tasks);
+    pq_push(&pq_tasks, td->priority, td);
+    break;
+  case TR_AWAIT_EVENT:
+    event_register(&im_tasks, td);
+    break;
+  case TR_SEND:
+    send_handler(td);
+    break;
+  case TR_RECEIVE:
+    receive_handler(td);
+    break;
+  case TR_REPLY:
+    reply_handler(td);
     break;
   case TR_PASS:
     pq_push(&pq_tasks, td->priority, td);
@@ -214,15 +224,6 @@ void handle(TaskDescriptor *td, TaskRequest req) {
     get_parentTid(td);
     pq_push(&pq_tasks, td->priority, td);
     break;
-  case TR_SEND:
-    send_handler(td);
-    break;
-  case TR_RECEIVE:
-    receive_handler(td);
-    break;
-  case TR_REPLY:
-    reply_handler(td);
-    break;
   case TR_NS_REG:
     ns_register(td);
     pq_push(&pq_tasks, td->priority, td);
@@ -238,12 +239,11 @@ void handle(TaskDescriptor *td, TaskRequest req) {
     td->status = TS_ZOMBIE;
     tt_return(td->tid, &tid_tracker);
     break;
-  case TR_IRQ:
-    event_wake(&im_tasks);
-    pq_push(&pq_tasks, td->priority, td);
-    break;
-  case TR_AWAIT_EVENT:
-    event_register(&im_tasks, td);
+  case TR_ASSERT:
+#ifdef TASK_METRICS
+    tm_summarize();
+#endif //TASK_METRICS
+    KABORT();
     break;
   default:
     KASSERT(false && "UNDEFINED SWI PARAM");
