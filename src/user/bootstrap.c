@@ -47,15 +47,17 @@ void Bootstrap() {
   Create(30, &IOServerUART1); // 9
   Create(30, &IOServerUART2); // 17
 
-  Create(30, &WriterServiceUART2);
-  Create(30, &SendGo);
+  Create(30, &TerminalManager); // 17
 
-  Create(31, &ClearScreen);
-  Create(29, &SwitchManager);
-  Create(29, &TrainManager);
-  Create(29, &SensorManager);
-  Create(29, &RailwayManager);
-  Create(30, &ReaderServiceUART2);
+  // Create(30, &WriterServiceUART2);
+  // Create(30, &SendGo);
+
+  // Create(31, &ClearScreen);
+  // Create(29, &SwitchManager);
+  // Create(29, &TrainManager);
+  // Create(29, &SensorManager);
+  // Create(29, &RailwayManager);
+  //Create(30, &ReaderServiceUART2);
 
   Create(0, &IdleTask);
   Exit();

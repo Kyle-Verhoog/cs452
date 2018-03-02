@@ -106,7 +106,7 @@ void SensorManager(){
     tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
     assert(tx_tid >= 0);
 
-    Cursor c;
+    // Cursor c;
     // SET_CURSOR(c, 30, 20);
 
     Create(30, &SensorReceiver);
