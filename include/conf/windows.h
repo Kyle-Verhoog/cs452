@@ -5,8 +5,8 @@
 // logging window config
 #define LOG_OFFSET_X  50
 #define LOG_OFFSET_Y   1
-#define LOG_WIDTH     20
-#define LOG_HEIGHT    25
+#define LOG_WIDTH     40
+#define LOG_HEIGHT    40
 
 // timer window config
 #define TIME_OFFSET_X  2

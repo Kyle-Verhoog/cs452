@@ -55,8 +55,8 @@ void Bootstrap() {
   // Create(29, &SensorManager);
   // Create(29, &RailwayManager);
 
-  Create(0, &IdleTask);
+  // Create(0, &IdleTask);
   Create(10, &TimerInterface);
-  // Create(0, &Logger);
+  Create(0, &Logger);
   Exit();
 }
