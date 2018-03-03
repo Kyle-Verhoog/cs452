@@ -59,6 +59,19 @@ void parse_rv(tid_t tm_tid, RWProtocol *rwp){
 	Send(tm_tid, &tm, sizeof(tm), &reply, sizeof(reply));
 }
 
+//<train>
+void parse_tk(tid_t tm_tid, RWProtocol *rwp){
+	int args[2];
+	int reply;
+	parse_args(rwp->command, rwp->size, args);
+
+	TMProtocol tm;
+	tm.tmc = TM_TRACK;
+	tm.arg1 = args[0]; //train
+	tm.arg2 = args[1]; //track
+	Send(tm_tid, &tm, sizeof(tm), &reply, sizeof(reply));
+}
+
 //<switch> <dir>
 void parse_sw(tid_t sw_tid, RWProtocol *rwp){
 	int reply;
@@ -75,6 +88,7 @@ void parse_sw(tid_t sw_tid, RWProtocol *rwp){
   }
 
 	SWProtocol sw;
+	sw.swr = SW_FLIP;
 	sw.sw = arg1;
 	sw.dir = swd == 'C' ? SW_CURVE : SW_STRAIGHT;
 	Send(sw_tid, &sw, sizeof(sw), &reply, sizeof(reply));
@@ -88,6 +102,7 @@ void RailwayManager(){
   	track_node track[TRACK_MAX];
   	init_tracka(track);
 
+  	CreateArgs(29, &PredictionManager, (void *)track);
   	tid_t tm_tid = CreateArgs(29, &TrainManager, (void *)track);
   	tid_t sw_tid = CreateArgs(29, &SwitchManager, (void *)track);
   	CreateArgs(29, &SensorManager, (void *)track);
@@ -110,8 +125,12 @@ void RailwayManager(){
 			case RW_SWITCH:
 				parse_sw(sw_tid, &rwp);
 				break;
+			case RW_TRACK:
+				parse_tk(tm_tid, &rwp);
+				break;
 			case RW_SENSOR:
 				assert(0 && "RW_SENSOR");
+				break;
 			default:
 				assert(0 && "Bad Train Command");
 				break;

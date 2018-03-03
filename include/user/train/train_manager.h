@@ -19,7 +19,8 @@ typedef enum TM_Command{
 	TM_MOVE = 0,
 	TM_REVERSE = 1,
 	TM_DELAY = 2,
-	TM_TASK_COMPLETE = 3
+	TM_TASK_COMPLETE = 3,
+	TM_TRACK = 4,
 }TM_Command;
 
 typedef struct TMProtocol{
@@ -47,7 +48,9 @@ CIRCULAR_BUFFER_DEC(tc_cb, volatile TrainProtocol, TRAIN_COMMAND_BUFFER_SIZE);
 #define INIT_TRAIN(td, train_id) td.id = train_id; \
 	td.speed = 0; \
 	td.dir = 1; \
+	td.exist = false; \
 	td.isRunning = -1; \
+	td.node = NULL; \
 	tc_cb_init(&td.buf); \
 
 typedef struct TrainDescriptor{
@@ -55,8 +58,11 @@ typedef struct TrainDescriptor{
 	int speed;
 	bool dir;	//forward is 1
 
+	bool exist;
 	tid_t isRunning;
 	tc_cb buf;
+
+	track_node *node;
 } TrainDescriptor;
 
 void TMWriteTask(void *args);	//args - TrainDescriptor
