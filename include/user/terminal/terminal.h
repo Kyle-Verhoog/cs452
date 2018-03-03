@@ -2,6 +2,7 @@
 #define TERMINAL_H
 
 #include <lib/circular_buffer.h>
+#include <ascii.h>
 
 #ifndef X86
 #include <user/syscalls.h>
