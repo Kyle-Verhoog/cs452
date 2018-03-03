@@ -3,8 +3,6 @@
 //CIRCULAR_BUFFER_DEF(pm_cb, volatile PredictionModel, MAX_STEPS_AHEAD)
 
 void Oracle(void *args){
-	track_node *track = ((OracleArgs*)args)->track;
-	LiveTrains *live = ((OracleArgs*)args)->live;
 }
 
 void MeasureSpeed(tid_t mytid, tid_t cs_tid, TrainDescriptor *td, int dist){

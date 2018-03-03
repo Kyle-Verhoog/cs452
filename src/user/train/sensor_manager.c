@@ -2,6 +2,7 @@
 #include <lib/circular_buffer.h>
 #include <prediction_manager.h>
 
+
 void PrintSensorData(tid_t ws_tid, Sensor *slist, rec_buffer *rb){
 	int i;
 	char sensor[4];
@@ -141,6 +142,16 @@ void init_sensors(Sensor *list, track_node *t){
 			++list;
 		}
 	}
+}
+
+void PushSensorToPrediction(tid_t pred, Sensor *list){
+	int reply;
+	PMProtocol pmp;
+	pmp.pmc = PM_SENSOR;
+	pmp.args = (void *)list;
+	pmp.size = 1;
+
+	Send(pred, &pmp, sizeof(pmp), &reply, sizeof(reply));
 }
 
 void SensorManager(void *args){

@@ -6,7 +6,6 @@ void parse_and_send(tid_t tm, char *command, int size){
 
   if(command[0] == 'q'){
     assert(0 && "we've been up for 26 hours and counting and do not feel like implementing a clean exit. sorry.");
-<<<<<<< HEAD
 	}
 	else if(command[0] == 'r' && command[1]=='v'){
 		//Reverse
