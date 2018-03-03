@@ -1,45 +1,35 @@
-#include <timer_interface.h>
+#include <user/ui/timer_interface.h>
 
-void TimerInterface(){
-	Clock clk;
-	tid_t my_tid = MyTid();
-	tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
-	tid_t ws_tid = WhoIs(WRITERSERVICE_UART2_ID);
+void TimerInterface() {
+  Clock clk;
   char buf[25];
-  int size, offset;
-  Cursor cur;
-  SET_CURSOR(cur, 1, 25);
-  offset = 0;
-	assert(cs_tid >= 0);
+  int len, prev_ti, cur_ti, diff;
+  tid_t my_tid, cs_tid, tm_tid;
 
-	clk_init(&clk);
+  my_tid = MyTid();
+  assert(my_tid >= 0);
+  cs_tid = WhoIs(CLOCKSERVER_ID);
+  assert(cs_tid >= 0);
+  tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+  assert(tm_tid >= 0);
 
-	int prev_ti, cur_ti;
-	prev_ti = cur_ti = Time(cs_tid, my_tid);
-	while(true){
-		Delay(cs_tid, my_tid, 10);
-		int cur_ti = Time(cs_tid, my_tid);
-		int diff = cur_ti - prev_ti;
-    buf[0] = '\033';
-    buf[1] = '[';
-    buf[2] = 'K';
+  clk_init(&clk);
 
-    if(diff >= 10){
+  prev_ti = cur_ti = Time(cs_tid, my_tid);
+  TMRegister(tm_tid, TIME_OFFSET_X, TIME_OFFSET_Y, TIME_WIDTH, TIME_HEIGHT);
+
+  while (true) {
+    Delay(cs_tid, my_tid, 10);
+    cur_ti = Time(cs_tid, my_tid);
+    diff = cur_ti - prev_ti;
+
+    if (diff >= 10) {
       add_dsec(&clk, diff/10);
-      offset = 3;
-      i2a(clk.min, &size, buf+offset);
-      offset += size;
-      buf[offset++] = ':';
-      i2a(clk.sec, &size, buf+offset);
-      offset += size;
-      buf[offset++] = ':';
-      i2a(clk.dsec, &size, buf+offset);
-      offset += size;
-      assert(offset < 20);
-      WriteCommandUART2(ws_tid, buf, offset, &cur);
-			prev_ti += (diff/10)*10;	//Try to be as accurate as possible
-		}
-	}
+      len = buf_pack_f(buf, "\r%t:%t.%d", clk.min, clk.sec, clk.dsec);
+      TMPutStr(tm_tid, buf, len);
+      prev_ti += (diff/10)*10; // Try to be as accurate as possible
+    }
+  }
 
-	Exit();
+  Exit();
 }

@@ -28,25 +28,55 @@ void shell_init(shell *sh) {
 
   sh->cur_pos = 0;
   sh->len = 0;
-  sh->count = 0;
+  sh->cmd_count = 0;
+  sh->clear_count = SH_CLEAR_COUNT;
+  sh->clear = false;
   cmd_cb_init(&sh->buf);
 
   shell_prompt(sh);
 }
 
+void shell_clear(shell *sh) {
+  shell_clear_cmd(sh);
+  cmd_cb_push(&sh->buf, '\r');
+  sh->cmd_count = 0;
+  shell_prompt(sh);
+}
+
+void shell_pre(shell *sh) {
+  if (sh->cmd_count == sh->clear_count) {
+    shell_clear(sh);
+  }
+}
+
 void shell_print(shell *sh, tid_t tm_tid) {
   char c;
+  char buf[10];
+  int i;
+
+  i = 0;
   while (sh->buf.size > 0) {
     cmd_cb_pop(&sh->buf, &c);
-    TMPutC(tm_tid, c);
+    buf[i++] = c;
+    if (i == 9) {
+      TMPutStr(tm_tid, buf, i);
+      i = 0;
+    }
   }
+
+  if (i > 0)
+    TMPutStr(tm_tid, buf, i);
 }
 
 void shell_add_c(shell *sh, char c) {
   int i, pos;
 
-  if (sh->len + 1 > CMD_MAX)
+  if (sh->len > CMD_MAX - 2)
     return;
+
+  if (sh->cmd_count > sh->clear_count) {
+    shell_clear(sh);
+  }
 
   pos = sh->cur_pos;
 
@@ -92,19 +122,37 @@ void shell_info(shell *sh) {
   cmd_cb_push_str(&sh->buf, "`\n");
 }
 
+void shell_skip(shell *sh) {
+  cmd_cb_push_str(&sh->buf, "\n\n");
+}
+
+void shell_info_msg(shell *sh, char *msg) {
+  cmd_cb_push_str(&sh->buf, "\nsh: `");
+  cmd_cb_push_str(&sh->buf, msg);
+  cmd_cb_push_str(&sh->buf, "`\n");
+}
+
 void shell_error(shell *sh) {
   cmd_cb_push_str(&sh->buf, "\nsh: unknown cmd `");
   cmd_cb_push_str(&sh->buf, sh->cmd);
   cmd_cb_push_str(&sh->buf, "`\n");
 }
 
+void shell_errorf(shell *sh, char *msg) {
+  cmd_cb_push_str(&sh->buf, "\nerror: `");
+  cmd_cb_push_str(&sh->buf, sh->cmd);
+  cmd_cb_push_str(&sh->buf, msg);
+  cmd_cb_push_str(&sh->buf, "`\n");
+}
+
+
 void shell_reset(shell *sh) {
+  sh->cmd_count++;
   shell_clear_cmd(sh);
-  if (sh->count == 3) {
-    cmd_cb_push(&sh->buf, '\r');
-    sh->count = 0;
+
+  if (sh->cmd_count < sh->clear_count) {
+    shell_prompt(sh);
   }
-  shell_prompt(sh);
 }
 
 void shell_exec(shell *sh) {
@@ -114,15 +162,18 @@ void shell_exec(shell *sh) {
 
   cmd = sh->cmd;
 
-  if (cmd[0] == 'q') {
+  if (sh->len == 0) {
+    shell_skip(sh);
+  }
+  else if (cmd[0] == 'q' && sh->len == 1) {
     Halt();
   }
   else if (cmd[0] == 't' && cmd[1] == 'r') {
-    if ((r = parse_i32(cmd+2, &arg1)) == 0) {
-      shell_error(sh);
+    if ((r = parse_i32(cmd+2, &arg1)) == 0 || arg1 > 81 || arg1 < 0) {
+      shell_errorf(sh, "train number");
     }
-    else if ((r = parse_i32(r, &arg2)) == 0 || arg2 > 81 || arg2 < 0) {
-      shell_error(sh);
+    else if ((r = parse_i32(r, &arg2)) == 0) {
+      shell_errorf(sh, "train cmd");
     }
     else {
       shell_info(sh);
@@ -151,13 +202,36 @@ void shell_exec(shell *sh) {
       shell_info(sh);
     }
   }
+  else if (cmd[0] == 's' && cmd[1] == 'h') {
+    int x, y, w, h;
+    if ((r = parse_i32(cmd+2, &x)) == 0) {
+      shell_error(sh);
+    }
+    else if ((r = parse_i32(r, &y)) == 0) {
+      shell_error(sh);
+    }
+    else if ((r = parse_i32(r, &w)) == 0) {
+      shell_error(sh);
+    }
+    else if ((r = parse_i32(r, &h)) == 0) {
+      shell_error(sh);
+    }
+    else {
+      shell_info_msg(sh, "spawning new shell");
+      // Create(29, &Shell);
+    }
+  }
+  else if (cmd[0] == 'c' && cmd[1] == 'l' && cmd[2] == 's') {
+    shell_clear(sh);
+    return;
+  }
   else {
     shell_error(sh);
   }
 
-  sh->count++;
   shell_reset(sh);
 }
+
 
 
 void Shell() {
@@ -166,13 +240,14 @@ void Shell() {
   shell sh;
 
   tm_tid = WhoIs(TERMINAL_MANAGER_ID);
-  TMRegister(tm_tid, 2, 1, 47, 9);
+  TMRegister(tm_tid, SH_OFFSET_X, SH_OFFSET_Y, SH_WIDTH, SH_HEIGHT);
 
   shell_init(&sh);
   shell_print(&sh, tm_tid);
 
   while (true) {
     c = TMGetC(tm_tid);
+    shell_pre(&sh);
     switch (c) {
       case CARRIAGE_RETURN:
         shell_exec(&sh);

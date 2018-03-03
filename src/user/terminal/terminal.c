@@ -3,6 +3,11 @@
 CIRCULAR_BUFFER_DEF(tdisp_cb, char, TERMINAL_BUFFER_SIZE);
 CIRCULAR_BUFFER_DEF(wid_cb, int, MAX_WINDOWS);
 
+void tdisp_cb_pushstr(tdisp_cb *buf, char *str) {
+  while (*str != '\0')
+    tdisp_cb_push(buf, *str++);
+}
+
 int tdisp_cb_pushui32(tdisp_cb *buf, unsigned int i) {
   int n;
   int dgt;
@@ -115,7 +120,7 @@ void tdisp_draw_window_outline(TDisplay *td) {
   for (i = 0; i <= h; ++i) {
     if (i == 0 || i == h) {
       tdisp_set_cursor(td, 0, i);
-      tdisp_cb_push(&td->buffer, '+');
+      tdisp_cb_pushstr(&td->buffer, i == 0 ? TERM_TOP_L: TERM_BOT_L);
       if (i == 0) {
         int n;
         if (window->tid == -1)
@@ -123,19 +128,19 @@ void tdisp_draw_window_outline(TDisplay *td) {
         else
           n = tdisp_cb_pushui32(&td->buffer, window->tid);
         for (j = n; j < w-2; ++j)
-          tdisp_cb_push(&td->buffer, '-');
+          tdisp_cb_pushstr(&td->buffer, TERM_HOR);
       }
       else {
         for (j = 0; j < w-2; ++j)
-          tdisp_cb_push(&td->buffer, '-');
+          tdisp_cb_pushstr(&td->buffer, TERM_HOR);
       }
-      tdisp_cb_push(&td->buffer, '+');
+      tdisp_cb_pushstr(&td->buffer, i == 0 ? TERM_TOP_R : TERM_BOT_R);
     }
     else {
       tdisp_set_cursor(td, 0, i);
-      tdisp_cb_push(&td->buffer, '|');
+      tdisp_cb_pushstr(&td->buffer, TERM_VER);
       tdisp_set_cursor(td, w-1, i);
-      tdisp_cb_push(&td->buffer, '|');
+      tdisp_cb_pushstr(&td->buffer, TERM_VER);
     }
   }
 }

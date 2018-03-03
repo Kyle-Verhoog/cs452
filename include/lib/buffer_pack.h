@@ -16,6 +16,8 @@ int buf_pack_i32(char *buf, int i);
  */
 int buf_pack_str(char *buf, char *str);
 
+int buf_pack_fmt(char *buf, char *fmt, va_list va);
+
 int buf_pack_f(char *buf, char *fmt, ...);
 
 #endif  /* BUFFER_PACK_H */
