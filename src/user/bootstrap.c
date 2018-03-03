@@ -7,8 +7,6 @@ void IdleTask() {
   tid_t tm_tid;
 
   tm_tid = WhoIs(TERMINAL_MANAGER_ID);
-
-  assert(tx_tid >= 0);
   assert(tm_tid >= 0);
 
   TMRegister(tm_tid, 50, 1, 20, 25);
@@ -21,17 +19,6 @@ void IdleTask() {
       i = 0;
     }
   }
-  Exit();
-}
-
-void ClearScreen(){
-  tid_t writer = WhoIs(WRITERSERVICE_UART2_ID);
-  Cursor c;
-  SET_CURSOR(c, 1, 1);
-
-  WriteStringUART2(writer, "\033[2J", &c);
-  assert(writer == 15);
-
   Exit();
 }
 

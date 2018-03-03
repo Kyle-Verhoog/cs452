@@ -245,6 +245,9 @@ void handle(TaskDescriptor *td, TaskRequest req) {
 #endif //TASK_METRICS
     KABORT();
     break;
+  case TR_HALT:
+    KEXIT();
+    break;
   default:
     KASSERT(false && "UNDEFINED SWI PARAM");
     pq_push(&pq_tasks, td->priority, td);
