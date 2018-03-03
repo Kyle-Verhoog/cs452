@@ -31,14 +31,25 @@ void wm_add_window(WManager *wm, tid_t tid, char *conf) {
 
 void print_tdisp(tid_t tx_tid, TDisplay *td) {
   char c;
+  char buf[10];
+  int len;
+
+  len = 0;
   while (td->buffer.size > 0) {
     tdisp_cb_pop(&td->buffer, &c);
-    PutC(tx_tid, c);
+    buf[len++] = c;
+    if (len == 9) {
+      PutStr(tx_tid, buf, len);
+      len = 0;
+    }
   }
+
+  if (len > 0)
+    PutStr(tx_tid, buf, len);
 }
 
 void TerminalManager() {
-  int r;
+  int r, i;
   char *c;
   char ch;
   WManager wm;
@@ -47,10 +58,11 @@ void TerminalManager() {
   TManRep rep;
   term_cb buf;
   bool  sh_rdy;
-  tid_t sh_tid;
+  tid_t sh_tid, log_tid;
 
   sh_rdy = false;
   sh_tid = -1;
+  log_tid = -1;
   term_cb_init(&buf);
   r = RegisterAs(TERMINAL_MANAGER_ID);
   assert(r == 0);
@@ -64,7 +76,7 @@ void TerminalManager() {
   PutStr(tx_tid, "\033[2J", 5);
   print_tdisp(tx_tid, &wm.td);
 
-  Create(30, &Shell);
+  Create(29, &Shell);
 
   while (true) {
     Receive(&recv_tid, &req, sizeof(req));
@@ -117,7 +129,18 @@ void TerminalManager() {
         Reply(recv_tid, &rep, sizeof(rep));
         break;
       case TERM_OUT:
-        tdisp_write_task(&wm.td, recv_tid, *c);
+        for (i = 0; i < req.len; ++i) {
+          tdisp_write_task(&wm.td, recv_tid, req.data[i]);
+        }
+        Reply(recv_tid, &rep, sizeof(rep));
+        break;
+      case TERM_LOG_REG:
+        log_tid = recv_tid;
+        break;
+      case TERM_LOG:
+        for (i = 0; i < req.len; ++i) {
+          tdisp_write_task(&wm.td, log_tid, req.data[i]);
+        }
         Reply(recv_tid, &rep, sizeof(rep));
         break;
       default:
@@ -132,12 +155,12 @@ void TMRegister(tid_t tm_tid, char offsetx, char offsety, char width, char heigh
   TManReq req;
   TManRep rep;
   char config[4];
-  req.type = TERM_REG;
+  req.type  = TERM_REG;
   config[0] = offsetx;
   config[1] = offsety;
   config[2] = width;
   config[3] = height;
-  req.data = config;
+  req.data  = config;
   Send(tm_tid, &req, sizeof(req), &rep, sizeof(rep));
 }
 
@@ -165,4 +188,28 @@ char TMGetC(tid_t tm_tid) {
   req.type = TERM_GET;
   Send(tm_tid, &req, sizeof(req), &rep, sizeof(rep));
   return rep.data;
+}
+
+void TMLogRegister(tid_t tm_tid) {
+  TManReq req;
+  TManRep rep;
+  req.type = TERM_LOG_REG;
+  Send(tm_tid, &req, sizeof(req), &rep, sizeof(rep));
+}
+
+void TMLogStrf(tid_t tm_tid, char *fmt, ...) {
+  int len;
+  va_list va;
+  char buf[100];
+  TManReq req;
+  TManRep rep;
+
+  va_start(va, fmt);
+  len = buf_pack_fmt(buf, fmt, va);
+  va_end(va);
+
+  req.type = TERM_LOG;
+  req.data = buf;
+  req.len  = len;
+  Send(tm_tid, &req, sizeof(req), &rep, sizeof(rep));
 }

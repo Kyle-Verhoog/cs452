@@ -20,12 +20,33 @@ int buf_pack_ui32(char *buf, unsigned int i, unsigned int base) {
     dgt = i / d;
     i %= d;
     d /= base;
-    if(n || dgt > 0 || d == 0) {
+    if (n || dgt > 0 || d == 0) {
       c = dgt + (dgt < 10 ? '0' : 'a' - 10);
       offset += buf_pack_c(buf + offset, c);
       ++n;
     }
   }
+  return offset;
+}
+
+int buf_pack_t(char *buf, int t) {
+  int offset;
+  char c;
+
+  offset = 0;
+
+  if (t < 10) {
+    offset += buf_pack_c(buf+offset, '0');
+    c = t + '0';
+    offset += buf_pack_c(buf+offset, c);
+  }
+  else {
+    c = (t/10) + '0';
+    offset += buf_pack_c(buf+offset, c);
+    c = (t%10) + '0';
+    offset += buf_pack_c(buf+offset, c);
+  }
+
   return offset;
 }
 
@@ -65,6 +86,9 @@ int buf_pack_fmt(char *buf, char *fmt, va_list va) {
     else {
       c = *(fmt++);
       switch (c) {
+        case 't':
+          offset += buf_pack_t(buf + offset, va_arg(va, int));
+          break;
         case 'c':
           offset += buf_pack_c(buf + offset, va_arg(va, int));
           break;

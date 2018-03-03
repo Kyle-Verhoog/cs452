@@ -8,18 +8,21 @@
 #include <user/nameserver.h>
 #include <user/terminal/terminal_manager.h>
 
-#define CMD_MAX 20
+#define CMD_MAX 41
 #define CMD_BUF_MAX 512
 
-CIRCULAR_BUFFER_DEC(cmd_cb, char, CMD_BUF_MAX);
+#define SH_CLEAR_COUNT 4
 
+CIRCULAR_BUFFER_DEC(cmd_cb, char, CMD_BUF_MAX);
 
 typedef struct shell {
   char cmd[CMD_MAX];
   cmd_cb buf;
   int cur_pos;
   int len;
-  int count;
+  int cmd_count;
+  int clear_count;
+  bool clear;
 } shell;
 
 void Shell();

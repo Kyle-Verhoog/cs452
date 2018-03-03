@@ -6,9 +6,9 @@
 #include <io.h>
 #include <user/nameserver.h>
 #include <user/clockserver.h>
+#include <user/terminal/terminal_manager.h>
 #include <clock.h>
 #include <writerservice.h>
-#include <i2a.h>
 
 void TimerInterface();
 

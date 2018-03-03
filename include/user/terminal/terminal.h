@@ -13,6 +13,16 @@
 #define MAX_WINDOWS 4
 #define TERMINAL_BUFFER_SIZE 1024
 
+#define TERM_TOP_R "┓"
+#define TERM_TOP_L "┏"
+#define TERM_BOT_R "┛"
+#define TERM_BOT_L "┗"
+#define TERM_HOR   "━"
+#define TERM_VER   "┃"
+
+#define TERM_RETURN  '\r'
+#define TERM_NEWLINE '\n'
+
 CIRCULAR_BUFFER_DEC(tdisp_cb, char, TERMINAL_BUFFER_SIZE);
 CIRCULAR_BUFFER_DEC(wid_cb, int, MAX_WINDOWS);
 
