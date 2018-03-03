@@ -50,6 +50,14 @@
 #define KASSERT(exp) {}
 #endif
 
+#define KEXIT() \
+  do {                                                 \
+*(int *)(VIC1_BASE + VIC_INTENCLEAR_OFFSET) = VIC1_ENABLED; \
+*(int *)(VIC2_BASE + VIC_INTENCLEAR_OFFSET) = VIC2_ENABLED; \
+      PRINTF("\033[2J");                                    \
+      KABORT();                                        \
+  } while (0)
+
 
 // TODO: figure out a way to exit cleanly??
 #define KABORT() \

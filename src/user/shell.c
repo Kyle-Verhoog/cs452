@@ -11,6 +11,10 @@ void Shell() {
 
   while (true) {
     c = TMGetC(tm_tid);
-    TMPutC(tm_tid, c);
+    switch (c) {
+      default:
+        TMPutC(tm_tid, c);
+        break;
+    }
   }
 }

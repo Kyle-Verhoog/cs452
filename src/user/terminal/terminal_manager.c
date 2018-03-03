@@ -40,12 +40,17 @@ void print_tdisp(tid_t tx_tid, TDisplay *td) {
 void TerminalManager() {
   int r;
   char *c;
+  char ch;
   WManager wm;
   tid_t recv_tid, tx_tid;
   TManReq req;
   TManRep rep;
   term_cb buf;
+  bool  sh_rdy;
+  tid_t sh_tid;
 
+  sh_rdy = false;
+  sh_tid = -1;
   term_cb_init(&buf);
   r = RegisterAs(TERMINAL_MANAGER_ID);
   assert(r == 0);
@@ -67,32 +72,43 @@ void TerminalManager() {
 
     switch (req.type) {
       case TERM_GET:
+        sh_tid = recv_tid;
         if (buf.size > 0) {
+          r = term_cb_pop(&buf, &ch);
+          assert(r == 0);
+          rep.data = ch;
+          Reply(recv_tid, &rep, sizeof(rep));
+          sh_rdy = false;
+        } else {
+          sh_rdy = true;
         }
         break;
       case TERM_IN:
         switch (*c) {
-          case 'q':
-            assert(0);
+          case 27:
+            // assert(0);
+            Halt();
             break;
           case '+':
             wm_add_window(&wm, -1, 0);
             break;
-          case '-':
+          case 127:
             tdisp_delete_window(&wm.td);
             break;
-          case '1':
+          case '.':
             tdisp_focus_window(&wm.td, 0);
             break;
-          case '2':
-            tdisp_focus_window(&wm.td, 1);
-            break;
-          case '3':
-            tdisp_focus_window(&wm.td, 2);
-            break;
           default:
-            tdisp_writec(&wm.td, *c);
             break;
+        }
+
+        if (sh_rdy) {
+          rep.data = *c;
+          Reply(sh_tid, &rep, sizeof(rep));
+        }
+        else {
+          r = term_cb_push(&buf, *c);
+          assert(r == 0);
         }
 
         Reply(recv_tid, &rep, sizeof(rep));

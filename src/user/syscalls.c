@@ -43,7 +43,7 @@ void Assert() {
 }
 
 void Halt() {
-  asm("swi #6");
+  asm("swi #15");
 }
 
 int Send(tid_t tid, void *msg, int msg_len, void *reply, int reply_len) {
