@@ -52,6 +52,7 @@ void TerminalManager() {
   int r, i;
   char *c;
   char ch;
+  char tid_buf[10];
   WManager wm;
   tid_t recv_tid, tx_tid;
   TManReq req;
@@ -59,10 +60,12 @@ void TerminalManager() {
   term_cb buf;
   bool  sh_rdy;
   tid_t sh_tid, log_tid;
+  int log_line;
 
   sh_rdy = false;
   sh_tid = -1;
   log_tid = -1;
+  log_line = 0;
   term_cb_init(&buf);
   r = RegisterAs(TERMINAL_MANAGER_ID);
   assert(r == 0);
@@ -136,11 +139,17 @@ void TerminalManager() {
         break;
       case TERM_LOG_REG:
         log_tid = recv_tid;
+        Reply(log_tid, &rep, sizeof(rep));
         break;
       case TERM_LOG:
-        for (i = 0; i < req.len; ++i) {
+        r = buf_pack_i32(tid_buf, recv_tid);
+        assert(r != 0);
+        for (i = 0; i < r; ++i)
+          tdisp_write_task(&wm.td, log_tid, tid_buf[i]);
+        tdisp_write_task(&wm.td, log_tid, ':');
+        tdisp_write_task(&wm.td, log_tid, ' ');
+        for (i = 0; i < req.len; ++i)
           tdisp_write_task(&wm.td, log_tid, req.data[i]);
-        }
         Reply(recv_tid, &rep, sizeof(rep));
         break;
       default:
@@ -207,6 +216,7 @@ void TMLogStrf(tid_t tm_tid, char *fmt, ...) {
   va_start(va, fmt);
   len = buf_pack_fmt(buf, fmt, va);
   va_end(va);
+
 
   req.type = TERM_LOG;
   req.data = buf;

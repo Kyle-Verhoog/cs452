@@ -73,6 +73,6 @@ void Bootstrap() {
   Create(20, &StoppingServerTest);
   Create(0, &IdleTask);
   Create(10, &TimerInterface);
-  // Create(0, &Logger);
+  Create(0, &Logger);
   Exit();
 }
