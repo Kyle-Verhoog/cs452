@@ -2,42 +2,22 @@
 
 int ui_alive;
 
-void IdleTask2() {
-  int i;
-
-  tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
-  assert(tm_tid >= 0);
-
-  TMRegister(tm_tid);
-
-  i = 0;
-  while (ui_alive) {
-    i++;
-    if (i > 20000000) {
-      TMPutC(tm_tid, ';');
-      // PutC(tx_tid, '.');
-      i = 0;
-    }
-  }
-  Exit();
-}
-
 void IdleTask() {
   int i;
+  tid_t tm_tid;
 
-  tid_t tx_tid = WhoIs(IOSERVER_UART2_TX_ID);
-  tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+  tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+
   assert(tx_tid >= 0);
   assert(tm_tid >= 0);
 
-  TMRegister(tm_tid);
+  TMRegister(tm_tid, 50, 1, 20, 25);
 
   i = 0;
   while (ui_alive) {
     i++;
     if (i > 20000000) {
       TMPutC(tm_tid, '.');
-      // PutC(tx_tid, '.');
       i = 0;
     }
   }
@@ -100,6 +80,5 @@ void Bootstrap() {
   DelayCS(mytid, 200);
   Create(20, &StoppingServerTest);
   Create(0, &IdleTask);
-  Create(0, &IdleTask2);
   Exit();
 }
