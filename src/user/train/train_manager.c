@@ -1,6 +1,17 @@
 #include <train_manager.h>
+#include <prediction_manager.h>
 
 CIRCULAR_BUFFER_DEF(tc_cb, volatile TrainProtocol, TRAIN_COMMAND_BUFFER_SIZE);
+
+void AddTrainToPrediction(tid_t pred_tid, TrainDescriptor *train){
+	int reply;
+	PMProtocol pmp;
+	pmp.pmc = PM_TRAIN;
+	pmp.args = (void *)train;
+	pmp.size = 1;
+	
+	Send(pred_tid, &pmp, sizeof(pmp), &reply, sizeof(reply));
+}
 
 void TMWriteTask(void *args){
 	char buf[2];
@@ -64,6 +75,8 @@ void TrainManager(void *args){
   	assert(r == 0);
   	tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
   	assert(tx_tid >= 0);
+  	tid_t pred_tid = WhoIs(PREDICTION_MANAGER_ID);
+  	assert(pred_tid >= 0);
 
 	while(true){
 		tid_t tid_req;
@@ -106,6 +119,11 @@ void TrainManager(void *args){
 				else{
 					Trains[(int)tmp.arg1].isRunning = -1;	
 				}
+				break;
+			case TM_TRACK:
+				Trains[(int)tmp.arg1].node = &track[(int)tmp.arg2];
+				Trains[(int)tmp.arg1].exist = true;
+				AddTrainToPrediction(pred_tid, &Trains[(int)tmp.arg1]);
 				break;
 			default:
 				assert(0 && "Bad Train Command");

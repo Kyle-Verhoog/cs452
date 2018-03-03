@@ -16,6 +16,7 @@
 #include <switch_manager.h>
 #include <train_manager.h>
 #include <sensor_manager.h>
+#include <prediction_manager.h>
 
 typedef enum RW_Command{
 	RW_QUIT = -1,
@@ -23,6 +24,7 @@ typedef enum RW_Command{
 	RW_REVERSE = 2,
 	RW_SWITCH = 3,
 	RW_SENSOR = 4,
+	RW_TRACK = 5
 } RW_Command;
 
 typedef struct RWProtocol{

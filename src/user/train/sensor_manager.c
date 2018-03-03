@@ -1,15 +1,19 @@
 #include <sensor_manager.h>
 #include <lib/circular_buffer.h>
 
-
-void UpdateSensorData(Sensor *slist, char byte, int scounter){
+//Returns if a diff happened
+bool UpdateSensorData(Sensor *slist, char byte, int scounter){
+	bool delta = false;
 	int i=7;
 	for(i = 7; i >= 0; i--){
+		delta = delta || (slist[i + scounter*8].state != (byte & 1));
 		slist[i + scounter*8].state = byte & 1;
 		byte = byte >> 1;
 		assert(i + scounter*8 < 80);
 		assert(i + scounter*8 >= 0);
 	}
+
+	return delta;
 }
 
 void PrintSensorData(tid_t ws_tid, Sensor *slist, rec_buffer *rb){
@@ -97,6 +101,16 @@ void init_sensors(Sensor *list, track_node *t){
 	}
 }
 
+void PushSensorToPrediction(tid_t pred, Sensor *list){
+	int reply;
+	PMProtocol pmp;
+	pmp.pmc = PM_SENSOR;
+	pmp.args = (void *)list;
+	pmp.size = 1;
+
+	Send(pred, &pmp, sizeof(pmp), &reply, sizeof(reply));
+}
+
 void SensorManager(void *args){
 	track_node *track = (track_node *)args;
 	Sensor sensorList[SENSOR_SIZE];
@@ -108,6 +122,8 @@ void SensorManager(void *args){
 	int reply = 0;
 	int r = RegisterAs(SENSOR_MANAGER_ID);
   	assert(r == 0);
+  	tid_t pred_tid = WhoIs(PREDICTION_MANAGER_ID);
+    assert(pred_tid >= 0);
   	tid_t ws_tid2 = WhoIs(WRITERSERVICE_UART2_ID);
     assert(ws_tid2 >= 0);
     tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
@@ -119,7 +135,8 @@ void SensorManager(void *args){
     Create(30, &SensorReceiver);
   	Create(30, &SensorTimeout);
   	int scounter = 0;
-  	int recFlag = 0;
+  	bool recFlag = false;
+  	bool deltaFlag = false;
   	//Kick start sensor gathering data
   	PutC(tx_tid, GET_ALL_SENSORS);
   	while(true){
@@ -131,27 +148,29 @@ void SensorManager(void *args){
   		switch(smp.smr){
   			case SM_READBYTE:
   				Reply(tid_req, &reply, sizeof(reply));
-  				UpdateSensorData(sensorList, smp.byte, scounter);
+  				deltaFlag = deltaFlag || UpdateSensorData(sensorList, smp.byte, scounter);
   				scounter = (scounter + 1) % (DECODER_SIZE*2);
   				if(scounter == 0){
   					PutC(tx_tid, GET_ALL_SENSORS);
-  					PrintSensorData(ws_tid2, sensorList, &rb);
+  					//Update Prediction
+  					if(deltaFlag){
+  						PushSensorToPrediction(pred_tid, sensorList);
+  						deltaFlag = false;
+  					}
   				}
   				if(scounter % 2 == 0){
-  					recFlag = 1;
+  					recFlag = true;
   				}
   				break;
   			case SM_CHECK:
   				Reply(tid_req, &recFlag, sizeof(recFlag));
-  				recFlag = 0;
+  				recFlag = false;
   				break;
   			case SM_RESET:
-  				recFlag = 0;
+  				recFlag = false;
   				scounter = 0;
   				PutC(tx_tid, GET_ALL_SENSORS);
   				Reply(tid_req, &reply, sizeof(reply));
-
-  				// SHIFT_CURSOR(c, 1, 0);
   				break;
   			case SM_HALT:
   				break;

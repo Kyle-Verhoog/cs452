@@ -6,37 +6,43 @@ void parse_and_send(tid_t tm, char *command, int size){
 
   if(command[0] == 'q'){
     assert(0 && "we've been up for 26 hours and counting and do not feel like implementing a clean exit. sorry.");
-  }
-  else if(command[0] == 'r' && command[1]=='v'){
-    //Reverse
-    rwp.rwc = RW_REVERSE;
-    rwp.command = command+2;
-    rwp.size = size-2;
-    Send(tm, &rwp, sizeof(rwp), &reply, sizeof(reply));
-  }
-  else if(command[0] == 't' && command[1]=='r'){
-    //Move Train
-    rwp.rwc = RW_TRAIN;
-    rwp.command = command+2;
-    rwp.size = size-2;
-    Send(tm, &rwp, sizeof(rwp), &reply, sizeof(reply));
-  }
-  else if(command[0] == 's' && command[1]=='w'){
-    //Switch
-    rwp.rwc = RW_SWITCH;
-    rwp.command = command+2;
-    rwp.size = size-2;
-    Send(tm, &rwp, sizeof(rwp), &reply, sizeof(reply));
-  }
-  else if(command[0]=='t' && command[1]=='t'){
-    tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
-    PutStr(tx_tid, "\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85", 100);
-  }
-  else{
-    //Bad Command
-    PRINTF("%c%c", command[0], command[1]);
-    assert(0 && "bad command");
-  }
+	}
+	else if(command[0] == 'r' && command[1]=='v'){
+		//Reverse
+		rwp.rwc = RW_REVERSE;
+		rwp.command = command+2;
+		rwp.size = size-2;
+		Send(tm, &rwp, sizeof(rwp), &reply, sizeof(reply));
+	}
+	else if(command[0] == 't' && command[1]=='r'){
+		//Move Train
+		rwp.rwc = RW_TRAIN;
+		rwp.command = command+2;
+		rwp.size = size-2;
+		Send(tm, &rwp, sizeof(rwp), &reply, sizeof(reply));
+	}
+	else if(command[0] == 's' && command[1]=='w'){
+		//Switch
+		rwp.rwc = RW_SWITCH;
+		rwp.command = command+2;
+		rwp.size = size-2;
+		Send(tm, &rwp, sizeof(rwp), &reply, sizeof(reply));
+	}
+	else if(command[0]=='t' && command[1]=='k'){
+		rwp.rwc = RW_TRACK;
+		rwp.command = command+2;
+		rwp.size = size-2;
+		Send(tm, &rwp, sizeof(rwp), &reply, sizeof(reply));
+	}
+	else if(command[0]=='t' && command[1]=='t'){
+		tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
+		PutStr(tx_tid, "\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85\x85", 100);
+	}
+	else{
+		//Bad Command
+		PRINTF("%c%c", command[0], command[1]);
+		assert(0 && "bad command");
+	}
 }
 
 void ReaderServiceUART2(){
