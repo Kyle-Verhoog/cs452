@@ -85,8 +85,7 @@ void TerminalManager() {
         break;
       case TERM_IN:
         switch (*c) {
-          case 27:
-            // assert(0);
+          case ESCAPE:
             Halt();
             break;
           case '+':

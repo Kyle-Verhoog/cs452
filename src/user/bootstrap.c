@@ -3,7 +3,7 @@
 int ui_alive;
 
 void IdleTask() {
-  int i;
+  int i, j;
   tid_t tm_tid;
 
   tm_tid = WhoIs(TERMINAL_MANAGER_ID);
@@ -12,10 +12,17 @@ void IdleTask() {
   TMRegister(tm_tid, 50, 1, 20, 25);
 
   i = 0;
+  j = 0;
   while (ui_alive) {
     i++;
     if (i > 20000000) {
-      TMPutC(tm_tid, '.');
+      if (j == 18) {
+        TMPutC(tm_tid, '\n');
+        j = 0;
+      } else {
+        TMPutC(tm_tid, '.');
+        j++;
+      }
       i = 0;
     }
   }

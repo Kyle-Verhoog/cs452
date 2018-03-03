@@ -220,16 +220,29 @@ void tdisp_writec(TDisplay *td, char c) {
     return;
 
   tdisp_reset_cursor(td);
-  tdisp_cb_push(&td->buffer, c);
 
-  fwindow->cur.x++;
-  td->tdcur.x++;
-
-  // wrap character if it goes beyond the boundry of the window
-  if (fwindow->cur.x >= fwindow->w-1) {
-    fwindow->cur.x = 1;
-    fwindow->cur.y++;
-    tdisp_set_cursor(td, 1, fwindow->cur.y);
+  switch (c) {
+    case '\r':
+      fwindow->cur.y = 1;
+      fwindow->cur.x = 1;
+      tdisp_clear_window(td);
+      tdisp_reset_cursor(td);
+      break;
+    case '\n':
+      fwindow->cur.y++;
+      fwindow->cur.x = 1;
+      tdisp_reset_cursor(td);
+      break;
+    case BACKSPACE:
+      fwindow->cur.x--;
+      td->tdcur.x--;
+      tdisp_cb_push(&td->buffer, c);
+      break;
+    default:
+      fwindow->cur.x++;
+      td->tdcur.x++;
+      tdisp_cb_push(&td->buffer, c);
+      break;
   }
 }
 
