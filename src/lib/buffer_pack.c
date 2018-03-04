@@ -50,6 +50,15 @@ int buf_pack_t(char *buf, int t) {
   return offset;
 }
 
+// int buf_pack_str(char *buf, char *s) {
+//   int offset;
+//   offset = 0;
+//   while(*s != '\0') {
+//     offset += buf_pack_c(buf+offset, *s++);
+//   }
+//   return offset;
+// }
+
 int buf_pack_i32(char *buf, int i) {
   int offset;
   offset = 0;

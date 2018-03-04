@@ -227,13 +227,18 @@ void tdisp_writec(TDisplay *td, char c) {
   tdisp_reset_cursor(td);
 
   switch (c) {
-    case '\r':
+    case TERM_RESET:
+      fwindow->cur.y = 1;
+      fwindow->cur.x = 1;
+      tdisp_reset_cursor(td);
+      break;
+    case TERM_RETURN:
       fwindow->cur.y = 1;
       fwindow->cur.x = 1;
       tdisp_clear_window(td);
       tdisp_reset_cursor(td);
       break;
-    case '\n':
+    case TERM_NEWLINE:
       fwindow->cur.y++;
       fwindow->cur.x = 1;
       tdisp_reset_cursor(td);

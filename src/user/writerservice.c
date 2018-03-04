@@ -1,8 +1,9 @@
 #include<writerservice.h>
-
 void WriteCommandUART1(tid_t tx_tid, char *command, int size){
 	PutStr(tx_tid, command, size);
 }
+
+/*
 
 void WriteCharUART2(tid_t writer, char c){
 	int reply;
@@ -137,3 +138,4 @@ void WriterServiceUART2(){
 
 	Exit();
 }
+*/

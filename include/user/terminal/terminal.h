@@ -22,6 +22,7 @@
 
 #define TERM_RETURN  '\r'
 #define TERM_NEWLINE '\n'
+#define TERM_RESET   '\v'
 
 CIRCULAR_BUFFER_DEC(tdisp_cb, char, TERMINAL_BUFFER_SIZE);
 CIRCULAR_BUFFER_DEC(wid_cb, int, MAX_WINDOWS);

@@ -31,14 +31,14 @@ void wm_add_window(WManager *wm, tid_t tid, char *conf) {
 
 void print_tdisp(tid_t tx_tid, TDisplay *td) {
   char c;
-  char buf[10];
+  char buf[20];
   int len;
 
   len = 0;
   while (td->buffer.size > 0) {
     tdisp_cb_pop(&td->buffer, &c);
     buf[len++] = c;
-    if (len == 9) {
+    if (len == 19) {
       PutStr(tx_tid, buf, len);
       len = 0;
     }
@@ -142,6 +142,11 @@ void TerminalManager() {
         Reply(log_tid, &rep, sizeof(rep));
         break;
       case TERM_LOG:
+        log_line++;
+        if (log_line > 25) {
+          tdisp_write_task(&wm.td, log_tid, TERM_RETURN);
+          log_line = 0;
+        }
         r = buf_pack_i32(tid_buf, recv_tid);
         assert(r != 0);
         for (i = 0; i < r; ++i)

@@ -16,6 +16,7 @@
 #include <train_manager.h>
 #include <switch_manager.h>
 #include <sensor_manager.h>
+#include <user/terminal/terminal_manager.h>
 
 #define MAX_STEPS_AHEAD 16
 

@@ -1,5 +1,5 @@
 #include<readerservice.h>
-
+/*
 void parse_and_send(tid_t tm, char *command, int size){
   RWProtocol rwp;
   int reply;
@@ -84,3 +84,4 @@ void ReaderServiceUART2(){
     }
   }
 }
+*/

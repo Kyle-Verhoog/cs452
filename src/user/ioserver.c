@@ -197,10 +197,7 @@ void IOServerTX(void *args) {
       case IO_PUTSTR:
         str = req.msg;
         iobi.btid = -1;
-        // assert(str[0] == '\033');
-        // assert(str[1] == '[');
-        // assert(str[2] == '2');
-        // assert(str[3] == 'J');
+
         for (i = 0; i < req.len; ++i) {
           iobi.c = str[i];
           r = io_cb_push(&tran_buf, iobi);

@@ -38,7 +38,7 @@ void shell_init(shell *sh) {
 
 void shell_clear(shell *sh) {
   shell_clear_cmd(sh);
-  cmd_cb_push(&sh->buf, '\r');
+  cmd_cb_push(&sh->buf, TERM_RETURN);
   sh->cmd_count = 0;
   shell_prompt(sh);
 }
@@ -156,9 +156,17 @@ void shell_reset(shell *sh) {
 }
 
 void shell_exec(shell *sh) {
+  int reply;
   char *cmd;
   char *r;
   int arg1, arg2;
+
+  tid_t tr_tid, sw_tid;
+
+  tr_tid = WhoIs(TRAIN_MANAGER_ID);
+  sw_tid = WhoIs(SWITCH_MANAGER_ID);
+  assert(tr_tid > 0);
+  assert(sw_tid > 0);
 
   cmd = sh->cmd;
 
@@ -176,6 +184,11 @@ void shell_exec(shell *sh) {
       shell_errorf(sh, "train cmd");
     }
     else {
+      TMProtocol tm;
+      tm.tmc = TM_MOVE;
+      tm.arg1 = arg1;	//train
+      tm.arg2 = arg2;	//train speed
+      Send(tr_tid, &tm, sizeof(tm), &reply, sizeof(reply));
       shell_info(sh);
     }
   }
@@ -187,6 +200,11 @@ void shell_exec(shell *sh) {
       shell_error(sh);
     }
     else {
+      TMProtocol tm;
+      tm.tmc = TM_REVERSE;
+      tm.arg1 = arg1; //train
+      Send(tr_tid, &tm, sizeof(tm), &reply, sizeof(reply));
+
       shell_info(sh);
     }
   }
@@ -199,6 +217,27 @@ void shell_exec(shell *sh) {
       shell_error(sh);
     }
     else {
+      SWProtocol sw;
+      sw.swr = SW_FLIP;
+      sw.sw = arg1;
+      sw.dir = swd == 'C' ? SW_CURVE : SW_STRAIGHT;
+      Send(sw_tid, &sw, sizeof(sw), &reply, sizeof(reply));
+      shell_info(sh);
+    }
+  }
+  else if (cmd[0] == 't' && cmd[1] == 'k') {
+    if ((r = parse_i32(cmd+2, &arg1)) == 0 || arg1 > 81 || arg1 < 0) {
+      shell_errorf(sh, "train number");
+    }
+    else if ((r = parse_i32(r, &arg2)) == 0) {
+      shell_errorf(sh, "train cmd");
+    }
+    else {
+      TMProtocol tm;
+      tm.tmc = TM_TRACK;
+      tm.arg1 = arg1; //train
+      tm.arg2 = arg2; //train track
+      Send(tr_tid, &tm, sizeof(tm), &reply, sizeof(reply));
       shell_info(sh);
     }
   }

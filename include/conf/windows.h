@@ -6,7 +6,7 @@
 #define LOG_OFFSET_X  50
 #define LOG_OFFSET_Y   1
 #define LOG_WIDTH     40
-#define LOG_HEIGHT    40
+#define LOG_HEIGHT    30
 
 // timer window config
 #define TIME_OFFSET_X  2
@@ -18,5 +18,11 @@
 #define SH_OFFSET_X  2
 #define SH_OFFSET_Y  4
 #define SH_WIDTH    47
-#define SH_HEIGHT    8
+#define SH_HEIGHT    7
+
+// sensor window config
+#define SENSOR_OFFSET_X  11
+#define SENSOR_OFFSET_Y  1
+#define SENSOR_WIDTH    38
+#define SENSOR_HEIGHT   2
 #endif

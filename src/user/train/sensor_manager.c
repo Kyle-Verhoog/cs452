@@ -16,31 +16,9 @@ bool UpdateSensorData(Sensor *slist, char byte, int scounter){
 	return delta;
 }
 
-void PrintSensorData(tid_t ws_tid, Sensor *slist, rec_buffer *rb){
-	int i;
-	char sensor[4];
-	int size;
-
-	for(i = 0; i < SENSOR_SIZE; i++){
-		if(slist[i].state){
-			rec_buffer_add(rb, i);
-		}
-	}
-
-	Cursor c;	//TODO: MAKE DEFINES
-	SET_CURSOR(c, 3, 25);
-
-	//Print from Latest Sensor
-	for(i = 0; i < rb->num; i++){
-		int val = rec_buffer_get(rb, i);
-		sensor[0] = val/16 + 'A';
-		i2a(val%16 + 1, &size, sensor+1);
-		if(val%16 + 1 < 10){
-			sensor[2] = ' ';
-		}
-		WriteCommandUART2(ws_tid, sensor, 3, &c);
-		c.row++;
-	}
+void PrintSensorData(tid_t si_tid, Sensor *slist){
+  int reply;
+  Send(si_tid, &slist, sizeof(slist), &reply, sizeof(reply));
 }
 
 void SensorTimeout(){
@@ -116,24 +94,22 @@ void SensorManager(void *args){
 	Sensor sensorList[SENSOR_SIZE];
 	init_sensors(sensorList, track);
 
-	rec_buffer rb;
-	rec_buffer_init(&rb);
-
 	int reply = 0;
 	int r = RegisterAs(SENSOR_MANAGER_ID);
   	assert(r == 0);
   	tid_t pred_tid = WhoIs(PREDICTION_MANAGER_ID);
     assert(pred_tid >= 0);
-  	tid_t ws_tid2 = WhoIs(WRITERSERVICE_UART2_ID);
-    assert(ws_tid2 >= 0);
     tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
     assert(tx_tid >= 0);
+
+
 
     // Cursor c;
     // SET_CURSOR(c, 30, 20);
 
     Create(30, &SensorReceiver);
   	Create(30, &SensorTimeout);
+    tid_t si_tid = Create(29, &SensorInterface);
   	int scounter = 0;
   	bool recFlag = false;
   	bool deltaFlag = false;
@@ -152,6 +128,7 @@ void SensorManager(void *args){
   				scounter = (scounter + 1) % (DECODER_SIZE*2);
   				if(scounter == 0){
   					PutC(tx_tid, GET_ALL_SENSORS);
+            PrintSensorData(si_tid, sensorList);
   					//Update Prediction
   					if(deltaFlag){
   						PushSensorToPrediction(pred_tid, sensorList);

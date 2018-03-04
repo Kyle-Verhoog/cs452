@@ -9,8 +9,7 @@
 #include <user/terminal/terminal_manager.h>
 #include <user/logger.h>
 #include <user/ui/timer_interface.h>
-#include <user/train/sensor_manager.h>
-#include <user/train/switch_manager.h>
+#include <user/train/railway_manager.h>
 
 void Bootstrap();
 #endif

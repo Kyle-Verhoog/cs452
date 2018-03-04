@@ -25,7 +25,7 @@ void TimerInterface() {
 
     if (diff >= 10) {
       add_dsec(&clk, diff/10);
-      len = buf_pack_f(buf, "\r%t:%t.%d", clk.min, clk.sec, clk.dsec);
+      len = buf_pack_f(buf, "\v%t:%t.%d", clk.min, clk.sec, clk.dsec);
       TMPutStr(tm_tid, buf, len);
       prev_ti += (diff/10)*10; // Try to be as accurate as possible
     }
