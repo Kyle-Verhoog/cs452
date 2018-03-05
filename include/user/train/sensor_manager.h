@@ -12,7 +12,7 @@
 #include <writerservice.h>
 #include <recency_buffer.h>
 #include <track_data.h>
-#include <prediction_manager.h>
+#include <tid_buffer.h>
 
 #define GET_ALL_SENSORS 133
 
@@ -29,6 +29,9 @@ typedef enum SM_Request{
 	SM_READBYTE = 0,
 	SM_CHECK = 1,
 	SM_RESET = 2,
+	SM_SUBSCRIBE = 3,
+	SM_SUBSCRIBE_DELTA = 4,
+	SM_GET_ALL = 10
 } SM_Request;
 
 typedef struct Sensor{

@@ -1,4 +1,5 @@
 #include <railway_manager.h>
+#include <prediction_manager.h>
 
 //Non inclusive tail
 int str2int(char *args, int head, int tail, int base){
@@ -95,6 +96,7 @@ void parse_sw(tid_t sw_tid, RWProtocol *rwp){
 }
 
 void RailwayManager(){
+	void *data;
 	int reply = 0;
 	int r = RegisterAs(RAILWAY_MANAGER_ID);
   	assert(r == 0);
@@ -118,28 +120,33 @@ void RailwayManager(){
 		switch(rwp.rwc){
 			case RW_TRAIN:
 				parse_tr(tm_tid, &rwp);
+				Reply(tid_req, &reply, sizeof(reply));
 				break;
 			case RW_REVERSE:
 				parse_rv(tm_tid, &rwp);
+				Reply(tid_req, &reply, sizeof(reply));
 				break;
 			case RW_SWITCH:
 				parse_sw(sw_tid, &rwp);
+				Reply(tid_req, &reply, sizeof(reply));
 				break;
 			case RW_TRACK:
 				parse_tk(tm_tid, &rwp);
+				Reply(tid_req, &reply, sizeof(reply));
+				break;
+			case RW_GET_TRACK:
+				data = (void *)track;
+				Reply(tid_req, &data, sizeof(data));
 				break;
 			case RW_SENSOR:
 				assert(0 && "RW_SENSOR");
 				break;
+			
 			default:
 				assert(0 && "Bad Train Command");
 				break;
 		}
-
-		//Reply to Sender
-		Reply(tid_req, &reply, sizeof(reply));
 	}
 
 	Exit();
 }
-

@@ -1,5 +1,5 @@
 #include <switch_manager.h>
-
+#include <prediction_manager.h>
 
 void PushSwitchToPrediction(tid_t pred, Switch *sw){
   int reply;
@@ -115,6 +115,7 @@ void SwitchHandler(void *args){
 
 
 void SwitchManager(void * args){
+  void *data;
   track_node *track = (track_node *)args;
 	Switch switchList[SWITCH_SIZE];
 
@@ -149,6 +150,10 @@ void SwitchManager(void * args){
           //Update Prediction
           PushSwitchToPrediction(pred_tid, switchList);
 	  			Reply(req_tid, &reply, sizeof(reply));
+  				break;
+  			case SW_GET_ALL:
+          data = (void *)switchList;
+  				Reply(req_tid, &data, sizeof(data));
   				break;
   			default:
   				assert(0 && "Bad Switch Command");

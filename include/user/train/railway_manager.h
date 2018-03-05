@@ -24,7 +24,9 @@ typedef enum RW_Command{
 	RW_REVERSE = 2,
 	RW_SWITCH = 3,
 	RW_SENSOR = 4,
-	RW_TRACK = 5
+	RW_TRACK = 5,
+	RW_GET_NODE = 6,
+	RW_GET_TRACK = 7
 } RW_Command;
 
 typedef struct RWProtocol{

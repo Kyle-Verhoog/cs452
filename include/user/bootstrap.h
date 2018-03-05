@@ -12,5 +12,7 @@
 #include <user/train/sensor_manager.h>
 #include <user/train/switch_manager.h>
 
+#include <stoppingcalibration_test.h>	//TODO: REMOVE THIS
+
 void Bootstrap();
 #endif

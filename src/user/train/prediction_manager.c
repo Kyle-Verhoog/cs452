@@ -3,41 +3,134 @@
 //CIRCULAR_BUFFER_DEF(pm_cb, volatile PredictionModel, MAX_STEPS_AHEAD)
 
 void Oracle(void *args){
-
+	track_node *track = ((OracleArgs*)args)->track;
+	LiveTrains *live = ((OracleArgs*)args)->live;
 }
 
-track_node *GetNextSensor(Switch *sw, track_node *n){
-	do{
-		if(n->type == NODE_BRANCH){
+void MeasureSpeed(tid_t mytid, tid_t cs_tid, TrainDescriptor *td, int dist){
+	int time = Time(cs_tid, mytid);
+	int speed = dist * 1000/(time - td->time_of_sensor);
+
+	if(time <= td->time_of_sensor){
+		assert(0);
+	}
+
+	td->speed = speed;
+	td->time_of_sensor = time;
+}
+
+int DistanceBetweenNodes(Switch *sw, track_node *start, track_node *end){
+	int dist = 0;
+	track_node *n = start; 
+	while(n != end){
+		if(n->type == NODE_EXIT){
+			return -1;
+		}
+		else if(n->type == NODE_BRANCH){
 			if(sw[n->num].state == SW_STRAIGHT){
+				dist += n->edge[DIR_STRAIGHT].dist;
 				n = n->edge[DIR_STRAIGHT].dest;
 			}
 			else{
-				n = n->edge[DIR_CURVED].dest;	
+				dist += n->edge[DIR_CURVED].dist;
+				n = n->edge[DIR_CURVED].dest;
 			}
 		}
 		else{
+			dist += n->edge[DIR_AHEAD].dist;
+			n = n->edge[DIR_AHEAD].dest;
+		}
+	}
+
+	return dist;
+}
+
+Destination GetPrevSensor(Switch *sw, track_node *n){
+	Destination dest;
+	dest.dist = 0;
+	n = n->reverse;
+
+	while(n->type != NODE_SENSOR){
+		if(n->type == NODE_EXIT){
+			break;
+		}
+		else if(n->type == NODE_BRANCH){
+			if(sw[n->num].state == SW_STRAIGHT){
+				dest.dist += n->edge[DIR_STRAIGHT].dist;
+				n = n->edge[DIR_STRAIGHT].dest;
+			}
+			else{
+				dest.dist += n->edge[DIR_CURVED].dist;
+				n = n->edge[DIR_CURVED].dest;
+			}
+		}
+		else{
+			dest.dist += n->edge[DIR_AHEAD].dist;
+			n = n->edge[DIR_AHEAD].dest;
+		}
+	}
+
+	dest.node = n->reverse;
+
+	return dest;
+}
+
+Destination GetNextSensor(Switch *sw, track_node *n){
+	Destination dest;
+	dest.dist = 0;
+
+	do{
+		if(n->type == NODE_EXIT){
+			break;
+		}
+		else if(n->type == NODE_BRANCH){
+			if(sw[n->num].state == SW_STRAIGHT){
+				dest.dist += n->edge[DIR_STRAIGHT].dist;
+				n = n->edge[DIR_STRAIGHT].dest;
+			}
+			else{
+				dest.dist += n->edge[DIR_CURVED].dist;
+				n = n->edge[DIR_CURVED].dest;
+			}
+		}
+		else{
+			dest.dist += n->edge[DIR_AHEAD].dist;
 			n = n->edge[DIR_AHEAD].dest;
 		}
 
 	} while(n->type != NODE_SENSOR);
 
-	return n;
+	dest.node = n;
+
+	return dest;
 }
 
-void CheckPrediction(Switch *swList, Sensor *snList, LiveTrains *live){
+void CheckPrediction(tid_t mytid, tid_t cs_tid, Switch *swList, Sensor *snList, LiveTrains *live){
+	Destination dest;
 	int i;
+	bool dir;
+
 	for(i = 0; i < live->size; i++){
 		TrainDescriptor * train = live->buf[i];
-		track_node * next = GetNextSensor(swList, train->node);
-		if(snList[train->node->num].state == SEN_OFF){
-			//Train Left Sensor
-			PRINTF("TRAIN %d LEFT SENSOR %s\n\r", train->id, train->node->name);
+		dir = train->dir;
+		dest = GetNextSensor(swList, train->node);
+		if(train->dir != dir){
+			assert(0 && "TRAIN HAS FLIPPED SOMEWHERE WHEN WE CALLED NEXT SENSOR");
 		}
-		if(snList[next->num].state == SEN_ON){
-			//Train On New Sensor
-			PRINTF("TRAIN %d ON SENSOR %s\n\r", train->id, next->name);
-			train->node = next;
+		if(dest.node->type == NODE_EXIT){
+			assert(0 && "TRAIN IS ABOUT TO RUN OFF THE TRACK");
+		}
+		else{
+			if(snList[train->node->num].state == SEN_OFF){
+			//Train Left Sensor
+			//PRINTF("TRAIN %d LEFT SENSOR %s\n\r", train->id, train->node->name);
+		}
+			if(snList[dest.node->num].state == SEN_ON){
+				//Train On New Sensor
+				train->node = dest.node;
+				MeasureSpeed(mytid, cs_tid, train, dest.dist);
+				//PRINTF("TRAIN %d ON SENSOR %s with SPEED: %dum/ms\n\r", train->id, dest.node->name, train->speed);
+			}
 		}
 	}
 }
@@ -52,6 +145,9 @@ void PredictionManager(void *args){
 	int r = RegisterAs(PREDICTION_MANAGER_ID);
 	assert(r == 0);
 
+	tid_t mytid = MyTid();
+	tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
+	assert(cs_tid >= 0);
 	tid_t tx2_writer = WhoIs(WRITERSERVICE_UART2_ID);
 	assert(tx2_writer >= 0);
 
@@ -78,7 +174,7 @@ void PredictionManager(void *args){
 				//Sensor data has been updated
 				snList = (Sensor *)pmp.args;
 				if(swList != NULL && snList != NULL){
-					CheckPrediction(swList, snList, &live);	
+					CheckPrediction(mytid, cs_tid, swList, snList, &live);	
 				}
 				break;
 			case PM_SWITCH:
@@ -87,7 +183,6 @@ void PredictionManager(void *args){
 				break;
 			case PM_TRAIN:
 				AddTrain(&live, (TrainDescriptor *)pmp.args);
-				WriteStringUART2(tx2_writer, live.buf[live.size - 1]->node->name, &c);
 				break;
 			default:
 				assert(0 && "Bad Command");

@@ -39,8 +39,21 @@ typedef struct PMProtocol{
 	int size;
 }PMProtocol;
 
+typedef struct OracleArgs{
+	track_node *track;
+	LiveTrains *live;
+}OracleArgs;
+
+typedef struct Destination{
+	track_node *node;
+	int dist;
+}Destination;
+
 void AddTrain(LiveTrains *live, TrainDescriptor *td);
 
+int DistanceBetweenNodes(Switch *sw, track_node *start, track_node *end);
+Destination GetPrevSensor(Switch *sw, track_node *n);	//Inclusive, Overshoots distance
+Destination GetNextSensor(Switch *sw, track_node *n);	//Exclusive, Undershoots distance
 void PredictionManager();
 
 #endif //PREDICTION_MANAGER_H

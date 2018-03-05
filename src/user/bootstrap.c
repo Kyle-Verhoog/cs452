@@ -48,5 +48,8 @@ void Bootstrap() {
 
   // Create(19, &TimerInterface);
   Create(0, &IdleTask);
+
+  DelayCS(mytid, 200);
+  Create(20, &StoppingServerTest);
   Exit();
 }

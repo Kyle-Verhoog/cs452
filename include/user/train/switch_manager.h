@@ -10,7 +10,6 @@
 #include <ioserver.h>
 #include <writerservice.h>
 #include <track_data.h>
-#include <prediction_manager.h>
 
 typedef enum SwitchState{
 	SW_STRAIGHT = 33,
@@ -20,6 +19,7 @@ typedef enum SwitchState{
 typedef enum SW_Request{
 	SW_HALT = -1,
 	SW_FLIP = 0,
+	SW_GET_ALL = 1
 }SW_Request;
 
 typedef struct SWProtocol{
