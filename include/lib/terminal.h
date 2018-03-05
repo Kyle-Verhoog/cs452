@@ -11,10 +11,8 @@
 #include <assert.h>
 #endif
 
-#define DISPLAY_WIDTH  300
-#define DISPLAY_HEIGHT 300
-#define MAX_WINDOWS 4
-#define TERMINAL_BUFFER_SIZE 1024
+#define MAX_WINDOWS 10
+#define TERMINAL_BUFFER_SIZE 4096
 
 #define TERM_TOP_R "┓"
 #define TERM_TOP_L "┏"

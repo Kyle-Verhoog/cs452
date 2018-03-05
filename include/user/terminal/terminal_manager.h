@@ -6,7 +6,7 @@
 #include <conf/windows.h>
 #include <user/syscalls.h>
 #include <user/ioserver.h>
-#include <user/terminal/terminal.h>
+#include <lib/terminal.h>
 #include <user/shell.h>
 
 #define TERMINAL_UART_RX IOSERVER_UART2_RX_ID

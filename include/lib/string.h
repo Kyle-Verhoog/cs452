@@ -1,4 +1,5 @@
 #ifndef STRING_H
-#define STRING*_H
+#define STRING_H
 
+int strlen(const char *);
 #endif

@@ -152,7 +152,6 @@ void tdisp_clear_window(TDisplay *td) {
   w = window->w;
   h = window->h;
 
-  // tdisp_set_cursor(td, window->offsetx, window->offsety);
   for (i = 1; i < h; ++i) {
     tdisp_set_cursor(td, 1, i);
     for (j = 0; j < w-2; ++j) {
@@ -161,6 +160,21 @@ void tdisp_clear_window(TDisplay *td) {
   }
 }
 
+void tdisp_clear_whole_window(TDisplay *td) {
+  int i, j, w, h;
+  TWindow *window;
+  window = td->focused_window;
+
+  w = window->w;
+  h = window->h;
+
+  for (i = 0; i <= h; ++i) {
+    tdisp_set_cursor(td, 0, i);
+    for (j = 0; j < w; ++j) {
+      tdisp_cb_push(&td->buffer, ' ');
+    }
+  }
+}
 
 int tdisp_add_window(TDisplay *td, int x, int y, int w, int h, tid_t tid) {
   int r, wid;
@@ -203,7 +217,7 @@ void tdisp_delete_window(TDisplay *td) {
   fwindow = td->focused_window;
   wid = fwindow->wid;
 
-  tdisp_clear_window(td);
+  tdisp_clear_whole_window(td);
   td->active_windows[wid] = 0;
   td->task_window[TID_ID(fwindow->tid)] = -1;
   r = wid_cb_push(&td->avail_wids, wid);
@@ -219,6 +233,18 @@ void tdisp_delete_window(TDisplay *td) {
   }
 }
 
+void tdisp_move_window(TDisplay *td, int x, int y) {
+  TWindow *fwindow;
+  int i, r;
+  int wid;
+  fwindow = td->focused_window;
+  wid = fwindow->wid;
+
+  tdisp_clear_whole_window(td);
+  twindow_init(fwindow, wid, x, y, fwindow->w, fwindow->h, fwindow->tid);
+  tdisp_draw_window_outline(td);
+  tdisp_reset_cursor(td);
+}
 
 // writes a character to the active window
 void tdisp_writec(TDisplay *td, char c) {

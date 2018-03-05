@@ -75,11 +75,17 @@ void TerminalManager() {
   Create(30, &TerminalInputHandler);
 
   wm_init(&wm);
-  PutStr(tx_tid, "\033[2J", 5);
-  PutStr(tx_tid, "\033[2J", 5);
+  char *init = "\033[30m\033[47m\033[2J\e[1m";
+  PutStr(tx_tid, init, strlen(init));
+  PutStr(tx_tid, init, strlen(init));
   print_tdisp(tx_tid, &wm.td);
 
-  Create(29, &Shell);
+  int sh_args[4];
+  sh_args[0] = SH_OFFSET_X;
+  sh_args[1] = SH_OFFSET_Y;
+  sh_args[2] = SH_WIDTH;
+  sh_args[3] = SH_HEIGHT;
+  CreateArgs(29, &Shell, (void *)sh_args);
 
   while (true) {
     Receive(&recv_tid, &req, sizeof(req));
