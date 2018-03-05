@@ -1,5 +1,12 @@
 #include <test/train/path_finding.h>
 
+static void dij_simple_path(track_node *track) {
+  track_node *start, *dest;
+  start = &track[0];
+  dest  = &track[1];
+
+  dij_path_find(track, start, dest);
+}
 
 static void bf_simple_path(track_node *track) {
   track_node *start, *dest;

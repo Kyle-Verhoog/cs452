@@ -6,7 +6,6 @@
 
 #define MAX_TPQ_SIZE TRACK_MAX
 
-
 typedef struct train_priority_queue_node {
   int priority;
   int val;
