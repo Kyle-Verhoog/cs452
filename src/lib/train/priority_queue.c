@@ -93,6 +93,7 @@ int tpq_dec_priority(tp_queue *tpq, int val, int priority) {
   int i, p;
   tp_queue_node *tree, t;
   int *map;
+  assert(val >= 0 && val <= TRACK_MAX);
 
   map = tpq->map;
   tree = tpq->tree;

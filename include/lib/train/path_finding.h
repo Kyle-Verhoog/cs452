@@ -7,9 +7,8 @@
 #include <lib/train/priority_queue.h>
 
 
-// void bf_path_find(track);
 void bf_path_find(track_node *s, track_node *d);
 
-void dij_path_find(track_node *track, track_node *s, track_node *d);
+void dij_path_find(track_node *track, track_node *s, track_node *d, int *prev);
 
 #endif
