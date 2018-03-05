@@ -11,6 +11,8 @@ void Logger() {
   TMRegister(tm_tid, LOG_OFFSET_X, LOG_OFFSET_Y, LOG_WIDTH, LOG_HEIGHT);
   TMLogRegister(tm_tid);
 
+  Create(5, &IdleTimeInterface);
+
   i = 0;
   j = 0;
   while (true) {

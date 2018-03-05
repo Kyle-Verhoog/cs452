@@ -50,6 +50,7 @@ void IOServerUART1();
 
 char GetC(tid_t ios_tid);
 int PutC(tid_t ios_tid, char c);
+int BLPutC(tid_t ios_tid, char c);
 int PutStr(tid_t ios_tid, char *c, int len);
 
 

@@ -19,7 +19,7 @@ void NProcsInterface() {
 
   while (true) {
     nprocs = NProcs();
-    len = buf_pack_f(buf, "%t/%d\b\b\b\b\b", nprocs, 32);
+    len = buf_pack_f(buf, "%t/%d\b\b\b\b\b", nprocs, MAX_TASK);
     TMPutStr(tm_tid, buf, len);
     Delay(cs_tid, my_tid, 100);
   }

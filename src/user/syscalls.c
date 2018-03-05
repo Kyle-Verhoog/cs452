@@ -100,4 +100,12 @@ int MemUsage() {
   return r0;
 }
 
+int CPUUsage(tid_t tid) {
+  register uint32_t r0 __asm__("r0");
+  asm("swi #18");
+  return r0;
+}
+
+
+
 

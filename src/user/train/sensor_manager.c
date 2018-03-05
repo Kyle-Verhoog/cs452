@@ -140,7 +140,7 @@ void SensorManager(void *args){
 
     tid_t si_tid = Create(29, &SensorInterface);
   	//Kick start sensor gathering data
-  	PutC(tx_tid, GET_ALL_SENSORS);
+  	BLPutC(tx_tid, GET_ALL_SENSORS);
   	while(true){
   		tid_t tid_req;
   		SMProtocol smp;
@@ -153,7 +153,7 @@ void SensorManager(void *args){
   				deltaFlag = deltaFlag || UpdateSensorData(sensorList, smp.byte, scounter, subscribers);
   				scounter = (scounter + 1) % (DECODER_SIZE*2);
   				if(scounter == 0){
-  					PutC(tx_tid, GET_ALL_SENSORS);
+  					BLPutC(tx_tid, GET_ALL_SENSORS);
   					//Update Prediction
   					if(deltaFlag){
   						Notify(&subscribers[SENSOR_SIZE]);
@@ -174,7 +174,7 @@ void SensorManager(void *args){
   				Reply(tid_req, &reply, sizeof(reply));
   				recFlag = false;
   				scounter = 0;
-  				PutC(tx_tid, GET_ALL_SENSORS);
+  				BLPutC(tx_tid, GET_ALL_SENSORS);
   				break;
   			case SM_SUBSCRIBE:
   				tid_cb_push(&subscribers[(int)smp.byte], tid_req);

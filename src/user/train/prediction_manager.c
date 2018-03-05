@@ -124,14 +124,14 @@ void CheckPrediction(tid_t mytid, tid_t cs_tid, Switch *swList, Sensor *snList, 
 		else{
 			if(snList[train->node->num].state == SEN_OFF){
 			//Train Left Sensor
-      TMLogStrf(tm_tid, "tr %d left %s\n", train->id, train->node->name);
+      // TMLogStrf(tm_tid, "tr %d left %s\n", train->id, train->node->name);
 			//PRINTF("TRAIN %d LEFT SENSOR %s\n\r", train->id, train->node->name);
 		}
 			if(snList[dest.node->num].state == SEN_ON){
 				//Train On New Sensor
 				train->node = dest.node;
 				MeasureSpeed(mytid, cs_tid, train, dest.dist);
-			  TMLogStrf(tm_tid, "tr %d at %s (%d)\n", train->id, dest.node->name, train->speed);
+			  // TMLogStrf(tm_tid, "tr %d at %s (%d)\n", train->id, dest.node->name, train->speed);
 				//PRINTF("TRAIN %d ON SENSOR %s with SPEED: %dum/ms\n\r", train->id, dest.node->name, train->speed);
 			}
 		}

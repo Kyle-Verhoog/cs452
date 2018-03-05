@@ -149,7 +149,7 @@ void TerminalManager() {
         break;
       case TERM_LOG:
         log_line++;
-        if (log_line > 37) {
+        if (log_line > LOG_HEIGHT - 3) {
           tdisp_write_task(&wm.td, log_tid, TERM_RETURN);
           log_line = 0;
         }

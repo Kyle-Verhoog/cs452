@@ -35,9 +35,17 @@
 #define SH_WIDTH    69
 #define SH_HEIGHT    9
 
+// idle
+#define IDLE_OFF_X  MEM_OFF_X + MEM_WIDTH + 1
+#define IDLE_OFF_Y  1
+#define IDLE_WIDTH    11
+#define IDLE_HEIGHT   2
+
 // sensor window config
-#define SENSOR_OFFSET_X  MEM_OFF_X + MEM_WIDTH + 1
+#define SENSOR_OFFSET_X  IDLE_OFF_X + IDLE_WIDTH + 1
 #define SENSOR_OFFSET_Y  1
-#define SENSOR_WIDTH    31
+#define SENSOR_WIDTH    19
 #define SENSOR_HEIGHT   2
+
+
 #endif

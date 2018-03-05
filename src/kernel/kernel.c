@@ -183,6 +183,21 @@ void get_parentTid( TaskDescriptor *td) {
   td->ret = td->parent ? td->parent->tid : -1;
 }
 
+#ifdef TASK_METRICS
+int calc_cpu_time(TaskDescriptor *td) {
+  int id;
+  tid_t other_tid;
+  TaskDescriptor *other;
+
+  asm("ldr %0, [%1, #4];":"=r"(other_tid):"r"(td->sp));
+
+  id = TID_ID(other_tid);
+  other = &tasks[id];
+  assert(*(int*)(TM_CLOCK_VAL) < other->start_time);
+  return (other->running_time * 100) / (other->start_time - *(int*)(TM_CLOCK_VAL));
+}
+#endif
+
 void handle(TaskDescriptor *td, TaskRequest req) {
   switch (req) {
   case TR_IRQ:
@@ -256,6 +271,12 @@ void handle(TaskDescriptor *td, TaskRequest req) {
     td->ret = calc_mem_usage();
     pq_push(&pq_tasks, td->priority, td);
     break;
+  case TR_INFO_CPU:
+#ifdef TASK_METRICS
+    td->ret = calc_cpu_time(td);
+    pq_push(&pq_tasks, td->priority, td);
+    break;
+#endif
   default:
     KASSERT(false && "UNDEFINED SWI PARAM");
     pq_push(&pq_tasks, td->priority, td);

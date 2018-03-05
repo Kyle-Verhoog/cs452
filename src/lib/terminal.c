@@ -292,7 +292,7 @@ int tdisp_get_task(TDisplay *td) {
 
 int tdisp_focus_task_window(TDisplay *td, tid_t tid) {
   tid_id_t id = TID_ID(tid);
-  if (id < 0 || 32 < id)
+  if (id < 0 || MAX_TASK < id)
     return -1;
 
   int wid = td->task_window[id];

@@ -31,7 +31,7 @@ void SensorInterface() {
     }
 
     // Print from Latest Sensor
-    for(i = 0; i < min(rb.num, 7); i++){
+    for(i = 0; i < min(rb.num, 4); i++){
       int val = rec_buffer_get(&rb, i);
       offset += buf_pack_c(buf+offset, ' ');
       offset += buf_pack_c(buf+offset, val/16 + 'A');

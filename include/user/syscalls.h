@@ -37,6 +37,8 @@ int NProcs();
 
 int MemUsage();
 
+int CPUUsage(tid_t tid);
+
 #ifdef DEBUG
 #include <io.h>
 

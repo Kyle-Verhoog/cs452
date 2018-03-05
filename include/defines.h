@@ -17,7 +17,9 @@
 #define KERNEL_STACK_BASE 0x01000000 //0x01000000
 
 #define USER_STACK_BASE 0x02000000
-#define USER_STACK_SIZE 0xf0000  //1 MB User stacks
+// #define USER_STACK_SIZE 0xf0000  //1 MB User stacks
+#define USER_STACK_SIZE 0x78000  // 512 KB User stacks
+
 
 //Kernel Modes
 #define USER_MODE 16
@@ -26,7 +28,7 @@
 #define SYSTEM_MODE 31
 
 // The number of tasks in the system
-#define MAX_TASK  32
+#define MAX_TASK  64
 #define MAX_PRIORITY 32
 #define NS_MAX_ENTRY 64
 #define CSQ_MAX_SIZE MAX_TASK
@@ -40,6 +42,7 @@
 #define IOSERVER_UART2_RX_ID 5
 #define IOSERVER_UART2_TX_ID 6
 #define TERMINAL_MANAGER_ID 10
+#define LOGGER_ID 11
 #define RAILWAY_MANAGER_ID 20
 #define TRAIN_MANAGER_ID 21
 #define SWITCH_MANAGER_ID 22
