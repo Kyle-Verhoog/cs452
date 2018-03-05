@@ -1,5 +1,5 @@
 #include <user/test/k2_task.h>
-
+/*
 #define RPC_SERVER_NAME 42
 #define RPC_BUFFER_SIZE 64
 
@@ -218,3 +218,4 @@ void RPCServer() {
     }
   }
 }
+*/

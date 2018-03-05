@@ -3,7 +3,7 @@
 
 #include <lib/circular_buffer.h>
 
-#define IO_SERVER_BUFFER_SIZE 2048
+#define IO_SERVER_BUFFER_SIZE 16192
 
 typedef struct iobuf_item {
   char c;

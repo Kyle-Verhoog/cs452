@@ -2,6 +2,43 @@
 
 CIRCULAR_BUFFER_DEF(cmd_cb, char, CMD_BUF_MAX);
 
+int sh_args[4]; // kinda a bad hack
+
+void ShellDummyTask() {
+  tid_t tm_tid;
+  int i, j, k, x, y, w, h;
+
+  x = sh_args[0];
+  y = sh_args[1];
+  w = sh_args[2];
+  h = sh_args[3];
+
+  tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+  assert(tm_tid >= 0);
+  TMRegister(tm_tid, x, y, w, h);
+
+  i = j = k = 0;
+  while (true) {
+    i++;
+    if (i > 2000000) {
+      if (j == w-2) {
+        TMPutC(tm_tid, '\n');
+        if (k == h-2) {
+          TMPutC(tm_tid, '\r');
+          k = 0;
+        } else {
+          k++;
+        }
+        j = 0;
+      } else {
+        TMPutC(tm_tid, 'a'+j);
+        j++;
+      }
+      i = 0;
+    }
+  }
+}
+
 void cmd_cb_push_str(cmd_cb *buf, char *str) {
   while (*str != '\0') {
     cmd_cb_push(buf, *str++);
@@ -38,7 +75,7 @@ void shell_init(shell *sh) {
 
 void shell_clear(shell *sh) {
   shell_clear_cmd(sh);
-  cmd_cb_push(&sh->buf, '\r');
+  cmd_cb_push(&sh->buf, TERM_RETURN);
   sh->cmd_count = 0;
   shell_prompt(sh);
 }
@@ -156,9 +193,17 @@ void shell_reset(shell *sh) {
 }
 
 void shell_exec(shell *sh) {
+  int reply;
   char *cmd;
   char *r;
   int arg1, arg2;
+
+  tid_t tr_tid, sw_tid;
+
+  tr_tid = WhoIs(TRAIN_MANAGER_ID);
+  sw_tid = WhoIs(SWITCH_MANAGER_ID);
+  assert(tr_tid > 0);
+  assert(sw_tid > 0);
 
   cmd = sh->cmd;
 
@@ -176,6 +221,11 @@ void shell_exec(shell *sh) {
       shell_errorf(sh, "train cmd");
     }
     else {
+      TMProtocol tm;
+      tm.tmc = TM_MOVE;
+      tm.arg1 = arg1;	//train
+      tm.arg2 = arg2;	//train speed
+      Send(tr_tid, &tm, sizeof(tm), &reply, sizeof(reply));
       shell_info(sh);
     }
   }
@@ -187,6 +237,11 @@ void shell_exec(shell *sh) {
       shell_error(sh);
     }
     else {
+      TMProtocol tm;
+      tm.tmc = TM_REVERSE;
+      tm.arg1 = arg1; //train
+      Send(tr_tid, &tm, sizeof(tm), &reply, sizeof(reply));
+
       shell_info(sh);
     }
   }
@@ -199,6 +254,27 @@ void shell_exec(shell *sh) {
       shell_error(sh);
     }
     else {
+      SWProtocol sw;
+      sw.swr = SW_FLIP;
+      sw.sw = arg1;
+      sw.dir = swd == 'C' ? SW_CURVE : SW_STRAIGHT;
+      Send(sw_tid, &sw, sizeof(sw), &reply, sizeof(reply));
+      shell_info(sh);
+    }
+  }
+  else if (cmd[0] == 't' && cmd[1] == 'k') {
+    if ((r = parse_i32(cmd+2, &arg1)) == 0 || arg1 > 81 || arg1 < 0) {
+      shell_errorf(sh, "train number");
+    }
+    else if ((r = parse_i32(r, &arg2)) == 0) {
+      shell_errorf(sh, "train cmd");
+    }
+    else {
+      TMProtocol tm;
+      tm.tmc = TM_TRACK;
+      tm.arg1 = arg1; //train
+      tm.arg2 = arg2; //train track
+      Send(tr_tid, &tm, sizeof(tm), &reply, sizeof(reply));
       shell_info(sh);
     }
   }
@@ -218,7 +294,35 @@ void shell_exec(shell *sh) {
     }
     else {
       shell_info_msg(sh, "spawning new shell");
-      // Create(29, &Shell);
+      int sh_args[4];
+      sh_args[0] = x;
+      sh_args[1] = y;
+      sh_args[2] = w;
+      sh_args[3] = h;
+      Create(29, &Shell);
+    }
+  }
+  else if (cmd[0] == 'c' && cmd[1] == 'r') {
+    int x, y, w, h;
+    if ((r = parse_i32(cmd+2, &x)) == 0) {
+      shell_error(sh);
+    }
+    else if ((r = parse_i32(r, &y)) == 0) {
+      shell_error(sh);
+    }
+    else if ((r = parse_i32(r, &w)) == 0) {
+      shell_error(sh);
+    }
+    else if ((r = parse_i32(r, &h)) == 0) {
+      shell_error(sh);
+    }
+    else {
+      shell_info_msg(sh, "spawning test window");
+      sh_args[0] = x;
+      sh_args[1] = y;
+      sh_args[2] = w;
+      sh_args[3] = h;
+      Create(1, &ShellDummyTask);
     }
   }
   else if (cmd[0] == 'c' && cmd[1] == 'l' && cmd[2] == 's') {
@@ -234,13 +338,22 @@ void shell_exec(shell *sh) {
 
 
 
-void Shell() {
+void Shell(void *args) {
   tid_t tm_tid;
   char c;
   shell sh;
+  int *vars;
+  int i, x, y, w, h;
+
+  vars = (int *)args;
+  x = vars[0];
+  y = vars[1];
+  w = vars[2];
+  h = vars[3];
 
   tm_tid = WhoIs(TERMINAL_MANAGER_ID);
-  TMRegister(tm_tid, SH_OFFSET_X, SH_OFFSET_Y, SH_WIDTH, SH_HEIGHT);
+  //TMRegister(tm_tid, SH_OFFSET_X, SH_OFFSET_Y, SH_WIDTH, SH_HEIGHT);
+  TMRegister(tm_tid, x, y, w, h);
 
   shell_init(&sh);
   shell_print(&sh, tm_tid);

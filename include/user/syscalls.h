@@ -33,6 +33,10 @@ int GetNS();
 
 int AwaitEvent(InterruptEvent eventid);
 
+int NProcs();
+
+int MemUsage();
+
 #ifdef DEBUG
 #include <io.h>
 

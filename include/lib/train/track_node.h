@@ -27,6 +27,7 @@ struct track_edge {
 struct track_node {
   const char *name;
   node_type type;
+  int id;
   int num;              /* sensor or switch number */
   track_node *reverse;  /* same location, but opposite direction */
   track_edge edge[2];

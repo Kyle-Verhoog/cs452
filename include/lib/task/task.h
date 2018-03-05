@@ -3,8 +3,7 @@
 #include <ts7200.h>
 #include <stdlib.h>
 #include <asm/asm.h>
-#include <task/tid_buffer.h>
-#include <circularbuffer.h>
+#include <lib/task/tid_buffer.h>
 
 #ifdef DEBUG
   #include <io.h>
@@ -48,6 +47,8 @@ typedef enum TaskRequest {
   TR_AWAIT_EVENT    = 13,
   TR_CREATE_W_ARGS  = 14,
   TR_HALT           = 15,
+  TR_INFO_NPROC     = 16,
+  TR_INFO_MEM       = 17,
 } TaskRequest;
 
 typedef enum InterruptType{

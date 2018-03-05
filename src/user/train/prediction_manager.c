@@ -2,6 +2,9 @@
 
 //CIRCULAR_BUFFER_DEF(pm_cb, volatile PredictionModel, MAX_STEPS_AHEAD)
 
+
+tid_t tm_tid;
+
 void Oracle(void *args){
 }
 
@@ -121,12 +124,14 @@ void CheckPrediction(tid_t mytid, tid_t cs_tid, Switch *swList, Sensor *snList, 
 		else{
 			if(snList[train->node->num].state == SEN_OFF){
 			//Train Left Sensor
+      TMLogStrf(tm_tid, "tr %d left %s\n", train->id, train->node->name);
 			//PRINTF("TRAIN %d LEFT SENSOR %s\n\r", train->id, train->node->name);
 		}
 			if(snList[dest.node->num].state == SEN_ON){
 				//Train On New Sensor
 				train->node = dest.node;
 				MeasureSpeed(mytid, cs_tid, train, dest.dist);
+			  TMLogStrf(tm_tid, "tr %d at %s (%d)\n", train->id, dest.node->name, train->speed);
 				//PRINTF("TRAIN %d ON SENSOR %s with SPEED: %dum/ms\n\r", train->id, dest.node->name, train->speed);
 			}
 		}
@@ -146,15 +151,11 @@ void PredictionManager(void *args){
 	tid_t mytid = MyTid();
 	tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
 	assert(cs_tid >= 0);
-	tid_t tx2_writer = WhoIs(WRITERSERVICE_UART2_ID);
-	assert(tx2_writer >= 0);
+  tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+  assert(tm_tid >= 0);
 
 	LiveTrains live;
 	INIT_LIVE_TRAINS(live);
-
-	Cursor c;
-	c.row = 40;
-	c.col = 30;
 
 	Switch *swList = NULL;
 	Sensor *snList = NULL;
@@ -181,6 +182,7 @@ void PredictionManager(void *args){
 				break;
 			case PM_TRAIN:
 				AddTrain(&live, (TrainDescriptor *)pmp.args);
+        TMLogStrf(tm_tid, "train %d on track %s\n", live.buf[live.size-1]->id, live.buf[live.size-1]->node->name);
 				break;
 			default:
 				assert(0 && "Bad Command");

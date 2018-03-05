@@ -3,31 +3,9 @@
 #include <prediction_manager.h>
 
 
-void PrintSensorData(tid_t ws_tid, Sensor *slist, rec_buffer *rb){
-	int i;
-	char sensor[4];
-	int size;
-
-	for(i = 0; i < SENSOR_SIZE; i++){
-		if(slist[i].state){
-			rec_buffer_add(rb, i);
-		}
-	}
-
-	Cursor c;	//TODO: MAKE DEFINES
-	SET_CURSOR(c, 3, 25);
-
-	//Print from Latest Sensor
-	for(i = 0; i < rb->num; i++){
-		int val = rec_buffer_get(rb, i);
-		sensor[0] = val/16 + 'A';
-		i2a(val%16 + 1, &size, sensor+1);
-		if(val%16 + 1 < 10){
-			sensor[2] = ' ';
-		}
-		WriteCommandUART2(ws_tid, sensor, 3, &c);
-		c.row++;
-	}
+void PrintSensorData(tid_t si_tid, Sensor *slist){
+  int reply;
+  Send(si_tid, &slist, sizeof(slist), &reply, sizeof(reply));
 }
 
 void init_sensors(Sensor *list, track_node *t){
@@ -42,7 +20,6 @@ void init_sensors(Sensor *list, track_node *t){
 }
 
 void PushSensorToPrediction(tid_t pred, Sensor *list){
-	void *data;
 	int reply;
 	PMProtocol pmp;
 	pmp.pmc = PM_SENSOR;
@@ -133,27 +110,6 @@ void init_subscribers(tid_cb *subscribers){
   }
 }
 
-void init_sensors(Sensor *list, track_node *t){
-	int i;
-	for(i = 0; i < TRACK_MAX; i++){
-		if(t[i].type == NODE_SENSOR){
-			list->state = SEN_OFF;
-			list->node = &t[i];
-			++list;
-		}
-	}
-}
-
-void PushSensorToPrediction(tid_t pred, Sensor *list){
-	int reply;
-	PMProtocol pmp;
-	pmp.pmc = PM_SENSOR;
-	pmp.args = (void *)list;
-	pmp.size = 1;
-
-	Send(pred, &pmp, sizeof(pmp), &reply, sizeof(reply));
-}
-
 void SensorManager(void *args){
 	void *data;
 	int scounter = 0;
@@ -167,18 +123,14 @@ void SensorManager(void *args){
 	tid_cb subscribers[SENSOR_SIZE + 1];	//Subscribers on [SENSOR_SIZE] are waiting on delta
 	init_subscribers(subscribers);
 
-	rec_buffer rb;
-	rec_buffer_init(&rb);
-
 	int reply = 0;
 	int r = RegisterAs(SENSOR_MANAGER_ID);
   	assert(r == 0);
   	tid_t pred_tid = WhoIs(PREDICTION_MANAGER_ID);
     assert(pred_tid >= 0);
-  	tid_t ws_tid2 = WhoIs(WRITERSERVICE_UART2_ID);
-    assert(ws_tid2 >= 0);
     tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
     assert(tx_tid >= 0);
+
 
     // Cursor c;
     // SET_CURSOR(c, 30, 20);
@@ -186,6 +138,7 @@ void SensorManager(void *args){
     Create(30, &SensorReceiver);
   	Create(30, &SensorTimeout);
 
+    tid_t si_tid = Create(29, &SensorInterface);
   	//Kick start sensor gathering data
   	PutC(tx_tid, GET_ALL_SENSORS);
   	while(true){
@@ -206,6 +159,7 @@ void SensorManager(void *args){
   						Notify(&subscribers[SENSOR_SIZE]);
   						PushSensorToPrediction(pred_tid, sensorList);
   						deltaFlag = false;
+              PrintSensorData(si_tid, sensorList);
   					}
   				}
   				if(scounter % 2 == 0){

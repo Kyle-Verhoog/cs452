@@ -1,6 +1,7 @@
 #include <switch_manager.h>
 #include <prediction_manager.h>
 
+
 void PushSwitchToPrediction(tid_t pred, Switch *sw){
   int reply;
   PMProtocol pmp;
@@ -11,11 +12,9 @@ void PushSwitchToPrediction(tid_t pred, Switch *sw){
   Send(pred, &pmp, sizeof(pmp), &reply, sizeof(reply));
 }
 
-void init_switch(tid_t tx2_writer, tid_t pred_tid, tid_t sw_handler, Switch *slist, track_node *track){
+void init_switch(tid_t pred_tid, tid_t sw_handler, Switch *slist, track_node *track){
 	int reply = 0;
 	SWProtocol swp;
-	Cursor c;
-	SET_CURSOR(c, SWITCH_TABLE_ROW, SWITCH_TABLE_COL);
 
 	//Send Commands to SwitchHandler
 	swp.swr = SW_FLIP;
@@ -35,8 +34,6 @@ void init_switch(tid_t tx2_writer, tid_t pred_tid, tid_t sw_handler, Switch *sli
 		slist[i].state = SW_CURVE;
 		swp.sw = i;
 		Send(sw_handler, &swp, sizeof(swp), &reply, sizeof(reply));
-		// WriteStringUART2(tx2_writer, "C", &c);
-		// c.row++;
 	}
 
 	// c.row++;
@@ -54,31 +51,13 @@ void init_switch(tid_t tx2_writer, tid_t pred_tid, tid_t sw_handler, Switch *sli
 		swp.dir = SW_STRAIGHT+(i%2);
 		swp.sw = i;
 		Send(sw_handler, &swp, sizeof(swp), &reply, sizeof(reply));
-		// if(i%2){
-		// 	WriteStringUART2(tx2_writer, "C", &c);	
-		// }else{
-		// 	WriteStringUART2(tx2_writer, "S", &c);
-		// }
-		// c.row++;
 	}
 
   PushSwitchToPrediction(pred_tid, slist);
 }
 
-void UpdateSwitchTable(tid_t tx2_writer, Switch *table, int sw, SwitchState dir){
-	// SET_CURSOR(c, SWITCH_TABLE_ROW + sw, SWITCH_TABLE_COL + 13);
-
-	// if(sw >= SPECIAL_SWITCH_SIZE_LOW){
-	// 	c.row++;
-	// }
-
-	table[sw].state = dir;
-	// if(dir == SW_CURVE){
-	// 	WriteStringUART2(tx2_writer, "C", &c);	
-	// }
-	// else{
-	// 	WriteStringUART2(tx2_writer, "S", &c);
-	// }
+void UpdateSwitchTable(Switch *table, int sw, SwitchState dir){
+  table[sw].state = dir;
 }
 
 void SwitchHandler(void *args){
@@ -124,14 +103,12 @@ void SwitchManager(void * args){
       tid_t pred_tid = WhoIs(PREDICTION_MANAGER_ID);
       assert(pred_tid >= 0);
   tid_t tx1_writer = WhoIs(IOSERVER_UART1_TX_ID);
-  tid_t tx2_writer = WhoIs(WRITERSERVICE_UART2_ID);
 
   assert(tx1_writer >= 0);
-  assert(tx2_writer >= 0);
 
   	tid_t sw_handler = CreateArgs(19, &SwitchHandler, (void *)tx1_writer);
 
-  	init_switch(tx2_writer, pred_tid, sw_handler, switchList, track);
+  	init_switch(pred_tid, sw_handler, switchList, track);
 
   	while(true){
   		tid_t req_tid;
@@ -145,7 +122,7 @@ void SwitchManager(void * args){
 	  			//Send the command switch handler
 	  			Send(sw_handler, &sw, sizeof(sw), &reply, sizeof(reply));
 	  			//Update the UI and table
-	  			UpdateSwitchTable(tx2_writer, switchList, sw.sw, sw.dir);
+	  			UpdateSwitchTable(switchList, sw.sw, sw.dir);
           //Update Prediction
           PushSwitchToPrediction(pred_tid, switchList);
 	  			Reply(req_tid, &reply, sizeof(reply));

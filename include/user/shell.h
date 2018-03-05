@@ -6,12 +6,14 @@
 #include <lib/parse.h>
 #include <user/syscalls.h>
 #include <user/nameserver.h>
-#include <user/terminal/terminal_manager.h>
+#include <user/train/train_manager.h>
+#include <user/train/switch_manager.h>
+#include <user/terminal_manager.h>
 
 #define CMD_MAX 41
 #define CMD_BUF_MAX 512
 
-#define SH_CLEAR_COUNT 4
+#define SH_CLEAR_COUNT 3
 
 CIRCULAR_BUFFER_DEC(cmd_cb, char, CMD_BUF_MAX);
 

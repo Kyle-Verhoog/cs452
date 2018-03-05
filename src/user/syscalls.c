@@ -88,3 +88,16 @@ int CreateArgs(int priority, void (*code)(), void *args) {
   return r0;
 }
 
+int NProcs() {
+  register uint32_t r0 __asm__("r0");
+  asm("swi #16");
+  return r0;
+}
+
+int MemUsage() {
+  register uint32_t r0 __asm__("r0");
+  asm("swi #17");
+  return r0;
+}
+
+

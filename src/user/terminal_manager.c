@@ -1,4 +1,4 @@
-#include <user/terminal/terminal_manager.h>
+#include <user/terminal_manager.h>
 
 CIRCULAR_BUFFER_DEF(term_cb, char, TERMINAL_BUFFER_SIZE);
 
@@ -31,14 +31,14 @@ void wm_add_window(WManager *wm, tid_t tid, char *conf) {
 
 void print_tdisp(tid_t tx_tid, TDisplay *td) {
   char c;
-  char buf[10];
+  char buf[20];
   int len;
 
   len = 0;
   while (td->buffer.size > 0) {
     tdisp_cb_pop(&td->buffer, &c);
     buf[len++] = c;
-    if (len == 9) {
+    if (len == 19) {
       PutStr(tx_tid, buf, len);
       len = 0;
     }
@@ -75,11 +75,17 @@ void TerminalManager() {
   Create(30, &TerminalInputHandler);
 
   wm_init(&wm);
-  PutStr(tx_tid, "\033[2J", 5);
-  PutStr(tx_tid, "\033[2J", 5);
+  char *init = "\033[30m\033[47m\033[2J\e[1m";
+  PutStr(tx_tid, init, strlen(init));
+  PutStr(tx_tid, init, strlen(init));
   print_tdisp(tx_tid, &wm.td);
 
-  Create(29, &Shell);
+  int sh_args[4];
+  sh_args[0] = SH_OFFSET_X;
+  sh_args[1] = SH_OFFSET_Y;
+  sh_args[2] = SH_WIDTH;
+  sh_args[3] = SH_HEIGHT;
+  CreateArgs(29, &Shell, (void *)sh_args);
 
   while (true) {
     Receive(&recv_tid, &req, sizeof(req));
@@ -142,6 +148,11 @@ void TerminalManager() {
         Reply(log_tid, &rep, sizeof(rep));
         break;
       case TERM_LOG:
+        log_line++;
+        if (log_line > 37) {
+          tdisp_write_task(&wm.td, log_tid, TERM_RETURN);
+          log_line = 0;
+        }
         r = buf_pack_i32(tid_buf, recv_tid);
         assert(r != 0);
         for (i = 0; i < r; ++i)

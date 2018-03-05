@@ -137,9 +137,6 @@ void RailwayManager(){
 				data = (void *)track;
 				Reply(tid_req, &data, sizeof(data));
 				break;
-			case RW_TRACK:
-				parse_tk(tm_tid, &rwp);
-				break;
 			case RW_SENSOR:
 				assert(0 && "RW_SENSOR");
 				break;

@@ -61,7 +61,6 @@ typedef struct TrainDescriptor{
 	bool dir;	//forward is 1
 	bool exist;
 
-	bool exist;
 	tid_t isRunning;
 	tc_cb buf;
 

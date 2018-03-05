@@ -248,6 +248,14 @@ void handle(TaskDescriptor *td, TaskRequest req) {
   case TR_HALT:
     KEXIT();
     break;
+  case TR_INFO_NPROC:
+    td->ret = MAX_TASK - tid_tracker.cb.size;
+    pq_push(&pq_tasks, td->priority, td);
+    break;
+  case TR_INFO_MEM:
+    td->ret = calc_mem_usage();
+    pq_push(&pq_tasks, td->priority, td);
+    break;
   default:
     KASSERT(false && "UNDEFINED SWI PARAM");
     pq_push(&pq_tasks, td->priority, td);

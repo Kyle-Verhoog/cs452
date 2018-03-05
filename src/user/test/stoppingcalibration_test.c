@@ -1,5 +1,7 @@
 #include<stoppingcalibration_test.h>
 
+static tid_t term_tid;
+
 int max(int i, int j) { return i < j ? j : i; };
 
 void StoppingCalibrationTest(void * args){
@@ -87,7 +89,7 @@ void StoppingCalibrationTest(void * args){
 	dest = GetNextSensor(switches, before);
 	//END INITIALIZATION
 
-	PRINTF("%d SPEED TEST From: %s\n\r", speed, track[start_node].name);
+	TMLogStrf(term_tid, "%d SPEED TEST From: %s\n", speed, track[start_node].name);
 	Delay(cs_tid, mytid, 30);
 
 	//ready
@@ -102,7 +104,7 @@ void StoppingCalibrationTest(void * args){
 		Send(sm_tid, &sm, sizeof(sm), &reply, sizeof(reply));
 		delay = (fraction*dest.dist*1000)/(td->speed * 10);
 		currentSpeed = td->speed;
-		PRINTF("Stopping - (%d)\n\r", delay);
+		TMLogStrf(term_tid, "Stopping (%d)\n", delay);
 		//Delay some more
 		Delay(cs_tid, mytid, delay);
 
@@ -116,7 +118,7 @@ void StoppingCalibrationTest(void * args){
 			//wait and determine target
 			Delay(cs_tid, mytid, speed*10*4);
 			target = GetPrevSensor(switches, td->node).node;
-			PRINTF("TARGET ACQUIRED - %s\n\r", target->name);
+			TMLogStrf(term_tid, "TARGET ACQUIRED %s\n", target->name);
 		}
 		else{
 			//Delay
@@ -127,8 +129,8 @@ void StoppingCalibrationTest(void * args){
 		if(sensors[target->num].state == SEN_ON){
 			distance = DistanceBetweenNodes(switches, before, target)*1000;
 			distance -= delay * currentSpeed;
-			PRINTF("Time To Stop: %d ticks\n\r", delay);
-			PRINTF("Distance: %d um\n\r", distance);
+			TMLogStrf(term_tid, "Stop time: %d ticks\n", delay);
+			TMLogStrf(term_tid, "Distance: %d um\n", distance);
 			break;
 		}
 		else{
@@ -136,8 +138,8 @@ void StoppingCalibrationTest(void * args){
 			if(over != target){
 				distance = DistanceBetweenNodes(switches, before, target)*1000;
 				distance -= delay * currentSpeed;
-				PRINTF("Undershot: %d ticks\n\r", delay);
-				PRINTF("Distance: %d um\n\r", distance);
+				TMLogStrf(term_tid, "Undershot: %d ticks\n", delay);
+				TMLogStrf(term_tid, "Distance: %d um\n", distance);
 				break;
 			}
 		}
@@ -159,6 +161,11 @@ void StoppingServerTest(){
 	args.train = 24;
 	args.before_sensor = 60; //D13
 	args.start_node = 0;	//A1
+
+  term_tid = WhoIs(TERMINAL_MANAGER_ID);
+  assert(term_tid >= 0);
+
+  TMRegister(term_tid, CAL_OFFSET_X, CAL_OFFSET_Y, CAL_WIDTH, CAL_HEIGHT);
 
 	while(true){
 		if(args.speed < 7){

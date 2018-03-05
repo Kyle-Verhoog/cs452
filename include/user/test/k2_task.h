@@ -4,7 +4,6 @@
 #include <ts7200.h>
 #include <user/syscalls.h>
 #include <user/nameserver.h>
-#include <lib/circularbuffer.h>
 
 typedef enum RPCservice {
   S_Signup = 0,

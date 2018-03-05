@@ -13,6 +13,7 @@
 #include <recency_buffer.h>
 #include <track_data.h>
 #include <tid_buffer.h>
+#include <user/ui/sensor_interface.h>
 
 #define GET_ALL_SENSORS 133
 

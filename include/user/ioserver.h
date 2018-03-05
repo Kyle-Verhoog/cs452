@@ -9,9 +9,6 @@
 #include <debug/debug.h>
 #include <lib/ioserver_buffer.h>
 
-//TEST
-#include <writerservice.h>
-
 
 typedef struct IOServerArgs {
   InterruptEvent ie_base;

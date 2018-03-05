@@ -22,8 +22,8 @@
 //Kernel Modes
 #define USER_MODE 16
 #define IRQ_MODE 18
-#define KERNEL_MODE 19 
-#define SYSTEM_MODE 31 
+#define KERNEL_MODE 19
+#define SYSTEM_MODE 31
 
 // The number of tasks in the system
 #define MAX_TASK  32
@@ -39,15 +39,14 @@
 #define IOSERVER_UART1_TX_ID 4
 #define IOSERVER_UART2_RX_ID 5
 #define IOSERVER_UART2_TX_ID 6
-#define READERSERVICE_UART2_ID 7
-#define WRITERSERVICE_UART1_ID 8
-#define WRITERSERVICE_UART2_ID 9
 #define TERMINAL_MANAGER_ID 10
 #define RAILWAY_MANAGER_ID 20
 #define TRAIN_MANAGER_ID 21
 #define SWITCH_MANAGER_ID 22
 #define SENSOR_MANAGER_ID 23
 #define PREDICTION_MANAGER_ID 30
+
+#define INT_MAX 2147483647
 
 //Commands
 #define COMMAND_SIZE 256
