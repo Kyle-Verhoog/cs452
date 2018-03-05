@@ -1,4 +1,4 @@
-#include <task/interrupt_matrix.h>
+#include <lib/task/interrupt_matrix.h>
 
 void im_init(interrupt_matrix *im){
   im_cb_init(&(im->TC1UI));

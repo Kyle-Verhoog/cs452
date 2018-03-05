@@ -8,9 +8,9 @@
 #define PQ_PRIORITY  3
 
 typedef struct priority_queue {
-  task_queue pqs[MAX_PRIORITY];
-  int size;
-  int state;
+task_queue pqs[MAX_PRIORITY];
+int size;
+int state;
 } priority_queue;
 
 

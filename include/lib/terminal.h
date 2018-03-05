@@ -1,11 +1,14 @@
 #ifndef TERMINAL_H
 #define TERMINAL_H
 
+#include <defines.h>
 #include <lib/circular_buffer.h>
 #include <ascii.h>
 
 #ifndef X86
 #include <user/syscalls.h>
+#else
+#include <assert.h>
 #endif
 
 #define DISPLAY_WIDTH  300
@@ -47,7 +50,7 @@ typedef struct TerminalDisplay {
   tdisp_cb buffer;                  // buffer of commands to PutC/PutStr
   wid_cb avail_wids;                // available window ids
   TWindow windows[MAX_WINDOWS];
-  int task_window[64];         // mapping from tid_id to window
+  int task_window[MAX_TASK];        // mapping from tid_id to window
   bool active_windows[MAX_WINDOWS]; // active windows
   int num_active_windows;           // number of active windows
   TWindow *focused_window;          // the current window

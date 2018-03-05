@@ -38,7 +38,7 @@ OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
 TEST_IGNORE := $(shell find src/kernel/ -type f -name '*.c' ) \
-               $(shell find src/user/ -type f -name '*.c' -not -path 'src/user/terminal/terminal.c' ) \
+               $(shell find src/user/ -type f -name '*.c' ) \
 # $(info $(TEST_IGNORE))
 TEST_SRCS := $(shell find $(TEST_DIR) -name *.c) $(filter-out $(TEST_IGNORE), $(SRCS))
 # $(info $(TEST_SRCS))

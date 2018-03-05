@@ -22,8 +22,8 @@
 //Kernel Modes
 #define USER_MODE 16
 #define IRQ_MODE 18
-#define KERNEL_MODE 19 
-#define SYSTEM_MODE 31 
+#define KERNEL_MODE 19
+#define SYSTEM_MODE 31
 
 // The number of tasks in the system
 #define MAX_TASK  32
@@ -48,6 +48,8 @@
 #define SWITCH_MANAGER_ID 22
 #define SENSOR_MANAGER_ID 23
 #define PREDICTION_MANAGER_ID 30
+
+#define INT_MAX 2147483647
 
 //Commands
 #define COMMAND_SIZE 256

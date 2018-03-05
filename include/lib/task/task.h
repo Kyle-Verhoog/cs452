@@ -3,8 +3,7 @@
 #include <ts7200.h>
 #include <stdlib.h>
 #include <asm/asm.h>
-#include <task/tid_buffer.h>
-#include <circularbuffer.h>
+#include <lib/task/tid_buffer.h>
 
 #ifdef DEBUG
   #include <io.h>

@@ -2,7 +2,7 @@
 #define TERMINAL_TEST_H
 
 #include <test/test.h>
-#include <user/terminal/terminal.h>
+#include <lib/terminal.h>
 
 void terminal_tests();
 

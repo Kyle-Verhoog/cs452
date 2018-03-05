@@ -2,7 +2,7 @@
 #define TEST_TASK_QUEUE_H
 
 #include <test/test.h>
-#include <task/task_queue.h>
+#include <lib/task/task_queue.h>
 
 void task_queue_tests();
 

@@ -1,4 +1,4 @@
-#include <user/terminal/terminal.h>
+#include <lib/terminal.h>
 
 CIRCULAR_BUFFER_DEF(tdisp_cb, char, TERMINAL_BUFFER_SIZE);
 CIRCULAR_BUFFER_DEF(wid_cb, int, MAX_WINDOWS);
@@ -90,6 +90,7 @@ void tdisp_set_cursor(TDisplay *td, int x, int y) {
     ret = tdisp_cb_push(buf, ';');
     ret = tdisp_cb_pushui32(buf, x);
     ret = tdisp_cb_push(buf, 'H');
+    assert(ret == 0);
   }
 
   td->tdcur.x = x;
@@ -108,12 +109,10 @@ void tdisp_set_active_window(TDisplay *td, int wid) {
 }
 
 void tdisp_draw_window_outline(TDisplay *td) {
-  int i, j, x, y, w, h;
+  int i, j, w, h;
   TWindow *window;
   window = td->focused_window;
 
-  x = window->offsetx;
-  y = window->offsety;
   w = window->w;
   h = window->h;
 
@@ -166,8 +165,11 @@ void tdisp_clear_window(TDisplay *td) {
 int tdisp_add_window(TDisplay *td, int x, int y, int w, int h, tid_t tid) {
   int r, wid;
   TWindow *window;
+  tid_id_t id;
 
-  if (td->avail_wids.size < 1) {
+  id = TID_ID(tid);
+
+  if (td->avail_wids.size < 1 || id < 0 || id > MAX_TASK-1) {
     return -1;
   }
 
@@ -205,6 +207,7 @@ void tdisp_delete_window(TDisplay *td) {
   td->active_windows[wid] = 0;
   td->task_window[TID_ID(fwindow->tid)] = -1;
   r = wid_cb_push(&td->avail_wids, wid);
+  assert(r == 0);
   td->focused_window = 0;
 
   // focus another window if it exists
