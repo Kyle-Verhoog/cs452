@@ -7,4 +7,6 @@
 #include <lib/va_arg.h>
 #include <lib/string.h>
 
+int min(int i, int j);
+
 #endif /* STDLIB_H */

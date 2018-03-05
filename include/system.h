@@ -13,6 +13,7 @@
 
 #include <asm/asm.h>
 #include <defines.h>
+#include <types.h>
 #include <ts7200.h>
 
 #define STR_HELPER(x) #x
@@ -73,5 +74,7 @@
 void kpanic(const char *fmt, ...);
 void interrupt_cleanup();
 void interrupt_init();
+
+int calc_mem_usage();
 
 #endif /* SYSTEM_H */

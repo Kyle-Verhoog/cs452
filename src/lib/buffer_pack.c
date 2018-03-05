@@ -110,6 +110,9 @@ int buf_pack_fmt(char *buf, char *fmt, va_list va) {
         case 's':
           offset += buf_pack_str(buf + offset, va_arg(va, char *));
           break;
+        case '%':
+          offset += buf_pack_c(buf + offset, c);
+          break;
         default:
           return -1;
           break;

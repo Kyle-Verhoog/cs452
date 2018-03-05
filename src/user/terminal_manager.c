@@ -1,4 +1,4 @@
-#include <user/terminal/terminal_manager.h>
+#include <user/terminal_manager.h>
 
 CIRCULAR_BUFFER_DEF(term_cb, char, TERMINAL_BUFFER_SIZE);
 

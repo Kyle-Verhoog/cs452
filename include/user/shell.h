@@ -8,7 +8,7 @@
 #include <user/nameserver.h>
 #include <user/train/train_manager.h>
 #include <user/train/switch_manager.h>
-#include <user/terminal/terminal_manager.h>
+#include <user/terminal_manager.h>
 
 #define CMD_MAX 41
 #define CMD_BUF_MAX 512

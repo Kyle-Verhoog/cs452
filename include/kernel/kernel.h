@@ -5,7 +5,7 @@
 #include <system.h>
 #include <ts7200.h>
 #include <asm/asm.h>
-#include <kernel_task.h>
+#include <kernel/kernel_task.h>
 
 #include <user/test/k2_task.h>
 #include <user/test/k3_task.h>

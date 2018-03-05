@@ -3,7 +3,8 @@
 
 #include <user/syscalls.h>
 #include <user/nameserver.h>
-#include <user/terminal/terminal_manager.h>
+#include <user/clockserver.h>
+#include <user/terminal_manager.h>
 #include <user/train/sensor_manager.h>
 
 void SensorInterface();

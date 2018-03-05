@@ -15,18 +15,26 @@ void kpanic(const char *fmt, ...) {
 }
 
 void interrupt_init() {
-  //Set the IRQ Stack Base
+  // Set the IRQ Stack Base
   SET_CPSR(IRQ_MODE);
   WRITE_SP(IRQ_STACK_BASE);
   SET_CPSR(KERNEL_MODE);
 
-  //Enable Hardware Interrupts
+  // Enable Hardware Interrupts
   *(int *)(VIC1_BASE + VIC_INTENABLE_OFFSET) = VIC1_ENABLED;
   *(int *)(VIC2_BASE + VIC_INTENABLE_OFFSET) = VIC2_ENABLED;
 }
 
 void interrupt_cleanup(){
-	//Disable Hardware Interrupts
+  // Disable Hardware Interrupts
   *(int *)(VIC1_BASE + VIC_INTENCLEAR_OFFSET) = VIC1_ENABLED;
   *(int *)(VIC2_BASE + VIC_INTENCLEAR_OFFSET) = VIC2_ENABLED;
+}
+
+int calc_mem_usage() {
+  char c[10000];
+  uint32_t sp;
+  sp = 0;
+  asm("mov %0, sp;":"=r"(sp));
+  return (KERNEL_STACK_BASE - sp) / KERNEL_STACK_BASE;
 }

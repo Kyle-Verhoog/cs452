@@ -235,7 +235,6 @@ void tdisp_delete_window(TDisplay *td) {
 
 void tdisp_move_window(TDisplay *td, int x, int y) {
   TWindow *fwindow;
-  int i, r;
   int wid;
   fwindow = td->focused_window;
   wid = fwindow->wid;

@@ -20,7 +20,7 @@ void ShellDummyTask() {
   i = j = k = 0;
   while (true) {
     i++;
-    if (i > 200000) {
+    if (i > 2000000) {
       if (j == w-2) {
         TMPutC(tm_tid, '\n');
         if (k == h-2) {

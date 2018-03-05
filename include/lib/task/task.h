@@ -47,6 +47,8 @@ typedef enum TaskRequest {
   TR_AWAIT_EVENT    = 13,
   TR_CREATE_W_ARGS  = 14,
   TR_HALT           = 15,
+  TR_INFO_NPROC     = 16,
+  TR_INFO_MEM       = 17,
 } TaskRequest;
 
 typedef enum InterruptType{
