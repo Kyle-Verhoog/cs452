@@ -21,6 +21,7 @@ typedef enum TerminalManagerRequestType {
   TERM_GET     = 3,
   TERM_LOG_REG = 4,
   TERM_LOG     = 5,
+  TERM_EXIT    = 6,
 } TManReqType;
 
 typedef struct TerminalManagerRequest {
@@ -47,4 +48,5 @@ void TMPutStr(tid_t tm_tid, char *c, int len);
 char TMGetC(tid_t tm_tid);
 void TMLogRegister(tid_t tm_tid);
 void TMLogStrf(tid_t tm_tid, char *fmt, ...);
+void TMExit(tid_t tm_tid);
 #endif

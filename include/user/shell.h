@@ -9,6 +9,7 @@
 #include <user/train/train_manager.h>
 #include <user/train/switch_manager.h>
 #include <user/terminal_manager.h>
+#include <user/train/m1_reset.h>
 
 #define CMD_MAX 41
 #define CMD_BUF_MAX 512

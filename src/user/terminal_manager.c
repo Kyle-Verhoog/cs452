@@ -29,6 +29,12 @@ void wm_add_window(WManager *wm, tid_t tid, char *conf) {
   tdisp_focus_window(&wm->td, 0);
 }
 
+void wm_delete_window(WManager *wm, tid_t tid) {
+  tdisp_focus_task_window(&wm->td, tid);
+  tdisp_delete_window(&wm->td);
+  tdisp_focus_window(&wm->td, 0);
+}
+
 void print_tdisp(tid_t tx_tid, TDisplay *td) {
   char c;
   char buf[20];
@@ -166,6 +172,10 @@ void TerminalManager() {
           tdisp_write_task(&wm.td, log_tid, req.data[i]);
         Reply(recv_tid, &rep, sizeof(rep));
         break;
+      case TERM_EXIT:
+        wm_delete_window(&wm, recv_tid);
+        Reply(recv_tid, &rep, sizeof(rep));
+        break;
       default:
         KASSERT(0);
         break;
@@ -184,6 +194,13 @@ void TMRegister(tid_t tm_tid, char offsetx, char offsety, char width, char heigh
   config[2] = width;
   config[3] = height;
   req.data  = config;
+  Send(tm_tid, &req, sizeof(req), &rep, sizeof(rep));
+}
+
+void TMExit(tid_t tm_tid) {
+  TManReq req;
+  TManRep rep;
+  req.type  = TERM_EXIT;
   Send(tm_tid, &req, sizeof(req), &rep, sizeof(rep));
 }
 

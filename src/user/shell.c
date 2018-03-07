@@ -164,9 +164,9 @@ void shell_skip(shell *sh) {
 }
 
 void shell_info_msg(shell *sh, char *msg) {
-  cmd_cb_push_str(&sh->buf, "\nsh: `");
+  cmd_cb_push_str(&sh->buf, "\nsh: '");
   cmd_cb_push_str(&sh->buf, msg);
-  cmd_cb_push_str(&sh->buf, "`\n");
+  cmd_cb_push_str(&sh->buf, "'\n");
 }
 
 void shell_error(shell *sh) {
@@ -176,10 +176,9 @@ void shell_error(shell *sh) {
 }
 
 void shell_errorf(shell *sh, char *msg) {
-  cmd_cb_push_str(&sh->buf, "\nerror: `");
-  cmd_cb_push_str(&sh->buf, sh->cmd);
+  cmd_cb_push_str(&sh->buf, "\ncmd err: '");
   cmd_cb_push_str(&sh->buf, msg);
-  cmd_cb_push_str(&sh->buf, "`\n");
+  cmd_cb_push_str(&sh->buf, "'\n");
 }
 
 
@@ -223,8 +222,8 @@ void shell_exec(shell *sh) {
     else {
       TMProtocol tm;
       tm.tmc = TM_MOVE;
-      tm.arg1 = arg1;	//train
-      tm.arg2 = arg2;	//train speed
+      tm.arg1 = arg1; //train
+      tm.arg2 = arg2; //train speed
       Send(tr_tid, &tm, sizeof(tm), &reply, sizeof(reply));
       shell_info(sh);
     }
@@ -329,6 +328,35 @@ void shell_exec(shell *sh) {
     shell_clear(sh);
     return;
   }
+  else if (cmd[0] == 'r' && cmd[1] == 't') {
+    if ((r = parse_i32(cmd+2, &arg1)) == 0 || arg1 > 81 || arg1 < 0) {
+      shell_errorf(sh, "rt <tr> <spd>");
+    }
+    else if ((r = parse_i32(r, &arg2)) == 0 || arg1 > 81 || arg1 < 0) {
+      shell_errorf(sh, "rt <tr> <spd");
+    }
+    else {
+      shell_info_msg(sh, "spawning m1 reset");
+      sh_args[0] = arg1;
+      sh_args[1] = arg2;
+      CreateArgs(30, &M1Reset, (void *)sh_args);
+    }
+  }
+  else if (cmd[0] == 's' && cmd[1] == 't' && cmd[2] == 'p') {
+    int x, y;
+    if ((r = parse_i32(cmd+3, &x)) == 0) {
+      shell_error(sh);
+    }
+    else if ((r = parse_i32(r, &y)) == 0) {
+      shell_error(sh);
+    }
+    else {
+      shell_info_msg(sh, "spawning milestone 1");
+      sh_args[0] = x;
+      sh_args[1] = y;
+      // Create(28, &Pathing);
+    }
+  }
   else {
     shell_error(sh);
   }
@@ -337,13 +365,12 @@ void shell_exec(shell *sh) {
 }
 
 
-
 void Shell(void *args) {
   tid_t tm_tid;
   char c;
   shell sh;
   int *vars;
-  int i, x, y, w, h;
+  int x, y, w, h;
 
   vars = (int *)args;
   x = vars[0];

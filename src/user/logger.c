@@ -1,7 +1,7 @@
 #include <user/logger.h>
 
 void Logger() {
-  int i, j, r;
+  int i, j;
   tid_t tm_tid, tx_tid;
 
   tm_tid = WhoIs(TERMINAL_MANAGER_ID);

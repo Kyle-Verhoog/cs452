@@ -63,6 +63,8 @@ int tdisp_add_window(TDisplay *td, int x, int y, int w, int h, tid_t tid);
 
 void tdisp_focus_window(TDisplay *td, int wid);
 
+int tdisp_focus_task_window(TDisplay *td, tid_t tid);
+
 void tdisp_delete_window(TDisplay *td);
 
 void tdisp_writec(TDisplay *td, char c);

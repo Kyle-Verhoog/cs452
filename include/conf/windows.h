@@ -47,4 +47,10 @@
 #define SENSOR_WIDTH    19
 #define SENSOR_HEIGHT   2
 
+// sensor window config
+#define M1_RESET_OFF_X   SH_OFFSET_X
+#define M1_RESET_OFF_Y   SH_OFFSET_Y + SH_HEIGHT + 1
+#define M1_RESET_WIDTH   SH_WIDTH
+#define M1_RESET_HEIGHT  10
+
 #endif

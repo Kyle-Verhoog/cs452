@@ -250,6 +250,9 @@ void tdisp_delete_window(TDisplay *td) {
   assert(r == 0);
   td->focused_window = 0;
 
+  if (td->active_task == fwindow->tid)
+    td->active_task = -1;
+
   // focus another window if it exists
   for (i = 0; i < MAX_WINDOWS; ++i) {
     if (td->active_windows[i]) {
