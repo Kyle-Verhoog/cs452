@@ -1,5 +1,13 @@
 #include <test/train/path_finding.h>
 
+#define T(str) trhr(t, str)
+
+static void trhr_test(track_node *t) {
+  assert(trhr(t, "BR15") == 108);
+  assert(trhr(t, "MR15") == 109);
+  assert(trhr(t, "EX1") == 125);
+}
+
 static void dij_simple_path(track_node *track) {
   track_node *start, *dest;
   int prev[TRACK_MAX];
@@ -23,13 +31,52 @@ static void dij_simple_path(track_node *track) {
   assert(prev[4] == 24);
 }
 
-static void bf_simple_path(track_node *track) {
+static void dij_branch_path(track_node *t) {
   track_node *start, *dest;
-  start = &track[0];
-  dest  = &track[1];
+  int prev[TRACK_MAX];
+  start = &t[76];
+  dest  = &t[73];
+  dij_path_find(t, start, dest, prev);
+	// printf("%d\n", prev[73]);
+  assert(prev[73] == 94);
+	// printf("%d\n", prev[73]);
+  assert(prev[94] == 97);
+  assert(prev[97] == 53);
+  assert(prev[53] == 68);
+  assert(prev[68] == 99);
+  assert(prev[99] == 67);
+  assert(prev[67] == 49);
+  assert(prev[49] == 120);
+  assert(prev[120] == 122);
+  assert(prev[122] == 119);
+  assert(prev[119] == 28);
+  assert(prev[28] == 62);
+  assert(prev[62] == 112);
+  assert(prev[112] == 76);
 
-  bf_path_find(start, dest);
+  start = &t[T("C4")];
+  dest  = &t[T("E14")];
+  dij_path_find(t, start, dest, prev);
+  assert(prev[T("E14")] == T("MR17"));
+  assert(prev[T("MR17")] == T("D16"));
+  assert(prev[T("D16")] == T("B14"));
+  assert(prev[T("B14")] == T("BR154"));
+  assert(prev[T("BR154")] == T("MR156"));
+  assert(prev[T("MR156")] == T("E1"));
+  assert(prev[T("E1")] == T("E16"));
+  assert(prev[T("E16")] == T("BR13"));
+  assert(prev[T("BR13")] == T("C11"));
+  assert(prev[T("C11")] == T("BR14"));
+  assert(prev[T("BR14")] == T("A3"));
+  assert(prev[T("A3")] == T("B15"));
+  assert(prev[T("B15")] == T("MR15"));
+  assert(prev[T("MR15")] == T("C6"));
+  assert(prev[T("C6")] == T("MR6"));
+  assert(prev[T("MR6")] == T("BR18"));
+  assert(prev[T("BR18")] == T("MR5"));
+  assert(prev[T("MR5")] == T("C4"));
 }
+
 
 void train_pathing_tests() {
   track_node track[TRACK_MAX];
@@ -37,5 +84,7 @@ void train_pathing_tests() {
   assert(track[0].num == 0);
   assert(track[0].reverse == &track[1]);
 
+  trhr_test(track);
   dij_simple_path(track);
+	dij_branch_path(track);
 }

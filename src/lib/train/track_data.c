@@ -14,6 +14,18 @@ static void add_ids(track_node *track) {
     track[i].id = i;
 }
 
+
+int trhr(track_node *track, const char *name) {
+  int i;
+  for (i = 0; i < TRACK_MAX; ++i) {
+    if (streq(track[i].name, name)) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+
 void init_tracka(track_node *track) {
   // note: this memset is necessary to account for NULL values
   memset(track, 0, TRACK_MAX*sizeof(track_node));

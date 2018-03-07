@@ -3,6 +3,7 @@
 void ktd_create(TaskDescriptor* volatile td, tid_t tid, void *task,
                 int priority,
                 TaskStatus status, TaskDescriptor *parent) {
+  // KASSERT(tid)
   //Initialize the Test task pc
   td->sp = USER_STACK_BASE - (TID_ID(tid)*USER_STACK_SIZE);
   asm("mov r8, %0;"::"r"(task));

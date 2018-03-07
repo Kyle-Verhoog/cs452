@@ -11,7 +11,7 @@ void tt_init(TidTracker *tt) {
 }
 
 tid_t tt_get(TidTracker *tt) {
-  if(tt_size(tt) == 0) {
+  if(tt_size(tt) <= 0) {
     return -2;
   }
   tid_t tid;

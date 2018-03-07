@@ -47,5 +47,4 @@
 #define SENSOR_WIDTH    19
 #define SENSOR_HEIGHT   2
 
-
 #endif

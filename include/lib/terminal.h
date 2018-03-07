@@ -11,7 +11,7 @@
 #include <assert.h>
 #endif
 
-#define MAX_WINDOWS 10
+#define MAX_WINDOWS MAX_TASK
 #define TERMINAL_BUFFER_SIZE 4096
 
 #define TERM_TOP_R "┓"
@@ -52,9 +52,12 @@ typedef struct TerminalDisplay {
   bool active_windows[MAX_WINDOWS]; // active windows
   int num_active_windows;           // number of active windows
   TWindow *focused_window;          // the current window
+  tid_t active_task;
 } TDisplay;
 
 void tdisp_init(TDisplay *td);
+
+void tdisp_set_active_task(TDisplay *td, tid_t tid);
 
 int tdisp_add_window(TDisplay *td, int x, int y, int w, int h, tid_t tid);
 

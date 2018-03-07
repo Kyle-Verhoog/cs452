@@ -5,5 +5,4 @@
 #include <lib/train/path_finding.h>
 
 void train_pathing_tests();
-
 #endif

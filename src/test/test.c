@@ -9,6 +9,7 @@
 #include <test/terminal.h>
 #include <test/train/priority_queue.h>
 #include <test/train/path_finding.h>
+#include <test/string.h>
 
 int main(void) {
   PRINTF("\n");
@@ -16,15 +17,19 @@ int main(void) {
   PRINTF("|  RUNNING UNIT TESTS  | ☐ |\n");
   PRINTF("+----------------------+---+\n");
 
-  PTEST_START("buffer_pack");
+  PTEST_START("lib/buffer_pack");
   buffer_pack_tests();
+  PTEST_END();
+
+  PTEST_START("lib/string");
+  string_tests();
   PTEST_END();
 
   PTEST_START("circular_buffer");
   cbuf_tests();
   PTEST_END();
 
-  PTEST_START("cs_queue");
+  PTEST_START("lib/cs_queue");
   clockserver_tests();
   PTEST_END();
 
@@ -36,7 +41,7 @@ int main(void) {
   nameserver_tests();
   PTEST_END();
 
-  PTEST_START("task_queue");
+  PTEST_START("lib/task_queue");
   task_queue_tests();
   PTEST_END();
 
@@ -44,7 +49,7 @@ int main(void) {
   priority_queue_tests();
   PTEST_END();
 
-  PTEST_START("terminal");
+  PTEST_START("lib/terminal");
   terminal_tests();
   PTEST_END();
 

@@ -49,6 +49,7 @@ void tdisp_init(TDisplay *td) {
   int i;
   td->num_active_windows = 0;
   td->focused_window = 0;
+  td->active_task = -1;
   tcursor_init(&td->tdcur, -1, -1);
   tdisp_cb_init(&td->buffer);
   wid_cb_init(&td->avail_wids);
@@ -59,6 +60,7 @@ void tdisp_init(TDisplay *td) {
     wid_cb_push(&td->avail_wids, i);
   }
 }
+
 
 char tdisp_pop(TDisplay *td) {
   int r;
@@ -84,6 +86,24 @@ void tdisp_set_cursor(TDisplay *td, int x, int y) {
   assert(y >= window->offsety && y <= window->offsety + window->h);
 
   if (td->tdcur.x != x || td->tdcur.y != y) {
+    /*
+    if (td->active_task == window->tid) {
+      ret = tdisp_cb_push(buf, '\033');
+      ret = tdisp_cb_push(buf, '[');
+      ret = tdisp_cb_push(buf, '?');
+      ret = tdisp_cb_push(buf, '2');
+      ret = tdisp_cb_push(buf, '5');
+      ret = tdisp_cb_push(buf, 'h');
+    }
+    else {
+      ret = tdisp_cb_push(buf, '\033');
+      ret = tdisp_cb_push(buf, '[');
+      ret = tdisp_cb_push(buf, '?');
+      ret = tdisp_cb_push(buf, '2');
+      ret = tdisp_cb_push(buf, '5');
+      ret = tdisp_cb_push(buf, 'l');
+    }
+    */
     ret = tdisp_cb_push(buf, '\033');
     ret = tdisp_cb_push(buf, '[');
     ret = tdisp_cb_pushui32(buf, y);
@@ -208,6 +228,12 @@ void tdisp_focus_window(TDisplay *td, int wid) {
   window = &td->windows[wid];
   td->focused_window = window;
   tdisp_reset_cursor(td);
+}
+
+void tdisp_set_active_task(TDisplay *td, tid_t tid) {
+  td->active_task = tid;
+  assert(td->task_window[tid] != -1);
+  tdisp_focus_window(td, td->task_window[tid]);
 }
 
 void tdisp_delete_window(TDisplay *td) {

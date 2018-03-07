@@ -24,13 +24,8 @@ void term_add_window() {
   assert(td.tdcur.x == -1);
   assert(td.tdcur.y == -1);
 
-<<<<<<< HEAD
-  tdisp_add_window(&td, 50, 80, 10, 20, -1);
-  /// tdisp_print(&td);
-=======
   tdisp_add_window(&td, 50, 80, 10, 20, 0);
   // tdisp_print(&td);
->>>>>>> master
   // printf("%d\n", td.tdcur.x);
   assert(td.tdcur.x == 51);
   assert(td.tdcur.y == 81);
@@ -42,11 +37,7 @@ void term_add_window() {
   assert(td.windows[0].w == 10);
   assert(td.windows[0].h == 20);
   // printf("%d\n", td.buffer.size);
-<<<<<<< HEAD
-  assert(td.buffer.size == 387);
-=======
   assert(td.buffer.size == 501);
->>>>>>> master
   bsize += td.buffer.size;
 
   tdisp_writec(&td, 'a');
@@ -77,8 +68,6 @@ void term_add_window() {
   // printf("%d\n", td.buffer.size);
   assert(td.buffer.size == bsize + 1);
   bsize += 1;
-<<<<<<< HEAD
-=======
 
   tdisp_writec(&td, BACKSPACE);
   assert(td.tdcur.x == 50 + 2);
@@ -93,37 +82,21 @@ void term_add_window() {
   // printf("%d\n", td.buffer.size);
   assert(td.buffer.size == bsize + 1);
   bsize += 1;
->>>>>>> master
 }
 
 void term_focus() {
   TDisplay td;
   tdisp_init(&td);
-<<<<<<< HEAD
-  tdisp_add_window(&td, 1, 1, 10, 5);
-  tdisp_add_window(&td, 1, 6, 10, 5);
-=======
   tdisp_add_window(&td, 1, 1, 10, 5, 0);
   tdisp_add_window(&td, 1, 6, 10, 5, 1);
->>>>>>> master
   assert(td.focused_window == &td.windows[1]);
   // printf("%d\n", td.tdcur);
   assert(td.tdcur.x == 2);
   assert(td.tdcur.y == 7);
-<<<<<<< HEAD
-
-=======
->>>>>>> master
 }
 
 void term_writec() {
   TDisplay td;
-<<<<<<< HEAD
-  tdisp_init(&td);
-  tdisp_add_window(&td, 1, 1, 5 , 5);
-  tdisp_writec(&td, 'a');
-  tdisp_writec(&td, 'a');
-=======
   int bsize;
   bsize = 0;
   tdisp_init(&td);
@@ -136,7 +109,6 @@ void term_writec() {
   tdisp_writec(&td, 'a');
   assert(td.buffer.size == bsize + 1);
   bsize += 1;
->>>>>>> master
   assert(td.tdcur.x == 4);
   assert(td.tdcur.y == 2);
   assert(td.windows[0].cur.x == 3);
@@ -145,34 +117,6 @@ void term_writec() {
   tdisp_writec(&td, 'a');
   //printf("%d\n", td.windows[0].cur.x);
   // printf("%d\n", td.tdcur.x);
-<<<<<<< HEAD
-  assert(td.tdcur.x == 2);
-  // printf("%d\n", td.tdcur.y);
-  assert(td.tdcur.y == 3);
-  // printf("%d\n", td.windows[0].cur.x);
-  assert(td.windows[0].cur.x == 1);
-  assert(td.windows[0].cur.y == 2);
-
-  tdisp_writec(&td, 'a');
-  assert(td.tdcur.x == 3);
-  // printf("%d\n", td.tdcur.y);
-  assert(td.tdcur.y == 3);
-  // printf("%d\n", td.windows[0].cur.x);
-  assert(td.windows[0].cur.x == 2);
-  assert(td.windows[0].cur.y == 2);
-}
-
-void term_write() {
-  TDisplay td;
-  tdisp_init(&td);
-  tdisp_add_window(&td, 10, 10, 5 , 5);
-  tdisp_write(&td, 'a', 1, 1);
-
-  assert(td.tdcur.x == 11);
-  // printf("%d\n", td.tdcur.y);
-  assert(td.tdcur.y == 11);
-  // printf("%d\n", td.windows[0].cur.x);
-=======
   assert(td.tdcur.x == 5);
   // printf("%d\n", td.tdcur.y);
   assert(td.tdcur.y == 2);
@@ -206,25 +150,15 @@ void term_write() {
   bsize += 6;
   assert(td.tdcur.x == 2);
   assert(td.tdcur.y == 3);
->>>>>>> master
   assert(td.windows[0].cur.x == 1);
   assert(td.windows[0].cur.y == 2);
 }
 
-<<<<<<< HEAD
-
-=======
->>>>>>> master
 void term_move_cursor() {
   TDisplay td;
   tdisp_init(&td);
 
-<<<<<<< HEAD
-  tdisp_add_window(&td, 50, 80, 25, 25);
-  // assert
-=======
   tdisp_add_window(&td, 50, 80, 25, 25, 0);
->>>>>>> master
 }
 
 void terminal_tests() {
@@ -233,8 +167,4 @@ void terminal_tests() {
   term_focus();
   term_writec();
   term_move_cursor();
-<<<<<<< HEAD
-  term_write();
-=======
->>>>>>> master
 }

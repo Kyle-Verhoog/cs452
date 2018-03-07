@@ -13,7 +13,7 @@
 #define CMD_MAX 41
 #define CMD_BUF_MAX 512
 
-#define SH_CLEAR_COUNT 3
+#define SH_CLEAR_COUNT 4
 
 CIRCULAR_BUFFER_DEC(cmd_cb, char, CMD_BUF_MAX);
 

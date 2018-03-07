@@ -75,7 +75,7 @@ void TerminalManager() {
   Create(30, &TerminalInputHandler);
 
   wm_init(&wm);
-  char *init = "\033[30m\033[47m\033[2J\e[1m";
+  char *init = "\033[30m\033[47m\033[2J\033[1m\033[?25l";
   PutStr(tx_tid, init, strlen(init));
   PutStr(tx_tid, init, strlen(init));
   print_tdisp(tx_tid, &wm.td);
@@ -93,7 +93,10 @@ void TerminalManager() {
 
     switch (req.type) {
       case TERM_GET:
-        sh_tid = recv_tid;
+        if (sh_tid == -1) {
+          sh_tid = recv_tid;
+          tdisp_set_active_task(&wm.td, sh_tid);
+        }
         if (buf.size > 0) {
           r = term_cb_pop(&buf, &ch);
           assert(r == 0);

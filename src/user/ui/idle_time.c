@@ -23,10 +23,10 @@ void IdleTimeInterface() {
 
   while (true) {
     usage = CPUUsage(log_tid);
-    len = buf_pack_f(buf, "\vidle: %d%%", usage);
+    len = buf_pack_f(buf, "\vidle: %t%%", usage);
     TMPutStr(tm_tid, buf, len);
     // TMLogStrf(tm_tid, "%d\n", usage);
-    Delay(cs_tid, my_tid, 20);
+    Delay(cs_tid, my_tid, 50);
   }
 #endif
   Exit();
