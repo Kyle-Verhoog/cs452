@@ -8,6 +8,10 @@ void SendGo(){
   Exit();
 }
 
+void Reset(){
+
+}
+
 void Bootstrap() {
   int mytid;
   mytid = MyTid();
@@ -17,7 +21,7 @@ void Bootstrap() {
   Create(30, &IOServerUART2);
   Create(30, &TerminalManager);
 
-  Create(30, &SendGo);
+  //Create(30, &SendGo);
   Create(29, &RailwayManager);
 
   // interfaces
@@ -25,7 +29,16 @@ void Bootstrap() {
   Create(5, &NProcsInterface);
   Create(5, &MemUsageInterface);
   Create(0, &Logger);
+
   DelayCS(mytid, 200);
-  Create(20, &StoppingServerTest);
+  //Create(20, &StoppingServerTest);
+  //Create(19, &StopAtServer);
+  // StopAtProtocol sap;
+  // sap.train = 24;
+  // sap.gear = 14;
+  // sap.stop_from = 54; //D7
+  // sap.stop_at = 17; //B3
+  // CreateArgs(20, &StopAt, (void *)&sap);
+
   Exit();
 }

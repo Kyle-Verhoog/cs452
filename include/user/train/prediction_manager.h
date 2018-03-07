@@ -54,7 +54,10 @@ void AddTrain(LiveTrains *live, TrainDescriptor *td);
 
 int DistanceBetweenNodes(Switch *sw, track_node *start, track_node *end);
 Destination GetPrevSensor(Switch *sw, track_node *n);	//Inclusive, Overshoots distance
-Destination GetNextSensor(Switch *sw, track_node *n);	//Exclusive, Undershoots distance
+Destination GetPrevSensorNI(Switch *sw, track_node *n);	//Exclusive, Undershoots distance
+
+Destination GetNextSensor(Switch *sw, track_node *n);	//Inclusive, Overshoots distance
+Destination GetNextSensorNI(Switch *sw, track_node *n);	//Exclusive, Undershoots distance
 void PredictionManager();
 
 #endif //PREDICTION_MANAGER_H

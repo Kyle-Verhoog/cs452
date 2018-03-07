@@ -96,6 +96,11 @@ void IOServerRX(void *args) {
         Reply(req_tid, &rep, sizeof(rep));
         break;
 
+      case IO_FLUSH:
+        io_cb_init(&recv_buf);
+        Reply(req_tid, &rep, sizeof(rep));
+        break;
+
       default:
         assert(0 && "INVALID RT INTERRUPT");
         break;
@@ -224,6 +229,11 @@ void IOServerTX(void *args) {
         if (tx_ready && tran_buf.size > 0 && cts_count > 1)
           goto TX_CHAR;
 
+        break;
+
+      case IO_FLUSH:
+        io_cb_init(&tran_buf);
+        Reply(req_tid, &rep, sizeof(rep));
         break;
 
       default:
@@ -386,6 +396,20 @@ int PutStr(tid_t ios_tid, char *c, int len) {
   req.type = IO_PUTSTR;
   req.msg = c;
   req.len = len;
+
+  r = Send(ios_tid, &req, sizeof(req), &rep, sizeof(rep));
+  assert(r == 0);
+  return 0;
+}
+
+int FlushIO(tid_t ios_tid){
+  int r;
+  assert(ios_tid > 0);
+
+  IOServerReq req;
+  int rep;
+
+  req.type = IO_FLUSH;
 
   r = Send(ios_tid, &req, sizeof(req), &rep, sizeof(rep));
   assert(r == 0);

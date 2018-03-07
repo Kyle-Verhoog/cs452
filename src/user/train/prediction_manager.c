@@ -1,7 +1,5 @@
 #include <prediction_manager.h>
-
-//CIRCULAR_BUFFER_DEF(pm_cb, volatile PredictionModel, MAX_STEPS_AHEAD)
-
+#include <stop_at_test.h>
 
 tid_t tm_tid;
 
@@ -76,7 +74,67 @@ Destination GetPrevSensor(Switch *sw, track_node *n){
 	return dest;
 }
 
+Destination GetPrevSensorNI(Switch *sw, track_node *n){
+	Destination dest;
+	dest.dist = 0;
+	n = n->reverse;
+
+	do{
+		if(n->type == NODE_EXIT){
+			break;
+		}
+		else if(n->type == NODE_BRANCH){
+			if(sw[n->num].state == SW_STRAIGHT){
+				dest.dist += n->edge[DIR_STRAIGHT].dist;
+				n = n->edge[DIR_STRAIGHT].dest;
+			}
+			else{
+				dest.dist += n->edge[DIR_CURVED].dist;
+				n = n->edge[DIR_CURVED].dest;
+			}
+		}
+		else{
+			dest.dist += n->edge[DIR_AHEAD].dist;
+			n = n->edge[DIR_AHEAD].dest;
+		}
+	}while(n->type != NODE_SENSOR);
+
+	dest.node = n->reverse;
+
+	return dest;
+}
+
 Destination GetNextSensor(Switch *sw, track_node *n){
+	Destination dest;
+	dest.dist = 0;
+
+	while(n->type != NODE_SENSOR){
+		if(n->type == NODE_EXIT){
+			break;
+		}
+		else if(n->type == NODE_BRANCH){
+			if(sw[n->num].state == SW_STRAIGHT){
+				dest.dist += n->edge[DIR_STRAIGHT].dist;
+				n = n->edge[DIR_STRAIGHT].dest;
+			}
+			else{
+				dest.dist += n->edge[DIR_CURVED].dist;
+				n = n->edge[DIR_CURVED].dest;
+			}
+		}
+		else{
+			dest.dist += n->edge[DIR_AHEAD].dist;
+			n = n->edge[DIR_AHEAD].dest;
+		}
+
+	}
+
+	dest.node = n;
+
+	return dest;
+}
+
+Destination GetNextSensorNI(Switch *sw, track_node *n){
 	Destination dest;
 	dest.dist = 0;
 
@@ -114,7 +172,7 @@ void CheckPrediction(tid_t mytid, tid_t cs_tid, Switch *swList, Sensor *snList, 
 	for(i = 0; i < live->size; i++){
 		TrainDescriptor * train = live->buf[i];
 		dir = train->dir;
-		dest = GetNextSensor(swList, train->node);
+		dest = GetNextSensorNI(swList, train->node);
 		if(train->dir != dir){
 			assert(0 && "TRAIN HAS FLIPPED SOMEWHERE WHEN WE CALLED NEXT SENSOR");
 		}
@@ -131,16 +189,51 @@ void CheckPrediction(tid_t mytid, tid_t cs_tid, Switch *swList, Sensor *snList, 
 				//Train On New Sensor
 				train->node = dest.node;
 				MeasureSpeed(mytid, cs_tid, train, dest.dist);
-			  // TMLogStrf(tm_tid, "tr %d at %s (%d)\n", train->id, dest.node->name, train->speed);
+			  	//TMLogStrf(tm_tid, "tr %d at %s (%d)\n", train->id, dest.node->name, train->speed);
 				//PRINTF("TRAIN %d ON SENSOR %s with SPEED: %dum/ms\n\r", train->id, dest.node->name, train->speed);
 			}
 		}
 	}
 }
 
+void InitTrain(void * args){
+	Switch *switches;
+	InchingArgs iargs;
+
+	tid_t my_tid = MyTid();
+	tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
+	assert(cs_tid >= 0);
+	tid_t tm_tid = WhoIs(TRAIN_MANAGER_ID);
+	assert(tm_tid >= 0);
+	tid_t sw_tid = WhoIs(SWITCH_MANAGER_ID);
+	assert(sw_tid >= 0);
+	tid_t sm_tid = WhoIs(SENSOR_MANAGER_ID);
+	assert(sm_tid >= 0);
+
+	SWProtocol sw;
+	
+	//Get Switch List
+	sw.swr = SW_GET_ALL;
+	Send(sw_tid, &sw, sizeof(sw), &switches, sizeof(switches));
+	
+	iargs.tm_tid = tm_tid;
+	iargs.sm_tid = sm_tid;
+	iargs.cs_tid = cs_tid;
+	iargs.my_tid = my_tid;
+	iargs.switches = switches;
+	iargs.train = (TrainDescriptor *)args;
+
+	//Call Initialize
+	InitInch(iargs);
+
+	Exit();
+}
+
 void AddTrain(LiveTrains *live, TrainDescriptor *td){
 	live->buf[live->size] = td;
 	live->size++;
+	//Init the train
+	CreateArgs(20, &InitTrain, (void *)td);
 }
 
 void PredictionManager(void *args){
@@ -182,7 +275,7 @@ void PredictionManager(void *args){
 				break;
 			case PM_TRAIN:
 				AddTrain(&live, (TrainDescriptor *)pmp.args);
-        TMLogStrf(tm_tid, "train %d on track %s\n", live.buf[live.size-1]->id, live.buf[live.size-1]->node->name);
+        		TMLogStrf(tm_tid, "train %d on track %s\n", live.buf[live.size-1]->id, live.buf[live.size-1]->node->name);
 				break;
 			default:
 				assert(0 && "Bad Command");
