@@ -27,6 +27,7 @@ typedef enum IOServerRequestType {
   IO_MI     = 5,
   IO_PUTSTR = 6,
   IO_BLPUTC = 7,
+  IO_FLUSH = 8,
 } IOServerReqType;
 
 typedef struct IONotifierArgs {
@@ -52,6 +53,7 @@ char GetC(tid_t ios_tid);
 int PutC(tid_t ios_tid, char c);
 int BLPutC(tid_t ios_tid, char c);
 int PutStr(tid_t ios_tid, char *c, int len);
+int FlushIO(tid_t ios_tid);
 
 
 #endif

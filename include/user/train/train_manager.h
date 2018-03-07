@@ -33,7 +33,8 @@ typedef struct TMProtocol{
 typedef enum Train_Command{
 	T_MOVE = 0,
 	T_REVERSE = 1,
-	T_DELAY = 2
+	T_DELAY = 2,
+	T_INIT = 3,
 }Train_Command;
 
 typedef struct TrainProtocol{
@@ -67,6 +68,7 @@ typedef struct TrainDescriptor{
 	//Modifiable By Model
 	track_node *node;
 	int speed;
+	int inchingSpeed;
 	int time_of_sensor;
 } TrainDescriptor;
 

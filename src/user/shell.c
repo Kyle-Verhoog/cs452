@@ -1,4 +1,5 @@
 #include <user/shell.h>
+#include <stop_at_test.h> //TODO:Remove this
 
 CIRCULAR_BUFFER_DEF(cmd_cb, char, CMD_BUF_MAX);
 
@@ -195,12 +196,13 @@ void shell_exec(shell *sh) {
   int reply;
   char *cmd;
   char *r;
-  int arg1, arg2;
+  int arg1, arg2, arg3, arg4, arg5;
 
-  tid_t tr_tid, sw_tid;
+  tid_t tr_tid, sw_tid, stop_at_tid;
 
   tr_tid = WhoIs(TRAIN_MANAGER_ID);
   sw_tid = WhoIs(SWITCH_MANAGER_ID);
+
   assert(tr_tid > 0);
   assert(sw_tid > 0);
 
@@ -277,6 +279,34 @@ void shell_exec(shell *sh) {
       shell_info(sh);
     }
   }
+  // else if(cmd[0] == 's' && cmd[1] == 't'){
+  //   if ((r = parse_i32(cmd+2, &arg1)) == 0 || arg1 > 81 || arg1 < 0) {
+  //     shell_errorf(sh, "train number");
+  //   }
+  //   else if ((r = parse_i32(r, &arg2)) == 0) {
+  //     shell_errorf(sh, "train cmd");
+  //   }
+  //   else if ((r = parse_i32(r, &arg3)) == 0) {
+  //     shell_errorf(sh, "track stop at");
+  //   }
+  //   else if ((r = parse_i32(r, &arg4)) == 0) {
+  //     shell_errorf(sh, "track stop from");
+  //   }
+  //   else if ((r = parse_i32(r, &arg5)) == 0) {
+  //     shell_errorf(sh, "track start");
+  //   }
+  //   else {
+  //     StopAtProtocol sap;
+  //     sap.sar = SAR_STOP;
+  //     sap.train = arg1; //train
+  //     sap.gear = arg2; //train speed
+  //     sap.stop_at = arg3; //track stop at
+  //     sap.stop_from = arg4; //train stop from
+  //     sap.start = arg5; //train start
+  //     Send(stop_at_tid, &sap, sizeof(sap), &reply, sizeof(reply));
+  //     shell_info(sh);
+  //   }
+  // }
   else if (cmd[0] == 's' && cmd[1] == 'h') {
     int x, y, w, h;
     if ((r = parse_i32(cmd+2, &x)) == 0) {

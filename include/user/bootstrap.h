@@ -15,6 +15,7 @@
 #include <user/train/railway_manager.h>
 
 #include <stoppingcalibration_test.h>	//TODO: REMOVE THIS
+#include <stop_at_test.h>	//TODO: REMOVE THIS
 
 void Bootstrap();
 #endif

@@ -1,4 +1,5 @@
 #include<stoppingcalibration_test.h>
+#include <stop_at_test.h> //TODO: CHANGE THIS
 
 static tid_t term_tid;
 
@@ -67,17 +68,16 @@ void StoppingCalibrationTest(void * args){
 	//INITIALIZE
 	td = &trains[train];
 
-	sw.swr = SW_FLIP;
-	sw.sw = 14;
-	sw.dir = SW_STRAIGHT;
-	Send(sw_tid, &sw, sizeof(sw), &reply, sizeof(reply));
+	// sw.swr = SW_FLIP;
+	// sw.sw = 14;
+	// sw.dir = SW_STRAIGHT;
+	// Send(sw_tid, &sw, sizeof(sw), &reply, sizeof(reply));
 
-	sw.sw = 17;
-	sw.dir = SW_STRAIGHT;
-	Send(sw_tid, &sw, sizeof(sw), &reply, sizeof(reply));
+	// sw.sw = 17;
+	// sw.dir = SW_STRAIGHT;
+	// Send(sw_tid, &sw, sizeof(sw), &reply, sizeof(reply));
 
-	Delay(cs_tid, mytid, 200);
-
+	// Delay(cs_tid, mytid, 200);
 
 	//Send the TK
 	tm.tmc = TM_TRACK;
@@ -86,7 +86,7 @@ void StoppingCalibrationTest(void * args){
 	Send(tm_tid, &tm, sizeof(tm), &reply, sizeof(reply));
 
 	//Guess initial delay (10ms)
-	dest = GetNextSensor(switches, before);
+	dest = GetNextSensorNI(switches, before);
 	//END INITIALIZATION
 
 	TMLogStrf(term_tid, "%d SPEED TEST From: %s\n", speed, track[start_node].name);
@@ -157,7 +157,7 @@ void StoppingServerTest(){
 	tid_t req_tid;
 	int reply;
 	StoppingCalibrationArgs args;
-	args.speed = 14;
+	args.speed = 7;
 	args.train = 24;
 	args.before_sensor = 60; //D13
 	args.start_node = 0;	//A1
@@ -168,7 +168,7 @@ void StoppingServerTest(){
   TMRegister(term_tid, CAL_OFFSET_X, CAL_OFFSET_Y, CAL_WIDTH, CAL_HEIGHT);
 
 	while(true){
-		if(args.speed < 7){
+		if(args.speed < 4){
 			break;
 		}
 

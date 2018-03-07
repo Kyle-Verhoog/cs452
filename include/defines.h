@@ -49,6 +49,9 @@
 #define SENSOR_MANAGER_ID 23
 #define PREDICTION_MANAGER_ID 30
 
+//For Debugging
+#define STOP_AT_SERVER_ID 60
+
 #define INT_MAX 2147483647
 
 //Commands

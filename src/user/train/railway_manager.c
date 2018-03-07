@@ -94,11 +94,32 @@ void parse_sw(tid_t sw_tid, RWProtocol *rwp){
 	Send(sw_tid, &sw, sizeof(sw), &reply, sizeof(reply));
 }
 
+void RailwayInit(){
+	tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
+  	assert(tx_tid >= 0);
+  	tid_t rx_tid = WhoIs(IOSERVER_UART1_RX_ID);
+  	assert(rx_tid >= 0);
+
+  	//Send Reset Commands to Terminal
+  	//BLPutC(tx_tid, 'X');
+  	BLPutC(tx_tid, 192);
+
+  	//Flush the IO
+  	FlushIO(tx_tid);
+  	FlushIO(rx_tid);
+
+  	//Send Go
+  	PutC(tx_tid, 96);
+}
+
 void RailwayManager(){
 	void *data;
 	int reply = 0;
 	int r = RegisterAs(RAILWAY_MANAGER_ID);
   	assert(r == 0);
+
+  	//Reset The Train Controller
+  	RailwayInit();
 
   	track_node track[TRACK_MAX];
   	init_tracka(track);

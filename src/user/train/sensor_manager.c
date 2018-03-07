@@ -37,6 +37,15 @@ void Notify(tid_cb *subscribers){
 	}
 }
 
+void Publish(Sensor *sensors, tid_cb *subscribers){
+	int i;
+	for(i = 0; i < SENSOR_SIZE; i++){
+		if(sensors[i].state == SEN_ON){
+			Notify(&subscribers[i]);
+		}
+	}
+}
+
 //Returns if a diff happened
 bool UpdateSensorData(Sensor *slist, char byte, int scounter, tid_cb* subscribers){
 	bool delta = false;
@@ -48,9 +57,9 @@ bool UpdateSensorData(Sensor *slist, char byte, int scounter, tid_cb* subscriber
 		assert(i + scounter*8 < 80);
 		assert(i + scounter*8 >= 0);
 
-		if(slist[i + scounter*8].state == SEN_ON){
-			Notify(&subscribers[i + scounter*8]);
-		}
+		// if(slist[i + scounter*8].state == SEN_ON){
+		// 	Notify(&subscribers[i + scounter*8]);
+		// }
 	}
 
 	return delta;
@@ -131,10 +140,6 @@ void SensorManager(void *args){
     tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
     assert(tx_tid >= 0);
 
-
-    // Cursor c;
-    // SET_CURSOR(c, 30, 20);
-
     Create(30, &SensorReceiver);
   	Create(30, &SensorTimeout);
 
@@ -154,12 +159,13 @@ void SensorManager(void *args){
   				scounter = (scounter + 1) % (DECODER_SIZE*2);
   				if(scounter == 0){
   					BLPutC(tx_tid, GET_ALL_SENSORS);
+  					Publish(sensorList, subscribers);
   					//Update Prediction
   					if(deltaFlag){
   						Notify(&subscribers[SENSOR_SIZE]);
   						PushSensorToPrediction(pred_tid, sensorList);
   						deltaFlag = false;
-              PrintSensorData(si_tid, sensorList);
+              			PrintSensorData(si_tid, sensorList);
   					}
   				}
   				if(scounter % 2 == 0){
