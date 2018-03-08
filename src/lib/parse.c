@@ -6,6 +6,23 @@ int mypow(int x, int y) {
   return r;
 }
 
+char *parse_str(char *str, char *buf, int buf_len) {
+  char c;
+  int len;
+  len = 0;
+  while ((c = *(str++)) == ' ');
+  str--;
+  while ((c = *str++) != ' ' && c != '\0') {
+    *buf++ = c;
+    ++len;
+    if (len > buf_len)
+      return 0;
+  }
+  *buf++ = '\0';
+  return str-1;
+}
+
+
 char *parse_c(char *str, char *c) {
   while ((*c = *(str++)) == ' ');
 

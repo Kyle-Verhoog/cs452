@@ -14,4 +14,6 @@ char *parse_c(char *str, char *c);
  */
 char *parse_i32(char *str, int *i);
 
+char *parse_str(char *str, char *buf, int buf_len);
+
 #endif

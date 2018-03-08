@@ -66,12 +66,13 @@ void TerminalManager() {
   term_cb buf;
   bool  sh_rdy;
   tid_t sh_tid, log_tid;
-  int log_line;
+  int log_line, log_len;
 
   sh_rdy = false;
   sh_tid = -1;
   log_tid = -1;
   log_line = 0;
+  log_len  = 0;
   term_cb_init(&buf);
   r = RegisterAs(TERMINAL_MANAGER_ID);
   assert(r == 0);
@@ -243,9 +244,10 @@ void TMLogStrf(tid_t tm_tid, char *fmt, ...) {
   char buf[100];
   TManReq req;
   TManRep rep;
+  len = 0;
 
   va_start(va, fmt);
-  len = buf_pack_fmt(buf, fmt, va);
+  len += buf_pack_fmt(buf, fmt, va);
   va_end(va);
 
 

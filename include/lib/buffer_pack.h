@@ -14,7 +14,7 @@ int buf_pack_i32(char *buf, int i);
  * returns 0 if successful
  *         1 if the buffer size has been exceeded
  */
-int buf_pack_str(char *buf, char *str);
+int buf_pack_str(char *buf, const char *str);
 
 int buf_pack_fmt(char *buf, char *fmt, va_list va);
 

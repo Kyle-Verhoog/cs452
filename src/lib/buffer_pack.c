@@ -62,7 +62,7 @@ int buf_pack_i32(char *buf, int i) {
   return offset;
 }
 
-int buf_pack_str(char *buf, char *str) {
+int buf_pack_str(char *buf, const char *str) {
   char c;
   int offset;
   offset = 0;

@@ -72,7 +72,7 @@ char tdisp_pop(TDisplay *td) {
 }
 
 // set td cursor relative to focused window
-void tdisp_set_cursor(TDisplay *td, int x, int y) {
+void tdisp_set_cursor(TDisplay *td, int x, int y, bool wrap) {
   TWindow *window;
   int ret;
   tdisp_cb *buf;
@@ -82,10 +82,20 @@ void tdisp_set_cursor(TDisplay *td, int x, int y) {
   x += window->offsetx;
   y += window->offsety;
 
-  // if (!(x >= window->offsetx && x <= window->offsetx + window->w))
-    // PRINTF("%d\n", td->focused_window->tid);
-  assert(x >= window->offsetx && x <= window->offsetx + window->w);
-  assert(y >= window->offsety && y <= window->offsety + window->h);
+  if (/*wrap&&*/ x > window->offsetx + window->w /*- 1*/) {
+    window->cur.x = 3; // wrap the cursor by default
+    window->cur.y++;
+    x = window->offsetx;
+    y = window->offsety;
+  }
+  if (/*wrap &&*/ y > window->offsety + window->h /*- 1*/) {
+    window->cur.x = 1;
+    window->cur.y = 1;
+    x = window->offsetx;
+    y = window->offsety;
+  }
+  // assert(x >= window->offsetx && x <= window->offsetx + window->w);
+  // assert(y >= window->offsety && y <= window->offsety + window->h);
 
   if (td->tdcur.x != x || td->tdcur.y != y) {
     /*
@@ -123,7 +133,7 @@ void tdisp_set_cursor(TDisplay *td, int x, int y) {
 void tdisp_reset_cursor(TDisplay *td) {
   TWindow *window;
   window = td->focused_window;
-  tdisp_set_cursor(td, window->cur.x, window->cur.y);
+  tdisp_set_cursor(td, window->cur.x, window->cur.y, true);
 }
 
 void tdisp_set_active_window(TDisplay *td, int wid) {
@@ -140,7 +150,7 @@ void tdisp_draw_window_outline(TDisplay *td) {
 
   for (i = 0; i <= h; ++i) {
     if (i == 0 || i == h) {
-      tdisp_set_cursor(td, 0, i);
+      tdisp_set_cursor(td, 0, i, false);
       tdisp_cb_pushstr(&td->buffer, i == 0 ? TERM_TOP_L: TERM_BOT_L);
       if (i == 0) {
         int n;
@@ -158,9 +168,9 @@ void tdisp_draw_window_outline(TDisplay *td) {
       tdisp_cb_pushstr(&td->buffer, i == 0 ? TERM_TOP_R : TERM_BOT_R);
     }
     else {
-      tdisp_set_cursor(td, 0, i);
+      tdisp_set_cursor(td, 0, i, false);
       tdisp_cb_pushstr(&td->buffer, TERM_VER);
-      tdisp_set_cursor(td, w-1, i);
+      tdisp_set_cursor(td, w-1, i, false);
       tdisp_cb_pushstr(&td->buffer, TERM_VER);
     }
   }
@@ -175,7 +185,7 @@ void tdisp_clear_window(TDisplay *td) {
   h = window->h;
 
   for (i = 1; i < h; ++i) {
-    tdisp_set_cursor(td, 1, i);
+    tdisp_set_cursor(td, 1, i, false);
     for (j = 0; j < w-2; ++j) {
       tdisp_cb_push(&td->buffer, ' ');
     }
@@ -191,7 +201,7 @@ void tdisp_clear_whole_window(TDisplay *td) {
   h = window->h;
 
   for (i = 0; i <= h; ++i) {
-    tdisp_set_cursor(td, 0, i);
+    tdisp_set_cursor(td, 0, i, false);
     for (j = 0; j < w; ++j) {
       tdisp_cb_push(&td->buffer, ' ');
     }

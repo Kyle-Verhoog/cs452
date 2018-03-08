@@ -124,10 +124,69 @@ static void generate_simple_path(track_node *t) {
   assert(p.current == NULL);
 }
 
-static void generate_longer_path(track_node *t) {
+static void path_switches(track_node *t) {
   track_node *start, *end;
   path p;
   path_init(&p, t);
+
+  start = &t[T("A1")];
+  end   = &t[T("E12")];
+
+  path_set_destination(&p, start, end);
+  path_generate(&p);
+  assert(p.ready);
+  assert(p.current == NULL);
+  assert(p.behind.size == 0);
+  assert(p.ahead.size == 10);
+
+  path_start(&p, start);
+  sw_configs cfgs;
+  sw_config cfg;
+  sw_configs_init(&cfgs);
+  path_switches_in_next_dist(&p, &cfgs, 2500);
+  assert(cfgs.size == 1);
+  sw_configs_pop(&cfgs, &cfg);
+  assert(cfg.state_required == DIR_STRAIGHT);
+  assert(cfg.sw->id == T("BR8"));
+
+  path_init(&p, t);
+
+  start = &t[T("A1")];
+  end   = &t[T("E13")];
+  path_set_destination(&p, start, end);
+  path_generate(&p);
+  assert(p.ready);
+  assert(p.current == NULL);
+  assert(p.behind.size == 0);
+  assert(p.ahead.size == 10);
+
+  path_start(&p, start);
+  sw_configs_init(&cfgs);
+  path_switches_in_next_dist(&p, &cfgs, 2500);
+  assert(cfgs.size == 1);
+  sw_configs_pop(&cfgs, &cfg);
+  assert(cfg.state_required == DIR_CURVED);
+  assert(cfg.sw->id == T("BR8"));
+}
+
+static void print_path(track_node *t) {
+  track_node *start, *end;
+  path p;
+  char buf[1024];
+  path_init(&p, t);
+
+  start = &t[T("A1")];
+  end   = &t[T("E13")];
+  path_set_destination(&p, start, end);
+  path_generate(&p);
+  path_to_str(&p, buf);
+  // printf("%s\n", buf);
+}
+
+static void generate_longer_path(track_node *t) {
+  // track_node *start, *end;
+  // path p;
+  // path_init(&p, t);
   // start = &track[24];
   // dest  = &track[74];
   // dij_path_find(track, start, dest, prev);
@@ -152,4 +211,7 @@ void train_pathing_tests() {
   dij_branch_path(track);
   init_path(track);
   generate_simple_path(track);
+  generate_longer_path(track);
+  path_switches(track);
+  print_path(track);
 }

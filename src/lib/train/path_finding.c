@@ -1,39 +1,7 @@
 #include <lib/train/path_finding.h>
 
 CIRCULAR_BUFFER_DEF(tr_path, track_node*, TRACK_MAX);
-CIRCULAR_BUFFER_DEF(sw_look_ahead, track_node*, TRACK_MAX);
-
-#ifndef X86
-#include <user/terminal_manager.h>
-int generate_train_path(TrainDescriptor *tr, track_node *track, int sid, int eid) {
-  int i, n;
-  int buf[TRACK_MAX];
-
-  dij_path_find(track, &track[sid], &track[eid], tr->path_prev);
-
-  tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
-  assert(tm_tid >= 0);
-
-  i = tr->path_prev[eid];
-  n = 0;
-  while (i != sid && i != -1) {
-    // TMLogStrf(tm_tid, "");
-    buf[n++] = i;
-    i = tr->path_prev[eid];
-  }
-
-  assert(i == sid);
-
-  if (i == -1)
-    assert(0 && "no path found");
-
-  for (n = n-1; n >= 0; --n) {
-    tr_path_push(&tr->path, buf[n]);
-  }
-}
-#else
-#include <assert.h>
-#endif
+CIRCULAR_BUFFER_DEF(sw_configs, sw_config, TRACK_MAX);
 
 void path_init(path *p, track_node *track) {
   p->current = NULL;
@@ -42,6 +10,7 @@ void path_init(path *p, track_node *track) {
   p->ready   = false;
   p->active  = false;
   p->track = track;
+  p->path_len = 0;
   tr_path_init(&p->ahead);
   tr_path_init(&p->behind);
 }
@@ -69,8 +38,11 @@ void path_next(path *p) {
     assert(r == 0);
     p->current = next;
   }
-}
 
+  if (p->current == NULL && p->ahead.size == 0) {
+    p->active = false;
+  }
+}
 
 // follow path until node t
 int path_follow_to(path *p, track_node *t) {
@@ -103,11 +75,79 @@ int path_backtrack(path *p, track_node *t) {
   return 0;
 }
 
+int path_get_switch_config(track_node *t1, track_node *t2) {
+  assert(t1->type == NODE_BRANCH);
+  track_edge *e;
+  e = &t1->edge[DIR_STRAIGHT];
+  if (e->dest == t2) {
+    return DIR_STRAIGHT;
+  }
+  e = &t1->edge[DIR_CURVED];
+  if (e->dest == t2) {
+    return DIR_CURVED;
+  }
+  assert(0 && "nodes are not connected via edge");
+}
+
+int track_node_dist(track_node *t1, track_node *t2) {
+  assert(t1->type != NODE_EXIT);
+  int dir;
+  dir = DIR_AHEAD;
+  if (t1->type == NODE_BRANCH) {
+    dir = path_get_switch_config(t1, t2);
+  }
+  return t1->edge[dir].dist;
+}
+
+void path_to_str(path *p, char *buf) {
+  int i, offset, x;
+  track_node *tn;
+  x = offset = 0;
+  for (i = 0; i < p->ahead.size; ++i) {
+    tr_path_get(&p->ahead, i, &tn);
+    offset += buf_pack_str(buf+offset, tn->name);
+    offset += buf_pack_c(buf+offset, ' ');
+    if (x == 6) {
+      offset += buf_pack_str(buf+offset, "\n    ");
+      x = 0;
+    }
+    else {
+      x++;
+    }
+  }
+  offset += buf_pack_c(buf+offset, '\0');
+}
+
 // return the switches in the next `dist` along the path
-void path_switches_in_next_dist(path *p, int dist) {
+void path_switches_in_next_dist(path *p, sw_configs *sw_cfgs, int dist) {
+  assert(p->active);
+  int i, d;
+  track_node *cur, *next;
+
+  d = 0;
+  cur = p->current;
+  for (i = 0; i < p->ahead.size; ++i) {
+    tr_path_get(&p->ahead, i, &next);
+
+    int dir;
+    sw_config sw_cfg;
+    if (cur->type == NODE_BRANCH) {
+      dir = path_get_switch_config(cur, next);
+      sw_cfg.sw = cur;
+      sw_cfg.state_required = dir;
+      sw_configs_push(sw_cfgs, sw_cfg);
+    }
+
+    d += track_node_dist(cur, next);
+    if (d >= dist)
+      break;
+
+    cur = next;
+  }
+  // printf("%d\n", d);
 }
 // find the next n switches on the path
-void path_next_n_switches(path *p, int n, sw_look_ahead *sw_la) {
+void path_next_n_switches(path *p, int n, sw_configs *sw_cfgs) {
 }
 
 // find the next switches before the next sensor
