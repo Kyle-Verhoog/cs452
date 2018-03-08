@@ -1,22 +1,175 @@
 #include<stoppingcalibration_test.h>
 #include <stop_at_test.h> //TODO: CHANGE THIS
 
-static tid_t term_tid;
-
 int max(int i, int j) { return i < j ? j : i; };
+
+void InitInch(InchingArgs args){
+	int s_time, e1_time, e2_time, reply;
+	//track_node *org = args.train->node;
+	Destination next = GetNextSensorNI(args.switches, args.train->node);
+	Destination next2 = GetNextSensorNI(args.switches, next.node);
+
+	tid_t term_tid = WhoIs(TERMINAL_MANAGER_ID);
+  	assert(term_tid >= 0);
+
+	TMProtocol tm;
+	SMProtocol sm;
+
+	//Move the Train
+	tm.tmc = TM_MOVE;
+	tm.arg1 = args.train->id;
+	tm.arg2 = INCHING_GEAR;
+	Send(args.tm_tid, &tm, sizeof(tm), &reply, sizeof(reply));
+
+	s_time = Time(args.cs_tid, args.my_tid);
+
+	//Block until the "next" sensor
+	sm.smr = SM_SUBSCRIBE;
+	sm.byte = (char)next.node->num;
+	Send(args.sm_tid, &sm, sizeof(sm), &reply, sizeof(reply));
+
+	e1_time = Time(args.cs_tid, args.my_tid);
+
+	//Block until the "next2" sensor
+	sm.smr = SM_SUBSCRIBE;
+	sm.byte = (char)next2.node->num;
+	Send(args.sm_tid, &sm, sizeof(sm), &reply, sizeof(reply));
+
+	e2_time = Time(args.cs_tid, args.my_tid);
+
+	//Determine Speed
+	args.train->inchingSpeed = (next2.dist*1000)/(e2_time - e1_time);
+	assert(args.train->inchingSpeed > 0);
+
+	TMLogStrf(term_tid, "Speed: %d\n", args.train->inchingSpeed);
+
+	//Reverse back to approx same location
+	// tm.tmc = TM_REVERSE;
+	// tm.arg1 = args.train->id;
+	// Send(args.tm_tid, &tm, sizeof(tm), &reply, sizeof(reply));
+	// //Wait until we're back
+	// sm.smr = SM_SUBSCRIBE;
+	// sm.byte = (char)org->num;
+	// Send(args.sm_tid, &sm, sizeof(sm), &reply, sizeof(reply));
+
+	// //Set Speed to be 0 and reverse back
+	tm.tmc = TM_MOVE;
+	tm.arg1 = args.train->id;
+	tm.arg2 = 0;
+	Send(args.tm_tid, &tm, sizeof(tm), &reply, sizeof(reply));
+	// tm.tmc = TM_REVERSE;
+	// tm.arg1 = args.train->id;
+	// Send(args.tm_tid, &tm, sizeof(tm), &reply, sizeof(reply));
+}
+
+int InchForward(InchingArgs args){
+	int s_time, e_time, reply;
+	Destination next = GetNextSensorNI(args.switches, args.train->node);
+
+	TMProtocol tm;
+	SMProtocol sm;
+
+	//Move the Train
+	tm.tmc = TM_MOVE;
+	tm.arg1 = args.train->id;
+	tm.arg2 = INCHING_GEAR;
+	Send(args.tm_tid, &tm, sizeof(tm), &reply, sizeof(reply));
+
+	s_time = Time(args.cs_tid, args.my_tid);
+
+	//Block until the "next" sensor
+	sm.smr = SM_SUBSCRIBE;
+	sm.byte = (char)next.node->num;
+	Send(args.sm_tid, &sm, sizeof(sm), &reply, sizeof(reply));
+
+	e_time = Time(args.cs_tid, args.my_tid);
+
+	tm.tmc = TM_MOVE;
+	tm.arg1 = args.train->id;
+	tm.arg2 = 0;
+	Send(args.tm_tid, &tm, sizeof(tm), &reply, sizeof(reply));
+
+	return (e_time - s_time) * args.train->inchingSpeed;
+}
+
+StopReference StopOverPath(track_node **path, int size, TrainDescriptor *td, int stopDist){
+	StopReference stopRef;
+	int i, distance;
+	track_node *n = path[size - 2];
+	// track_node *n = path[size - 1]->reverse;
+	// track_node *lastSensor = td->node;
+
+	// //Get Distance
+	// i = size - 1;
+	// distance = 0;
+	// while(true){
+	// 	if(distance*1000 >= stopDist && n->reverse->type == NODE_SENSOR){
+	// 		n = n->reverse;
+	// 		break;
+	// 	}
+
+	// 	n = path[i]->reverse;
+	// 	if(n->type == NODE_BRANCH){
+	// 		if(n->edge[DIR_STRAIGHT].dest == path[i - 1]->reverse){
+	// 			distance += n->edge[DIR_STRAIGHT].dist;
+	// 		}
+	// 		else if(n->edge[DIR_CURVED].dest == path[i - 1]->reverse){
+	// 			distance += n->edge[DIR_CURVED].dist;
+	// 		}
+	// 		else{
+	// 			assert(0 && "NOT POSSIBLE");
+	// 		}
+	// 	}else{
+	// 		distance += n->edge[DIR_AHEAD].dist;
+	// 	}
+
+	// 	i--;
+	// }
+	i = size - 2;
+	distance = 0;
+	do{
+		if(i < 0){
+			assert(0 && "Given path is too short!");
+		}
+
+		n = path[i];
+
+		if(n->type == NODE_BRANCH){
+			if(n->edge[DIR_STRAIGHT].dest == path[i+1]){
+				distance += n->edge[DIR_STRAIGHT].dist;
+			}
+			else if(n->edge[DIR_CURVED].dest == path[i+1]){
+				distance += n->edge[DIR_STRAIGHT].dist;	
+			}
+			else{
+				assert(0 && "NOT POSSIBLE");	
+			}
+		}
+		else{
+			distance += n->edge[DIR_AHEAD].dist;
+		}
+
+		i--;
+	}while(distance*1000 < stopDist || n->type != NODE_SENSOR);
+
+	stopRef.ref = n;
+	stopRef.target = path[size - 1];
+	stopRef.delayDist = distance*1000 - stopDist;
+	return stopRef;
+}
+
 
 void StoppingCalibrationTest(void * args){
 	void *data;
 	Destination dest;
 	TrainDescriptor *td;
-	int reply, delay, currentSpeed, distance;
-	int fraction = 10;
-	
+	int reply, distance;
+	InchingArgs iargs;
+
 	StoppingCalibrationArgs *scargs = (StoppingCalibrationArgs *)args;
 	int train = scargs->train;
 	int speed = scargs->speed;
 	int befsensor = scargs->before_sensor;
-	int start_node = scargs->start_node;
 
 	//Data of the grid
 	track_node *track;
@@ -27,8 +180,9 @@ void StoppingCalibrationTest(void * args){
 	track_node* target = NULL;
 	track_node* before = NULL;
 
-	tid_t mytid = MyTid();
-	tid_t parentTid = MyParentTid();
+	tid_t my_tid = MyTid();
+	tid_t term_tid = WhoIs(TERMINAL_MANAGER_ID);
+	assert(term_tid >= 0);
 	tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
 	assert(cs_tid >= 0);
 	tid_t rw_tid = WhoIs(RAILWAY_MANAGER_ID);
@@ -54,102 +208,81 @@ void StoppingCalibrationTest(void * args){
 
 	//Get Train List
 	tm.tmc = TM_GET_ALL;
-	Send(tm_tid, &tm, sizeof(tm), &trains, sizeof(trains));
+	Send(tm_tid, &tm, sizeof(tm), &data, sizeof(data));
+	trains = (TrainDescriptor *)data;
 
 	//Get Switch List
 	sw.swr = SW_GET_ALL;
-	Send(sw_tid, &sw, sizeof(sw), &switches, sizeof(switches));
+	Send(sw_tid, &sw, sizeof(sw), &data, sizeof(data));
+	switches = (Switch *)data;
 
 	//Get Sensor List
 	sm.smr = SM_GET_ALL;
-	Send(sm_tid, &sm, sizeof(sm), &sensors, sizeof(sensors));
-	
+	Send(sm_tid, &sm, sizeof(sm), &data, sizeof(data));
+	sensors = (Sensor *)data;
 
 	//INITIALIZE
 	td = &trains[train];
-
-	// sw.swr = SW_FLIP;
-	// sw.sw = 14;
-	// sw.dir = SW_STRAIGHT;
-	// Send(sw_tid, &sw, sizeof(sw), &reply, sizeof(reply));
-
-	// sw.sw = 17;
-	// sw.dir = SW_STRAIGHT;
-	// Send(sw_tid, &sw, sizeof(sw), &reply, sizeof(reply));
-
-	// Delay(cs_tid, mytid, 200);
-
-	//Send the TK
-	tm.tmc = TM_TRACK;
-	tm.arg1 = train;
-	tm.arg2 = start_node;
-	Send(tm_tid, &tm, sizeof(tm), &reply, sizeof(reply));
+	iargs.tm_tid = tm_tid;
+	iargs.sm_tid = sm_tid;
+	iargs.cs_tid = cs_tid;
+	iargs.my_tid = my_tid;
+	iargs.switches = switches;
+	iargs.train = td;
 
 	//Guess initial delay (10ms)
 	dest = GetNextSensorNI(switches, before);
 	//END INITIALIZATION
 
-	TMLogStrf(term_tid, "%d SPEED TEST From: %s\n", speed, track[start_node].name);
-	Delay(cs_tid, mytid, 30);
+	TMLogStrf(term_tid, "%d SPEED TEST\n", speed);
+	Delay(cs_tid, my_tid, 30);
 
 	//ready
-	while(true){
-		tm.tmc = TM_MOVE;
-		tm.arg1 = train;
-		tm.arg2 = speed;
-		Send(tm_tid, &tm, sizeof(tm), &reply, sizeof(reply));
-		//Block until the "before" sensor
-		sm.smr = SM_SUBSCRIBE;
-		sm.byte = (char)before->num;
-		Send(sm_tid, &sm, sizeof(sm), &reply, sizeof(reply));
-		delay = (fraction*dest.dist*1000)/(td->speed * 10);
-		currentSpeed = td->speed;
-		TMLogStrf(term_tid, "Stopping (%d)\n", delay);
-		//Delay some more
-		Delay(cs_tid, mytid, delay);
+	tm.tmc = TM_MOVE;
+	tm.arg1 = train;
+	tm.arg2 = speed;
+	Send(tm_tid, &tm, sizeof(tm), &reply, sizeof(reply));
+	//Block until the "before" sensor
+	sm.smr = SM_SUBSCRIBE;
+	sm.byte = (char)before->num;
+	Send(sm_tid, &sm, sizeof(sm), &reply, sizeof(reply));
 
-		//Send Stop Command
-		tm.tmc = TM_MOVE;
-		tm.arg1 = train;
-		tm.arg2 = 0;
-		Send(tm_tid, &tm, sizeof(tm), &reply, sizeof(reply));
+	//Send Stop Command
+	tm.tmc = TM_MOVE;
+	tm.arg1 = train;
+	tm.arg2 = 0;
+	Send(tm_tid, &tm, sizeof(tm), &reply, sizeof(reply));
 
-		if(target == NULL){
-			//wait and determine target
-			Delay(cs_tid, mytid, speed*10*4);
-			target = GetPrevSensor(switches, td->node).node;
-			TMLogStrf(term_tid, "TARGET ACQUIRED %s\n", target->name);
-		}
-		else{
-			//Delay
-			Delay(cs_tid, mytid, speed*10*4);	
-		}
-		
-		//Check if sitting on target
-		if(sensors[target->num].state == SEN_ON){
-			distance = DistanceBetweenNodes(switches, before, target)*1000;
-			distance -= delay * currentSpeed;
-			TMLogStrf(term_tid, "Stop time: %d ticks\n", delay);
-			TMLogStrf(term_tid, "Distance: %d um\n", distance);
-			break;
-		}
-		else{
-			track_node *over = GetPrevSensor(switches, td->node).node;
-			if(over != target){
-				distance = DistanceBetweenNodes(switches, before, target)*1000;
-				distance -= delay * currentSpeed;
-				TMLogStrf(term_tid, "Undershot: %d ticks\n", delay);
-				TMLogStrf(term_tid, "Distance: %d um\n", distance);
-				break;
-			}
-		}
-
-		//Subtract delay by some epsilon
-		fraction--;
+	//wait and determine target
+	Delay(cs_tid, my_tid, speed*10*4);
+	
+	//Check if sitting on target
+	if(sensors[td->node->num].state == SEN_ON){
+		target = td->node;
+		TMLogStrf(term_tid, "TARGET ACQUIRED %s\n", target->name);
+		distance = DistanceBetweenNodes(switches, before, target)*1000;
+		TMLogStrf(term_tid, "Distance: %d um\n", distance);
+	}
+	else{
+		target = GetNextSensorNI(switches, td->node).node;
+		TMLogStrf(term_tid, "TARGET ACQUIRED %s\n", target->name);
+		distance = DistanceBetweenNodes(switches, before, target)*1000 - InchForward(iargs);
+		TMLogStrf(term_tid, "Distance: %d um\n", distance);
 	}
 
-	int targetNum = target->num;
-	Send(parentTid, &targetNum, sizeof(targetNum), &reply, sizeof(reply));
+	//Dynamically test this
+	StopAtProtocol sap;
+  sap.sar = SAR_STOP;
+  sap.train = train;
+  sap.gear = speed;
+  sap.stop_at = before->num;
+  sap.dist = distance;
+
+  tid_t sa_tid = WhoIs(STOP_AT_SERVER_ID);
+  assert(sa_tid > 0);
+  Send(sa_tid, &sap, sizeof(sap), &reply, sizeof(reply));
+
+  TMLogStrf(term_tid, "Done!\n");
 	Exit();
 }
 
@@ -157,26 +290,17 @@ void StoppingServerTest(){
 	tid_t req_tid;
 	int reply;
 	StoppingCalibrationArgs args;
-	args.speed = 7;
-	args.train = 24;
-	args.before_sensor = 60; //D13
-	args.start_node = 0;	//A1
 
-  term_tid = WhoIs(TERMINAL_MANAGER_ID);
+	int r = RegisterAs(STOPPING_CALIBRATION_ID);
+	assert(r == 0);
+  tid_t term_tid = WhoIs(TERMINAL_MANAGER_ID);
   assert(term_tid >= 0);
 
-  TMRegister(term_tid, CAL_OFFSET_X, CAL_OFFSET_Y, CAL_WIDTH, CAL_HEIGHT);
-
 	while(true){
-		if(args.speed < 4){
-			break;
-		}
-
-		CreateArgs(20, StoppingCalibrationTest, (void *)&args);
-		Receive(&req_tid, &reply, sizeof(reply));
+		Receive(&req_tid, &args, sizeof(args));
 		Reply(req_tid, &reply, sizeof(reply));
 
-		args.start_node = reply;
-		args.speed--;
+		CreateArgs(20, StoppingCalibrationTest, (void *)&args);
 	}
 }
+

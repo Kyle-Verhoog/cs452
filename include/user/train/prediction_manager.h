@@ -27,6 +27,7 @@ typedef enum PM_Command{
 	PM_SWITCH = 1,
 	PM_TRAIN = 2,
 	PM_PREDICTION = 3,
+	PM_MEASURE = 4
 }PM_Command;
 
 typedef struct LiveTrains{

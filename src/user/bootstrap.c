@@ -31,8 +31,8 @@ void Bootstrap() {
   Create(0, &Logger);
 
   DelayCS(mytid, 200);
-  //Create(20, &StoppingServerTest);
-  //Create(19, &StopAtServer);
+  Create(20, &StoppingServerTest);
+  Create(20, &StopAtServer);
   // StopAtProtocol sap;
   // sap.train = 24;
   // sap.gear = 14;

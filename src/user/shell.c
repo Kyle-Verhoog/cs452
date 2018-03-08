@@ -1,4 +1,5 @@
 #include <user/shell.h>
+#include <stoppingcalibration_test.h> //TODO:Remove this
 #include <stop_at_test.h> //TODO:Remove this
 
 CIRCULAR_BUFFER_DEF(cmd_cb, char, CMD_BUF_MAX);
@@ -196,15 +197,19 @@ void shell_exec(shell *sh) {
   int reply;
   char *cmd;
   char *r;
-  int arg1, arg2, arg3, arg4, arg5;
+  int arg1, arg2, arg3, arg4;
 
-  tid_t tr_tid, sw_tid, stop_at_tid;
+  tid_t tr_tid, sw_tid, sc_tid, sa_tid;
 
   tr_tid = WhoIs(TRAIN_MANAGER_ID);
   sw_tid = WhoIs(SWITCH_MANAGER_ID);
+  sc_tid = WhoIs(STOPPING_CALIBRATION_ID);
+  sa_tid = WhoIs(STOP_AT_SERVER_ID);
 
   assert(tr_tid > 0);
   assert(sw_tid > 0);
+  assert(sc_tid > 0);
+  assert(sa_tid > 0);
 
   cmd = sh->cmd;
 
@@ -279,34 +284,85 @@ void shell_exec(shell *sh) {
       shell_info(sh);
     }
   }
-  // else if(cmd[0] == 's' && cmd[1] == 't'){
-  //   if ((r = parse_i32(cmd+2, &arg1)) == 0 || arg1 > 81 || arg1 < 0) {
-  //     shell_errorf(sh, "train number");
-  //   }
-  //   else if ((r = parse_i32(r, &arg2)) == 0) {
-  //     shell_errorf(sh, "train cmd");
-  //   }
-  //   else if ((r = parse_i32(r, &arg3)) == 0) {
-  //     shell_errorf(sh, "track stop at");
-  //   }
-  //   else if ((r = parse_i32(r, &arg4)) == 0) {
-  //     shell_errorf(sh, "track stop from");
-  //   }
-  //   else if ((r = parse_i32(r, &arg5)) == 0) {
-  //     shell_errorf(sh, "track start");
-  //   }
-  //   else {
-  //     StopAtProtocol sap;
-  //     sap.sar = SAR_STOP;
-  //     sap.train = arg1; //train
-  //     sap.gear = arg2; //train speed
-  //     sap.stop_at = arg3; //track stop at
-  //     sap.stop_from = arg4; //train stop from
-  //     sap.start = arg5; //train start
-  //     Send(stop_at_tid, &sap, sizeof(sap), &reply, sizeof(reply));
-  //     shell_info(sh);
-  //   }
-  // }
+  else if (cmd[0] == 'm' && cmd[1] == 's') {
+    if ((r = parse_i32(cmd+2, &arg1)) == 0 || arg1 > 81 || arg1 < 0) {
+      shell_errorf(sh, "train number");
+    }
+    else {
+      TMProtocol tm;
+      tm.tmc = TM_MEASURE;
+      tm.arg1 = arg1; //train
+      Send(tr_tid, &tm, sizeof(tm), &reply, sizeof(reply));
+      shell_info(sh);
+    }
+  }
+  else if(cmd[0] == 's' && cmd[1] == 'c'){
+    if ((r = parse_i32(cmd+2, &arg1)) == 0 || arg1 > 81 || arg1 < 0) {
+      shell_errorf(sh, "train number");
+    }
+    else if ((r = parse_i32(r, &arg2)) == 0) {
+      shell_errorf(sh, "train cmd");
+    }
+    else if ((r = parse_i32(r, &arg3)) == 0) {
+      shell_errorf(sh, "track stop from");
+    }
+    else {
+      StoppingCalibrationArgs scargs;
+      scargs.train = arg1;
+      scargs.speed = arg2;
+      scargs.before_sensor = arg3;
+
+      Send(sc_tid, &scargs, sizeof(scargs), &reply, sizeof(reply));
+      shell_info(sh);
+    }
+  }
+  else if(cmd[0] == 's' && cmd[1] == 'a'){
+    if ((r = parse_i32(cmd+2, &arg1)) == 0 || arg1 > 81 || arg1 < 0) {
+      shell_errorf(sh, "train number");
+    }
+    else if ((r = parse_i32(r, &arg2)) == 0) {
+      shell_errorf(sh, "train cmd");
+    }
+    else if ((r = parse_i32(r, &arg3)) == 0) {
+      shell_errorf(sh, "track stop at");
+    }
+    else {
+      StopAtProtocol sap;
+      sap.sar = SAR_STOP;
+      sap.train = arg1;
+      sap.gear = arg2;
+      sap.stop_at = arg3;
+      sap.dist = -1;
+
+      Send(sa_tid, &sap, sizeof(sap), &reply, sizeof(reply));
+      shell_info(sh);
+    }
+  }
+  else if(cmd[0] == '2' && cmd[1] == 's' && cmd[2] == 'a'){
+    if ((r = parse_i32(cmd+3, &arg1)) == 0 || arg1 > 81 || arg1 < 0) {
+      shell_errorf(sh, "train number");
+    }
+    else if ((r = parse_i32(r, &arg2)) == 0) {
+      shell_errorf(sh, "train cmd");
+    }
+    else if ((r = parse_i32(r, &arg3)) == 0) {
+      shell_errorf(sh, "track stop at");
+    }
+    else if ((r = parse_i32(r, &arg4)) == 0) {
+      shell_errorf(sh, "specified distance");
+    }
+    else {
+      StopAtProtocol sap;
+      sap.sar = SAR_STOP;
+      sap.train = arg1;
+      sap.gear = arg2;
+      sap.stop_at = arg3;
+      sap.dist = arg4;
+
+      Send(sa_tid, &sap, sizeof(sap), &reply, sizeof(reply));
+      shell_info(sh);
+    } 
+  }
   else if (cmd[0] == 's' && cmd[1] == 'h') {
     int x, y, w, h;
     if ((r = parse_i32(cmd+2, &x)) == 0) {

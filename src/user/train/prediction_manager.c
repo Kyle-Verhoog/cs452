@@ -1,5 +1,5 @@
 #include <prediction_manager.h>
-#include <stop_at_test.h>
+#include <stoppingcalibration_test.h>
 
 tid_t tm_tid;
 
@@ -196,11 +196,13 @@ void CheckPrediction(tid_t mytid, tid_t cs_tid, Switch *swList, Sensor *snList, 
 	}
 }
 
-void InitTrain(void * args){
+void MeasuringInitTask(void * args){
 	Switch *switches;
 	InchingArgs iargs;
 
 	tid_t my_tid = MyTid();
+	tid_t term_tid = WhoIs(TERMINAL_MANAGER_ID);
+  	assert(term_tid >= 0);
 	tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
 	assert(cs_tid >= 0);
 	tid_t tm_tid = WhoIs(TRAIN_MANAGER_ID);
@@ -224,6 +226,7 @@ void InitTrain(void * args){
 	iargs.train = (TrainDescriptor *)args;
 
 	//Call Initialize
+	TMLogStrf(term_tid, "measuring train %d inching\n", iargs.train->id);
 	InitInch(iargs);
 
 	Exit();
@@ -232,8 +235,12 @@ void InitTrain(void * args){
 void AddTrain(LiveTrains *live, TrainDescriptor *td){
 	live->buf[live->size] = td;
 	live->size++;
-	//Init the train
-	CreateArgs(20, &InitTrain, (void *)td);
+	TMLogStrf(tm_tid, "train %d on track %s\n", td->id, td->node->name);
+	//MeasureTrain(td);
+}
+
+void MeasureTrain(TrainDescriptor *td){
+	CreateArgs(21, &MeasuringInitTask, (void*)td);
 }
 
 void PredictionManager(void *args){
@@ -275,7 +282,10 @@ void PredictionManager(void *args){
 				break;
 			case PM_TRAIN:
 				AddTrain(&live, (TrainDescriptor *)pmp.args);
-        		TMLogStrf(tm_tid, "train %d on track %s\n", live.buf[live.size-1]->id, live.buf[live.size-1]->node->name);
+				break;
+			case PM_MEASURE:
+				//Init the train
+				MeasureTrain((TrainDescriptor *)pmp.args);
 				break;
 			default:
 				assert(0 && "Bad Command");

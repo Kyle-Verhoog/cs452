@@ -10,6 +10,22 @@
 #include <sensor_manager.h>
 #include <prediction_manager.h>
 
+#define INCHING_GEAR 5
+
+typedef struct StopReference{
+	track_node *ref;
+	track_node *target;
+	int delayDist;
+}StopReference;
+
+typedef struct InchingArgs{
+	tid_t tm_tid;
+	tid_t sm_tid;
+	tid_t cs_tid;
+	tid_t my_tid;
+	Switch *switches;
+	TrainDescriptor *train;
+}InchingArgs;
 
 typedef struct StoppingCalibrationArgs{
 	int train;
@@ -17,6 +33,11 @@ typedef struct StoppingCalibrationArgs{
 	int start_node;
 	int before_sensor;
 }StoppingCalibrationArgs;
+
+StopReference StopOverPath(track_node **path, int size, TrainDescriptor *td, int stopDist);
+
+void InitInch(InchingArgs args);
+int InchForward(InchingArgs args);
 
 void StoppingCalibrationTest(void *args);
 void StoppingServerTest();

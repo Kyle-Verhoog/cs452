@@ -3,14 +3,16 @@
 #include <io.h>
 #include <ts7200.h>
 #include <user/syscalls.h>
-
+#include <tid_buffer.h>
 #include <railway_manager.h>
 #include <train_manager.h>
 #include <switch_manager.h>
 #include <sensor_manager.h>
 #include <prediction_manager.h>
 
-#define INCHING_GEAR 5
+#include <stoppingcalibration_test.h>
+
+#define STOP_PATH_SIZE 128
 
 typedef enum StopAtReq{
 	SAR_STOP = 0,
@@ -21,20 +23,9 @@ typedef struct StopAtProtocol{
 	int train;
 	int gear;
 	int stop_at;
-	int stop_from;
-	int start;
+	int dist;
 }StopAtProtocol;
 
-typedef struct InchingArgs{
-	tid_t tm_tid;
-	tid_t sm_tid;
-	tid_t cs_tid;
-	tid_t my_tid;
-	Switch *switches;
-	TrainDescriptor *train;
-}InchingArgs;
-
-void InitInch(InchingArgs args);
 void StopAt(void *args);
 void StopAtServer();
 

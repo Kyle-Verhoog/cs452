@@ -1,5 +1,6 @@
 #include <train_manager.h>
 #include <prediction_manager.h>
+#include <stoppingcalibration_test.h>
 
 CIRCULAR_BUFFER_DEF(tc_cb, volatile TrainProtocol, TRAIN_COMMAND_BUFFER_SIZE);
 
@@ -7,6 +8,16 @@ void AddTrainToPrediction(tid_t pred_tid, TrainDescriptor *train){
 	int reply;
 	PMProtocol pmp;
 	pmp.pmc = PM_TRAIN;
+	pmp.args = (void *)train;
+	pmp.size = 1;
+	
+	Send(pred_tid, &pmp, sizeof(pmp), &reply, sizeof(reply));
+}
+
+void MeasureTrainForPredition(tid_t pred_tid, TrainDescriptor *train){
+	int reply;
+	PMProtocol pmp;
+	pmp.pmc = PM_MEASURE;
 	pmp.args = (void *)train;
 	pmp.size = 1;
 	
@@ -63,6 +74,16 @@ void TMWriteTask(void *args){
 
 	Exit();
 }
+void init_train_model(TrainDescriptor *td, int train_id){
+	td->id = train_id; 
+	td->gear = 0; 
+	td->speed = 0; 
+	td->dir = 1; 
+	td->exist = false; 
+	td->isRunning = -1; 
+	td->node = NULL; 
+	tc_cb_init(&td->buf);
+}
 
 void TrainManager(void *args){
 	void *data;
@@ -70,7 +91,7 @@ void TrainManager(void *args){
 	TrainDescriptor Trains[TRAIN_SIZE];
 	int i;
 	for(i = 0 ; i < TRAIN_SIZE; i++){
-		INIT_TRAIN(Trains[i], i);
+		init_train_model(&Trains[i], i);
 	}
 
 	int reply = 0;
@@ -135,6 +156,10 @@ void TrainManager(void *args){
 				Trains[(int)tmp.arg1].exist = true;
 				Trains[(int)tmp.arg1].time_of_sensor = Time(cs_tid, mytid);
 				AddTrainToPrediction(pred_tid, &Trains[(int)tmp.arg1]);
+				break;
+			case TM_MEASURE:
+				Reply(tid_req, &reply, sizeof(reply));
+				MeasureTrainForPredition(pred_tid, &Trains[(int)tmp.arg1]);
 				break;
 			case TM_GET_ALL:
 				data = (void *)Trains;
