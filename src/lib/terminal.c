@@ -82,6 +82,8 @@ void tdisp_set_cursor(TDisplay *td, int x, int y) {
   x += window->offsetx;
   y += window->offsety;
 
+  // if (!(x >= window->offsetx && x <= window->offsetx + window->w))
+    // PRINTF("%d\n", td->focused_window->tid);
   assert(x >= window->offsetx && x <= window->offsetx + window->w);
   assert(y >= window->offsety && y <= window->offsety + window->h);
 

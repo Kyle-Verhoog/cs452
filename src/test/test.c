@@ -21,11 +21,7 @@ int main(void) {
   buffer_pack_tests();
   PTEST_END();
 
-  PTEST_START("lib/string");
-  string_tests();
-  PTEST_END();
-
-  PTEST_START("circular_buffer");
+  PTEST_START("lib/circular_buffer");
   cbuf_tests();
   PTEST_END();
 
@@ -33,24 +29,20 @@ int main(void) {
   clockserver_tests();
   PTEST_END();
 
-  PTEST_START("ioserver_buffer");
+  PTEST_START("lib/ioserver_buffer");
   ioserver_buffer_tests();
   PTEST_END();
 
-  PTEST_START("nameserver");
-  nameserver_tests();
-  PTEST_END();
-
-  PTEST_START("lib/task_queue");
-  task_queue_tests();
-  PTEST_END();
-
-  PTEST_START("task/priority_queue");
-  priority_queue_tests();
+  PTEST_START("lib/string");
+  string_tests();
   PTEST_END();
 
   PTEST_START("lib/terminal");
   terminal_tests();
+  PTEST_END();
+
+  PTEST_START("task/priority_queue");
+  priority_queue_tests();
   PTEST_END();
 
   PTEST_START("train/priority_queue");

@@ -3,13 +3,13 @@
 CIRCULAR_BUFFER_DEC(int_cb, int, 5);
 CIRCULAR_BUFFER_DEF(int_cb, int, 5);
 
-void int_cbuf() {
+static void int_cbuf() {
   int_cb cb;
   int_cb_init(&cb);
   assert(cb.size == 0);
 }
 
-void int_cbuf_push_1() {
+static void int_cbuf_push_1() {
   int r;
   int_cb cb;
   int_cb_init(&cb);
@@ -18,7 +18,7 @@ void int_cbuf_push_1() {
   assert(cb.size == 1);
 }
 
-void int_cbuf_top_1() {
+static void int_cbuf_top_1() {
   int r, ret;
   int_cb cb;
   int_cb_init(&cb);
@@ -33,7 +33,7 @@ void int_cbuf_top_1() {
   assert(ret == 5);
 }
 
-void int_cbuf_pop_1() {
+static void int_cbuf_pop_1() {
   int r, ret;
   int_cb cb;
   int_cb_init(&cb);
@@ -44,7 +44,7 @@ void int_cbuf_pop_1() {
   assert(ret == 5);
 }
 
-void int_cbuf_push_2() {
+static void int_cbuf_push_2() {
   int r;
   int_cb cb;
   int_cb_init(&cb);
@@ -62,7 +62,7 @@ void int_cbuf_push_2() {
 }
 
 
-void int_cbuf_pop_2() {
+static void int_cbuf_pop_2() {
   int r, ret;
   int_cb cb;
   int_cb_init(&cb);
@@ -100,7 +100,95 @@ void int_cbuf_pop_2() {
   assert(r == CB_E_EMPTY);
 }
 
-void int_cbuf_reuse() {
+static void int_cbuf_get() {
+  int r, ret;
+  int_cb cb;
+  int_cb_init(&cb);
+
+  r = int_cb_get(&cb, 0, &ret);
+  // printf("%d\n", (cb.end-1 + 5) % 5);
+  assert(r == CB_E_DNE);
+
+  r = int_cb_push(&cb, 5);
+  r = int_cb_get(&cb, 0, &ret);
+  assert(ret == 5);
+
+  r = int_cb_push(&cb, 6);
+  r = int_cb_get(&cb, 0, &ret);
+  assert(ret == 5);
+  r = int_cb_get(&cb, 1, &ret);
+  assert(ret == 6);
+
+  r = int_cb_push(&cb, 7);
+  r = int_cb_get(&cb, 0, &ret);
+  assert(ret == 5);
+  r = int_cb_get(&cb, 1, &ret);
+  assert(ret == 6);
+  r = int_cb_get(&cb, 2, &ret);
+  assert(ret == 7);
+
+  r = int_cb_push(&cb, 8);
+  r = int_cb_get(&cb, 0, &ret);
+  assert(ret == 5);
+  r = int_cb_get(&cb, 1, &ret);
+  assert(ret == 6);
+  r = int_cb_get(&cb, 2, &ret);
+  assert(ret == 7);
+  r = int_cb_get(&cb, 3, &ret);
+  assert(ret == 8);
+
+  r = int_cb_push(&cb, 9);
+  r = int_cb_get(&cb, 0, &ret);
+  // printf("%d\n", (cb.end-1 + 5) % 5);
+  assert(ret == 5);
+  r = int_cb_get(&cb, 1, &ret);
+  assert(ret == 6);
+  assert(r == 0);
+  r = int_cb_get(&cb, 2, &ret);
+  assert(ret == 7);
+  assert(r == 0);
+  r = int_cb_get(&cb, 3, &ret);
+  assert(ret == 8);
+  assert(r == 0);
+  r = int_cb_get(&cb, 4, &ret);
+  assert(ret == 9);
+
+  r = int_cb_pop(&cb, &ret);
+  r = int_cb_get(&cb, 0, &ret);
+  assert(ret == 6);
+  assert(r == 0);
+  r = int_cb_get(&cb, 1, &ret);
+  assert(ret == 7);
+  assert(r == 0);
+  r = int_cb_get(&cb, 2, &ret);
+  assert(ret == 8);
+  assert(r == 0);
+  r = int_cb_get(&cb, 3, &ret);
+  assert(ret == 9);
+  assert(r == 0);
+
+  r = int_cb_push(&cb, 10);
+  r = int_cb_get(&cb, 0, &ret);
+  assert(ret == 6);
+  assert(r == 0);
+  r = int_cb_get(&cb, 1, &ret);
+  assert(ret == 7);
+  assert(r == 0);
+  r = int_cb_get(&cb, 2, &ret);
+  assert(ret == 8);
+  assert(r == 0);
+  r = int_cb_get(&cb, 3, &ret);
+  assert(ret == 9);
+  assert(r == 0);
+  r = int_cb_get(&cb, 4, &ret);
+  assert(ret == 10);
+  assert(r == 0);
+
+  r = int_cb_get(&cb, 5, &ret);
+  assert(r == CB_E_OOB);
+}
+
+static void int_cbuf_reuse() {
   int r, ret;
   int_cb cb;
   int_cb_init(&cb);
@@ -249,6 +337,7 @@ void cbuf_tests() {
   int_cbuf_pop_1();
   int_cbuf_push_2();
   int_cbuf_pop_2();
+  int_cbuf_get();
   int_cbuf_reuse();
   char_cbuf();
   char_cbuf_test();

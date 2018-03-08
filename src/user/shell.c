@@ -199,17 +199,18 @@ void shell_exec(shell *sh) {
   char *r;
   int arg1, arg2, arg3, arg4;
 
-  tid_t tr_tid, sw_tid, sc_tid, sa_tid;
+  tid_t tr_tid, sw_tid, sc_tid, sa_tid, pm_tid;
 
   tr_tid = WhoIs(TRAIN_MANAGER_ID);
   sw_tid = WhoIs(SWITCH_MANAGER_ID);
   sc_tid = WhoIs(STOPPING_CALIBRATION_ID);
   sa_tid = WhoIs(STOP_AT_SERVER_ID);
-
+  pm_tid = WhoIs(PREDICTION_MANAGER_ID);
   assert(tr_tid > 0);
   assert(sw_tid > 0);
   assert(sc_tid > 0);
   assert(sa_tid > 0);
+  assert(pm_tid > 0);
 
   cmd = sh->cmd;
 
@@ -234,9 +235,6 @@ void shell_exec(shell *sh) {
       Send(tr_tid, &tm, sizeof(tm), &reply, sizeof(reply));
       shell_info(sh);
     }
-  }
-  else if (cmd[0] == 'g' && cmd[1] == 'o') {
-    shell_info(sh);
   }
   else if (cmd[0] == 'r' && cmd[1] == 'v') {
     if ((r = parse_i32(cmd+2, &arg1)) == 0 || arg1 > 81 || arg1 < 0) {
@@ -419,7 +417,7 @@ void shell_exec(shell *sh) {
       shell_errorf(sh, "rt <tr> <spd>");
     }
     else if ((r = parse_i32(r, &arg2)) == 0 || arg1 > 81 || arg1 < 0) {
-      shell_errorf(sh, "rt <tr> <spd");
+      shell_errorf(sh, "rt <tr> <spd>");
     }
     else {
       shell_info_msg(sh, "spawning m1 reset");
@@ -441,6 +439,24 @@ void shell_exec(shell *sh) {
       sh_args[0] = x;
       sh_args[1] = y;
       // Create(28, &Pathing);
+    }
+  }
+  else if (cmd[0] == 'g' && cmd[1] == 'o') {
+    PMProtocol pmp;
+    int s, e;
+    if ((r = parse_i32(cmd+2, &s)) == 0 && s >= 0 && s <= TRACK_MAX) {
+      shell_error(sh);
+    }
+    else if ((r = parse_i32(r, &e)) == 0 && e >= 0 && e <= TRACK_MAX) {
+      shell_error(sh);
+    }
+    else {
+      shell_info_msg(sh, "routing train");
+      sh_args[0] = s;
+      sh_args[1] = e;
+      pmp.pmc = PM_ROUTE;
+      pmp.args = (void *)sh_args;
+      Send(pm_tid, &pmp, sizeof(pmp), &reply, sizeof(reply));
     }
   }
   else {

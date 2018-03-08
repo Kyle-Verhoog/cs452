@@ -8,6 +8,7 @@
 #include <user/nameserver.h>
 #include <user/train/train_manager.h>
 #include <user/train/switch_manager.h>
+#include <user/train/prediction_manager.h>
 #include <user/terminal_manager.h>
 #include <user/train/m1_reset.h>
 
