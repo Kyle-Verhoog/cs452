@@ -2,6 +2,8 @@
 
 
 # NOTE TO TAs:
+**Our TC1 submission is in a branch: milestone1**
+
 **Our kernel 3 submission is in a branch: kernel3**
 
 **The kernel 3 doc is located at docs/k3.pdf.**

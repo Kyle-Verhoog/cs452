@@ -295,7 +295,14 @@ static void print_path(track_node *t) {
   path_set_destination(&p, start, end);
   path_generate(&p);
   path_to_str(&p, buf);
-  // printf("%s\n", buf);
+
+  start = &t[T("A1")];
+  end   = &t[T("A1")];
+  path_init(&p, p.track);
+  path_set_destination(&p, start, end);
+  path_generate(&p);
+  path_to_str(&p, buf);
+  printf("%s\n", buf);
 }
 
 static void generate_longer_path(track_node *t) {
