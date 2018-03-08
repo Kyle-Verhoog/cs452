@@ -74,7 +74,7 @@ void TMWriteTask(void *args){
 
 	Exit();
 }
-void init_train_model(TrainDescriptor *td, int train_id){
+void init_train_model(TrainDescriptor *td, int train_id, track_node *track){
 	td->id = train_id; 
 	td->gear = 0; 
 	td->speed = 0; 
@@ -82,7 +82,7 @@ void init_train_model(TrainDescriptor *td, int train_id){
 	td->exist = false; 
 	td->isRunning = -1; 
 	td->node = NULL; 
-  path_init(td->tpath, track);
+  path_init(&td->tpath, track);
 	tc_cb_init(&td->buf);
 }
 
@@ -95,7 +95,7 @@ void TrainManager(void *args){
   assert(r == 0);
 	int i;
 	for(i = 0 ; i < TRAIN_SIZE; i++){
-		init_train_model(&Trains[i], i);
+		init_train_model(&Trains[i], i, track);
 	}
 
 	int reply = 0;
