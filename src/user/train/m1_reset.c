@@ -23,8 +23,33 @@ void loop_train(tid_t tr_tid, int tr_num, int tr_spd) {
 }
 
 void loop_switches(tid_t sw_tid) {
-  int reply;
+  Switch *swlist;
+  void *data;
+  int reply, i;
   SWProtocol sw;
+  sw.swr = SW_GET_ALL;
+  Send(sw_tid, &sw, sizeof(sw), &data, sizeof(data));
+  swlist = (Switch *)data;
+
+  for(i = NORMAL_SWITCH_SIZE_LOW; i <= NORMAL_SWITCH_SIZE_HIGH; ++i){
+    if (swlist[i].state == SW_STRAIGHT) {
+      sw.swr = SW_FLIP;
+      sw.sw = i;
+      sw.dir = SW_CURVE;
+      Send(sw_tid, &sw, sizeof(sw), &reply, sizeof(reply));
+      TMLogStrf(tm_tid, "  `sw %d %c`\n", i, 'S');
+    }
+  }
+
+  for(i = SPECIAL_SWITCH_SIZE_LOW; i <= SPECIAL_SWITCH_SIZE_HIGH; ++i){
+    if (swlist[i].state != SW_STRAIGHT+(i%2)) {
+      sw.dir = SW_STRAIGHT+(i%2);
+      sw.sw = i;
+      Send(sw_tid, &sw, sizeof(sw), &reply, sizeof(reply));
+      TMLogStrf(tm_tid, "  `sw %d %c`\n", i, (i%2) ? 'C' : 'S');
+    }
+  }
+
   sw.swr = SW_FLIP;
   sw.sw = 14;
   sw.dir = SW_STRAIGHT;
@@ -55,6 +80,7 @@ void M1Reset(void *arg) {
   // TMRegister(tm_tid, M1_RESET_OFF_X, M1_RESET_OFF_Y, M1_RESET_WIDTH, M1_RESET_HEIGHT);
 
   TMLogStrf(tm_tid, "looping train %d at %d\n", train_num, train_spd);
+
 
   init_train(tr_tid, train_num);
   DelayCS(cs_tid, 200);

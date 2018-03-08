@@ -223,6 +223,26 @@ void TMPutStr(tid_t tm_tid, char *c, int len) {
   Send(tm_tid, &req, sizeof(req), &rep, sizeof(rep));
 }
 
+#define PUT_STR_BUF_SIZE 1024
+void TMPutStrf(tid_t tm_tid, char *fmt, ...) {
+  int len;
+  va_list va;
+  char buf[PUT_STR_BUF_SIZE];
+  TManReq req;
+  TManRep rep;
+  len = 0;
+
+  va_start(va, fmt);
+  len += buf_pack_fmt(buf, fmt, va);
+  va_end(va);
+  assert(len < PUT_STR_BUF_SIZE);
+
+  req.type = TERM_OUT;
+  req.data = buf;
+  req.len  = len;
+  Send(tm_tid, &req, sizeof(req), &rep, sizeof(rep));
+}
+
 char TMGetC(tid_t tm_tid) {
   TManReq req;
   TManRep rep;

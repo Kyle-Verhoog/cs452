@@ -59,4 +59,6 @@ int path_follow_to(path *p, track_node *t);
 
 int path_arrived(path *p);
 
+int track_node_dist(track_node *t1, track_node *t2);
+
 #endif

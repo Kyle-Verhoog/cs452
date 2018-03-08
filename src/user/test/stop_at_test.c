@@ -124,6 +124,7 @@ void StopAt(void *args){
 	Send(tm_tid, &tm, sizeof(tm), &reply, sizeof(reply));
 
 	//Delay
+  assert(gear*10*4 > 0);
 	Delay(cs_tid, mytid, gear*10*4);
 
 	//Check if sitting on target

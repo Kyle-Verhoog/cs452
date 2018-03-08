@@ -216,6 +216,7 @@ void StoppingCalibrationTest(void * args){
 	Send(tm_tid, &tm, sizeof(tm), &reply, sizeof(reply));
 
 	//wait and determine target
+  assert(speed*10*4 > 0);
 	Delay(cs_tid, my_tid, speed*10*4);
 	
 	//Check if sitting on target

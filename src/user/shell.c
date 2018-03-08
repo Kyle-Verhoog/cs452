@@ -212,6 +212,9 @@ void shell_exec(shell *sh) {
   assert(sa_tid > 0);
   assert(pm_tid > 0);
 
+  track_node track[TRACK_MAX];
+  init_tracka(track);
+
   cmd = sh->cmd;
 
   if (sh->len == 0) {
@@ -267,19 +270,27 @@ void shell_exec(shell *sh) {
     }
   }
   else if (cmd[0] == 't' && cmd[1] == 'k') {
+    int s;
+    char stn1[5];
     if ((r = parse_i32(cmd+2, &arg1)) == 0 || arg1 > 81 || arg1 < 0) {
       shell_errorf(sh, "train number");
     }
-    else if ((r = parse_i32(r, &arg2)) == 0) {
-      shell_errorf(sh, "train cmd");
+    else if ((r = parse_str(r, stn1, 5)) == 0) {
+      shell_error(sh);
     }
     else {
-      TMProtocol tm;
-      tm.tmc = TM_TRACK;
-      tm.arg1 = arg1; //train
-      tm.arg2 = arg2; //train track
-      Send(tr_tid, &tm, sizeof(tm), &reply, sizeof(reply));
-      shell_info(sh);
+      s = trhr(track, stn1);
+      if (s < 0 || s > TRACK_MAX-1) {
+        shell_error(sh);
+      }
+      else {
+        TMProtocol tm;
+        tm.tmc = TM_TRACK;
+        tm.arg1 = arg1; //train
+        tm.arg2 = s; //train track
+        Send(tr_tid, &tm, sizeof(tm), &reply, sizeof(reply));
+        shell_info(sh);
+      }
     }
   }
   else if (cmd[0] == 'm' && cmd[1] == 's') {
@@ -444,8 +455,6 @@ void shell_exec(shell *sh) {
   else if (cmd[0] == 'g' && cmd[1] == 'o') {
     PMProtocol pmp;
     int s, e;
-    track_node track[TRACK_MAX];
-    init_tracka(track);
     char stn1[5], stn2[5];
 
     if ((r = parse_str(cmd+2, stn1, 5)) == 0) {

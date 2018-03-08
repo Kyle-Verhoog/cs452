@@ -8,10 +8,10 @@ void Oracle(void *args){
 
 void MeasureSpeed(tid_t mytid, tid_t cs_tid, TrainDescriptor *td, int dist){
   int prev_speed = td->speed;
-  int pred_time = (dist / prev_speed); // predicted time of our model
+  int pred_time = (dist*1000) / prev_speed; // predicted time of our model
 	int time = Time(cs_tid, mytid);
 	int speed = (dist * 1000)/(time - td->time_of_sensor);
-  int delta_t = time - pred_time;
+  int delta_t = (time - td->time_of_sensor) - pred_time;
 
 	if(time <= td->time_of_sensor){
 		assert(0);
@@ -19,7 +19,8 @@ void MeasureSpeed(tid_t mytid, tid_t cs_tid, TrainDescriptor *td, int dist){
 
 	td->speed = speed;
 	td->time_of_sensor = time;
-  TMLogStrf(tm_tid, "t: %d; d: %d\n", delta_t, prev_speed*delta_t);
+
+  TMPutStrf(tm_tid, "\vt: %ddc; d: %dum\n", delta_t, prev_speed*delta_t);
 }
 
 int DistanceBetweenNodes(Switch *sw, track_node *start, track_node *end){
@@ -169,7 +170,7 @@ Destination GetNextSensorNI(Switch *sw, track_node *n){
 }
 
 void CheckPrediction(tid_t mytid, tid_t cs_tid, Switch *swList, Sensor *snList, LiveTrains *live){
-	Destination dest;
+	Destination dest, next_dest;
 	int i;
 	bool dir;
 
@@ -192,10 +193,11 @@ void CheckPrediction(tid_t mytid, tid_t cs_tid, Switch *swList, Sensor *snList, 
       if(snList[dest.node->num].state == SEN_ON){
         train->node = dest.node;
         MeasureSpeed(mytid, cs_tid, train, dest.dist);
-        // if (dest.node == train->tpath.start) {
-        //   path_start(&train->tpath, train->tpath.start);
-        //   TMLogStrf(tm_tid, "starting pathing");
-        // }
+      }
+      next_dest = GetNextSensorNI(swList, dest.node);
+      if(snList[next_dest.node->num].state == SEN_ON){
+        train->node = next_dest.node;
+        MeasureSpeed(mytid, cs_tid, train, dest.dist + next_dest.dist);
       }
 		}
 	}
@@ -294,16 +296,19 @@ void SetRoute(LiveTrains *live, track_node *s, track_node *e, tid_t sw_tid, Swit
   int i, reply;
   char buf[1024];
   TrainDescriptor *td;
+  Destination start;
   path *p;
   td = live->buf[0];
   p = &td->tpath;
+
+  start = GetNextSensorNI(sws, td->node);
+  start = GetNextSensorNI(sws, start.node);
   path_init(p, p->track);
-  path_set_destination(p, s, e);
+  path_set_destination(p, start.node, e);
   if (path_generate(p) > -1) {
     path_to_str(p, buf);
     TMLogStrf(tm_tid, "route calculated:\n", buf);
     TMLogStrf(tm_tid, "%s\n", buf);
-
 
     track_node *sw_tn;
     sw_configs sw_cfgs;
@@ -348,6 +353,7 @@ void PredictionManager(void *args){
   assert(sw_tid >= 0);
   tid_t sa_tid;
 
+  TMRegister(tm_tid, PM_OFF_X, PM_OFF_Y, PM_WIDTH, PM_HEIGHT);
 	LiveTrains live;
 	INIT_LIVE_TRAINS(live);
 

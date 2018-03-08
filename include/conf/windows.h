@@ -5,7 +5,7 @@
 #define LOG_OFFSET_X  72
 #define LOG_OFFSET_Y   1
 #define LOG_WIDTH     40
-#define LOG_HEIGHT    40
+#define LOG_HEIGHT    50
 
 #define CAL_OFFSET_X  72
 #define CAL_OFFSET_Y  43
@@ -52,5 +52,10 @@
 #define M1_RESET_OFF_Y   SH_OFFSET_Y + SH_HEIGHT + 1
 #define M1_RESET_WIDTH   SH_WIDTH
 #define M1_RESET_HEIGHT  10
+
+#define PM_OFF_X   SH_OFFSET_X
+#define PM_OFF_Y   SH_OFFSET_Y + SH_HEIGHT + 1
+#define PM_WIDTH   35
+#define PM_HEIGHT  2
 
 #endif
