@@ -19,6 +19,7 @@ CIRCULAR_BUFFER_DEC(tr_path, track_node*, TRACK_MAX);
 typedef struct train_path {
   bool active;
   bool ready;
+  bool done;
   uint32_t path_len;
   track_node *track;
   track_node *start;
@@ -53,5 +54,9 @@ void path_to_str(path *p, char *buf);
 void path_switches_in_next_dist(path *p, sw_configs *sw_cfgs, int dist);
 
 void path_set_destination(path *p, track_node *start, track_node *end);
+
+int path_follow_to(path *p, track_node *t);
+
+int path_arrived(path *p);
 
 #endif

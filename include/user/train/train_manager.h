@@ -11,7 +11,7 @@
 #include <writerservice.h>
 #include <types.h>
 #include <circular_buffer.h>
-#include <track_data.h>
+#include <lib/train/path_finding.h>
 
 #define TRAIN_COMMAND_BUFFER_SIZE 64
 
@@ -62,6 +62,7 @@ typedef struct TrainDescriptor{
 	int speed;
 	int inchingSpeed;
 	int time_of_sensor;
+  path tpath;
 } TrainDescriptor;
 
 void TMWriteTask(void *args);	//args - TrainDescriptor

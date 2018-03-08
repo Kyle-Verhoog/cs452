@@ -14,6 +14,7 @@
 #include <circular_buffer.h>
 
 #include <train_manager.h>
+#include <lib/train/path_finding.h>
 #include <switch_manager.h>
 #include <sensor_manager.h>
 #include <user/terminal_manager.h>
@@ -28,6 +29,7 @@ typedef enum PM_Command{
 	PM_TRAIN = 2,
 	PM_PREDICTION = 3,
 	PM_MEASURE = 4
+	PM_ROUTE = 5,
 }PM_Command;
 
 typedef struct LiveTrains{

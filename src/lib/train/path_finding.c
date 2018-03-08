@@ -9,6 +9,7 @@ void path_init(path *p, track_node *track) {
   p->end     = NULL;
   p->ready   = false;
   p->active  = false;
+  p->done    = false;
   p->track = track;
   p->path_len = 0;
   tr_path_init(&p->ahead);
@@ -41,7 +42,12 @@ void path_next(path *p) {
 
   if (p->current == NULL && p->ahead.size == 0) {
     p->active = false;
+    p->done = true;
   }
+}
+
+int path_arrived(path *p) {
+  return p->done;
 }
 
 // follow path until node t
@@ -60,7 +66,6 @@ int path_follow_to(path *p, track_node *t) {
 
   // t not in path ahead
   if (tn != t) {
-    assert(0);
     return -1;
   }
 
@@ -87,9 +92,11 @@ int path_get_switch_config(track_node *t1, track_node *t2) {
     return DIR_CURVED;
   }
   assert(0 && "nodes are not connected via edge");
+  return 0;
 }
 
 int track_node_dist(track_node *t1, track_node *t2) {
+  assert(t1 != NULL && t2 != NULL);
   assert(t1->type != NODE_EXIT);
   int dir;
   dir = DIR_AHEAD;
@@ -107,7 +114,7 @@ void path_to_str(path *p, char *buf) {
     tr_path_get(&p->ahead, i, &tn);
     offset += buf_pack_str(buf+offset, tn->name);
     offset += buf_pack_c(buf+offset, ' ');
-    if (x == 6) {
+    if (x == 5) {
       offset += buf_pack_str(buf+offset, "\n    ");
       x = 0;
     }
@@ -120,12 +127,16 @@ void path_to_str(path *p, char *buf) {
 
 // return the switches in the next `dist` along the path
 void path_switches_in_next_dist(path *p, sw_configs *sw_cfgs, int dist) {
-  assert(p->active);
+  // assert(p->active);
   int i, d;
   track_node *cur, *next;
 
   d = 0;
   cur = p->current;
+  if (cur == NULL) {
+    cur = p->start;
+  }
+
   for (i = 0; i < p->ahead.size; ++i) {
     tr_path_get(&p->ahead, i, &next);
 
@@ -144,8 +155,8 @@ void path_switches_in_next_dist(path *p, sw_configs *sw_cfgs, int dist) {
 
     cur = next;
   }
-  // printf("%d\n", d);
 }
+
 // find the next n switches on the path
 void path_next_n_switches(path *p, int n, sw_configs *sw_cfgs) {
 }
@@ -188,7 +199,7 @@ int path_generate(path *p) {
     tr_path_push(&p->ahead, &p->track[buf[n]]);
   }
 
-  if (p->ahead.size < 1) {
+  if (p->ahead.size < 2) {
     return -1;
   }
 

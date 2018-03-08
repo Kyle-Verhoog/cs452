@@ -123,9 +123,9 @@ void SwitchManager(void * args){
 	  			Send(sw_handler, &sw, sizeof(sw), &reply, sizeof(reply));
 	  			//Update the UI and table
 	  			UpdateSwitchTable(switchList, sw.sw, sw.dir);
-          //Update Prediction
-          PushSwitchToPrediction(pred_tid, switchList);
 	  			Reply(req_tid, &reply, sizeof(reply));
+          //Update Prediction
+          // PushSwitchToPrediction(pred_tid, switchList);
   				break;
   			case SW_GET_ALL:
           data = (void *)switchList;

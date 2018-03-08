@@ -445,7 +445,7 @@ void shell_exec(shell *sh) {
     PMProtocol pmp;
     int s, e;
     track_node track[TRACK_MAX];
-    init_tracka(&track);
+    init_tracka(track);
     char stn1[5], stn2[5];
 
     if ((r = parse_str(cmd+2, stn1, 5)) == 0) {
@@ -456,13 +456,19 @@ void shell_exec(shell *sh) {
     }
     else {
       shell_info_msg(sh, "routing train");
-      sh_args[0] = trhr(&track, stn1);
-      sh_args[1] = trhr(&track, stn2);
-      assert(sh_args[0] >= 0 && sh_args[0] < TRACK_MAX);
-      assert(sh_args[1] >= 0 && sh_args[1] < TRACK_MAX);
-      pmp.pmc = PM_ROUTE;
-      pmp.args = (void *)sh_args;
-      Send(pm_tid, &pmp, sizeof(pmp), &reply, sizeof(reply));
+      sh_args[0] = trhr(track, stn1);
+      sh_args[1] = trhr(track, stn2);
+      if (sh_args[0] < 0 || sh_args[0] > TRACK_MAX) {
+        shell_error(sh);
+      }
+      else if (sh_args[0] < 0 || sh_args[0] > TRACK_MAX) {
+        shell_error(sh);
+      }
+      else {
+        pmp.pmc = PM_ROUTE;
+        pmp.args = (void *)sh_args;
+        Send(pm_tid, &pmp, sizeof(pmp), &reply, sizeof(reply));
+      }
     }
   }
   else {

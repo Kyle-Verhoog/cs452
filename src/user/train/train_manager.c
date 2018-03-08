@@ -82,6 +82,7 @@ void init_train_model(TrainDescriptor *td, int train_id){
 	td->exist = false; 
 	td->isRunning = -1; 
 	td->node = NULL; 
+  path_init(td->tpath, track);
 	tc_cb_init(&td->buf);
 }
 
@@ -89,14 +90,15 @@ void TrainManager(void *args){
 	void *data;
 	track_node *track = (track_node *)args;
 	TrainDescriptor Trains[TRAIN_SIZE];
+	
+  int r = RegisterAs(TRAIN_MANAGER_ID);
+  assert(r == 0);
 	int i;
 	for(i = 0 ; i < TRAIN_SIZE; i++){
 		init_train_model(&Trains[i], i);
 	}
 
 	int reply = 0;
-	int r = RegisterAs(TRAIN_MANAGER_ID);
-  	assert(r == 0);
   	tid_t mytid = MyTid();
   	tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
   	assert(cs_tid >= 0);

@@ -1,6 +1,18 @@
 #include <test/train/path_finding.h>
+#include <user/train/train_defines.h>
 
 #define T(str) trhr(t, str)
+
+typedef enum SwitchState{
+	SW_STRAIGHT = 33,
+	SW_CURVE = 34
+} SwitchState;
+
+typedef struct Switch{
+  SwitchState state;
+  track_node *branch;
+  track_node *merge;
+}Switch;
 
 static void trhr_test(track_node *t) {
   assert(trhr(t, "BR15") == 108);
@@ -169,6 +181,84 @@ static void path_switches(track_node *t) {
   assert(cfg.sw->id == T("BR8"));
 }
 
+static void follow_path(track_node *t) {
+  track_node *start, *end;
+  path p;
+  int r;
+  path_init(&p, t);
+
+  start = &t[T("A1")];
+  end   = &t[T("A9")];
+  path_set_destination(&p, start, end);
+  path_generate(&p);
+  path_start(&p, p.start);
+
+  r = path_follow_to(&p, &t[T("C13")]);
+  assert(r == 0);
+  assert(p.current == &t[T("C13")]);
+  assert(p.behind.size == 3);
+  assert(p.behind.buf[0] == &t[T("A1")]);
+  assert(p.behind.buf[1] == &t[T("MR12")]);
+  assert(p.behind.buf[2] == &t[T("MR11")]);
+
+  r = path_follow_to(&p, &t[T("D7")]);
+  assert(r == 0);
+  assert(p.current == &t[T("D7")]);
+  assert(p.behind.size == 5);
+  assert(p.behind.buf[0] == &t[T("A1")]);
+  assert(p.behind.buf[1] == &t[T("MR12")]);
+  assert(p.behind.buf[2] == &t[T("MR11")]);
+  assert(p.behind.buf[3] == &t[T("C13")]);
+
+  sw_configs sw_cfgs;
+  sw_config sw_cfg;
+  path_switches_in_next_dist(&p, &sw_cfgs, 500);
+  assert(sw_cfgs.size == 1);
+  path_switches_in_next_dist(&p, &sw_cfgs, 1000);
+  assert(sw_cfgs.size == 2);
+}
+
+static void switch_flipping(track_node *t) {
+  track_node *start, *end;
+  path p;
+  int i, r;
+  path_init(&p, t);
+
+  start = &t[T("A1")];
+  end   = &t[T("A9")];
+  path_set_destination(&p, start, end);
+  path_generate(&p);
+
+  Switch slist[SWITCH_SIZE];
+	int node = 0;
+  for(i = NORMAL_SWITCH_SIZE_LOW; i <= NORMAL_SWITCH_SIZE_HIGH; ++i){
+    while(true){
+      if(t[node].type == NODE_BRANCH){
+        slist[i].branch = &t[node];
+        slist[i].merge = &t[node+1];
+        node+=2;
+        break;
+      }
+      node++;
+    }
+    slist[i].state = SW_CURVE;
+  }
+
+  track_node *sw_tn;
+  sw_configs sw_cfgs;
+  sw_configs_init(&sw_cfgs);
+  sw_config sw_cfg;
+  path_switches_in_next_dist(&p, &sw_cfgs, 5000000);
+  for (i = 0; i < sw_cfgs.size; ++i) {
+    r = sw_configs_get(&sw_cfgs, sw_cfgs.size-i-1, &sw_cfg);
+    assert(r == 0);
+    sw_tn = sw_cfg.sw;
+
+    if (sw_cfg.state_required != slist[sw_tn->num].state - 33) {
+    }
+  }
+}
+
 static void print_path(track_node *t) {
   track_node *start, *end;
   path p;
@@ -177,6 +267,31 @@ static void print_path(track_node *t) {
 
   start = &t[T("A1")];
   end   = &t[T("E13")];
+  path_set_destination(&p, start, end);
+  path_generate(&p);
+  path_to_str(&p, buf);
+  // printf("%s\n", buf);
+
+  start = &t[T("A3")];
+  end   = &t[T("D13")];
+  path_init(&p, p.track);
+  path_set_destination(&p, start, end);
+  path_generate(&p);
+  path_to_str(&p, buf);
+  // printf("%s\n", buf);
+
+
+  start = &t[T("A3")];
+  end   = &t[T("C3")];
+  path_init(&p, p.track);
+  path_set_destination(&p, start, end);
+  path_generate(&p);
+  path_to_str(&p, buf);
+  // printf("%s\n", buf);
+
+  start = &t[T("A1")];
+  end   = &t[T("A9")];
+  path_init(&p, p.track);
   path_set_destination(&p, start, end);
   path_generate(&p);
   path_to_str(&p, buf);
@@ -213,5 +328,7 @@ void train_pathing_tests() {
   generate_simple_path(track);
   generate_longer_path(track);
   path_switches(track);
+  follow_path(track);
   print_path(track);
+  switch_flipping(track);
 }

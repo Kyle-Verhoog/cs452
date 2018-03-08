@@ -238,10 +238,11 @@ void TMLogRegister(tid_t tm_tid) {
   Send(tm_tid, &req, sizeof(req), &rep, sizeof(rep));
 }
 
+#define LOG_STR_BUF_SIZE 1024
 void TMLogStrf(tid_t tm_tid, char *fmt, ...) {
   int len;
   va_list va;
-  char buf[100];
+  char buf[LOG_STR_BUF_SIZE];
   TManReq req;
   TManRep rep;
   len = 0;
@@ -249,7 +250,7 @@ void TMLogStrf(tid_t tm_tid, char *fmt, ...) {
   va_start(va, fmt);
   len += buf_pack_fmt(buf, fmt, va);
   va_end(va);
-
+  assert(len < LOG_STR_BUF_SIZE);
 
   req.type = TERM_LOG;
   req.data = buf;
