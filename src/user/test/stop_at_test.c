@@ -24,7 +24,7 @@ void StopAtServer(){
 
 void StopAt(void *args){
 	void *data;
-	int i, delay, reply;
+	int delay, reply;
 	int stoppingDistances[15] = {0, 0, 0, 50, 888, 16252, 44286, 100088, 137681, 267966, 388076, 543877, 811169, 973337, 1255858};
 	StopAtProtocol* stopAt = (StopAtProtocol *)args;
 	int trainId = stopAt->train;
@@ -38,14 +38,9 @@ void StopAt(void *args){
 	Switch *switches;
 	Sensor * sensors;
 
-	track_node *path[STOP_PATH_SIZE];
-	int pathSize = 0;
-
 	track_node *target;
 	TrainDescriptor *train;
 	StopReference stopRef;
-
-	track_node *n;
 
 	tid_t mytid = MyTid();
 	//tid_t parent_tid = MyParentTid();
@@ -96,34 +91,7 @@ void StopAt(void *args){
 		stoppingDistances[gear] = dist;
 	}
 
-	//Generate Path
-	n = train->node;
-	for(i = 0; i < STOP_PATH_SIZE; i++){
-		path[i] = n;
-		pathSize++;
-
-		if(n == target){
-			break;
-		}
-
-		if(n->type == NODE_EXIT){
-			assert(0 && "PATH RUNS OFF TRACK");
-		}
-		else if(n->type == NODE_BRANCH){
-			if(switches[n->num].state == SW_STRAIGHT){
-				n = n->edge[DIR_STRAIGHT].dest;
-			}
-			else{
-				n = n->edge[DIR_CURVED].dest;
-			}
-		}
-		else{
-			n = n->edge[DIR_AHEAD].dest;
-		}
-	}
-	assert(pathSize < STOP_PATH_SIZE && path[pathSize - 1] == target && pathSize > 0);
-
-	stopRef = StopOverPath(path, pathSize, train, stoppingDistances[gear]);
+	stopRef = StopOverPath(train, stoppingDistances[gear]);
 
 	//Move the Train
 	tm.tmc = TM_MOVE;

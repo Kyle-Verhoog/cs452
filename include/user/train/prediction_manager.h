@@ -18,6 +18,7 @@
 #include <switch_manager.h>
 #include <sensor_manager.h>
 #include <user/terminal_manager.h>
+#include <user/test/stop_at_test.h>
 
 #define MAX_STEPS_AHEAD 16
 

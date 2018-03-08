@@ -92,68 +92,30 @@ int InchForward(InchingArgs args){
 	return (e_time - s_time) * args.train->inchingSpeed;
 }
 
-StopReference StopOverPath(track_node **path, int size, TrainDescriptor *td, int stopDist){
+StopReference StopOverPath(TrainDescriptor *td, int stopDist){
 	StopReference stopRef;
 	int i, distance;
-	track_node *n = path[size - 2];
-	// track_node *n = path[size - 1]->reverse;
-	// track_node *lastSensor = td->node;
+  path *p = &td->tpath;
 
-	// //Get Distance
-	// i = size - 1;
-	// distance = 0;
-	// while(true){
-	// 	if(distance*1000 >= stopDist && n->reverse->type == NODE_SENSOR){
-	// 		n = n->reverse;
-	// 		break;
-	// 	}
+	track_node *n, *next;
+	i = p->ahead.size - 2;
+  tr_path_get(&p->ahead, i, &n);
 
-	// 	n = path[i]->reverse;
-	// 	if(n->type == NODE_BRANCH){
-	// 		if(n->edge[DIR_STRAIGHT].dest == path[i - 1]->reverse){
-	// 			distance += n->edge[DIR_STRAIGHT].dist;
-	// 		}
-	// 		else if(n->edge[DIR_CURVED].dest == path[i - 1]->reverse){
-	// 			distance += n->edge[DIR_CURVED].dist;
-	// 		}
-	// 		else{
-	// 			assert(0 && "NOT POSSIBLE");
-	// 		}
-	// 	}else{
-	// 		distance += n->edge[DIR_AHEAD].dist;
-	// 	}
-
-	// 	i--;
-	// }
-	i = size - 2;
 	distance = 0;
 	do{
 		if(i < 0){
 			assert(0 && "Given path is too short!");
 		}
 
-		n = path[i];
+    tr_path_get(&p->ahead, i, &n);
+    tr_path_get(&p->ahead, i+1, &next);
 
-		if(n->type == NODE_BRANCH){
-			if(n->edge[DIR_STRAIGHT].dest == path[i+1]){
-				distance += n->edge[DIR_STRAIGHT].dist;
-			}
-			else if(n->edge[DIR_CURVED].dest == path[i+1]){
-				distance += n->edge[DIR_STRAIGHT].dist;	
-			}
-			else{
-				assert(0 && "NOT POSSIBLE");	
-			}
-		}
-		else{
-			distance += n->edge[DIR_AHEAD].dist;
-		}
-
+    distance += track_node_dist(n, next);
 		i--;
 	}while(distance*1000 < stopDist || n->type != NODE_SENSOR);
 
 	stopRef.ref = n;
-	stopRef.target = path[size - 1];
+  tr_path_get(&p->ahead, p->ahead.size-1, &stopRef.target);
 	stopRef.delayDist = distance*1000 - stopDist;
 	return stopRef;
 }
@@ -270,6 +232,7 @@ void StoppingCalibrationTest(void * args){
 		TMLogStrf(term_tid, "Distance: %d um\n", distance);
 	}
 
+  /*
 	//Dynamically test this
 	StopAtProtocol sap;
   sap.sar = SAR_STOP;
@@ -283,6 +246,7 @@ void StoppingCalibrationTest(void * args){
   Send(sa_tid, &sap, sizeof(sap), &reply, sizeof(reply));
 
   TMLogStrf(term_tid, "Done!\n");
+  */
 	Exit();
 }
 

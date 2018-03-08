@@ -9,6 +9,7 @@
 #include <switch_manager.h>
 #include <sensor_manager.h>
 #include <prediction_manager.h>
+#include <lib/train/path_finding.h>
 
 #define INCHING_GEAR 5
 
@@ -34,7 +35,7 @@ typedef struct StoppingCalibrationArgs{
 	int before_sensor;
 }StoppingCalibrationArgs;
 
-StopReference StopOverPath(track_node **path, int size, TrainDescriptor *td, int stopDist);
+StopReference StopOverPath(TrainDescriptor *td, int stopDist);
 
 void InitInch(InchingArgs args);
 int InchForward(InchingArgs args);

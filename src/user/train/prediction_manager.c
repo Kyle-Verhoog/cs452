@@ -346,6 +346,7 @@ void PredictionManager(void *args){
   assert(tr_tid >= 0);
 	tid_t sw_tid = WhoIs(SWITCH_MANAGER_ID);
   assert(sw_tid >= 0);
+  tid_t sa_tid;
 
 	LiveTrains live;
 	INIT_LIVE_TRAINS(live);
@@ -359,6 +360,7 @@ void PredictionManager(void *args){
 		int reply = 0;
 		tid_t tid_req;
 		PMProtocol pmp;
+    StopAtProtocol sap;
 
 		Receive(&tid_req, &pmp, sizeof(pmp));
 		Reply(tid_req, &reply, sizeof(reply));
@@ -379,8 +381,16 @@ void PredictionManager(void *args){
       // case PM_STOP:
         // break;
       case PM_ROUTE:
+        sa_tid = WhoIs(STOP_AT_SERVER_ID);
+        assert(sa_tid >= 0);
         route_args = (int *)pmp.args;
         SetRoute(&live, &track[route_args[0]], &track[route_args[1]], sw_tid, swList);
+        sap.sar = SAR_STOP;
+        sap.train = live.buf[0]->id;
+        sap.gear = live.buf[0]->gear;
+        sap.stop_at = track[route_args[1]].num;
+        sap.dist = -1;
+        Send(sa_tid, &sap, sizeof(sap), &reply, sizeof(reply));
         break;
 			case PM_TRAIN:
 				AddTrain(&live, (TrainDescriptor *)pmp.args);
