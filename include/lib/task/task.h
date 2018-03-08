@@ -5,17 +5,14 @@
 #include <asm/asm.h>
 #include <lib/task/tid_buffer.h>
 
-#ifdef DEBUG
-  #include <io.h>
-  // #define TASK_METRICS
-  #ifdef TASK_METRICS
-    #define TM_CLOCK_LDR (TIMER3_BASE | LDR_OFFSET)
-    #define TM_CLOCK_VAL (TIMER3_BASE | VAL_OFFSET)
-    #define TM_CLOCK_CTRL (TIMER3_BASE | CTRL_OFFSET)
-    #define TM_CLOCK_FLAGS (ENABLE_MASK) // | CLKSEL_MASK)
-    #define TM_CLOCK_VALUE 0xffffffff
-  #endif //TASK_METRICS
-#endif //DEBUG
+#ifdef TASK_METRICS
+#include <io.h>
+#define TM_CLOCK_LDR (TIMER3_BASE | LDR_OFFSET)
+#define TM_CLOCK_VAL (TIMER3_BASE | VAL_OFFSET)
+#define TM_CLOCK_CTRL (TIMER3_BASE | CTRL_OFFSET)
+#define TM_CLOCK_FLAGS (ENABLE_MASK) // | CLKSEL_MASK)
+#define TM_CLOCK_VALUE 0xffffffff
+#endif //TASK_METRICS
 
 
 typedef enum TaskStatus { // a task is...

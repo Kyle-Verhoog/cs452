@@ -21,7 +21,7 @@ track_node *path_peak_next(path *p) {
 }
 
 void path_next(path *p) {
-  assert(p->active);
+  KASSERT(p->active);
   int r;
   track_node *next;
   next = NULL;
@@ -29,14 +29,14 @@ void path_next(path *p) {
   // push the current into behind
   if (p->current != NULL) {
     r = tr_path_push(&p->behind, p->current);
-    assert(r == 0);
+    KASSERT(r == 0);
     p->current = NULL;
   }
 
   // load next current from ahead
   if (p->ahead.size > 0) {
     r = tr_path_pop(&p->ahead, &next);
-    assert(r == 0);
+    KASSERT(r == 0);
     p->current = next;
   }
 
@@ -58,7 +58,7 @@ int path_follow_to(path *p, track_node *t) {
   // check that t is actually in the path ahead
   for (i = 0; i < p->ahead.size; ++i) {
     r = tr_path_get(&p->ahead, i, &tn);
-    assert(r == 0);
+    KASSERT(r == 0);
     if (tn == t) {
       break;
     }
@@ -81,7 +81,7 @@ int path_backtrack(path *p, track_node *t) {
 }
 
 int path_get_switch_config(track_node *t1, track_node *t2) {
-  assert(t1->type == NODE_BRANCH);
+  KASSERT(t1->type == NODE_BRANCH);
   track_edge *e;
   e = &t1->edge[DIR_STRAIGHT];
   if (e->dest == t2) {
@@ -91,13 +91,13 @@ int path_get_switch_config(track_node *t1, track_node *t2) {
   if (e->dest == t2) {
     return DIR_CURVED;
   }
-  assert(0 && "nodes are not connected via edge");
+  KASSERT(0 && "nodes are not connected via edge");
   return 0;
 }
 
 int track_node_dist(track_node *t1, track_node *t2) {
-  assert(t1 != NULL && t2 != NULL);
-  assert(t1->type != NODE_EXIT);
+  KASSERT(t1 != NULL && t2 != NULL);
+  KASSERT(t1->type != NODE_EXIT);
   int dir;
   dir = DIR_AHEAD;
   if (t1->type == NODE_BRANCH) {
@@ -127,7 +127,7 @@ void path_to_str(path *p, char *buf) {
 
 // return the switches in the next `dist` along the path
 void path_switches_in_next_dist(path *p, sw_configs *sw_cfgs, int dist) {
-  // assert(p->active);
+  // KASSERT(p->active);
   int i, d;
   track_node *cur, *next;
 
@@ -175,16 +175,16 @@ int path_generate(path *p) {
   int i, n, sid, eid;
   int buf[TRACK_MAX];
 
-  assert(!p->active);
-  assert(p->start != NULL);
-  assert(p->end != NULL);
-  assert(p->start != p->end);
+  KASSERT(!p->active);
+  KASSERT(p->start != NULL);
+  KASSERT(p->end != NULL);
+  KASSERT(p->start != p->end);
 
   sid = p->start->id;
   eid = p->end->id;
 
   dij_path_find(p->track, p->start, p->end, p->pred);
-  assert(p->pred[sid] == -1);
+  KASSERT(p->pred[sid] == -1);
 
   n = 0;
   buf[n++] = eid;
@@ -208,11 +208,11 @@ int path_generate(path *p) {
 }
 
 void path_start(path *p, track_node *start_node) {
-  assert(p->start != NULL);
-  assert(p->end != NULL);
+  KASSERT(p->start != NULL);
+  KASSERT(p->end != NULL);
   if (start_node != p->start) {
-    // should be a warning probably, assert for now
-    assert(0);
+    // should be a warning probably, KASSERT for now
+    KASSERT(0);
   }
   p->active = true;
   path_follow_to(p, start_node);
@@ -259,10 +259,10 @@ void dij_path_find(track_node *track, track_node *s, track_node *d, int *prev) {
     int alt;
     track_edge *e;
     for (i = 0; i < nedges[track[u].type]; ++i) {
-      // assert(&track[u].edge[i]);
+      // KASSERT(&track[u].edge[i]);
       e = &track[u].edge[i];
-      // assert(e->src == &track[u]);
-      // assert(e->dist < 1000 && e->dist >= 0);
+      // KASSERT(e->src == &track[u]);
+      // KASSERT(e->dist < 1000 && e->dist >= 0);
       v = e->dest->id;
 
       alt = dist[u] + e->dist;
