@@ -20,7 +20,7 @@ void MeasureSpeed(tid_t mytid, tid_t cs_tid, TrainDescriptor *td, int dist){
 	td->speed = speed;
 	td->time_of_sensor = time;
 
-  TMPutStrf(tm_tid, "\vt: %ddc; d: %dum\n", delta_t, prev_speed*delta_t);
+  TMPutStrf(tm_tid, "\rt: %ddc; d: %dum", delta_t, prev_speed*delta_t);
 }
 
 int DistanceBetweenNodes(Switch *sw, track_node *start, track_node *end){
@@ -187,7 +187,7 @@ void CheckPrediction(tid_t mytid, tid_t cs_tid, Switch *swList, Sensor *snList, 
 		else{
       //Train Left Sensor
       if(snList[train->node->num].state == SEN_OFF){
-        TMLogStrf(tm_tid, "left %s\n", train->node->name);
+        //TMLogStrf(tm_tid, "left %s\n", train->node->name);
       }
       //Train On New Sensor
       if(snList[dest.node->num].state == SEN_ON){

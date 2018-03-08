@@ -25,7 +25,9 @@ void StopAtServer(){
 void StopAt(void *args){
 	void *data;
 	int delay, reply;
-	int stoppingDistances[15] = {0, 0, 0, 50, 888, 16252, 44286, 100088, 137681, 267966, 388076, 543877, 811169, 973337, 1255858};
+	int sdist24[15] = {0, 0, 0, 50, 888, 16252, 44286, 100088, 137681, 267966, 388076, 543877, 801169, 923337, 1300000};
+	int sdist58[15] = {0, 0, 0, 50, 888, 16252, 44286, 100088, 137681, 267966, 388076, 543877, 801169, 923337, 1300000};
+	int sdist74[15] = {0, 0, 0, 50, 888, 16252, 44286, 100088, 137681, 267966, 388076, 543877, 801169, 923337, 1300000};
 	StopAtProtocol* stopAt = (StopAtProtocol *)args;
 	int trainId = stopAt->train;
 	int gear = stopAt->gear;
@@ -88,10 +90,18 @@ void StopAt(void *args){
 
 	//If distance exists, update
 	if(dist != -1){
-		stoppingDistances[gear] = dist;
+		//stoppingDistances[gear] = dist;
 	}
 
-	stopRef = StopOverPath(train, stoppingDistances[gear]);
+	if(trainId == 58){
+		stopRef = StopOverPath(train, sdist58[gear]);	
+	}else if(trainId == 74){
+		stopRef = StopOverPath(train, sdist74[gear]);	
+	}
+	else{
+		stopRef = StopOverPath(train, sdist24[gear]);
+	}
+	
 
 	//Move the Train
 	tm.tmc = TM_MOVE;
