@@ -2,6 +2,7 @@
 
 CIRCULAR_BUFFER_DEF(term_cb, char, TERMINAL_BUFFER_SIZE);
 
+
 void TerminalInputHandler() {
   tid_t tman_tid, inpt_tid;
   char c;
@@ -35,16 +36,17 @@ void wm_delete_window(WManager *wm, tid_t tid) {
   tdisp_focus_window(&wm->td, 0);
 }
 
+#define CHUNK 20
 void print_tdisp(tid_t tx_tid, TDisplay *td) {
   char c;
-  char buf[20];
+  char buf[CHUNK];
   int len;
 
   len = 0;
   while (td->buffer.size > 0) {
     tdisp_cb_pop(&td->buffer, &c);
     buf[len++] = c;
-    if (len == 19) {
+    if (len == CHUNK-1) {
       PutStr(tx_tid, buf, len);
       len = 0;
     }
@@ -82,7 +84,7 @@ void TerminalManager() {
   Create(30, &TerminalInputHandler);
 
   wm_init(&wm);
-  char *init = "\033[30m\033[47m\033[2J\033[1m\033[?25l";
+  char *init = "\033[30m\033[47m\033[2J\033[1m\033[?25l\033[?9h\033[?9h";
   PutStr(tx_tid, init, strlen(init));
   PutStr(tx_tid, init, strlen(init));
   print_tdisp(tx_tid, &wm.td);
@@ -117,7 +119,7 @@ void TerminalManager() {
       case TERM_IN:
         switch (*c) {
           case ESCAPE:
-            Halt();
+            // Halt();
             break;
           case '+':
             wm_add_window(&wm, -1, 0);
@@ -135,6 +137,7 @@ void TerminalManager() {
         if (sh_rdy) {
           rep.data = *c;
           Reply(sh_tid, &rep, sizeof(rep));
+          sh_rdy = false;
         }
         else {
           r = term_cb_push(&buf, *c);
@@ -148,9 +151,10 @@ void TerminalManager() {
         Reply(recv_tid, &rep, sizeof(rep));
         break;
       case TERM_OUT:
-        for (i = 0; i < req.len; ++i) {
-          tdisp_write_task(&wm.td, recv_tid, req.data[i]);
-        }
+        tdisp_writes_task(&wm.td, recv_tid, req.data, req.len);
+        // for (i = 0; i < req.len; ++i) {
+        //   tdisp_write_task(&wm.td, recv_tid, req.data[i]);
+        // }
         Reply(recv_tid, &rep, sizeof(rep));
         break;
       case TERM_LOG_REG:

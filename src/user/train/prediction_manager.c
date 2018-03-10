@@ -430,7 +430,7 @@ void PredictionManager(void *args){
   assert(sw_tid >= 0);
   tid_t sa_tid;
 
-  TMRegister(tm_tid, PM_OFF_X, PM_OFF_Y, PM_WIDTH, PM_HEIGHT);
+  // TMRegister(tm_tid, PM_OFF_X, PM_OFF_Y, PM_WIDTH, PM_HEIGHT);
 	LiveTrains live;
 	INIT_LIVE_TRAINS(live);
 

@@ -38,7 +38,7 @@
 *(int *)(VIC1_BASE + VIC_INTENCLEAR_OFFSET) = VIC1_ENABLED; \
 *(int *)(VIC2_BASE + VIC_INTENCLEAR_OFFSET) = VIC2_ENABLED; \
       PRINTF(                                          \
-          "\033[31m"                                   \
+          "\033[31m\033[?9l"                           \
           "ASSERTION '"STR(exp)"' FAILED <%s:%d>\r\n"  \
           "\033[0m",                                   \
           __FILE__,                                    \
@@ -55,7 +55,7 @@
   do {                                                 \
 *(int *)(VIC1_BASE + VIC_INTENCLEAR_OFFSET) = VIC1_ENABLED; \
 *(int *)(VIC2_BASE + VIC_INTENCLEAR_OFFSET) = VIC2_ENABLED; \
-      PRINTF("\033[0m\033[2J");                               \
+      PRINTF("\033[?9l\033[0m\033[2J");                               \
       KABORT();                                        \
   } while (0)
 

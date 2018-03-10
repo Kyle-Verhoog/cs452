@@ -59,7 +59,7 @@ void shell_clear_cmd(shell *sh) {
 }
 
 void shell_prompt(shell *sh) {
-  cmd_cb_push_str(&sh->buf, " $ ");
+  cmd_cb_push_str(&sh->buf, " → ■■■ ");
 }
 
 void shell_init(shell *sh) {
@@ -88,16 +88,18 @@ void shell_pre(shell *sh) {
   }
 }
 
+#define CHUNK 20
+
 void shell_print(shell *sh, tid_t tm_tid) {
   char c;
-  char buf[10];
+  char buf[CHUNK];
   int i;
 
   i = 0;
   while (sh->buf.size > 0) {
     cmd_cb_pop(&sh->buf, &c);
     buf[i++] = c;
-    if (i == 9) {
+    if (i == CHUNK-1) {
       TMPutStr(tm_tid, buf, i);
       i = 0;
     }

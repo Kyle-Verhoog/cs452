@@ -8,10 +8,6 @@ void SendGo(){
   Exit();
 }
 
-void Reset(){
-
-}
-
 void Bootstrap() {
   int mytid;
   mytid = MyTid();
@@ -23,6 +19,7 @@ void Bootstrap() {
 
   //Create(30, &SendGo);
   // interfaces
+  Create(10, &TrainTrackInterface);
   Create(5, &TimerInterface);
   Create(5, &NProcsInterface);
   Create(5, &MemUsageInterface);

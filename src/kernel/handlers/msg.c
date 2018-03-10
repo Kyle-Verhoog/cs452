@@ -150,6 +150,9 @@ void reply_handler(TaskDescriptor *rtd) {
   TaskDescriptor *std = &(tasks[stid]);
   asm("ldr %0, [%1, #16];":"=r"(sreply):"r"(std->sp));
   KASSERT(rtd->status == TS_READY);
+  if (std->status != TS_RPL_BL) {
+    PRINTF("%d %d\n\n", std->tid, rtd->tid);
+  }
   KASSERT(std->status == TS_RPL_BL);
   KASSERT(IS_VALID_USER_P(std->tid, sreply));
 
