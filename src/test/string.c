@@ -18,22 +18,24 @@ static void streq_basic() {
 
 static void str_parse() {
   char *c = "cmd A12 B24";
-  char *r;
+  int r;
   char buf[48];
   r = parse_str(c, buf, 48);
   assert(streq(buf, "cmd"));
-  assert(r == c+3);
-  r = parse_str(r, buf, 48);
+  assert(r == 4);
+  r += parse_str(c+r, buf, 48);
+  assert(r == 8);
   assert(streq(buf, "A12"));
-  r = parse_str(r, buf, 48);
+  r += parse_str(c+r, buf, 48);
+  assert(r == 12);
   assert(streq(buf, "B24"));
 
   char *s = "command      D123     F12";
   r = parse_str(s, buf, 48);
   assert(streq(buf, "command"));
-  r = parse_str(r, buf, 48);
+  r += parse_str(s+r, buf, 48);
   assert(streq(buf, "D123"));
-  r = parse_str(r, buf, 48);
+  r += parse_str(s+r, buf, 48);
   assert(streq(buf, "F12"));
 }
 

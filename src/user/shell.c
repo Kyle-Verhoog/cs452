@@ -1,8 +1,11 @@
 #include <user/shell.h>
-#include <stoppingcalibration_test.h> //TODO:Remove this
-#include <stop_at_test.h> //TODO:Remove this
 
 CIRCULAR_BUFFER_DEF(cmd_cb, char, CMD_BUF_MAX);
+
+shell_cmd SHELL_PATH[] = {
+  { "q", &Quit },
+  { "tr %d %d", &TrainTR },
+};
 
 int sh_args[4]; // kinda a bad hack
 
@@ -214,9 +217,6 @@ void shell_exec(shell *sh) {
   assert(sa_tid > 0);
   assert(pm_tid > 0);
 
-  track_node track[TRACK_MAX];
-  init_tracka(track);
-
   cmd = sh->cmd;
 
   if (sh->len == 0) {
@@ -241,6 +241,7 @@ void shell_exec(shell *sh) {
       shell_info(sh);
     }
   }
+  /*
   else if (cmd[0] == 'r' && cmd[1] == 'v') {
     if ((r = parse_i32(cmd+2, &arg1)) == 0 || arg1 > 81 || arg1 < 0) {
       shell_error(sh);
@@ -487,6 +488,7 @@ void shell_exec(shell *sh) {
       }
     }
   }
+  */
   else {
     shell_error(sh);
   }

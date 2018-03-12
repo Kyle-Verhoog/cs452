@@ -10,6 +10,8 @@
 #include <test/train/priority_queue.h>
 #include <test/train/path_finding.h>
 #include <test/string.h>
+#include <test/parse.h>
+#include <test/parse_args.h>
 
 int main(void) {
   PRINTF("\n");
@@ -31,6 +33,14 @@ int main(void) {
 
   PTEST_START("lib/ioserver_buffer");
   ioserver_buffer_tests();
+  PTEST_END();
+
+  PTEST_START("lib/parse");
+  parse_tests();
+  PTEST_END();
+
+  PTEST_START("lib/parse_args");
+  parse_args_tests();
   PTEST_END();
 
   PTEST_START("lib/string");

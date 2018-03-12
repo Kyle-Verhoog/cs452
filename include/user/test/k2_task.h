@@ -4,7 +4,7 @@
 #include <ts7200.h>
 #include <user/syscalls.h>
 #include <user/nameserver.h>
-
+/*
 typedef enum RPCservice {
   S_Signup = 0,
   S_Play = 1,
@@ -53,5 +53,5 @@ void RPCClient();
 void RPCClient2();
 void RPCServer();
 void StopServer();
-
+*/
 #endif /* K2_TASK_H */
