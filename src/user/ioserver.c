@@ -50,7 +50,7 @@ void IOServerRX(void *args) {
   notargs.type  = IO_RX;
   notargs.ie    = ie_base + IE_UART_RX_OFFSET;
   notargs.emask = RIEN_MASK;
-  r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
+  r = CreateArgs(31, &IOServerNotifier, (void *)&notargs, sizeof(notargs));
 
   tid_t req_tid, queued_tid;
   IOServerReq req;
@@ -133,14 +133,14 @@ void IOServerTX(void *args) {
   notargs.type  = IO_TX;
   notargs.ie    = ie_base + IE_UART_TX_OFFSET;
   notargs.emask = TIEN_MASK; //0x20;
-  r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
+  r = CreateArgs(31, &IOServerNotifier, (void *)&notargs, sizeof(notargs));
 
   // if we are using UART1 (to the train), create a notifier for MI
   if (cts_en) {
     notargs.type  = IO_MI;
     notargs.ie    = ie_base + IE_UART_MI_OFFSET;
     notargs.emask = MSIEN_MASK; //0x8;
-    r = CreateArgs(31, &IOServerNotifier, (void *)&notargs);
+    r = CreateArgs(31, &IOServerNotifier, (void *)&notargs, sizeof(notargs));
   }
 
   tid_t req_tid;
@@ -296,11 +296,11 @@ void IOServerUART2() {
 
   // Create the RX server
   arg.ns_id = IOSERVER_UART2_RX_ID;
-  r = CreateArgs(31, &IOServerRX, (void *)&arg);
+  r = CreateArgs(31, &IOServerRX, (void *)&arg, sizeof(arg));
 
   // Create the TX server
   arg.ns_id = IOSERVER_UART2_TX_ID;
-  r = CreateArgs(31, &IOServerTX, (void *)&arg);
+  r = CreateArgs(31, &IOServerTX, (void *)&arg, sizeof(arg));
 
 
   // Enable UART
@@ -328,11 +328,11 @@ void IOServerUART1() {
 
   // Create the RX server
   arg.ns_id = IOSERVER_UART1_RX_ID;
-  r = CreateArgs(31, &IOServerRX, (void *)&arg);
+  r = CreateArgs(31, &IOServerRX, (void *)&arg, sizeof(arg));
 
   // Create the TX server
   arg.ns_id = IOSERVER_UART1_TX_ID;
-  r = CreateArgs(31, &IOServerTX, (void *)&arg);
+  r = CreateArgs(31, &IOServerTX, (void *)&arg, sizeof(arg));
 
   // Enable UART
   *(int *)(UART1_BASE + UART_CTRL_OFFSET) = UARTEN_MASK | RIEN_MASK | TIEN_MASK | MSIEN_MASK;

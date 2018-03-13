@@ -16,11 +16,11 @@
 
 
 typedef enum TaskStatus { // a task is...
-  TS_ACTIVE  = 0,            //  active, currently running
-  TS_READY   = 1,            //  ready to be run
-  TS_BLOCKED = 2,            //  blocked, waiting for something
-  TS_UNINIT  = 3,            //  not yet initialized
-  TS_ZOMBIE  = 4,            //  dead... but still alive?
+  TS_ACTIVE  = 0,         //  active, currently running
+  TS_READY   = 1,         //  ready to be run
+  TS_BLOCKED = 2,         //  blocked, waiting for something
+  TS_UNINIT  = 3,         //  not yet initialized
+  TS_ZOMBIE  = 4,         //  dead... but still alive?
   TS_RCV_BL  = 5,
   TS_SND_BL  = 6,
   TS_RPL_BL  = 7,

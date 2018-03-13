@@ -11,7 +11,7 @@ void Block();
 
 int Create(int priority, void (*code)());
 
-int CreateArgs(int priority, void (*code)(), void *args);
+int CreateArgs(int priority, void (*code)(), void *args, int argsize);
 
 tid_t MyTid();
 

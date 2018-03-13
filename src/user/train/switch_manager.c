@@ -49,7 +49,7 @@ void UpdateSwitchTable(Switch *table, int sw, SwitchState dir){
 
 void SwitchHandler(void *args){
 	int reply = 0;
-	tid_t tx1_writer = (tid_t)args;
+	tid_t tx1_writer = *(tid_t *)args;
 	tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
 	tid_t my_tid = MyTid();
 
@@ -156,10 +156,11 @@ void SwitchManager(void * args){
   tid_t tx1_writer = WhoIs(IOSERVER_UART1_TX_ID);
   assert(tx1_writer >= 0);
 
-  	tid_t sw_handler = CreateArgs(29, &SwitchHandler, (void *)tx1_writer);
+  	tid_t sw_handler = CreateArgs(29, &SwitchHandler, &tx1_writer, sizeof(tx1_writer));
     CreateArgs(29, &SwitchPublisher, (void *)switchList);
     tid_t suc_tid = Create(29, &SwitchUpdateCourier);
     init_switch(sw_handler, switchList, track);
+
 
   	while(true){
   		tid_t req_tid;

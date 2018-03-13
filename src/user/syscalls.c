@@ -80,7 +80,7 @@ int AwaitEvent(InterruptEvent eventid){
   return r0;
 }
 
-int CreateArgs(int priority, void (*code)(), void *args) {
+int CreateArgs(int priority, void (*code)(), void *args, int argsize) {
   //r0 = priority, r1 = code, r2 = args
   //Call swi with create
   register uint32_t r0 __asm__("r0");

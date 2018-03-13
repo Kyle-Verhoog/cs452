@@ -17,7 +17,6 @@ void Bootstrap() {
   Create(30, &IOServerUART2);
   Create(30, &TerminalManager);
 
-  //Create(30, &SendGo);
   // interfaces
   Create(10, &TrainTrackInterface);
   Create(5, &TimerInterface);
@@ -25,11 +24,10 @@ void Bootstrap() {
   Create(5, &MemUsageInterface);
   Create(0, &Logger);
 
-  Create(28, &RailwayManager);
 
-  DelayCS(mytid, 200);
-  Create(20, &StoppingServerTest);
-  Create(20, &StopAtServer);
+  // DelayCS(mytid, 200);
+  // Create(20, &StoppingServerTest);
+  // Create(20, &StopAtServer);
   // StopAtProtocol sap;
   // sap.train = 24;
   // sap.gear = 14;

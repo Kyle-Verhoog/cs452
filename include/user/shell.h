@@ -23,6 +23,8 @@ CIRCULAR_BUFFER_DEC(cmd_cb, char, CMD_BUF_MAX);
 typedef struct shell_cmd {
   char *cmd;
   void *task;
+  int pri;
+  bool sync;
 } shell_cmd;
 
 

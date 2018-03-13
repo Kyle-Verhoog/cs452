@@ -94,7 +94,7 @@ void TerminalManager() {
   sh_args[1] = SH_OFFSET_Y;
   sh_args[2] = SH_WIDTH;
   sh_args[3] = SH_HEIGHT;
-  CreateArgs(29, &Shell, (void *)sh_args);
+  CreateArgs(29, &Shell, (void *)sh_args, sizeof(int)*sizeof(sh_args));
 
   while (true) {
     Receive(&recv_tid, &req, sizeof(req));

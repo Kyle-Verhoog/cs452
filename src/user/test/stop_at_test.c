@@ -13,7 +13,7 @@ void StopAtServer(){
 
 		switch(sap.sar){
 			case SAR_STOP:
-				CreateArgs(20, &StopAt, (void*)&sap);
+				CreateArgs(20, &StopAt, (void*)&sap, sizeof(StopAtProtocol *));
 				break;
 			default:
 				assert(0 && "Bad Command");

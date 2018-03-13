@@ -260,11 +260,10 @@ void AddTrain(LiveTrains *live, TrainDescriptor *td, int track_node){
 }
 
 void MeasureTrain(TrainDescriptor *td){
-	CreateArgs(21, &MeasuringInitTask, (void*)td);
+	CreateArgs(21, &MeasuringInitTask, (void*)td, sizeof(TrainDescriptor *));
 }
 
 #define SW_LOOK_AHEAD 500000
-/*
 void Routing(tid_t sw_tid, Switch *sws, LiveTrains *live) {
   assert(live->size > 0);
   int i, reply;
@@ -302,7 +301,6 @@ void Routing(tid_t sw_tid, Switch *sws, LiveTrains *live) {
     }
   }
 }
-*/
 
 void SetRoute(LiveTrains *live, track_node *s, track_node *e, tid_t sw_tid, Switch *sws) {
   assert(live->size > 0);
@@ -485,6 +483,7 @@ void PredictionManager(void *args){
 				AddTrain(&live, &trains[pmp.arg1], pmp.arg2);
 				break;
 			case PM_MEASURE:
+        assert(0);
 				//Init the train
 				MeasureTrain(&trains[pmp.arg1]);
 				break;

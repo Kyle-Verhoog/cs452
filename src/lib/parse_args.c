@@ -1,6 +1,4 @@
 #include <lib/parse_args.h>
-#include <assert.h>
-
 
 int parse_args_va(char *buf, char *args, int *boff, int narg, va_list va) {
   char c, *str, *ch;

@@ -235,21 +235,19 @@ void StoppingCalibrationTest(void * args){
 		TMLogStrf(term_tid, "Distance: %d um\n", distance);
 	}
 
-  /*
 	//Dynamically test this
-	StopAtProtocol sap;
-  sap.sar = SAR_STOP;
-  sap.train = train;
-  sap.gear = speed;
-  sap.stop_at = before->num;
-  sap.dist = distance;
+	// StopAtProtocol sap;
+  // sap.sar = SAR_STOP;
+  // sap.train = train;
+  // sap.gear = speed;
+  // sap.stop_at = before->num;
+  // sap.dist = distance;
 
-  tid_t sa_tid = WhoIs(STOP_AT_SERVER_ID);
-  assert(sa_tid > 0);
-  Send(sa_tid, &sap, sizeof(sap), &reply, sizeof(reply));
+  // tid_t sa_tid = WhoIs(STOP_AT_SERVER_ID);
+  // assert(sa_tid > 0);
+  // Send(sa_tid, &sap, sizeof(sap), &reply, sizeof(reply));
 
-  TMLogStrf(term_tid, "Done!\n");
-  */
+  // TMLogStrf(term_tid, "Done!\n");
 	Exit();
 }
 
@@ -267,7 +265,6 @@ void StoppingServerTest(){
 		Receive(&req_tid, &args, sizeof(args));
 		Reply(req_tid, &reply, sizeof(reply));
 
-		CreateArgs(20, StoppingCalibrationTest, (void *)&args);
+		CreateArgs(20, StoppingCalibrationTest, (void *)&args, sizeof(args));
 	}
 }
-
