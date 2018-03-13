@@ -56,8 +56,11 @@ void StopAt(void *args){
 	assert(tm_tid >= 0);
 	tid_t sw_tid = WhoIs(SWITCH_MANAGER_ID);
 	assert(sw_tid >= 0);
-	tid_t sm_tid = WhoIs(SENSOR_MANAGER_ID);
-	assert(sm_tid >= 0);
+	tid_t swpub_tid = WhoIs(SWITCH_PUBLISHER_ID);
+	assert(sw_tid >= 0);
+	//tid_t sm_tid = WhoIs(SENSOR_MANAGER_ID);
+	tid_t smpub_tid = WhoIs(SENSOR_PUBLISHER_ID);
+	assert(smpub_tid >= 0);
 
 	RWProtocol rw;
 	TMProtocol tm;
@@ -76,12 +79,12 @@ void StopAt(void *args){
 
 	//Get Switch List
 	sw.swr = SW_GET_ALL;
-	Send(sw_tid, &sw, sizeof(sw), &data, sizeof(data));
+	Send(swpub_tid, &sw, sizeof(sw), &data, sizeof(data));
 	switches = (Switch *)data;
 
 	//Get Sensor List
 	sm.smr = SM_GET_ALL;
-	Send(sm_tid, &sm, sizeof(sm), &data, sizeof(data));
+	Send(smpub_tid, &sm, sizeof(sm), &data, sizeof(data));
 	sensors = (Sensor *)data;
 
 	//Initialize
@@ -115,7 +118,7 @@ void StopAt(void *args){
 	//Block until the "ref" sensor
 	sm.smr = SM_SUBSCRIBE;
 	sm.byte = (char)stopRef.ref->num;
-	Send(sm_tid, &sm, sizeof(sm), &reply, sizeof(reply));
+	Send(smpub_tid, &sm, sizeof(sm), &reply, sizeof(reply));
 
 	//Delay after ref
 	delay = stopRef.delayDist/(train->speed);

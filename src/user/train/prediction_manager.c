@@ -187,7 +187,7 @@ void CheckPrediction(tid_t mytid, tid_t cs_tid, Switch *swList, Sensor *snList, 
 		else{
       //Train Left Sensor
       if(snList[train->node->num].state == SEN_OFF){
-        //TMLogStrf(tm_tid, "left %s\n", train->node->name);
+        TMLogStrf(tm_tid, "left %s\n", train->node->name);
       }
       //Train On New Sensor
       if(snList[dest.node->num].state == SEN_ON){
@@ -216,14 +216,16 @@ void MeasuringInitTask(void * args){
 	assert(tm_tid >= 0);
 	tid_t sw_tid = WhoIs(SWITCH_MANAGER_ID);
 	assert(sw_tid >= 0);
-	tid_t sm_tid = WhoIs(SENSOR_MANAGER_ID);
+	tid_t swpub_tid = WhoIs(SWITCH_PUBLISHER_ID);
+	assert(swpub_tid >= 0);
+	tid_t sm_tid = WhoIs(SENSOR_PUBLISHER_ID);
 	assert(sm_tid >= 0);
 
 	SWProtocol sw;
 	
 	//Get Switch List
 	sw.swr = SW_GET_ALL;
-	Send(sw_tid, &sw, sizeof(sw), &switches, sizeof(switches));
+	Send(swpub_tid, &sw, sizeof(sw), &switches, sizeof(switches));
 	
 	iargs.tm_tid = tm_tid;
 	iargs.sm_tid = sm_tid;
@@ -239,11 +241,22 @@ void MeasuringInitTask(void * args){
 	Exit();
 }
 
-void AddTrain(LiveTrains *live, TrainDescriptor *td){
+void AddTrain(LiveTrains *live, TrainDescriptor *td, int track_node){
+	//TODO:FIX THIS
+	int reply;
+	tid_t tr_tid = WhoIs(TRAIN_MANAGER_ID);
+	TMProtocol tmp;
+	tmp.tmc = TM_TRACK;
+	tmp.arg1 = (char)td->id;
+	tmp.arg2 = track_node;
+	Send(tr_tid, &tmp, sizeof(tmp), &reply, sizeof(reply));
+
 	live->buf[live->size] = td;
 	live->size++;
+
+	tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+	assert(tm_tid >= 0);
 	TMLogStrf(tm_tid, "train %d on track %s\n", td->id, td->node->name);
-	//MeasureTrain(td);
 }
 
 void MeasureTrain(TrainDescriptor *td){
@@ -335,13 +348,77 @@ void SetRoute(LiveTrains *live, track_node *s, track_node *e, tid_t sw_tid, Swit
   }
 }
 
+void SensorUpdateNotifier(){
+	int reply;
+	void *data;
+	SMProtocol smp;
+	PMProtocol pmp;
+	Sensor *sensors; 
+
+	tid_t pub_tid = WhoIs(SENSOR_PUBLISHER_ID);
+	assert(pub_tid >= 0);
+	tid_t pred_tid = WhoIs(PREDICTION_MANAGER_ID);
+	assert(pred_tid >= 0);
+
+	//Get initial data
+	smp.smr = SM_GET_ALL;
+	Send(pub_tid, &smp, sizeof(smp), &data, sizeof(data));
+	sensors = (Sensor *)data;
+
+	//Init Prediction Manager Protocol
+	pmp.pmc = PM_SENSOR;
+	pmp.args = (void *)sensors;
+	pmp.size = 1;
+
+	while(true){
+		smp.smr = SM_SUBSCRIBE;
+		smp.byte = (char)SENSOR_SIZE;
+		Send(pub_tid, &smp, sizeof(smp), &data, sizeof(data));
+		Send(pred_tid, &pmp, sizeof(pmp), &reply, sizeof(reply));
+	}
+
+	Exit();
+}
+
+void SwitchUpdateNotifier(){
+	int reply;
+	void *data;
+	SWProtocol swp;
+	PMProtocol pmp;
+	Switch *switches; 
+
+	tid_t pub_tid = WhoIs(SWITCH_PUBLISHER_ID);
+	assert(pub_tid >= 0);
+	tid_t pred_tid = WhoIs(PREDICTION_MANAGER_ID);
+	assert(pred_tid >= 0);
+
+	//Get initial data
+	swp.swr = SW_GET_ALL;
+	Send(pub_tid, &swp, sizeof(swp), &data, sizeof(data));
+	switches = (Switch *)data;
+
+	//Init Prediction Manager Protocol
+	pmp.pmc = PM_SWITCH;
+	pmp.args = (void *)switches;
+	pmp.size = 1;
+
+	while(true){
+		swp.swr = SW_SUBSCRIBE;
+		Send(pub_tid, &swp, sizeof(swp), &data, sizeof(data));
+		Send(pred_tid, &pmp, sizeof(pmp), &reply, sizeof(reply));
+	}
+
+	Exit();
+}
 
 void PredictionManager(void *args){
+	void *data;
 	track_node *track = (track_node *)args;
-  // int path_prev[]
+	TrainDescriptor *trains;
+
 	int r = RegisterAs(PREDICTION_MANAGER_ID);
 	assert(r == 0);
-
+	
 	tid_t mytid = MyTid();
 	tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
 	assert(cs_tid >= 0);
@@ -359,8 +436,16 @@ void PredictionManager(void *args){
 
 	Switch *swList = NULL;
 	Sensor *snList = NULL;
+	//TODO: NOT THE BEST WAY TO DO THIS
+	TMProtocol tmp;
+	tmp.tmc = TM_GET_ALL;
+	Send(tr_tid, &tmp, sizeof(tmp), &data, sizeof(data));
+	trains = (TrainDescriptor *)data;
 
   int *route_args;
+
+  	Create(29, &SensorUpdateNotifier);
+  	Create(29, &SwitchUpdateNotifier);
 
 	while(true){
 		int reply = 0;
@@ -384,8 +469,6 @@ void PredictionManager(void *args){
 				//Re-evaluate Predictions
 				swList = (Switch *)pmp.args;
 				break;
-      // case PM_STOP:
-        // break;
       case PM_ROUTE:
         sa_tid = WhoIs(STOP_AT_SERVER_ID);
         assert(sa_tid >= 0);
@@ -399,11 +482,11 @@ void PredictionManager(void *args){
         Send(sa_tid, &sap, sizeof(sap), &reply, sizeof(reply));
         break;
 			case PM_TRAIN:
-				AddTrain(&live, (TrainDescriptor *)pmp.args);
+				AddTrain(&live, &trains[pmp.arg1], pmp.arg2);
 				break;
 			case PM_MEASURE:
 				//Init the train
-				MeasureTrain((TrainDescriptor *)pmp.args);
+				MeasureTrain(&trains[((int*)pmp.args)[0]]);
 				break;
 			default:
 				assert(0 && "Bad Command");

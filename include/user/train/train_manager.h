@@ -22,7 +22,7 @@ typedef enum TM_Command{
 	TM_TASK_COMPLETE = 3,
 	TM_TRACK = 4,
 	TM_MEASURE = 5,
-	TM_GET_ALL = 10,
+	TM_GET_ALL = 6
 }TM_Command;
 
 typedef struct TMProtocol{

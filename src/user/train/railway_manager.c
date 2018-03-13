@@ -124,10 +124,10 @@ void RailwayManager(){
   	track_node track[TRACK_MAX];
   	init_tracka(track);
 
-  	CreateArgs(29, &PredictionManager, (void *)track);
-  	tid_t tm_tid = CreateArgs(29, &TrainManager, (void *)track);
   	tid_t sw_tid = CreateArgs(29, &SwitchManager, (void *)track);
+  	tid_t tm_tid = CreateArgs(29, &TrainManager, (void *)track);
   	CreateArgs(29, &SensorManager, (void *)track);
+  	CreateArgs(29, &PredictionManager, (void *)track);
   	assert(tm_tid >= 0);
   	assert(sw_tid >= 0);
 

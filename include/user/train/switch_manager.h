@@ -19,7 +19,10 @@ typedef enum SwitchState{
 typedef enum SW_Request{
 	SW_HALT = -1,
 	SW_FLIP = 0,
-	SW_GET_ALL = 1
+	SW_GET_ALL = 1,
+	//User Reqs
+	SW_NOTIFY = 4,
+	SW_SUBSCRIBE = 5,
 }SW_Request;
 
 typedef struct SWProtocol{

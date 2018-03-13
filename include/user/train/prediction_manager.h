@@ -42,6 +42,8 @@ typedef struct PMProtocol{
 	PM_Command pmc;
 	void *args;
 	int size;
+	int arg1;
+	int arg2;
 }PMProtocol;
 
 typedef struct OracleArgs{
@@ -54,7 +56,7 @@ typedef struct Destination{
 	int dist;
 }Destination;
 
-void AddTrain(LiveTrains *live, TrainDescriptor *td);
+//void AddTrain(LiveTrains *live, TrainDescriptor *td);
 
 int DistanceBetweenNodes(Switch *sw, track_node *start, track_node *end);
 Destination GetPrevSensor(Switch *sw, track_node *n);	//Inclusive, Overshoots distance

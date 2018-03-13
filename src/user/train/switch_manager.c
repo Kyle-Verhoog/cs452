@@ -1,18 +1,7 @@
 #include <switch_manager.h>
 #include <prediction_manager.h>
 
-
-void PushSwitchToPrediction(tid_t pred, Switch *sw){
-  int reply;
-  PMProtocol pmp;
-  pmp.pmc = PM_SWITCH;
-  pmp.args = (void *)sw;
-  pmp.size = 1;
-
-  Send(pred, &pmp, sizeof(pmp), &reply, sizeof(reply));
-}
-
-void init_switch(tid_t pred_tid, tid_t sw_handler, Switch *slist, track_node *track){
+void init_switch(tid_t sw_handler, Switch *slist, track_node *track){
 	int reply = 0;
 	SWProtocol swp;
 
@@ -52,8 +41,6 @@ void init_switch(tid_t pred_tid, tid_t sw_handler, Switch *slist, track_node *tr
 		swp.sw = i;
 		Send(sw_handler, &swp, sizeof(swp), &reply, sizeof(reply));
 	}
-
-  PushSwitchToPrediction(pred_tid, slist);
 }
 
 void UpdateSwitchTable(Switch *table, int sw, SwitchState dir){
@@ -91,24 +78,70 @@ void SwitchHandler(void *args){
   Exit();
 }
 
+void SwitchPublisher(void *args){
+  void *data;
+  int reply;
+  tid_t req_tid;
+  SWProtocol swp;
+  Switch *switches = (Switch*)args;
+
+  tid_cb subscribers;
+  tid_cb_init(&subscribers);
+
+  int r = RegisterAs(SWITCH_PUBLISHER_ID);
+  assert(r == 0);
+
+  while(true){
+    Receive(&req_tid, &swp, sizeof(swp));
+
+    switch(swp.swr){
+      case SW_NOTIFY:
+        Reply(req_tid, &reply, sizeof(reply));
+        Notify(&subscribers);
+        break;
+      case SW_SUBSCRIBE:
+        tid_cb_push(&subscribers, req_tid);
+        break;
+      case SW_GET_ALL:
+        data = (void *)switches;
+        Reply(req_tid, &data, sizeof(data));
+        break;
+      default:
+        assert(0 && "Bad Command");
+    }
+  }
+
+  Exit();
+}
+
+void SwitchUpdateCourier(){
+  SMProtocol swp;
+  int reply;
+
+  tid_t pub_tid = WhoIs(SWITCH_PUBLISHER_ID);
+
+  swp.smr = SW_NOTIFY;
+
+
+  Send(pub_tid, &swp, sizeof(swp), &reply, sizeof(reply));
+  Exit();
+}
+
 
 void SwitchManager(void * args){
-  void *data;
   track_node *track = (track_node *)args;
 	Switch switchList[SWITCH_SIZE];
 
 	int reply = 0;
 	int r = RegisterAs(SWITCH_MANAGER_ID);
   assert(r == 0);
-      tid_t pred_tid = WhoIs(PREDICTION_MANAGER_ID);
-      assert(pred_tid >= 0);
   tid_t tx1_writer = WhoIs(IOSERVER_UART1_TX_ID);
-
   assert(tx1_writer >= 0);
 
-  	tid_t sw_handler = CreateArgs(19, &SwitchHandler, (void *)tx1_writer);
+  	tid_t sw_handler = CreateArgs(29, &SwitchHandler, (void *)tx1_writer);
+    CreateArgs(29, &SwitchPublisher, (void *)switchList);
 
-  	init_switch(pred_tid, sw_handler, switchList, track);
+    init_switch(sw_handler, switchList, track);
 
   	while(true){
   		tid_t req_tid;
@@ -123,13 +156,9 @@ void SwitchManager(void * args){
 	  			Send(sw_handler, &sw, sizeof(sw), &reply, sizeof(reply));
 	  			//Update the UI and table
 	  			UpdateSwitchTable(switchList, sw.sw, sw.dir);
+          //TODO: CHANGE THIS
+          		Create(29, &SwitchUpdateCourier);
 	  			Reply(req_tid, &reply, sizeof(reply));
-          //Update Prediction
-          // PushSwitchToPrediction(pred_tid, switchList);
-  				break;
-  			case SW_GET_ALL:
-          data = (void *)switchList;
-  				Reply(req_tid, &data, sizeof(data));
   				break;
   			default:
   				assert(0 && "Bad Switch Command");

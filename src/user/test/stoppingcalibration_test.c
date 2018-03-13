@@ -153,7 +153,9 @@ void StoppingCalibrationTest(void * args){
 	assert(tm_tid >= 0);
 	tid_t sw_tid = WhoIs(SWITCH_MANAGER_ID);
 	assert(sw_tid >= 0);
-	tid_t sm_tid = WhoIs(SENSOR_MANAGER_ID);
+	tid_t swpub_tid = WhoIs(SWITCH_PUBLISHER_ID);
+	assert(swpub_tid >= 0);
+	tid_t sm_tid = WhoIs(SENSOR_PUBLISHER_ID);
 	assert(sm_tid >= 0);
 
 	RWProtocol rw;
@@ -175,7 +177,7 @@ void StoppingCalibrationTest(void * args){
 
 	//Get Switch List
 	sw.swr = SW_GET_ALL;
-	Send(sw_tid, &sw, sizeof(sw), &data, sizeof(data));
+	Send(swpub_tid, &sw, sizeof(sw), &data, sizeof(data));
 	switches = (Switch *)data;
 
 	//Get Sensor List

@@ -22,13 +22,13 @@ void Bootstrap() {
   Create(30, &TerminalManager);
 
   //Create(30, &SendGo);
-  Create(29, &RailwayManager);
-
   // interfaces
   Create(5, &TimerInterface);
   Create(5, &NProcsInterface);
   Create(5, &MemUsageInterface);
   Create(0, &Logger);
+
+  Create(28, &RailwayManager);
 
   DelayCS(mytid, 200);
   Create(20, &StoppingServerTest);

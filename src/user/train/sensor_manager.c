@@ -2,7 +2,6 @@
 #include <lib/circular_buffer.h>
 #include <prediction_manager.h>
 
-
 void PrintSensorData(tid_t si_tid, Sensor *slist){
   int reply;
   Send(si_tid, &slist, sizeof(slist), &reply, sizeof(reply));
@@ -19,25 +18,7 @@ void init_sensors(Sensor *list, track_node *t){
 	}
 }
 
-void PushSensorToPrediction(tid_t pred, Sensor *list){
-	int reply;
-	PMProtocol pmp;
-	pmp.pmc = PM_SENSOR;
-	pmp.args = (void *)list;
-	pmp.size = 1;
-
-	Send(pred, &pmp, sizeof(pmp), &reply, sizeof(reply));
-}
-
-void Notify(tid_cb *subscribers){
-	int reply = 1;
-	tid_t sub;
-	while(tid_cb_pop(subscribers, &sub) != CB_E_EMPTY){
-		Reply(sub, &reply, sizeof(reply));
-	}
-}
-
-void Publish(Sensor *sensors, tid_cb *subscribers){
+void PublishSensors(Sensor *sensors, tid_cb *subscribers){
 	int i;
 	for(i = 0; i < SENSOR_SIZE; i++){
 		if(sensors[i].state == SEN_ON){
@@ -47,7 +28,7 @@ void Publish(Sensor *sensors, tid_cb *subscribers){
 }
 
 //Returns if a diff happened
-bool UpdateSensorData(Sensor *slist, char byte, int scounter, tid_cb* subscribers){
+bool UpdateSensorData(Sensor *slist, char byte, int scounter){
 	bool delta = false;
 	int i=7;
 	for(i = 7; i >= 0; i--){
@@ -56,10 +37,6 @@ bool UpdateSensorData(Sensor *slist, char byte, int scounter, tid_cb* subscriber
 		byte = byte >> 1;
 		assert(i + scounter*8 < 80);
 		assert(i + scounter*8 >= 0);
-
-		// if(slist[i + scounter*8].state == SEN_ON){
-		// 	Notify(&subscribers[i + scounter*8]);
-		// }
 	}
 
 	return delta;
@@ -119,8 +96,60 @@ void init_subscribers(tid_cb *subscribers){
   }
 }
 
-void SensorManager(void *args){
+void SensorPublisher(void *args){
+	int reply;
 	void *data;
+	tid_t tid_req;
+  	SMProtocol smp;
+
+	Sensor *sensorList = (Sensor *)args;
+	tid_cb subscribers[SENSOR_SIZE + 1];	//Subscribers on [SENSOR_SIZE] are waiting on delta
+	init_subscribers(subscribers);
+
+	int r = RegisterAs(SENSOR_PUBLISHER_ID);
+	assert(r == 0);
+
+	while(true){
+		Receive(&tid_req, &smp, sizeof(smp));
+
+		switch(smp.smr){
+			case SM_NOTIFY:
+				Reply(tid_req, &reply, sizeof(reply));
+				PublishSensors(sensorList, subscribers);
+				if(smp.byte){	// If a delta happened
+					Notify(&subscribers[SENSOR_SIZE]);
+				}
+				break;
+			case SM_SUBSCRIBE:
+				tid_cb_push(&subscribers[(int)smp.byte], tid_req);
+				break;
+			case SM_GET_ALL:
+  				data = (void *)sensorList;
+  				Reply(tid_req, &data, sizeof(data));
+  				break;
+			default:
+  				assert(0 && "Bad Command");
+		}
+	}
+
+	Exit();
+}
+
+void SensorUpdateCourier(void *args){
+	SMProtocol smp;
+	int reply;
+	char *data = (char *)args;
+
+	tid_t pub_tid = WhoIs(SENSOR_PUBLISHER_ID);
+
+	smp.smr = SM_NOTIFY;
+	smp.byte = *data;
+
+	Send(pub_tid, &smp, sizeof(smp), &reply, sizeof(reply));
+	Exit();
+}
+
+void SensorManager(void *args){
 	int scounter = 0;
   	bool recFlag = false;
   	bool deltaFlag = false;
@@ -129,21 +158,15 @@ void SensorManager(void *args){
 	Sensor sensorList[SENSOR_SIZE];
 	init_sensors(sensorList, track);
 
-	tid_cb subscribers[SENSOR_SIZE + 1];	//Subscribers on [SENSOR_SIZE] are waiting on delta
-	init_subscribers(subscribers);
-
 	int reply = 0;
-	int r = RegisterAs(SENSOR_MANAGER_ID);
-  	assert(r == 0);
-  	tid_t pred_tid = WhoIs(PREDICTION_MANAGER_ID);
-    assert(pred_tid >= 0);
     tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
     assert(tx_tid >= 0);
 
-    Create(30, &SensorReceiver);
-  	Create(30, &SensorTimeout);
-
+    Create(29, &SensorReceiver);
+  	Create(29, &SensorTimeout);
+  	CreateArgs(29, &SensorPublisher, (void *)sensorList);
     tid_t si_tid = Create(29, &SensorInterface);
+
   	//Kick start sensor gathering data
   	BLPutC(tx_tid, GET_ALL_SENSORS);
   	while(true){
@@ -155,17 +178,15 @@ void SensorManager(void *args){
   		switch(smp.smr){
   			case SM_READBYTE:
   				Reply(tid_req, &reply, sizeof(reply));
-  				deltaFlag = deltaFlag || UpdateSensorData(sensorList, smp.byte, scounter, subscribers);
+  				deltaFlag = deltaFlag || UpdateSensorData(sensorList, smp.byte, scounter);
   				scounter = (scounter + 1) % (DECODER_SIZE*2);
   				if(scounter == 0){
   					BLPutC(tx_tid, GET_ALL_SENSORS);
-  					Publish(sensorList, subscribers);
-  					//Update Prediction
+  					//TODO: Change this
+  					CreateArgs(29, &SensorUpdateCourier, (void *)&deltaFlag);
   					if(deltaFlag){
-  						Notify(&subscribers[SENSOR_SIZE]);
-  						PushSensorToPrediction(pred_tid, sensorList);
+  						PrintSensorData(si_tid, sensorList);
   						deltaFlag = false;
-              			PrintSensorData(si_tid, sensorList);
   					}
   				}
   				if(scounter % 2 == 0){
@@ -181,14 +202,6 @@ void SensorManager(void *args){
   				recFlag = false;
   				scounter = 0;
   				BLPutC(tx_tid, GET_ALL_SENSORS);
-  				break;
-  			case SM_SUBSCRIBE:
-  				tid_cb_push(&subscribers[(int)smp.byte], tid_req);
-  				//Reply(tid_req, &reply, sizeof(reply));
-  				break;
-  			case SM_GET_ALL:
-  				data = (void *)sensorList;
-  				Reply(tid_req, &data, sizeof(data));
   				break;
   			case SM_HALT:
   				Reply(tid_req, &reply, sizeof(reply));
