@@ -289,11 +289,11 @@ void shell_exec(shell *sh) {
         // tm.arg1 = arg1; //train
         // tm.arg2 = s; //train track
         // Send(tr_tid, &tm, sizeof(tm), &reply, sizeof(reply));        
-        PMProtocol pmp;
-        pmp.pmc = PM_TRAIN;
-        pmp.arg1 = arg1; //train
-        pmp.arg2 = s;   //train track
-        Send(pm_tid, &pmp, sizeof(pmp), &reply, sizeof(reply));
+        PMProtocol pm;
+        pm.pmc = PM_TRAIN;
+        pm.arg1 = arg1; //train
+        pm.arg2 = s;   //train track
+        Send(pm_tid, &pm, sizeof(pm), &reply, sizeof(reply));
         shell_info(sh);
       }
     }
@@ -303,10 +303,10 @@ void shell_exec(shell *sh) {
       shell_errorf(sh, "train number");
     }
     else {
-      TMProtocol tm;
-      tm.tmc = TM_MEASURE;
-      tm.arg1 = arg1; //train
-      Send(tr_tid, &tm, sizeof(tm), &reply, sizeof(reply));
+      PMProtocol pm;
+      pm.pmc = PM_MEASURE;
+      pm.arg1 = arg1; //train
+      Send(pm_tid, &pm, sizeof(pm), &reply, sizeof(reply));
       shell_info(sh);
     }
   }

@@ -28,9 +28,10 @@ typedef enum SM_Request{
 	SM_CHECK = 1,
 	SM_RESET = 2,
 	//User Reqs
-	SM_NOTIFY = 3,
-	SM_SUBSCRIBE = 4,
-	SM_SUBSCRIBE_DELTA = 5,
+	SM_NOTIFY_READY = 3,
+	SM_NOTIFY = 4,
+	SM_SUBSCRIBE = 5,
+	SM_SUBSCRIBE_DELTA = 6,
 	SM_GET_ALL = 10
 } SM_Request;
 

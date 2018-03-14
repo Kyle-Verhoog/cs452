@@ -102,6 +102,8 @@ void SensorPublisher(void *args){
 	tid_t tid_req;
   	SMProtocol smp;
 
+  	tid_t si_tid = Create(29, &SensorInterface);
+
 	Sensor *sensorList = (Sensor *)args;
 	tid_cb subscribers[SENSOR_SIZE + 1];	//Subscribers on [SENSOR_SIZE] are waiting on delta
 	init_subscribers(subscribers);
@@ -118,6 +120,7 @@ void SensorPublisher(void *args){
 				PublishSensors(sensorList, subscribers);
 				if(smp.byte){	// If a delta happened
 					Notify(&subscribers[SENSOR_SIZE]);
+					PrintSensorData(si_tid, sensorList);
 				}
 				break;
 			case SM_SUBSCRIBE:
@@ -135,17 +138,38 @@ void SensorPublisher(void *args){
 	Exit();
 }
 
-void SensorUpdateCourier(void *args){
+// void SensorUpdateCourier(void *args){
+// 	SMProtocol smp;
+// 	int reply;
+// 	char *data = (char *)args;
+
+// 	tid_t pub_tid = WhoIs(SENSOR_PUBLISHER_ID);
+
+// 	smp.smr = SM_NOTIFY;
+// 	smp.byte = *data;
+
+// 	Send(pub_tid, &smp, sizeof(smp), &reply, sizeof(reply));
+// 	Exit();
+// }
+
+void SensorUpdateCourier(){
 	SMProtocol smp;
 	int reply;
-	char *data = (char *)args;
+	char data;
 
 	tid_t pub_tid = WhoIs(SENSOR_PUBLISHER_ID);
+	tid_t sm_tid = MyParentTid();
 
-	smp.smr = SM_NOTIFY;
-	smp.byte = *data;
+	while(true){
+		smp.smr = SM_NOTIFY_READY;
+		Send(sm_tid, &smp, sizeof(smp), &data, sizeof(data));
 
-	Send(pub_tid, &smp, sizeof(smp), &reply, sizeof(reply));
+		smp.smr = SM_NOTIFY;
+		smp.byte = data;
+
+		Send(pub_tid, &smp, sizeof(smp), &reply, sizeof(reply));	
+	}
+	
 	Exit();
 }
 
@@ -153,6 +177,9 @@ void SensorManager(void *args){
 	int scounter = 0;
   	bool recFlag = false;
   	bool deltaFlag = false;
+  	bool persistDeltaFlag = false;
+  	bool courierFlag = false;
+  	bool dataFlag = false;
 
 	track_node *track = (track_node *)args;
 	Sensor sensorList[SENSOR_SIZE];
@@ -165,13 +192,20 @@ void SensorManager(void *args){
     Create(29, &SensorReceiver);
   	Create(29, &SensorTimeout);
   	CreateArgs(29, &SensorPublisher, (void *)sensorList);
-    tid_t si_tid = Create(29, &SensorInterface);
+    tid_t suc_tid = Create(29, &SensorUpdateCourier);
 
   	//Kick start sensor gathering data
   	BLPutC(tx_tid, GET_ALL_SENSORS);
   	while(true){
   		tid_t tid_req;
   		SMProtocol smp;
+
+  		//If courier is ready, send the data
+  		if(dataFlag && courierFlag){
+  			dataFlag = false;
+  			courierFlag = false;
+  			Reply(suc_tid, &persistDeltaFlag, sizeof(persistDeltaFlag));
+  		}
 
   		Receive(&tid_req, &smp, sizeof(smp));
 
@@ -182,12 +216,9 @@ void SensorManager(void *args){
   				scounter = (scounter + 1) % (DECODER_SIZE*2);
   				if(scounter == 0){
   					BLPutC(tx_tid, GET_ALL_SENSORS);
-  					//TODO: Change this
-  					CreateArgs(29, &SensorUpdateCourier, (void *)&deltaFlag);
-  					if(deltaFlag){
-  						PrintSensorData(si_tid, sensorList);
-  						deltaFlag = false;
-  					}
+  					dataFlag = true;
+  					persistDeltaFlag = deltaFlag;
+  					deltaFlag = false;
   				}
   				if(scounter % 2 == 0){
   					recFlag = true;
@@ -202,6 +233,9 @@ void SensorManager(void *args){
   				recFlag = false;
   				scounter = 0;
   				BLPutC(tx_tid, GET_ALL_SENSORS);
+  				break;
+  			case SM_NOTIFY_READY:
+  				courierFlag = true;
   				break;
   			case SM_HALT:
   				Reply(tid_req, &reply, sizeof(reply));

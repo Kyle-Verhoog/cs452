@@ -486,7 +486,7 @@ void PredictionManager(void *args){
 				break;
 			case PM_MEASURE:
 				//Init the train
-				MeasureTrain(&trains[((int*)pmp.args)[0]]);
+				MeasureTrain(&trains[pmp.arg1]);
 				break;
 			default:
 				assert(0 && "Bad Command");

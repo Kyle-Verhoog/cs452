@@ -114,23 +114,41 @@ void SwitchPublisher(void *args){
   Exit();
 }
 
+// void SwitchUpdateCourier(){
+//   SMProtocol swp;
+//   int reply;
+
+//   tid_t pub_tid = WhoIs(SWITCH_PUBLISHER_ID);
+
+//   swp.smr = SW_NOTIFY;
+
+//   Send(pub_tid, &swp, sizeof(swp), &reply, sizeof(reply));
+//   Exit();
+// }
+
 void SwitchUpdateCourier(){
   SMProtocol swp;
   int reply;
 
   tid_t pub_tid = WhoIs(SWITCH_PUBLISHER_ID);
+  tid_t sw_tid = MyParentTid();
 
-  swp.smr = SW_NOTIFY;
+  while(true){
+    swp.smr = SW_NOTIFY_READY;
+    Send(sw_tid, &swp, sizeof(swp), &reply, sizeof(reply));  
 
-
-  Send(pub_tid, &swp, sizeof(swp), &reply, sizeof(reply));
+    swp.smr = SW_NOTIFY;
+    Send(pub_tid, &swp, sizeof(swp), &reply, sizeof(reply));  
+  }
+  
   Exit();
 }
-
 
 void SwitchManager(void * args){
   track_node *track = (track_node *)args;
 	Switch switchList[SWITCH_SIZE];
+  bool courierFlag = false;
+  bool switchFlag = false;
 
 	int reply = 0;
 	int r = RegisterAs(SWITCH_MANAGER_ID);
@@ -140,12 +158,18 @@ void SwitchManager(void * args){
 
   	tid_t sw_handler = CreateArgs(29, &SwitchHandler, (void *)tx1_writer);
     CreateArgs(29, &SwitchPublisher, (void *)switchList);
-
+    tid_t suc_tid = Create(29, &SwitchUpdateCourier);
     init_switch(sw_handler, switchList, track);
 
   	while(true){
   		tid_t req_tid;
   		SWProtocol sw;
+
+      if(courierFlag && switchFlag){
+        courierFlag = false;
+        switchFlag = false;
+        Reply(suc_tid, &reply, sizeof(reply));
+      }
 
   		//Receive new SW request
   		Receive(&req_tid, &sw, sizeof(sw));
@@ -157,9 +181,13 @@ void SwitchManager(void * args){
 	  			//Update the UI and table
 	  			UpdateSwitchTable(switchList, sw.sw, sw.dir);
           //TODO: CHANGE THIS
-          		Create(29, &SwitchUpdateCourier);
+          //Create(29, &SwitchUpdateCourier);
 	  			Reply(req_tid, &reply, sizeof(reply));
+          switchFlag = true;
   				break;
+        case SW_NOTIFY_READY:
+          courierFlag = true;
+          break;
   			default:
   				assert(0 && "Bad Switch Command");
   		}
