@@ -26,7 +26,7 @@ typedef enum TerminalManagerRequestType {
 
 typedef struct TerminalManagerRequest {
   TManReqType type;
-  char *data;
+  const char *data;
   int   len;
 } TManReq;
 
@@ -44,10 +44,10 @@ typedef struct WindowManager {
 void TerminalManager();
 void TMRegister(tid_t tm_tid, char offsetx, char offsety, char width, char height);
 void TMPutC(tid_t tm_tid, char c);
-void TMPutStr(tid_t tm_tid, char *c, int len);
-void TMPutStrf(tid_t tm_tid, char *fmt, ...);
+void TMPutStr(tid_t tm_tid, const char *c, int len);
+void TMPutStrf(tid_t tm_tid, const char *fmt, ...);
 char TMGetC(tid_t tm_tid);
 void TMLogRegister(tid_t tm_tid);
-void TMLogStrf(tid_t tm_tid, char *fmt, ...);
+void TMLogStrf(tid_t tm_tid, const char *fmt, ...);
 void TMExit(tid_t tm_tid);
 #endif

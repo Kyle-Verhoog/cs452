@@ -352,7 +352,7 @@ void tdisp_write_task(TDisplay *td, tid_t tid, char c) {
   // tdisp_focus_window(td, wid);
 }
 
-void tdisp_writes_task(TDisplay *td, tid_t tid, char *c, int len) {
+void tdisp_writes_task(TDisplay *td, tid_t tid, const char *c, int len) {
   assert(td->focused_window != 0);
   int wid, r, i;
   wid = td->focused_window->wid;

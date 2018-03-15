@@ -197,7 +197,7 @@ void shell_exec(shell *sh, shell_cmd shell_path[], int shell_path_size) {
   char *cmd;
   int r;
 
-  tid_t sw_tid, sc_tid, sa_tid, pm_tid;
+  // tid_t sw_tid, sc_tid, sa_tid, pm_tid;
 
   // sw_tid = WhoIs(SWITCH_MANAGER_ID);
   // sc_tid = WhoIs(STOPPING_CALIBRATION_ID);

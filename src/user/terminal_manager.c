@@ -25,7 +25,7 @@ void wm_init(WManager *wm) {
   tdisp_init(&wm->td);
 }
 
-void wm_add_window(WManager *wm, tid_t tid, char *conf) {
+void wm_add_window(WManager *wm, tid_t tid, const char *conf) {
   tdisp_add_window(&wm->td, (int)conf[0], (int)conf[1], (int)conf[2], (int)conf[3], tid);
   tdisp_focus_window(&wm->td, 0);
 }
@@ -58,7 +58,7 @@ void print_tdisp(tid_t tx_tid, TDisplay *td) {
 
 void TerminalManager() {
   int r, i;
-  char *c;
+  const char *c;
   char ch;
   char tid_buf[10];
   WManager wm;
@@ -152,9 +152,6 @@ void TerminalManager() {
         break;
       case TERM_OUT:
         tdisp_writes_task(&wm.td, recv_tid, req.data, req.len);
-        // for (i = 0; i < req.len; ++i) {
-        //   tdisp_write_task(&wm.td, recv_tid, req.data[i]);
-        // }
         Reply(recv_tid, &rep, sizeof(rep));
         break;
       case TERM_LOG_REG:
@@ -218,7 +215,7 @@ void TMPutC(tid_t tm_tid, char c) {
   Send(tm_tid, &req, sizeof(req), &rep, sizeof(rep));
 }
 
-void TMPutStr(tid_t tm_tid, char *c, int len) {
+void TMPutStr(tid_t tm_tid, const char *c, int len) {
   TManReq req;
   TManRep rep;
   req.type = TERM_OUT;
@@ -228,7 +225,7 @@ void TMPutStr(tid_t tm_tid, char *c, int len) {
 }
 
 #define PUT_STR_BUF_SIZE 1024
-void TMPutStrf(tid_t tm_tid, char *fmt, ...) {
+void TMPutStrf(tid_t tm_tid, const char *fmt, ...) {
   int len;
   va_list va;
   char buf[PUT_STR_BUF_SIZE];
@@ -263,7 +260,7 @@ void TMLogRegister(tid_t tm_tid) {
 }
 
 #define LOG_STR_BUF_SIZE 1024
-void TMLogStrf(tid_t tm_tid, char *fmt, ...) {
+void TMLogStrf(tid_t tm_tid, const char *fmt, ...) {
   int len;
   va_list va;
   char buf[LOG_STR_BUF_SIZE];
