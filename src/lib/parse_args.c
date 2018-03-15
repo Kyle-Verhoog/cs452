@@ -1,39 +1,40 @@
 #include <lib/parse_args.h>
+#include <io.h>
 
 int parse_args_va(char *buf, char *args, int *boff, int narg, va_list va) {
   char c, *str, *ch;
-  int r, *i;
+  int r, *i, len;
 
   while ((c = *(args++))) {
     if (c != '%') {
+      continue;
     }
-    else {
-      c = *(args++);
-      switch (c) {
-        case 'd':
-          i = va_arg(va, int *);
-          if ((r = parse_ui32(buf + *boff, i)) <= 0)
-            return narg;
-          *boff += r;
-          break;
-        case 's':
-          str = va_arg(va, char *);
-          if ((r = parse_str(buf + *boff, str, sizeof(str))) <= 0)
-            return narg;
-          *boff += r;
-          break;
-        case 'c':
-          ch = va_arg(va, char *);
-          if ((r = parse_c(buf + *boff, ch)) <= 0)
-            return narg;
-          *boff += r;
-          break;
-        default:
-          return -1;
-          break;
-      }
-      narg++;
+    c = *(args++);
+    switch (c) {
+      case 'd':
+        i = va_arg(va, int *);
+        if ((r = parse_ui32(buf + *boff, i)) <= 0)
+          return narg;
+        *boff += r;
+        break;
+      case 's':
+        str = va_arg(va, char *);
+        len = va_arg(va, int);
+        if ((r = parse_str(buf + *boff, str, len)) <= 0)
+          return narg;
+        *boff += r;
+        break;
+      case 'c':
+        ch = va_arg(va, char *);
+        if ((r = parse_c(buf + *boff, ch)) <= 0)
+          return narg;
+        *boff += r;
+        break;
+      default:
+        return -1;
+        break;
     }
+    narg++;
   }
   return 0;
 }

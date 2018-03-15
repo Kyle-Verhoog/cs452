@@ -4,6 +4,7 @@
 #include <test/test.h>
 #include <lib/string.h>
 #include <lib/parse_args.h>
+#include <lib/pack.h>
 
 void parse_args_tests();
 

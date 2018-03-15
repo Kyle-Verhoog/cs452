@@ -77,4 +77,6 @@ void interrupt_init();
 
 int calc_mem_usage();
 
+void memcopy(void *d, void *s, int len);
+
 #endif /* SYSTEM_H */

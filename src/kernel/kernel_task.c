@@ -35,6 +35,7 @@ void ktd_create_args(TaskDescriptor* volatile td, tid_t tid, void *task,
 
   if (argsize > 0) {
     td->sp -= argsize%4 == 0 ? argsize : 4*(argsize/4 + 1);
+    // KASSERT(td->sp == USER_STACK_BASE - (TID_ID(tid)*USER_STACK_SIZE) - 4);
     // copy args to user task stack, shift task stack pointer down
     for (argsize = argsize-1; argsize >= 0; --argsize) {
       *((char *)(td->sp + argsize)) = *((char *)(args + argsize));

@@ -233,9 +233,11 @@ void shell_exec(shell *sh, shell_cmd shell_path[], int shell_path_size) {
     }
 
     if (sh_cmd) {
+      // assert(strlen(cmd+r) +1 == 4);
       tid = CreateArgs(sh_cmd->pri, sh_cmd->task, cmd+r, strlen(cmd+r)+1);
       if (sh_cmd->sync) {
         Send(tid, &r, sizeof(r), &r, sizeof(r));
+        cmd_cb_push_str(&sh->buf, "\n");
       }
     } else {
       shell_error(sh);

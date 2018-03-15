@@ -1,14 +1,14 @@
 #include <test/parse_args.h>
 
-
 static void parse_args_int() {
-  char *buf = "123 456";
+  char *buf = "3 4";
   char *args = "%d %d";
-  int i, j;
+  int i, j, r;
 
-  parse_args(buf, args, &i, &j);
-  assert(i == 123);
-  assert(j == 456);
+  r = parse_args(buf, args, &i, &j);
+  assert(r == 0);
+  assert(i == 3);
+  assert(j == 4);
 }
 
 static void parse_args_multi() {
@@ -17,7 +17,7 @@ static void parse_args_multi() {
   char c, cmd[32];
   int i, j, r;
 
-  r = parse_args(buf, args, cmd, &i, &j, &c);
+  r = parse_args(buf, args, cmd, sizeof(cmd), &i, &j, &c);
   assert (r == 0);
   assert(streq(cmd, "tr"));
   assert(i == 58);
@@ -25,7 +25,7 @@ static void parse_args_multi() {
   assert(c == 'C');
 
   char *buf_messy = "tr    58       14            C";
-  r = parse_args(buf_messy, args, cmd, &i, &j, &c);
+  r = parse_args(buf_messy, args, cmd, sizeof(cmd), &i, &j, &c);
   assert(r == 0);
   assert(streq(cmd, "tr"));
   assert(i == 58);
@@ -39,10 +39,10 @@ static void parse_args_fail() {
   char c, cmd[32];
   int i, j, r;
 
-  r = parse_args(buf, args, cmd, &i, &j, &c);
+  r = parse_args(buf, args, cmd, sizeof(cmd), &i, &j, &c);
   assert(r == 2);
 
-  r = parse_args("tr 58 asfd C", "%s %d %d %c", cmd, &i, &j, &c);
+  r = parse_args("tr 58 asfd C", "%s %d %d %c", cmd, sizeof(cmd), &i, &j, &c);
   assert(r == 3);
 
   r = parse_args("", "%d", cmd, &i, &j, &c);

@@ -38,3 +38,12 @@ int calc_mem_usage() {
   asm("mov %0, sp;":"=r"(sp));
   return (KERNEL_STACK_BASE - sp) / KERNEL_STACK_BASE;
 }
+
+
+void memcopy(void *d, void *s, int len) {
+  int i;
+  for (i = 0; i < len; ++i) {
+    *((char *)(d+i)) = *((char *)(s+i));
+  }
+}
+
