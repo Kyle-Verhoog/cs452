@@ -1,4 +1,4 @@
-#include <user/bootstrap.h>
+#include <user/init/bootstrap.h>
 
 void SendGo(){
   tid_t writer = WhoIs(IOSERVER_UART1_TX_ID);
@@ -16,6 +16,11 @@ void Bootstrap() {
   Create(30, &IOServerUART1);
   Create(30, &IOServerUART2);
   Create(30, &TerminalManager);
+
+  Create(30, &TrackDataInit);
+
+  // Create(30, &SendGo);
+  // Create(29, &RailwayManager);
 
   // interfaces
   Create(10, &TrainTrackInterface);

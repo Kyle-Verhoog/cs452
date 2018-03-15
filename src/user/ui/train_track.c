@@ -1,13 +1,13 @@
 #include <user/ui/train_track.h>
 
 void TrainTrackInterface() {
-  const char *empty_node = "□";
-  const char *occup_node = "■";
-  const char *train_right = "▶";
-  const char *train_left  = "◀";
-  const char *train_up    = "▲";
-  const char *train_down  = "▼";
-  const char *rect = "▬";
+  // const char *empty_node = "□";
+  // const char *occup_node = "■";
+  // const char *train_right = "▶";
+  // const char *train_left  = "◀";
+  // const char *train_up    = "▲";
+  // const char *train_down  = "▼";
+  // const char *rect = "▬";
   const char *track = " ═══════╦════╦════════▶═════════════════╗\n"
                       " ═══════╝ ╔══╝═════╦════╦════════════   ║\n"
                       "  ═════╝  ║        ╚╗  ╔╝               ▲\n"
@@ -29,7 +29,6 @@ void TrainTrackInterface() {
   assert(cs_tid >= 0);
   tm_tid = WhoIs(TERMINAL_MANAGER_ID);
   assert(tm_tid >= 0);
-  tid_t tx_tid = WhoIs(TERMINAL_UART_TX);
   TMRegister(tm_tid, TRACK_OFF_X, TRACK_OFF_Y, TRACK_WIDTH, TRACK_HEIGHT);
 
   // TMPutStr(tm_tid, occup_node, strlen(occup_node));

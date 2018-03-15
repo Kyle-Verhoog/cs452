@@ -10,7 +10,7 @@
 #ifdef KTEST
 #include <user/test/test_task.h>
 #endif
-#include <user/bootstrap.h>
+#include <user/init/bootstrap.h>
 
 //Data Structures
 #include <priority_queue.h>

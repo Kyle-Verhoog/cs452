@@ -8,6 +8,7 @@
 #include <user/nameserver.h>
 #include <user/terminal_manager.h>
 #include <user/logger.h>
+#include <user/init/track_data.h>
 #include <user/ui/train_track.h>
 #include <user/ui/timer_interface.h>
 #include <user/ui/num_procs.h>
