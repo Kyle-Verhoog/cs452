@@ -52,13 +52,13 @@
 // 	assert(cs_tid >= 0);
 // 	tid_t rw_tid = WhoIs(RAILWAY_MANAGER_ID);
 // 	assert(rw_tid >= 0);
-// 	tid_t tm_tid = WhoIs(TRAIN_MANAGER_ID);
+// 	tid_t tm_tid = WhoIs(TRAIN_PROVIDER_ID);
 // 	assert(tm_tid >= 0);
-// 	tid_t sw_tid = WhoIs(SWITCH_MANAGER_ID);
+// 	tid_t sw_tid = WhoIs(SWITCH_PROVIDER_ID);
 // 	assert(sw_tid >= 0);
 // 	tid_t swpub_tid = WhoIs(SWITCH_PUBLISHER_ID);
 // 	assert(sw_tid >= 0);
-// 	//tid_t sm_tid = WhoIs(SENSOR_MANAGER_ID);
+// 	//tid_t sm_tid = WhoIs(SENSOR_PROVIDER_ID);
 // 	tid_t smpub_tid = WhoIs(SENSOR_PUBLISHER_ID);
 // 	assert(smpub_tid >= 0);
 // 

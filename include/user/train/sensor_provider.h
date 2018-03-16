@@ -1,5 +1,5 @@
-#ifndef SENSOR_MANAGER_H
-#define SENSOR_MANAGER_H
+#ifndef SNESOR_PROVIDER_H
+#define SNESOR_PROVIDER_H
 
 #include <ts7200.h>
 #include <defines.h>
@@ -21,25 +21,6 @@
 #define SENSOR_TIMEOUT 4
 #define SENSOR_WAIT 4
 
-typedef enum SM_Request{
-	//Manager Reqs
-	SM_HALT = -1,
-	SM_READBYTE = 0,
-	SM_CHECK = 1,
-	SM_RESET = 2,
-	//User Reqs
-	SM_NOTIFY_READY = 3,
-	SM_NOTIFY = 4,
-	SM_SUBSCRIBE = 5,
-	SM_SUBSCRIBE_DELTA = 6,
-	SM_GET_ALL = 10
-} SM_Request;
+void SensorProvider();
 
-typedef struct SMProtocol{
-	SM_Request smr;
-	char byte;
-}SMProtocol;
-
-void SensorManager();
-
-#endif //SENSOR_MANAGER_H
+#endif //SNESOR_PROVIDER_H

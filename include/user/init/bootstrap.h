@@ -15,6 +15,10 @@
 #include <user/ui/mem_usage.h>
 #include <user/ui/idle_time.h>
 
+#include <user/train/train_provider.h>
+#include <user/train/switch_provider.h>
+#include <user/train/sensor_provider.h>
+
 #include <stoppingcalibration_test.h>	//TODO: REMOVE THIS
 #include <stop_at_test.h>	//TODO: REMOVE THIS
 

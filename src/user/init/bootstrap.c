@@ -25,9 +25,9 @@ void RailwayInit(){
     //Send Go
     PutC(tx_tid, 96);
 
-    Create(29, &TrainManager);
-    Create(29, &SwitchManager);
-    Create(29, &SensorManager);
+    Create(29, &TrainProvider);
+    Create(29, &SwitchProvider);
+    Create(29, &SensorProvider);
     
     Exit();
 }

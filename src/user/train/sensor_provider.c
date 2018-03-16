@@ -1,4 +1,4 @@
-#include <sensor_manager.h>
+#include <sensor_provider.h>
 #include <lib/circular_buffer.h>
 #include <prediction_manager.h>
 
@@ -158,7 +158,7 @@ void SensorUpdateCourier(){
 	Exit();
 }
 
-void SensorManager(){
+void SensorProvider(){
 	int scounter = 0;
   	bool recFlag = false;
   	bool deltaFlag = false;

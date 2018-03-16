@@ -1,5 +1,5 @@
-#ifndef TRAIN_MANAGER_H
-#define TRAIN_MANAGER_H
+#ifndef TRAIN_PROVIDER_H
+#define TRAIN_PROVIDER_H
 
 #include <ts7200.h>
 #include <defines.h>
@@ -12,6 +12,8 @@
 #include <types.h>
 #include <circular_buffer.h>
 #include <lib/train/path_finding.h>
+#include <tid_buffer.h>
+#include <user/terminal_manager.h>
 
 #define TRAIN_COMMAND_BUFFER_SIZE 64
 
@@ -22,7 +24,10 @@ typedef enum TM_Command{
 	TM_TASK_COMPLETE = 3,
 	TM_TRACK = 4,
 	TM_MEASURE = 5,
-	TM_GET_ALL = 6
+	TM_GET_ALL = 6,
+	//USER COMMANDS
+	TM_NOTIFY = 10,
+	TM_SUBSCRIBE = 11
 }TM_Command;
 
 typedef struct TMProtocol{
@@ -43,6 +48,12 @@ typedef struct TrainProtocol{
 	char arg1;
 	char arg2;
 }TrainProtocol;
+
+typedef struct TMSubscribe{
+	TM_Command tmc;
+	TrainProtocol tp;
+}TMSubscribe;
+
 
 //========================================================//
 
@@ -65,8 +76,7 @@ typedef struct TrainDescriptor{
   path tpath;
 } TrainDescriptor;
 
-void TrainManager();
-
+void TrainProvider();
 
 /****************
 Train Manager Commands
@@ -88,4 +98,4 @@ DELAY		- <Duration>
 ****************/
 
 
-#endif //TRAIN_MANAGER_H
+#endif //TRAIN_PROVIDER_H

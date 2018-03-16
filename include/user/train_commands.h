@@ -6,12 +6,17 @@
 #include <lib/train/track_data.h>
 #include <user/syscalls.h>
 #include <user/terminal_manager.h>
-#include <user/train/train_manager.h>
+#include <user/train/train_provider.h>
 
 void TrainTR(char *args);
 
 void TrainRV(char *args);
 
-void TrainTK(char *args);
+//void TrainTK(char *args);
+
+void SwitchSW(char *args);
+
+
+
 
 #endif

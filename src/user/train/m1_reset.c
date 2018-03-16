@@ -71,8 +71,8 @@ void M1Reset(void *arg) {
   train_num = args[0];
   train_spd = args[1];
 
-  tr_tid = WhoIs(TRAIN_MANAGER_ID);
-  sw_tid = WhoIs(SWITCH_MANAGER_ID);
+  tr_tid = WhoIs(TRAIN_PROVIDER_ID);
+  sw_tid = WhoIs(SWITCH_PROVIDER_ID);
   swpub_tid = WhoIs(SWITCH_PUBLISHER_ID);
   tm_tid = WhoIs(TERMINAL_MANAGER_ID);
   cs_tid = WhoIs(CLOCKSERVER_ID);

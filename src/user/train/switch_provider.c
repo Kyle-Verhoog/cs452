@@ -1,4 +1,4 @@
-#include <switch_manager.h>
+#include <switch_provider.h>
 #include <prediction_manager.h>
 
 void init_switch(tid_t sw_handler, Switch *slist){
@@ -133,14 +133,14 @@ void SwitchUpdateCourier(){
   Exit();
 }
 
-void SwitchManager(){
+void SwitchProvider(){
 	Switch switchList[SWITCH_SIZE];
   Switch *swl = switchList;
   bool courierFlag = false;
   bool switchFlag = false;
 
 	int reply = 0;
-	int r = RegisterAs(SWITCH_MANAGER_ID);
+	int r = RegisterAs(SWITCH_PROVIDER_ID);
   assert(r == 0);
   tid_t tx1_writer = WhoIs(IOSERVER_UART1_TX_ID);
   assert(tx1_writer >= 0);

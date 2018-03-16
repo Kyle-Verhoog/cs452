@@ -5,8 +5,8 @@
 #include <user/clockserver.h>
 #include <user/terminal_manager.h>
 #include <user/train/train_defines.h>
-#include <user/train/train_manager.h>
-#include <user/train/switch_manager.h>
+#include <user/train/train_provider.h>
+#include <user/train/switch_provider.h>
 
 void M1Reset();
 

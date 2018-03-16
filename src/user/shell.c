@@ -199,7 +199,7 @@ void shell_exec(shell *sh, shell_cmd shell_path[], int shell_path_size) {
 
   // tid_t sw_tid, sc_tid, sa_tid, pm_tid;
 
-  // sw_tid = WhoIs(SWITCH_MANAGER_ID);
+  // sw_tid = WhoIs(SWITCH_PROVIDER_ID);
   // sc_tid = WhoIs(STOPPING_CALIBRATION_ID);
   // sa_tid = WhoIs(STOP_AT_SERVER_ID);
   // pm_tid = WhoIs(PREDICTION_MANAGER_ID);
@@ -445,7 +445,8 @@ void Shell(void *args) {
     { "q", &Quit, 31, true },
     { "tr", &TrainTR, 28, true },
     { "rv", &TrainRV, 28, true },
-    { "tk", &TrainTK, 28, true },
+    { "sw", &SwitchSW, 28, true },
+    //{ "tk", &TrainTK, 28, true },
   };
 
   vars = (int *)args;
