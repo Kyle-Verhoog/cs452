@@ -86,7 +86,7 @@ void SwitchPublisher(){
 }
 
 void SwitchUpdateCourier(){
-  SWProtocol swp;
+  SWProtocol swp, data;
   SWSubscribe sws;
   int reply;
 
@@ -95,10 +95,10 @@ void SwitchUpdateCourier(){
 
   while(true){
     swp.swr = SW_NOTIFY_READY;
-    Send(sw_tid, &swp, sizeof(swp), &reply, sizeof(reply));  
+    Send(sw_tid, &swp, sizeof(swp), &data, sizeof(data));
 
     sws.swr = SW_NOTIFY;
-    sws.swp = swp;
+    sws.swp = data;
     Send(pub_tid, &sws, sizeof(sws), &reply, sizeof(reply));
   }
   
