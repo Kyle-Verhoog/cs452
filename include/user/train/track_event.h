@@ -2,6 +2,8 @@
 #define TRACK_EVENT_H
 
 #include <user/train/train.h>
+#include <lib/train/switch.h>
+#include <lib/train/sensor.h>
 
 #define MAX_NUM_UPDATES 10
 
@@ -12,8 +14,8 @@ typedef enum RawTrackEventType {
 } RawTrackEventType;
 
 // TODO: these protocols should be kept here
-typedef TrainProtocol RawSensorEvent;
-typedef TrainProtocol RawSwitchEvent;
+typedef SMProtocol RawSensorEvent;
+typedef SWProtocol RawSwitchEvent;
 typedef TrainProtocol RawTrainEvent;
 
 union RawTrackEvents {

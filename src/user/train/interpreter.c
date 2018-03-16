@@ -26,6 +26,7 @@ void Interpret(tid_t rep_tid, RawTrackEvent *rte) {
   rep_req.type = TRR_FETCH;
   Send(rep_tid, &rep_req, sizeof(rep_req), &track, sizeof(track));
 
+
   switch (rte->type) {
     case RTE_SENSOR:
       InterpretSensorEvent(&rte->event.se_event, &track, &updates);
@@ -47,16 +48,21 @@ void Interpret(tid_t rep_tid, RawTrackEvent *rte) {
   Send(rep_tid, &rep_req, sizeof(rep_req), &r, sizeof(r));
 }
 
+
 void Interpreter() {
   int r;
-  tid_t sw_prov, se_prov, tr_prov, rep_tid, req_tid;
+  tid_t sw_pub, se_pub, tr_pub, rep_tid, req_tid;
+  TMSubscribe tmsub;
 
   rep_tid = WhoIs(REPRESENTER_ID);
 
   // Subscribe to data providers
-  // sw_prov = WhoIs(SWITCH_PROVIDER_ID);
-  // se_prov = WhoIs(SENSOR_PROVIDER_ID);
-  // tr_prov = WhoIs(TRAIN_PROVIDER_ID);
+  sw_pub = WhoIs(SWITCH_PUBLISHER_ID);
+  se_pub = WhoIs(SENSOR_PUBLISHER_ID);
+  tr_pub = WhoIs(TRAIN_PUBLISHER_ID);
+
+  tmsub.tmc = TM_SUBSCRIBE;
+  Send(tr_pub, &tmsub, sizeof(tmsub), &r, sizeof(r));
 
   RawTrackEvent rte;
   while (true) {

@@ -42,7 +42,7 @@ void TrainPublisher(){
 void TMWriteTask(void *args){
 	char buf[2];
 	int reply;
-	volatile TrainProtocol cmd;
+	TrainProtocol cmd;
 	TMSubscribe tms;
 	TrainDescriptor* td = *(TrainDescriptor **)args;
 
