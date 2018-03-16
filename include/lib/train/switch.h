@@ -2,9 +2,9 @@
 #define SWITCH_H
 
 typedef enum SwitchState{
-	DIR_STRAIGHT = 0,
-	DIR_CURVED = 1,
-}SwitchState;
+	SW_STRAIGHT = 33,
+	SW_CURVE = 34
+} SwitchState;
 
 typedef struct Switch{
 	int state;
