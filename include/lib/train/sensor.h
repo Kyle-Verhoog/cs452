@@ -30,4 +30,9 @@ typedef struct SMProtocol{
 	char byte;
 }SMProtocol;
 
+typedef struct SMSubscribe{
+	SM_Request smr;
+	char sensors[DECODER_SIZE * 2];
+}
+
 #endif //SENSOR_H
