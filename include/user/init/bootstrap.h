@@ -14,7 +14,6 @@
 #include <user/ui/num_procs.h>
 #include <user/ui/mem_usage.h>
 #include <user/ui/idle_time.h>
-#include <user/train/railway_manager.h>
 
 #include <stoppingcalibration_test.h>	//TODO: REMOVE THIS
 #include <stop_at_test.h>	//TODO: REMOVE THIS

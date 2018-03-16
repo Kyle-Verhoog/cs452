@@ -27,7 +27,7 @@ CIRCULAR_BUFFER_DEF(tc_cb, volatile TrainProtocol, TRAIN_COMMAND_BUFFER_SIZE);
 void TMWriteTask(void *args){
 	char buf[2];
 	int reply;
-	TrainDescriptor* td = (TrainDescriptor *)args;
+	TrainDescriptor* td = *(TrainDescriptor **)args;
 	tid_t mytid = MyTid();
 	tid_t parentTid = MyParentTid();
 	tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
@@ -74,7 +74,7 @@ void TMWriteTask(void *args){
 
 	Exit();
 }
-void init_train_model(TrainDescriptor *td, int train_id, track_node *track){
+void init_train_model(TrainDescriptor *td, int train_id){
 	td->id = train_id; 
 	td->gear = 0; 
 	td->speed = 0; 
@@ -82,20 +82,19 @@ void init_train_model(TrainDescriptor *td, int train_id, track_node *track){
 	td->exist = false; 
 	td->isRunning = -1; 
 	td->node = NULL; 
-  path_init(&td->tpath, track);
+  path_init(&td->tpath);
 	tc_cb_init(&td->buf);
 }
 
-void TrainManager(void *args){
+void TrainManager(){
 	void *data;
-	track_node *track = (track_node *)args;
 	TrainDescriptor Trains[TRAIN_SIZE];
 	
   int r = RegisterAs(TRAIN_MANAGER_ID);
   assert(r == 0);
 	int i;
 	for(i = 0 ; i < TRAIN_SIZE; i++){
-		init_train_model(&Trains[i], i, track);
+		init_train_model(&Trains[i], i);
 	}
 
 	int reply = 0;
@@ -112,6 +111,7 @@ void TrainManager(void *args){
 
 		Receive(&tid_req, &tmp, sizeof(tmp));
 
+    TrainDescriptor *td;
 		switch(tmp.tmc){
 			case TM_MOVE:
 				Reply(tid_req, &reply, sizeof(reply));
@@ -120,7 +120,8 @@ void TrainManager(void *args){
 				tp.arg2 = tmp.arg2;
 				tc_cb_push(&Trains[(int)tmp.arg1].buf, tp);
 				if(Trains[(int)tmp.arg1].isRunning == -1){
-					Trains[(int)tmp.arg1].isRunning = CreateArgs(29, &TMWriteTask, &Trains[(int)tmp.arg1], sizeof(TrainDescriptor *));	
+          td = &Trains[(int)tmp.arg1];
+					Trains[(int)tmp.arg1].isRunning = CreateArgs(29, &TMWriteTask, &td, sizeof(TrainDescriptor *));
 				}
 				break;
 			case TM_REVERSE:
@@ -128,23 +129,26 @@ void TrainManager(void *args){
 				tp.tc = T_REVERSE;
 				tp.arg1 = tmp.arg1;
 				tc_cb_push(&Trains[(int)tmp.arg1].buf, tp);
-        		if(Trains[(int)tmp.arg1].isRunning == -1){
-					Trains[(int)tmp.arg1].isRunning = CreateArgs(29, &TMWriteTask, (void *)&Trains[(int)tmp.arg1], sizeof(TrainDescriptor *));	
-				}
+        if(Trains[(int)tmp.arg1].isRunning == -1){
+          td = &Trains[(int)tmp.arg1];
+					Trains[(int)tmp.arg1].isRunning = CreateArgs(29, &TMWriteTask, &td, sizeof(TrainDescriptor *));
+        }
 				break;
 			case TM_DELAY:
 				Reply(tid_req, &reply, sizeof(reply));
 				tp.tc = T_DELAY;
 				tp.arg1 = tmp.arg2;
 				tc_cb_push(&Trains[(int)tmp.arg1].buf, tp);
-        		if(Trains[(int)tmp.arg1].isRunning == -1){
-					Trains[(int)tmp.arg1].isRunning = CreateArgs(29, &TMWriteTask, (void *)&Trains[(int)tmp.arg1], sizeof(TrainDescriptor *));	
-				}
+        if(Trains[(int)tmp.arg1].isRunning == -1){
+          td = &Trains[(int)tmp.arg1];
+					Trains[(int)tmp.arg1].isRunning = CreateArgs(29, &TMWriteTask, &td, sizeof(TrainDescriptor *));
+        }
 				break;
 			case TM_TASK_COMPLETE:
 				Reply(tid_req, &reply, sizeof(reply));
 				if(Trains[(int)tmp.arg1].buf.size > 0){
-					Trains[(int)tmp.arg1].isRunning = CreateArgs(29, &TMWriteTask, (void *)&Trains[(int)tmp.arg1], sizeof(TrainDescriptor *));
+          td = &Trains[(int)tmp.arg1];
+					Trains[(int)tmp.arg1].isRunning = CreateArgs(29, &TMWriteTask, &td, sizeof(TrainDescriptor *));
 				}
 				else{
 					Trains[(int)tmp.arg1].isRunning = -1;	

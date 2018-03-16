@@ -4,7 +4,6 @@
 #include <ts7200.h>
 #include <user/syscalls.h>
 
-#include <railway_manager.h>
 #include <train_manager.h>
 #include <switch_manager.h>
 #include <sensor_manager.h>

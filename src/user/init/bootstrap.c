@@ -19,8 +19,11 @@ void Bootstrap() {
 
   Create(30, &TrackDataInit);
 
-  // Create(30, &SendGo);
-  // Create(29, &RailwayManager);
+  Create(30, &SendGo);
+
+  Create(29, &TrainManager);
+  Create(29, &SwitchManager);
+  Create(29, &SensorManager);
 
   // interfaces
   Create(10, &TrainTrackInterface);

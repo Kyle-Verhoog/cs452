@@ -7,12 +7,12 @@ void PrintSensorData(tid_t si_tid, Sensor *slist){
   Send(si_tid, &slist, sizeof(slist), &reply, sizeof(reply));
 }
 
-void init_sensors(Sensor *list, track_node *t){
+void init_sensors(Sensor *list){
 	int i;
 	for(i = 0; i < TRACK_MAX; i++){
-		if(t[i].type == NODE_SENSOR){
+		if(track[i].type == NODE_SENSOR){
 			list->state = SEN_OFF;
-			list->node = &t[i];
+			list->node = &track[i];
 			++list;
 		}
 	}
@@ -104,7 +104,7 @@ void SensorPublisher(void *args){
 
   	tid_t si_tid = Create(29, &SensorInterface);
 
-	Sensor *sensorList = (Sensor *)args;
+	Sensor *sensorList = *(Sensor **)args;
 	tid_cb subscribers[SENSOR_SIZE + 1];	//Subscribers on [SENSOR_SIZE] are waiting on delta
 	init_subscribers(subscribers);
 
@@ -173,7 +173,7 @@ void SensorUpdateCourier(){
 	Exit();
 }
 
-void SensorManager(void *args){
+void SensorManager(){
 	int scounter = 0;
   	bool recFlag = false;
   	bool deltaFlag = false;
@@ -181,9 +181,9 @@ void SensorManager(void *args){
   	bool courierFlag = false;
   	bool dataFlag = false;
 
-	track_node *track = (track_node *)args;
 	Sensor sensorList[SENSOR_SIZE];
-	init_sensors(sensorList, track);
+  Sensor *sl = sensorList;
+	init_sensors(sensorList);
 
 	int reply = 0;
     tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
@@ -191,7 +191,7 @@ void SensorManager(void *args){
 
     Create(29, &SensorReceiver);
   	Create(29, &SensorTimeout);
-  	CreateArgs(29, &SensorPublisher, (void *)sensorList);
+  	CreateArgs(29, &SensorPublisher, &sl, sizeof(Sensor *));
     tid_t suc_tid = Create(29, &SensorUpdateCourier);
 
   	//Kick start sensor gathering data

@@ -32,7 +32,6 @@ void interrupt_cleanup(){
 }
 
 int calc_mem_usage() {
-  char c[10000];
   uint32_t sp;
   sp = 0;
   asm("mov %0, sp;":"=r"(sp));

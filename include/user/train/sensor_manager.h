@@ -40,6 +40,6 @@ typedef struct SMProtocol{
 	char byte;
 }SMProtocol;
 
-void SensorManager(void * args);
+void SensorManager();
 
 #endif //SENSOR_MANAGER_H

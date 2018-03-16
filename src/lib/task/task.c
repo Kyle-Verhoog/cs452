@@ -47,30 +47,37 @@ void td_init(TaskDescriptor *td) {
 }
 
 #ifdef TASK_METRICS
+// TODO: MAKE THIS STATIC ARRAY BETTER
+TaskSummary TASK_SUMMARY[2056];
+int SUMMARY_HEAD;
+#endif
+
+void tm_init(){
+  *(int *)TM_CLOCK_LDR = TM_CLOCK_VALUE;
+  *(int *)TM_CLOCK_CTRL = TM_CLOCK_FLAGS;
+
+#ifdef TASK_METRICS
+  SUMMARY_HEAD = 0;
+#endif
+}
+
+void tm_delta(int st, int et, TaskDescriptor *td){
+  int delta;
+  if(et > st){  //handle wrap around
+    delta = st + TM_CLOCK_VALUE - et;
+  }
+  else{
+    delta = st - et;
+  }
+
+  td->running_time += delta;
+  td->end_time = et;
+}
+
+#ifdef TASK_METRICS
   // TODO: MAKE THIS STATIC ARRAY BETTER
   TaskSummary TASK_SUMMARY[2056];
   int SUMMARY_HEAD;
-
-  void tm_init(){
-    *(int *)TM_CLOCK_LDR = TM_CLOCK_VALUE;
-    *(int *)TM_CLOCK_CTRL = TM_CLOCK_FLAGS;
-
-    SUMMARY_HEAD = 0;
-  }
-
-  void tm_delta(int st, int et, TaskDescriptor *td){
-    int delta;
-    if(et > st){  //handle wrap around
-      delta = st + TM_CLOCK_VALUE - et;
-    }
-    else{
-      delta = st - et;
-    }
-
-    td->running_time += delta;
-    td->end_time = et;
-  }
-
   void tm_addSummary(TaskDescriptor *td){
     KASSERT(SUMMARY_HEAD != 2056);
 

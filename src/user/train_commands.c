@@ -7,8 +7,8 @@ void TrainTR(char *args) {
 
   tm.tmc = TM_MOVE;
 
-  // tr_tid = WhoIs(TRAIN_MANAGER_ID);
-  // assert(tr_tid > 0);
+  tr_tid = WhoIs(TRAIN_MANAGER_ID);
+  assert(tr_tid > 0);
   tm_tid = WhoIs(TERMINAL_MANAGER_ID);
   assert(tm_tid > 0);
 
@@ -24,9 +24,9 @@ void TrainTR(char *args) {
 
   tm.arg1 = (char)tn;
   tm.arg2 = (char)ts;
-  TMLogStrf(tm_tid, "tr %d %d\n", tn, ts);
+  TMLogStrf(tm_tid, "tr %d %d\n", tm.arg1, tm.arg2);
 
-  // Send(tr_tid, &tm, sizeof(tm), &reply, sizeof(reply));
+  Send(tr_tid, &tm, sizeof(tm), &r, sizeof(r));
   r = 0;
   Reply(tid, &r, sizeof(r));
   Exit();

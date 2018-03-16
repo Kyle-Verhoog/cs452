@@ -65,8 +65,7 @@ typedef struct TrainDescriptor{
   path tpath;
 } TrainDescriptor;
 
-void TMWriteTask(void *args);	//args - TrainDescriptor
-void TrainManager(void * args);
+void TrainManager();
 
 
 /****************

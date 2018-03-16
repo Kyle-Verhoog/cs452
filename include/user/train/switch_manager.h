@@ -38,7 +38,7 @@ typedef struct Switch{
 	track_node *merge;
 }Switch;
 
-void SwitchManager(void * args);
+void SwitchManager();
 
 #define TURN_SOLENOID_OFF 32
 

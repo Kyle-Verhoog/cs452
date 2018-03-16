@@ -17,12 +17,11 @@ void Logger() {
   j = 0;
   while (true) {
     i++;
-    if (i > 200000) {
+    if (i > 2000000) {
       if (j == 18) {
         //TMPutC(tm_tid, '\n');
         j = 0;
       } else {
-        // TMLogStrf(tm_tid, "TRAIN 30 ON SENSOR A10\n");
         // PutStr(tx_tid, "TRAIN 30 ON SENSOR A10\n", 24);
         // TMLogStrf(tm_tid, "PING\n");
         // TMPutC(tm_tid, '.');

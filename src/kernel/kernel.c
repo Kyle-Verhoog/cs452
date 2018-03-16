@@ -43,9 +43,7 @@ void initialize() {
   pq_init(&pq_tasks);
   im_init(&im_tasks);
 
-#ifdef TASK_METRICS
   tm_init();
-#endif //TASK_METRICS
 
   int priority;
   void *task;
@@ -183,7 +181,6 @@ void get_parentTid( TaskDescriptor *td) {
   td->ret = td->parent ? td->parent->tid : -1;
 }
 
-#ifdef TASK_METRICS
 int calc_cpu_time(TaskDescriptor *td) {
   int id;
   tid_t other_tid;
@@ -196,7 +193,6 @@ int calc_cpu_time(TaskDescriptor *td) {
   assert(*(int*)(TM_CLOCK_VAL) < other->start_time);
   return (other->running_time * 100) / (other->start_time - *(int*)(TM_CLOCK_VAL));
 }
-#endif
 
 void handle(TaskDescriptor *td, TaskRequest req) {
   switch (req) {
@@ -272,11 +268,9 @@ void handle(TaskDescriptor *td, TaskRequest req) {
     pq_push(&pq_tasks, td->priority, td);
     break;
   case TR_INFO_CPU:
-#ifdef TASK_METRICS
     td->ret = calc_cpu_time(td);
     pq_push(&pq_tasks, td->priority, td);
     break;
-#endif
   default:
     KASSERT(false && "UNDEFINED SWI PARAM");
     pq_push(&pq_tasks, td->priority, td);
@@ -312,9 +306,7 @@ __attribute__((naked)) int main(void) {
   initialize();
 
   while (true) {
-#ifdef TASK_METRICS
     int st, et; //start & end time
-#endif //TASK_METRICS
 
     //get a task from scheduler
     TaskDescriptor* td = schedule();
@@ -322,17 +314,13 @@ __attribute__((naked)) int main(void) {
     if (!td && no_tasks()) break;
     if (!td) continue;
 
-#ifdef TASK_METRICS
     st = *(int *)TM_CLOCK_VAL;
-#endif //TASK_METRICS
 
     //activate task
     TaskRequest req = activate(td);
 
-#ifdef TASK_METRICS
     et = *(int *)TM_CLOCK_VAL;
     tm_delta(st, et, td);
-#endif //TASK_METRICS
 
     //Handle the swi
     handle(td, req);

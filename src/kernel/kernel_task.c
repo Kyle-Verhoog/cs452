@@ -21,10 +21,8 @@ void ktd_create(TaskDescriptor* volatile td, tid_t tid, void *task,
   td->ret = 0;
   tid_cb_init(&(td->send_q));
 
-#ifdef TASK_METRICS
   td->start_time = *(int *)TM_CLOCK_VAL;
   td->running_time = 0;
-#endif //TASK_METRICS
 }
 
 
@@ -61,8 +59,6 @@ void ktd_create_args(TaskDescriptor* volatile td, tid_t tid, void *task,
   td->next = NULL;
   tid_cb_init(&(td->send_q));
 
-#ifdef TASK_METRICS
   td->start_time = *(int *)TM_CLOCK_VAL;
   td->running_time = 0;
-#endif //TASK_METRICS
 }

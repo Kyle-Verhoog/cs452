@@ -1,7 +1,4 @@
 #include <user/ioserver.h>
-#ifdef TASK_METRICS
-  #include <task.h>
-#endif
 
 void IOServerNotifier(void *args) {
   int r, rep, emask;
@@ -163,15 +160,6 @@ void IOServerTX(void *args) {
   cts_count = 2;
   rep  = 0;
   data = (int *)(uart_base + UART_DATA_OFFSET);
-
-  //Test Metrics
-// #ifdef TASK_METRICS
-//   int tstart, tend;
-// if(cts_en){
-//   tstart = *(int *)TM_CLOCK_VAL;
-//   tend = *(int *)TM_CLOCK_VAL;
-// }
-// #endif //TASK_METRICS
 
   while (true) {
     Receive(&req_tid, &req, sizeof(req));

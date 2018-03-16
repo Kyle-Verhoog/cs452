@@ -1,7 +1,7 @@
 #include <switch_manager.h>
 #include <prediction_manager.h>
 
-void init_switch(tid_t sw_handler, Switch *slist, track_node *track){
+void init_switch(tid_t sw_handler, Switch *slist){
 	int reply = 0;
 	SWProtocol swp;
 
@@ -83,7 +83,7 @@ void SwitchPublisher(void *args){
   int reply;
   tid_t req_tid;
   SWProtocol swp;
-  Switch *switches = (Switch*)args;
+  Switch *switches = *(Switch**)args;
 
   tid_cb subscribers;
   tid_cb_init(&subscribers);
@@ -144,9 +144,9 @@ void SwitchUpdateCourier(){
   Exit();
 }
 
-void SwitchManager(void * args){
-  track_node *track = (track_node *)args;
+void SwitchManager(){
 	Switch switchList[SWITCH_SIZE];
+  Switch *swl = switchList;
   bool courierFlag = false;
   bool switchFlag = false;
 
@@ -156,10 +156,11 @@ void SwitchManager(void * args){
   tid_t tx1_writer = WhoIs(IOSERVER_UART1_TX_ID);
   assert(tx1_writer >= 0);
 
+  // TODO: make switchList a global?
   	tid_t sw_handler = CreateArgs(29, &SwitchHandler, &tx1_writer, sizeof(tx1_writer));
-    CreateArgs(29, &SwitchPublisher, (void *)switchList);
+    CreateArgs(29, &SwitchPublisher, &swl, sizeof(Switch *));
     tid_t suc_tid = Create(29, &SwitchUpdateCourier);
-    init_switch(sw_handler, switchList, track);
+    init_switch(sw_handler, switchList);
 
 
   	while(true){
