@@ -1,5 +1,5 @@
-#ifndef SWITCH_MANAGER_H
-#define SWITCH_MANAGER_H
+#ifndef SWITCH_PROVIDER_H
+#define SWITCH_PROVIDER_H
 
 #include <ts7200.h>
 #include <defines.h>
@@ -10,35 +10,9 @@
 #include <ioserver.h>
 #include <writerservice.h>
 #include <track_data.h>
+#include <switch.h>
 
-typedef enum SwitchState{
-	SW_STRAIGHT = 33,
-	SW_CURVE = 34
-} SwitchState;
-
-typedef enum SW_Request{
-	SW_HALT = -1,
-	SW_FLIP = 0,
-	SW_GET_ALL = 1,
-	//User Reqs
-	SW_NOTIFY_READY = 3,
-	SW_NOTIFY = 4,
-	SW_SUBSCRIBE = 5,
-}SW_Request;
-
-typedef struct SWProtocol{
-	SW_Request swr;
-	char sw;
-	SwitchState dir;
-}SWProtocol;
-
-typedef struct Switch{
-	SwitchState state;
-	track_node *branch;
-	track_node *merge;
-}Switch;
-
-void SwitchManager();
+void SwitchProvider();
 
 #define TURN_SOLENOID_OFF 32
 
@@ -73,4 +47,4 @@ void SwitchManager();
 | 0x9C   |        |\n\r\
 +--------+--------+"
 
-#endif //SWITCH_MANAGER_H
+#endif //SWITCH_PROVIDER_H

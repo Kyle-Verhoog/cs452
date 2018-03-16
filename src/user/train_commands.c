@@ -7,7 +7,7 @@ void TrainTR(char *args) {
 
   tm.tmc = TM_MOVE;
 
-  tr_tid = WhoIs(TRAIN_MANAGER_ID);
+  tr_tid = WhoIs(TRAIN_PROVIDER_ID);
   assert(tr_tid > 0);
   tm_tid = WhoIs(TERMINAL_MANAGER_ID);
   assert(tm_tid > 0);
@@ -40,7 +40,7 @@ void TrainRV(char *args) {
 
   tm.tmc = TM_REVERSE;
 
-  tr_tid = WhoIs(TRAIN_MANAGER_ID);
+  tr_tid = WhoIs(TRAIN_PROVIDER_ID);
   assert(tr_tid > 0);
   tm_tid = WhoIs(TERMINAL_MANAGER_ID);
   assert(tm_tid > 0);
@@ -68,7 +68,7 @@ void SwitchSW(char *args){
   tid_t sw_tid, tm_tid, tid;
   SWProtocol sw;
 
-  sw_tid = WhoIs(SWITCH_MANAGER_ID);
+  sw_tid = WhoIs(SWITCH_PROVIDER_ID);
   assert(sw_tid > 0);
   tm_tid = WhoIs(TERMINAL_MANAGER_ID);
   assert(tm_tid > 0);
@@ -101,7 +101,7 @@ void SwitchSW(char *args){
 //   tid_t tr_tid, tm_tid, tid;
 //   tm.tmc = TM_TRACK;
 
-//   // tr_tid = WhoIs(TRAIN_MANAGER_ID);
+//   // tr_tid = WhoIs(TRAIN_PROVIDER_ID);
 //   // assert(tr_tid > 0);
 //   tm_tid = WhoIs(TERMINAL_MANAGER_ID);
 //   assert(tm_tid > 0);

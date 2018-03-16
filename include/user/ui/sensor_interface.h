@@ -5,7 +5,7 @@
 #include <user/nameserver.h>
 #include <user/clockserver.h>
 #include <user/terminal_manager.h>
-#include <user/train/sensor_manager.h>
+#include <user/train/sensor_provider.h>
 
 void SensorInterface();
 #endif

@@ -13,10 +13,10 @@
 #include <track_data.h>
 #include <circular_buffer.h>
 
-#include <train_manager.h>
+#include <train_provider.h>
 #include <lib/train/path_finding.h>
-#include <switch_manager.h>
-#include <sensor_manager.h>
+#include <switch_provider.h>
+#include <sensor_provider.h>
 #include <user/terminal_manager.h>
 #include <user/test/stop_at_test.h>
 

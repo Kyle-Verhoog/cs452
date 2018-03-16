@@ -211,9 +211,9 @@
 //   	assert(term_tid >= 0);
 // 	tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
 // 	assert(cs_tid >= 0);
-// 	tid_t tm_tid = WhoIs(TRAIN_MANAGER_ID);
+// 	tid_t tm_tid = WhoIs(TRAIN_PROVIDER_ID);
 // 	assert(tm_tid >= 0);
-// 	tid_t sw_tid = WhoIs(SWITCH_MANAGER_ID);
+// 	tid_t sw_tid = WhoIs(SWITCH_PROVIDER_ID);
 // 	assert(sw_tid >= 0);
 // 	tid_t swpub_tid = WhoIs(SWITCH_PUBLISHER_ID);
 // 	assert(swpub_tid >= 0);
@@ -243,7 +243,7 @@
 // void AddTrain(LiveTrains *live, TrainDescriptor *td, int track_node){
 // 	//TODO:FIX THIS
 // 	int reply;
-// 	tid_t tr_tid = WhoIs(TRAIN_MANAGER_ID);
+// 	tid_t tr_tid = WhoIs(TRAIN_PROVIDER_ID);
 // 	TMProtocol tmp;
 // 	tmp.tmc = TM_TRACK;
 // 	tmp.arg1 = (char)td->id;
@@ -423,9 +423,9 @@
 // 	assert(cs_tid >= 0);
 //   tm_tid = WhoIs(TERMINAL_MANAGER_ID);
 // 	assert(tm_tid >= 0);
-// 	tid_t tr_tid = WhoIs(TRAIN_MANAGER_ID);
+// 	tid_t tr_tid = WhoIs(TRAIN_PROVIDER_ID);
 //   assert(tr_tid >= 0);
-// 	tid_t sw_tid = WhoIs(SWITCH_MANAGER_ID);
+// 	tid_t sw_tid = WhoIs(SWITCH_PROVIDER_ID);
 //   assert(sw_tid >= 0);
 //   tid_t swpub_tid = WhoIs(SWITCH_PUBLISHER_ID);
 //   assert(swpub_tid >= 0);

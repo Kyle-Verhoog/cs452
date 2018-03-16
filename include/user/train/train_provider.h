@@ -1,5 +1,5 @@
-#ifndef TRAIN_MANAGER_H
-#define TRAIN_MANAGER_H
+#ifndef TRAIN_PROVIDER_H
+#define TRAIN_PROVIDER_H
 
 #include <ts7200.h>
 #include <defines.h>
@@ -76,7 +76,7 @@ typedef struct TrainDescriptor{
   path tpath;
 } TrainDescriptor;
 
-void TrainManager();
+void TrainProvider();
 
 /****************
 Train Manager Commands
@@ -98,4 +98,4 @@ DELAY		- <Duration>
 ****************/
 
 
-#endif //TRAIN_MANAGER_H
+#endif //TRAIN_PROVIDER_H

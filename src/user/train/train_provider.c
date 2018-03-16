@@ -1,4 +1,4 @@
-#include <train_manager.h>
+#include <train_provider.h>
 //#include <prediction_manager.h>
 //#include <stoppingcalibration_test.h>
 
@@ -137,11 +137,11 @@ void TestTMPublisher(){
 	Exit();
 }
 
-void TrainManager(){
+void TrainProvider(){
 	void *data;
 	TrainDescriptor Trains[TRAIN_SIZE];
 	
-  int r = RegisterAs(TRAIN_MANAGER_ID);
+  int r = RegisterAs(TRAIN_PROVIDER_ID);
   assert(r == 0);
 	int i;
 	for(i = 0 ; i < TRAIN_SIZE; i++){

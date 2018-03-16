@@ -4,9 +4,9 @@
 #include <ts7200.h>
 #include <user/syscalls.h>
 #include <tid_buffer.h>
-#include <train_manager.h>
-#include <switch_manager.h>
-#include <sensor_manager.h>
+#include <train_provider.h>
+#include <switch_provider.h>
+#include <sensor_provider.h>
 #include <prediction_manager.h>
 
 #include <stoppingcalibration_test.h>
