@@ -24,9 +24,9 @@ void SensorTimeout(){
 	tid_t my_tid = MyTid();
 	volatile int counter = 0;
 
-	SMProtocol checker, timeout;
-	checker.smr = SM_CHECK;
-	timeout.smr = SM_RESET;
+	SNProtocol checker, timeout;
+	checker.snr = SN_CHECK;
+	timeout.snr = SN_RESET;
 
 	while(true){
 		//Check if Sensor data is being retrieved
@@ -52,12 +52,12 @@ void SensorReceiver(){
 	int reply = 0;
 	tid_t sensor_man = MyParentTid();
 	tid_t rx_tid = WhoIs(IOSERVER_UART1_RX_ID);
-	SMProtocol smp;
-	smp.smr = SM_READBYTE;
+	SNProtocol snp;
+	snp.snr = SN_READBYTE;
 
 	while(true){
-		smp.byte = GetC(rx_tid);
-		Send(sensor_man, &smp, sizeof(smp), &reply, sizeof(reply));
+		snp.byte = GetC(rx_tid);
+		Send(sensor_man, &snp, sizeof(snp), &reply, sizeof(reply));
 	}
 
 	Exit();
@@ -66,7 +66,7 @@ void SensorReceiver(){
 void SensorPublisher(){
 	int reply;
 	tid_t tid_req, sub;
-  	SMSubscribe sms;
+  	SNSubscribe sns;
 
 	tid_cb subscribers;
 	tid_cb_init(&subscribers);
@@ -75,14 +75,14 @@ void SensorPublisher(){
 	assert(r == 0);
 
 	while(true){
-		Receive(&tid_req, &sms, sizeof(sms));
+		Receive(&tid_req, &sns, sizeof(sns));
 
-		switch(sms.smr){
-			case SM_NOTIFY:
+		switch(sns.snr){
+			case SN_NOTIFY:
 				Reply(tid_req, &reply, sizeof(reply));
-				NOTIFY(&subscribers, &sub, sms.sensors, sizeof(sms.sensors));
+				NOTIFY(&subscribers, &sub, sns.sensors, sizeof(sns.sensors));
 				break;
-			case SM_SUBSCRIBE:
+			case SN_SUBSCRIBE:
 				tid_cb_push(&subscribers, tid_req);
 				break;
 			default:
@@ -94,21 +94,40 @@ void SensorPublisher(){
 }
 
 void SensorUpdateCourier(){
-	SMProtocol smp;
-	SMSubscribe sms;
+	SNProtocol snp;
+	SNSubscribe sns;
 	int reply;
 
 	tid_t pub_tid = WhoIs(SENSOR_PUBLISHER_ID);
-	tid_t sm_tid = MyParentTid();
+	tid_t sn_tid = MyParentTid();
 
 	while(true){
-		smp.smr = SM_NOTIFY_READY;
-		Send(sm_tid, &smp, sizeof(smp), &sms.sensors, sizeof(sms.sensors));
+		snp.snr = SN_NOTIFY_READY;
+		Send(sn_tid, &snp, sizeof(snp), &sns.sensors, sizeof(sns.sensors));
 
-		sms.smr = SM_NOTIFY;
-		Send(pub_tid, &sms, sizeof(sms), &reply, sizeof(reply));	
+		sns.snr = SN_NOTIFY;
+		Send(pub_tid, &sns, sizeof(sns), &reply, sizeof(reply));	
 	}
 	
+	Exit();
+}
+
+void TestSNPublisher(){
+	SNSubscribe sns;
+	char sensors[DECODER_SIZE*2];
+
+	tid_t pub_tid = WhoIs(SENSOR_PUBLISHER_ID);
+	assert(pub_tid >= 0);
+	tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+	assert(tm_tid >= 0);
+
+	sns.snr = SN_SUBSCRIBE;
+
+	while(true){
+		Send(pub_tid, &sns, sizeof(sns), sensors, sizeof(sensors));
+		TMLogStrf(tm_tid, "Sensors:%d%d %d%d %d%d %d%d %d%d\n", sensors[0],sensors[1],sensors[2],sensors[3],sensors[4],sensors[5],sensors[6],sensors[7],sensors[8],sensors[9]);
+	}
+
 	Exit();
 }
 
@@ -128,15 +147,15 @@ void SensorProvider(){
 
     Create(29, &SensorReceiver);
   	Create(29, &SensorTimeout);
-  	//CreateArgs(29, &SensorPublisher, &sl, sizeof(Sensor *));
   	Create(29, &SensorPublisher);
     tid_t suc_tid = Create(29, &SensorUpdateCourier);
+   	Create(19, &TestSNPublisher);
 
   	//Kick start sensor gathering data
   	BLPutC(tx_tid, GET_ALL_SENSORS);
   	while(true){
   		tid_t tid_req;
-  		SMProtocol smp;
+  		SNProtocol snp;
 
   		//If courier is ready, send the data
   		if(dataFlag && courierFlag){
@@ -145,12 +164,12 @@ void SensorProvider(){
   			Reply(suc_tid, &sensors, sizeof(sensors));
   		}
 
-  		Receive(&tid_req, &smp, sizeof(smp));
+  		Receive(&tid_req, &snp, sizeof(snp));
 
-  		switch(smp.smr){
-  			case SM_READBYTE:
+  		switch(snp.snr){
+  			case SN_READBYTE:
   				Reply(tid_req, &reply, sizeof(reply));
-  				sensors[scounter] = smp.byte;
+  				sensors[scounter] = snp.byte;
   				scounter = (scounter + 1) % (DECODER_SIZE*2);
   				if(scounter == 0){
   					BLPutC(tx_tid, GET_ALL_SENSORS);
@@ -160,20 +179,20 @@ void SensorProvider(){
   					recFlag = true;
   				}
   				break;
-  			case SM_CHECK:
+  			case SN_CHECK:
   				Reply(tid_req, &recFlag, sizeof(recFlag));
   				recFlag = false;
   				break;
-  			case SM_RESET:
+  			case SN_RESET:
   				Reply(tid_req, &reply, sizeof(reply));
   				recFlag = false;
   				scounter = 0;
   				BLPutC(tx_tid, GET_ALL_SENSORS);
   				break;
-  			case SM_NOTIFY_READY:
+  			case SN_NOTIFY_READY:
   				courierFlag = true;
   				break;
-  			case SM_HALT:
+  			case SN_HALT:
   				Reply(tid_req, &reply, sizeof(reply));
   				break;
   			default:

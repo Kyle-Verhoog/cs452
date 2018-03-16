@@ -105,9 +105,26 @@ void SwitchUpdateCourier(){
   Exit();
 }
 
+void TestSWPublisher(){
+  SWSubscribe sws;
+  SWProtocol res;
+
+  tid_t pub_tid = WhoIs(SWITCH_PUBLISHER_ID);
+  assert(pub_tid >= 0);
+  tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+  assert(tm_tid >= 0);
+
+  sws.swr = SW_SUBSCRIBE;
+
+  while(true){
+    Send(pub_tid, &sws, sizeof(sws), &res, sizeof(res));
+    TMLogStrf(tm_tid, "Switch: %d, Arg: %d\n", res.sw, res.dir);
+  }
+
+  Exit();
+}
+
 void SwitchProvider(){
-	Switch switchList[SWITCH_SIZE];
-  Switch *swl = switchList;
   bool courierFlag = false;
   bool switchFlag = false;
 
@@ -119,9 +136,9 @@ void SwitchProvider(){
 
   // TODO: make switchList a global?
   	tid_t sw_handler = CreateArgs(29, &SwitchHandler, &tx1_writer, sizeof(tx1_writer));
-    CreateArgs(29, &SwitchPublisher, &swl, sizeof(Switch *));
+    Create(29, &SwitchPublisher);
     tid_t suc_tid = Create(29, &SwitchUpdateCourier);
-
+    Create(19, &TestSWPublisher); //TODO: Remove this
 
   	while(true){
   		tid_t req_tid;
