@@ -31,6 +31,7 @@ void Bootstrap() {
   Create(5, &NProcsInterface);
   Create(5, &MemUsageInterface);
   Create(0, &Logger);
+  //DelayCS(mytid, 200);
 
 
   // DelayCS(mytid, 200);

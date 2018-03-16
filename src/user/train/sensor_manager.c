@@ -82,7 +82,6 @@ void SensorReceiver(){
 
 	while(true){
 		smp.byte = GetC(rx_tid);
-		// Delay(cs_tid, my_tid, 2);
 		Send(sensor_man, &smp, sizeof(smp), &reply, sizeof(reply));
 	}
 
@@ -137,20 +136,6 @@ void SensorPublisher(void *args){
 
 	Exit();
 }
-
-// void SensorUpdateCourier(void *args){
-// 	SMProtocol smp;
-// 	int reply;
-// 	char *data = (char *)args;
-
-// 	tid_t pub_tid = WhoIs(SENSOR_PUBLISHER_ID);
-
-// 	smp.smr = SM_NOTIFY;
-// 	smp.byte = *data;
-
-// 	Send(pub_tid, &smp, sizeof(smp), &reply, sizeof(reply));
-// 	Exit();
-// }
 
 void SensorUpdateCourier(){
 	SMProtocol smp;

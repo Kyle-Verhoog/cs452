@@ -78,6 +78,7 @@ void SwitchHandler(void *args){
   Exit();
 }
 
+
 void SwitchPublisher(void *args){
   void *data;
   int reply;
@@ -113,18 +114,6 @@ void SwitchPublisher(void *args){
 
   Exit();
 }
-
-// void SwitchUpdateCourier(){
-//   SMProtocol swp;
-//   int reply;
-
-//   tid_t pub_tid = WhoIs(SWITCH_PUBLISHER_ID);
-
-//   swp.smr = SW_NOTIFY;
-
-//   Send(pub_tid, &swp, sizeof(swp), &reply, sizeof(reply));
-//   Exit();
-// }
 
 void SwitchUpdateCourier(){
   SMProtocol swp;
@@ -182,8 +171,6 @@ void SwitchManager(){
 	  			Send(sw_handler, &sw, sizeof(sw), &reply, sizeof(reply));
 	  			//Update the UI and table
 	  			UpdateSwitchTable(switchList, sw.sw, sw.dir);
-          //TODO: CHANGE THIS
-          //Create(29, &SwitchUpdateCourier);
 	  			Reply(req_tid, &reply, sizeof(reply));
           switchFlag = true;
   				break;

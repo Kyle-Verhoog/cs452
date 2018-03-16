@@ -322,53 +322,6 @@ void shell_exec(shell *sh, shell_cmd shell_path[], int shell_path_size) {
       shell_info(sh);
     }
   }
-  // else if(cmd[0] == 's' && cmd[1] == 'a'){
-  //   if ((r = parse_i32(cmd+2, &arg1)) == 0 || arg1 > 81 || arg1 < 0) {
-  //     shell_errorf(sh, "train number");
-  //   }
-  //   else if ((r = parse_i32(r, &arg2)) == 0) {
-  //     shell_errorf(sh, "train cmd");
-  //   }
-  //   else if ((r = parse_i32(r, &arg3)) == 0) {
-  //     shell_errorf(sh, "track stop at");
-  //   }
-  //   else {
-  //     StopAtProtocol sap;
-  //     sap.sar = SAR_STOP;
-  //     sap.train = arg1;
-  //     sap.gear = arg2;
-  //     sap.stop_at = arg3;
-  //     sap.dist = -1;
-
-  //     Send(sa_tid, &sap, sizeof(sap), &reply, sizeof(reply));
-  //     shell_info(sh);
-  //   }
-  // }
-  // else if(cmd[0] == '2' && cmd[1] == 's' && cmd[2] == 'a'){
-  //   if ((r = parse_i32(cmd+3, &arg1)) == 0 || arg1 > 81 || arg1 < 0) {
-  //     shell_errorf(sh, "train number");
-  //   }
-  //   else if ((r = parse_i32(r, &arg2)) == 0) {
-  //     shell_errorf(sh, "train cmd");
-  //   }
-  //   else if ((r = parse_i32(r, &arg3)) == 0) {
-  //     shell_errorf(sh, "track stop at");
-  //   }
-  //   else if ((r = parse_i32(r, &arg4)) == 0) {
-  //     shell_errorf(sh, "specified distance");
-  //   }
-  //   else {
-  //     StopAtProtocol sap;
-  //     sap.sar = SAR_STOP;
-  //     sap.train = arg1;
-  //     sap.gear = arg2;
-  //     sap.stop_at = arg3;
-  //     sap.dist = arg4;
-
-  //     Send(sa_tid, &sap, sizeof(sap), &reply, sizeof(reply));
-  //     shell_info(sh);
-  //   } 
-  // }
   else if (cmd[0] == 's' && cmd[1] == 'h') {
     int x, y, w, h;
     if ((r = parse_i32(cmd+2, &x)) == 0) {
