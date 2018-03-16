@@ -21,6 +21,6 @@
 #define SENSOR_TIMEOUT 4
 #define SENSOR_WAIT 4
 
-void SensorProivider();
+void SensorProvider();
 
 #endif //SNESOR_PROVIDER_H
