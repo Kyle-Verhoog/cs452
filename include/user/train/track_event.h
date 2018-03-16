@@ -14,7 +14,7 @@ typedef enum RawTrackEventType {
 } RawTrackEventType;
 
 // TODO: these protocols should be kept here
-typedef SMProtocol RawSensorEvent;
+typedef SNProtocol RawSensorEvent;
 typedef SWProtocol RawSwitchEvent;
 typedef TrainProtocol RawTrainEvent;
 
