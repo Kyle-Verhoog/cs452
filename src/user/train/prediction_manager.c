@@ -428,8 +428,11 @@ void PredictionManager(void *args){
   assert(tr_tid >= 0);
 	tid_t sw_tid = WhoIs(SWITCH_MANAGER_ID);
   assert(sw_tid >= 0);
+  tid_t swpub_tid = WhoIs(SWITCH_PUBLISHER_ID);
+  assert(swpub_tid >= 0);
+  tid_t smpub_tid = WhoIs(SENSOR_PUBLISHER_ID);
+  assert(smpub_tid >= 0);
   tid_t sa_tid;
-
   TMRegister(tm_tid, PM_OFF_X, PM_OFF_Y, PM_WIDTH, PM_HEIGHT);
 	LiveTrains live;
 	INIT_LIVE_TRAINS(live);
@@ -441,6 +444,16 @@ void PredictionManager(void *args){
 	tmp.tmc = TM_GET_ALL;
 	Send(tr_tid, &tmp, sizeof(tmp), &data, sizeof(data));
 	trains = (TrainDescriptor *)data;
+
+	SWProtocol swp;
+	swp.swr = SW_GET_ALL;
+	Send(swpub_tid, &swp, sizeof(swp), &data, sizeof(data));
+	swList = (Switch *)data;
+
+	SMProtocol smp;
+	smp.smr = SM_GET_ALL;
+	Send(smpub_tid, &smp, sizeof(smp), &data, sizeof(data));
+	snList = (Sensor *)data;
 
   int *route_args;
 
@@ -460,16 +473,17 @@ void PredictionManager(void *args){
 			case PM_SENSOR:
 				//Sensor data has been updated
 				snList = (Sensor *)pmp.args;
-				if(swList != NULL && snList != NULL){
+				//if(swList != NULL && snList != NULL){
           // Routing(sw_tid, swList, &live);
 					CheckPrediction(mytid, cs_tid, swList, snList, &live);	
-				}
+				//}
 				break;
 			case PM_SWITCH:
 				//Re-evaluate Predictions
 				swList = (Switch *)pmp.args;
 				break;
       case PM_ROUTE:
+      	//TODO: THIS IS A HACK
         sa_tid = WhoIs(STOP_AT_SERVER_ID);
         assert(sa_tid >= 0);
         route_args = (int *)pmp.args;
