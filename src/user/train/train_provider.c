@@ -27,7 +27,7 @@ void TrainPublisher(){
 		switch(tms.tmc){
 			case TM_NOTIFY:				
 				Reply(req_tid, &reply, sizeof(reply));
-				NOTIFY(&subscribers, &sub, tms.tp, sizeof(tp))
+				NOTIFY(&subscribers, &sub, tms.tp, sizeof(tms.tp))
 				break;
 			case TM_SUBSCRIBE:
 				tid_cb_push(&subscribers, req_tid);

@@ -77,10 +77,6 @@ void SwitchPublisher(){
       case SW_SUBSCRIBE:
         tid_cb_push(&subscribers, req_tid);
         break;
-      case SW_GET_ALL:
-        data = (void *)switches;
-        Reply(req_tid, &data, sizeof(data));
-        break;
       default:
         assert(0 && "Bad Command");
     }
@@ -98,10 +94,10 @@ void SwitchUpdateCourier(){
   tid_t sw_tid = MyParentTid();
 
   while(true){
-    swp.smr = SW_NOTIFY_READY;
+    swp.swr = SW_NOTIFY_READY;
     Send(sw_tid, &swp, sizeof(swp), &reply, sizeof(reply));  
 
-    sws.smr = SW_NOTIFY;
+    sws.swr = SW_NOTIFY;
     sws.swp = swp;
     Send(pub_tid, &sws, sizeof(sws), &reply, sizeof(reply));
   }

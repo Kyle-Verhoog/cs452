@@ -116,14 +116,13 @@ void SensorProvider(){
 	int scounter = 0;
 	int reply;
   	bool recFlag = false;
-  	bool deltaFlag = false;
-  	bool persistDeltaFlag = false;
+  	//bool deltaFlag = false;
+  	//bool persistDeltaFlag = false;
   	bool courierFlag = false;
   	bool dataFlag = false;
 
   	char sensors[DECODER_SIZE*2];
 
-	int reply = 0;
     tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
     assert(tx_tid >= 0);
 
