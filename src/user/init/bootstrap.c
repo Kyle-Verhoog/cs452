@@ -8,6 +8,30 @@ void SendGo(){
   Exit();
 }
 
+void RailwayInit(){
+    tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
+    assert(tx_tid >= 0);
+    tid_t rx_tid = WhoIs(IOSERVER_UART1_RX_ID);
+    assert(rx_tid >= 0);
+
+    //Send Reset Commands to Terminal
+    //BLPutC(tx_tid, 'X');
+    BLPutC(tx_tid, 192);
+
+    //Flush the IO
+    FlushIO(tx_tid);
+    FlushIO(rx_tid);
+
+    //Send Go
+    PutC(tx_tid, 96);
+
+    Create(29, &TrainManager);
+    Create(29, &SwitchManager);
+    Create(29, &SensorManager);
+    
+    Exit();
+}
+
 void Bootstrap() {
   int mytid;
   mytid = MyTid();
@@ -19,11 +43,8 @@ void Bootstrap() {
 
   Create(30, &TrackDataInit);
 
-  Create(30, &SendGo);
-
-  Create(29, &TrainManager);
-  Create(29, &SwitchManager);
-  Create(29, &SensorManager);
+  //Create(30, &SendGo);
+  Create(30, &RailwayInit);
 
   // interfaces
   Create(10, &TrainTrackInterface);
