@@ -1,43 +1,71 @@
 #include <train_manager.h>
-#include <prediction_manager.h>
-#include <stoppingcalibration_test.h>
+//#include <prediction_manager.h>
+//#include <stoppingcalibration_test.h>
 
 CIRCULAR_BUFFER_DEF(tc_cb, volatile TrainProtocol, TRAIN_COMMAND_BUFFER_SIZE);
 
-// void AddTrainToPrediction(tid_t pred_tid, TrainDescriptor *train){
-// 	int reply;
-// 	PMProtocol pmp;
-// 	pmp.pmc = PM_TRAIN;
-// 	pmp.args = (void *)train;
-// 	pmp.size = 1;
-	
-// 	Send(pred_tid, &pmp, sizeof(pmp), &reply, sizeof(reply));
-// }
+void NotifyTMSubscribers(tid_cb *subscribers, TrainProtocol cmd){
+	tid_t sub;
+	while(tid_cb_pop(subscribers, &sub) != CB_E_EMPTY){
+		Reply(sub, &cmd, sizeof(cmd));
+	}
+}
 
-// void MeasureTrainForPredition(tid_t pred_tid, TrainDescriptor *train){
-// 	int reply;
-// 	PMProtocol pmp;
-// 	pmp.pmc = PM_MEASURE;
-// 	pmp.args = (void *)train;
-// 	pmp.size = 1;
-	
-// 	Send(pred_tid, &pmp, sizeof(pmp), &reply, sizeof(reply));
-// }
+void TrainPublisher(){
+	int reply;
+	tid_t req_tid;
+	TMSubscribe tms;
+
+	tid_cb subscribers;
+	tid_cb_init(&subscribers);
+
+	int r = RegisterAs(TRAIN_PUBLISHER_ID);
+	assert(r == 0);
+
+	while(true){
+		Receive(&tid_req, &tms, sizeof(tms));
+
+		switch(tms.tmc){
+			case TM_NOTIFY:				
+				Reply(tid_req, &reply, sizeof(reply));
+				NotifyTMSubscribers(&subscribers, tms.tp);
+				break;
+			case TM_SUBSCRIBE:
+				tid_cb_push(&subscribers, tid_req);
+				break;
+			default:
+				assert(0 && "Bad train command");
+		}
+	}
+
+	Exit();	
+}
 
 void TMWriteTask(void *args){
 	char buf[2];
 	int reply;
+	volatile TrainProtocol cmd;
+	volatile TMSubscribe tms;
 	TrainDescriptor* td = *(TrainDescriptor **)args;
+
 	tid_t mytid = MyTid();
 	tid_t parentTid = MyParentTid();
 	tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
   	assert(tx_tid >= 0);
+  	tid_t pub_tid = WhoIs(TRAIN_PUBLISHER_ID);
+  	assert(pub_tid >= 0);
 
-	volatile TrainProtocol cmd;
+  	//Pop from instruction queue
 	if(tc_cb_pop(&td->buf, &cmd) == CB_E_EMPTY){
 		assert(0);
 	}
 
+	//Send the Updated Command to the publisher (TODO: Rare - Possible unwanted blocking)
+	tms.tmc = TM_NOTIFY;
+	tms.tp = cmd;
+	Send(pub_tid, &tms, sizeof(tms), &reply, sizeof(reply));
+
+	//Handle Command
 	switch(cmd.tc){
 		case T_MOVE:
 			buf[0] = cmd.arg2;
@@ -90,6 +118,25 @@ void init_train_model(TrainDescriptor *td, int train_id){
 	tc_cb_init(&td->buf);
 }
 
+void TestTMPublisher(){
+	TMSubscribe tms;
+	TrainProtocol res;
+	tid_t pub_tid = WhoIs(TRAIN_PUBLISHER_ID);
+	assert(pub_tid >= 0);
+	tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+	assert(tm_tid >= 0);
+
+
+	tms.tmc = TM_SUBSCRIBE;
+
+	while(true){
+		Send(pub_tid, &tms, sizeof(tms), &res, sizeof(res));
+		TMLogStrf(tm_tid, "Command: %d, Arg: %d\n\r", res.tc, res.arg1);
+	}
+
+	Exit();
+}
+
 void TrainManager(){
 	void *data;
 	TrainDescriptor Trains[TRAIN_SIZE];
@@ -107,6 +154,10 @@ void TrainManager(){
   	assert(cs_tid >= 0);
   	tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
   	assert(tx_tid >= 0);
+
+  	//Construct the Train Publisher
+  	Create(29, &TrainPublisher);
+  	Create(19, &TestTMPublisher); //TODO: REMOVE THIS
 
 	while(true){
 		tid_t tid_req;
