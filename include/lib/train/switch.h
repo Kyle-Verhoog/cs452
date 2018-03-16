@@ -7,9 +7,9 @@ typedef enum SwitchState{
 } SwitchState;
 
 typedef struct Switch{
-	int state;
-	track_node *branch;
-	track_node *merge;
+  int state;
+  track_node *branch;
+  track_node *merge;
 }Switch;
 
 typedef enum SW_Request{

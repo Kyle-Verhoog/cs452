@@ -39,10 +39,11 @@ int calc_mem_usage() {
 }
 
 
-void memcopy(void *d, void *s, int len) {
+void *memcpy(void *d, void *s, int len) {
   int i;
   for (i = 0; i < len; ++i) {
     *((char *)(d+i)) = *((char *)(s+i));
   }
+  return (char *)(d+len-1);
 }
 

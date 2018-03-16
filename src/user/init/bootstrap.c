@@ -1,13 +1,5 @@
 #include <user/init/bootstrap.h>
 
-// void SendGo(){
-//   tid_t writer = WhoIs(IOSERVER_UART1_TX_ID);
-//   char command[1];
-//   command[0] = 96;
-//   WriteCommandUART1(writer, command, 1);
-//   Exit();
-// }
-
 void RailwayInit(){
     tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
     assert(tx_tid >= 0);

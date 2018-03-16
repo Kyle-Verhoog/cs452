@@ -2,8 +2,6 @@
 //#include <prediction_manager.h>
 //#include <stoppingcalibration_test.h>
 
-CIRCULAR_BUFFER_DEF(tc_cb, volatile TrainProtocol, TRAIN_COMMAND_BUFFER_SIZE);
-
 void NotifyTMSubscribers(tid_cb *subscribers, TrainProtocol cmd){
 	tid_t sub;
 	while(tid_cb_pop(subscribers, &sub) != CB_E_EMPTY){
