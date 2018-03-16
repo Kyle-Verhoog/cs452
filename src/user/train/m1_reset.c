@@ -22,13 +22,13 @@ void loop_train(tid_t tr_tid, int tr_num, int tr_spd) {
   Send(tr_tid, &tm, sizeof(tm), &reply, sizeof(reply));
 }
 
-void loop_switches(tid_t sw_tid) {
+void loop_switches(tid_t sw_tid, tid_t swpub_tid) {
   Switch *swlist;
   void *data;
   int reply, i;
   SWProtocol sw;
   sw.swr = SW_GET_ALL;
-  Send(sw_tid, &sw, sizeof(sw), &data, sizeof(data));
+  Send(swpub_tid, &sw, sizeof(sw), &data, sizeof(data));
   swlist = (Switch *)data;
 
   for(i = NORMAL_SWITCH_SIZE_LOW; i <= NORMAL_SWITCH_SIZE_HIGH; ++i){
@@ -64,7 +64,7 @@ void loop_switches(tid_t sw_tid) {
 void M1Reset(void *arg) {
   int *args;
   int train_num, train_spd;
-  tid_t tr_tid, sw_tid, cs_tid;
+  tid_t tr_tid, sw_tid, swpub_tid, cs_tid;
 
   args = (int *)arg;
 
@@ -73,9 +73,10 @@ void M1Reset(void *arg) {
 
   tr_tid = WhoIs(TRAIN_MANAGER_ID);
   sw_tid = WhoIs(SWITCH_MANAGER_ID);
+  swpub_tid = WhoIs(SWITCH_PUBLISHER_ID);
   tm_tid = WhoIs(TERMINAL_MANAGER_ID);
   cs_tid = WhoIs(CLOCKSERVER_ID);
-  assert(tr_tid > 0 && tm_tid > 0 && sw_tid > 0 && cs_tid > 0);
+  assert(tr_tid > 0 && tm_tid > 0 && sw_tid > 0 && swpub_tid > 0 && cs_tid > 0);
 
   // TMRegister(tm_tid, M1_RESET_OFF_X, M1_RESET_OFF_Y, M1_RESET_WIDTH, M1_RESET_HEIGHT);
 
@@ -84,7 +85,7 @@ void M1Reset(void *arg) {
 
   init_train(tr_tid, train_num);
   DelayCS(cs_tid, 200);
-  loop_switches(sw_tid);
+  loop_switches(sw_tid, swpub_tid);
   DelayCS(cs_tid, 300);
   loop_train(tr_tid, train_num, train_spd);
   DelayCS(cs_tid, 100);

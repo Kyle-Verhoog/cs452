@@ -73,7 +73,7 @@ int buf_pack_str(char *buf, const char *str) {
   return offset;
 }
 
-int buf_pack_fmt(char *buf, char *fmt, va_list va) {
+int buf_pack_fmt(char *buf, const char *fmt, va_list va) {
   int offset;
   char c;
 
@@ -114,7 +114,7 @@ int buf_pack_fmt(char *buf, char *fmt, va_list va) {
 }
 
 
-int buf_pack_f(char *buf, char *fmt, ...) {
+int buf_pack_f(char *buf, const char *fmt, ...) {
   int offset;
   va_list va;
 

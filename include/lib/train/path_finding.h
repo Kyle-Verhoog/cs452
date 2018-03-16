@@ -37,11 +37,9 @@ typedef struct switch_config {
 
 CIRCULAR_BUFFER_DEC(sw_configs, sw_config, TRACK_MAX);
 
-void path_init(path *p, track_node *track);
+void path_init(path *p);
 
 void dij_path_find(track_node *track, track_node *s, track_node *d, int *prev);
-
-void path_init(path *p, track_node *track);
 
 void path_start(path *p, track_node *start_node);
 

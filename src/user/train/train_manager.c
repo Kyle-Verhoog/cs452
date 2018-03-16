@@ -4,30 +4,30 @@
 
 CIRCULAR_BUFFER_DEF(tc_cb, volatile TrainProtocol, TRAIN_COMMAND_BUFFER_SIZE);
 
-void AddTrainToPrediction(tid_t pred_tid, TrainDescriptor *train){
-	int reply;
-	PMProtocol pmp;
-	pmp.pmc = PM_TRAIN;
-	pmp.args = (void *)train;
-	pmp.size = 1;
+// void AddTrainToPrediction(tid_t pred_tid, TrainDescriptor *train){
+// 	int reply;
+// 	PMProtocol pmp;
+// 	pmp.pmc = PM_TRAIN;
+// 	pmp.args = (void *)train;
+// 	pmp.size = 1;
 	
-	Send(pred_tid, &pmp, sizeof(pmp), &reply, sizeof(reply));
-}
+// 	Send(pred_tid, &pmp, sizeof(pmp), &reply, sizeof(reply));
+// }
 
-void MeasureTrainForPredition(tid_t pred_tid, TrainDescriptor *train){
-	int reply;
-	PMProtocol pmp;
-	pmp.pmc = PM_MEASURE;
-	pmp.args = (void *)train;
-	pmp.size = 1;
+// void MeasureTrainForPredition(tid_t pred_tid, TrainDescriptor *train){
+// 	int reply;
+// 	PMProtocol pmp;
+// 	pmp.pmc = PM_MEASURE;
+// 	pmp.args = (void *)train;
+// 	pmp.size = 1;
 	
-	Send(pred_tid, &pmp, sizeof(pmp), &reply, sizeof(reply));
-}
+// 	Send(pred_tid, &pmp, sizeof(pmp), &reply, sizeof(reply));
+// }
 
 void TMWriteTask(void *args){
 	char buf[2];
 	int reply;
-	TrainDescriptor* td = (TrainDescriptor *)args;
+	TrainDescriptor* td = *(TrainDescriptor **)args;
 	tid_t mytid = MyTid();
 	tid_t parentTid = MyParentTid();
 	tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
@@ -74,7 +74,7 @@ void TMWriteTask(void *args){
 
 	Exit();
 }
-void init_train_model(TrainDescriptor *td, int train_id, track_node *track){
+void init_train_model(TrainDescriptor *td, int train_id){
 	td->id = train_id; 
 	td->gear = 0; 
 	td->speed = 0; 
@@ -82,20 +82,19 @@ void init_train_model(TrainDescriptor *td, int train_id, track_node *track){
 	td->exist = false; 
 	td->isRunning = -1; 
 	td->node = NULL; 
-  path_init(&td->tpath, track);
+  path_init(&td->tpath);
 	tc_cb_init(&td->buf);
 }
 
-void TrainManager(void *args){
+void TrainManager(){
 	void *data;
-	track_node *track = (track_node *)args;
 	TrainDescriptor Trains[TRAIN_SIZE];
 	
   int r = RegisterAs(TRAIN_MANAGER_ID);
   assert(r == 0);
 	int i;
 	for(i = 0 ; i < TRAIN_SIZE; i++){
-		init_train_model(&Trains[i], i, track);
+		init_train_model(&Trains[i], i);
 	}
 
 	int reply = 0;
@@ -104,8 +103,6 @@ void TrainManager(void *args){
   	assert(cs_tid >= 0);
   	tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
   	assert(tx_tid >= 0);
-  	tid_t pred_tid = WhoIs(PREDICTION_MANAGER_ID);
-  	assert(pred_tid >= 0);
 
 	while(true){
 		tid_t tid_req;
@@ -114,6 +111,7 @@ void TrainManager(void *args){
 
 		Receive(&tid_req, &tmp, sizeof(tmp));
 
+    TrainDescriptor *td;
 		switch(tmp.tmc){
 			case TM_MOVE:
 				Reply(tid_req, &reply, sizeof(reply));
@@ -122,7 +120,8 @@ void TrainManager(void *args){
 				tp.arg2 = tmp.arg2;
 				tc_cb_push(&Trains[(int)tmp.arg1].buf, tp);
 				if(Trains[(int)tmp.arg1].isRunning == -1){
-					Trains[(int)tmp.arg1].isRunning = CreateArgs(29, &TMWriteTask, (void *)&Trains[(int)tmp.arg1]);	
+          td = &Trains[(int)tmp.arg1];
+					Trains[(int)tmp.arg1].isRunning = CreateArgs(29, &TMWriteTask, &td, sizeof(TrainDescriptor *));
 				}
 				break;
 			case TM_REVERSE:
@@ -130,42 +129,40 @@ void TrainManager(void *args){
 				tp.tc = T_REVERSE;
 				tp.arg1 = tmp.arg1;
 				tc_cb_push(&Trains[(int)tmp.arg1].buf, tp);
-        		if(Trains[(int)tmp.arg1].isRunning == -1){
-					Trains[(int)tmp.arg1].isRunning = CreateArgs(29, &TMWriteTask, (void *)&Trains[(int)tmp.arg1]);	
-				}
+        if(Trains[(int)tmp.arg1].isRunning == -1){
+          td = &Trains[(int)tmp.arg1];
+					Trains[(int)tmp.arg1].isRunning = CreateArgs(29, &TMWriteTask, &td, sizeof(TrainDescriptor *));
+        }
 				break;
 			case TM_DELAY:
 				Reply(tid_req, &reply, sizeof(reply));
 				tp.tc = T_DELAY;
 				tp.arg1 = tmp.arg2;
 				tc_cb_push(&Trains[(int)tmp.arg1].buf, tp);
-        		if(Trains[(int)tmp.arg1].isRunning == -1){
-					Trains[(int)tmp.arg1].isRunning = CreateArgs(29, &TMWriteTask, (void *)&Trains[(int)tmp.arg1]);	
-				}
+        if(Trains[(int)tmp.arg1].isRunning == -1){
+          td = &Trains[(int)tmp.arg1];
+					Trains[(int)tmp.arg1].isRunning = CreateArgs(29, &TMWriteTask, &td, sizeof(TrainDescriptor *));
+        }
 				break;
 			case TM_TASK_COMPLETE:
 				Reply(tid_req, &reply, sizeof(reply));
 				if(Trains[(int)tmp.arg1].buf.size > 0){
-					Trains[(int)tmp.arg1].isRunning = CreateArgs(29, &TMWriteTask, (void *)&Trains[(int)tmp.arg1]);						
+          td = &Trains[(int)tmp.arg1];
+					Trains[(int)tmp.arg1].isRunning = CreateArgs(29, &TMWriteTask, &td, sizeof(TrainDescriptor *));
 				}
 				else{
 					Trains[(int)tmp.arg1].isRunning = -1;	
 				}
 				break;
 			case TM_TRACK:
-				Reply(tid_req, &reply, sizeof(reply));
 				Trains[(int)tmp.arg1].node = &track[(int)tmp.arg2];
 				Trains[(int)tmp.arg1].exist = true;
 				Trains[(int)tmp.arg1].time_of_sensor = Time(cs_tid, mytid);
-				AddTrainToPrediction(pred_tid, &Trains[(int)tmp.arg1]);
-				break;
-			case TM_MEASURE:
 				Reply(tid_req, &reply, sizeof(reply));
-				MeasureTrainForPredition(pred_tid, &Trains[(int)tmp.arg1]);
 				break;
 			case TM_GET_ALL:
 				data = (void *)Trains;
-				Reply(tid_req, &data, sizeof(void *));
+				Reply(tid_req, &data, sizeof(data));
 				break;
 			default:
 				assert(0 && "Bad Train Command");

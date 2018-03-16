@@ -53,9 +53,9 @@
 #define M1_RESET_WIDTH   SH_WIDTH
 #define M1_RESET_HEIGHT  10
 
-#define PM_OFF_X   SH_OFFSET_X
-#define PM_OFF_Y   SH_OFFSET_Y + SH_HEIGHT + 1
-#define PM_WIDTH   35
-#define PM_HEIGHT  2
+#define TRACK_OFF_X SH_OFFSET_X
+#define TRACK_OFF_Y SH_OFFSET_Y + SH_HEIGHT + 1
+#define TRACK_WIDTH SH_WIDTH
+#define TRACK_HEIGHT 40
 
 #endif

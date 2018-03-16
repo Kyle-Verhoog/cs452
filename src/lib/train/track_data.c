@@ -1,6 +1,8 @@
-/* THIS FILE IS GENERATED CODE -- DO NOT EDIT */
-
 #include <lib/train/track_data.h>
+
+track_node track_a[TRACK_MAX];
+track_node track_b[TRACK_MAX];
+track_node *track;
 
 static void *memset(void *s, int c, unsigned int n) {
   unsigned char *p = s;
@@ -15,6 +17,14 @@ static void add_ids(track_node *track) {
 }
 
 
+void set_track_a() {
+  track = track_a;
+}
+
+void set_track_b() {
+  track = track_b;
+}
+
 int trhr(track_node *track, const char *name) {
   int i;
   for (i = 0; i < TRACK_MAX; ++i) {
@@ -25,8 +35,10 @@ int trhr(track_node *track, const char *name) {
   return -1;
 }
 
+void init_tracka() {
+  track_node *track;
+  track = track_a;
 
-void init_tracka(track_node *track) {
   // note: this memset is necessary to account for NULL values
   memset(track, 0, TRACK_MAX*sizeof(track_node));
   add_ids(track);
@@ -1212,7 +1224,10 @@ void init_tracka(track_node *track) {
   track[143].reverse = &track[142];
 }
 
-void init_trackb(track_node *track) {
+void init_trackb() {
+  track_node *track;
+  track = track_b;
+
   memset(track, 0, TRACK_MAX*sizeof(track_node));
   add_ids(track);
   track[0].name = "A1";

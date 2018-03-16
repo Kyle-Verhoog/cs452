@@ -13,7 +13,6 @@
 #include <user/test/schedule_test.h>
 #include <user/test/create_args.h>
 #include <user/test/train_controller_test.h>
-#include <user/test/ui_test.h>
 #include <user/test/ioserver_test.h>
 
 void TestTask();

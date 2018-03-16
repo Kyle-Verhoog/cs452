@@ -3,14 +3,13 @@
 CIRCULAR_BUFFER_DEF(tr_path, track_node*, TRACK_MAX);
 CIRCULAR_BUFFER_DEF(sw_configs, sw_config, TRACK_MAX);
 
-void path_init(path *p, track_node *track) {
+void path_init(path *p) {
   p->current = NULL;
   p->start   = NULL;
   p->end     = NULL;
   p->ready   = false;
   p->active  = false;
   p->done    = false;
-  p->track = track;
   p->path_len = 0;
   tr_path_init(&p->ahead);
   tr_path_init(&p->behind);
@@ -183,7 +182,7 @@ int path_generate(path *p) {
   sid = p->start->id;
   eid = p->end->id;
 
-  dij_path_find(p->track, p->start, p->end, p->pred);
+  dij_path_find(track, p->start, p->end, p->pred);
   KASSERT(p->pred[sid] == -1);
 
   n = 0;

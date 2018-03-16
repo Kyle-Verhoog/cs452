@@ -6,11 +6,10 @@
 #include <lib/parse.h>
 #include <user/syscalls.h>
 #include <user/nameserver.h>
-#include <user/train/train_manager.h>
-#include <user/train/switch_manager.h>
-#include <user/train/prediction_manager.h>
 #include <user/terminal_manager.h>
 #include <user/train/m1_reset.h>
+#include <user/train_commands.h>
+#include <user/quit.h>
 
 #define CMD_MAX 41
 #define CMD_BUF_MAX 512
@@ -18,6 +17,16 @@
 #define SH_CLEAR_COUNT 4
 
 CIRCULAR_BUFFER_DEC(cmd_cb, char, CMD_BUF_MAX);
+
+#define ARG_MAX 5
+
+typedef struct shell_cmd {
+  char *cmd;
+  void *task;
+  int pri;
+  bool sync;
+} shell_cmd;
+
 
 typedef struct shell {
   char cmd[CMD_MAX];

@@ -1,7 +1,6 @@
 #include <user/ui/idle_time.h>
 
 void IdleTimeInterface() {
-#ifdef TASK_METRICS
   tid_t my_tid, tm_tid, cs_tid, log_tid;
   int usage, len;
   char buf[32];
@@ -17,10 +16,6 @@ void IdleTimeInterface() {
 
   TMRegister(tm_tid, IDLE_OFF_X, IDLE_OFF_Y, IDLE_WIDTH, IDLE_HEIGHT);
 
-
-  // char *init = "idle: ";
-  // TMPutStr(tm_tid, init, strlen(init));
-
   while (true) {
     usage = CPUUsage(log_tid);
     len = buf_pack_f(buf, "\vidle: %t%%", usage);
@@ -28,6 +23,5 @@ void IdleTimeInterface() {
     // TMLogStrf(tm_tid, "%d\n", usage);
     Delay(cs_tid, my_tid, 50);
   }
-#endif
   Exit();
 }

@@ -70,4 +70,6 @@ void tdisp_delete_window(TDisplay *td);
 void tdisp_writec(TDisplay *td, char c);
 
 void tdisp_write_task(TDisplay *td, tid_t tid, char c);
+
+void tdisp_writes_task(TDisplay *td, tid_t tid, const char *c, int len);
 #endif

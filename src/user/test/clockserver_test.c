@@ -22,7 +22,7 @@ void TimeTest() {
 void ClockServerStopper(){
   volatile int mytid;
   mytid = MyTid();
-  DelayCS(mytid, 300);
+  DelayCS(mytid, 20);
   Create(13, &ClockServerStop);
   Create(12, &NameServerStop);
   stay_alive = 0;

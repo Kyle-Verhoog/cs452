@@ -82,18 +82,18 @@ void tdisp_set_cursor(TDisplay *td, int x, int y, bool wrap) {
   x += window->offsetx;
   y += window->offsety;
 
-  if (/*wrap&&*/ x > window->offsetx + window->w /*- 1*/) {
-    window->cur.x = 3; // wrap the cursor by default
-    window->cur.y++;
-    x = window->offsetx;
-    y = window->offsety;
-  }
-  if (/*wrap &&*/ y > window->offsety + window->h /*- 1*/) {
-    window->cur.x = 1;
-    window->cur.y = 1;
-    x = window->offsetx;
-    y = window->offsety;
-  }
+  // if (/*wrap&&*/ x > window->offsetx + window->w /*- 1*/) {
+  //   window->cur.x = 3; // wrap the cursor by default
+  //   window->cur.y++;
+  //   x = window->offsetx;
+  //   y = window->offsety;
+  // }
+  // if (/*wrap &&*/ y > window->offsety + window->h /*- 1*/) {
+  //   window->cur.x = 1;
+  //   window->cur.y = 1;
+  //   x = window->offsetx;
+  //   y = window->offsety;
+  // }
   // assert(x >= window->offsetx && x <= window->offsetx + window->w);
   // assert(y >= window->offsety && y <= window->offsety + window->h);
 
@@ -349,6 +349,19 @@ void tdisp_write_task(TDisplay *td, tid_t tid, char c) {
   r = tdisp_focus_task_window(td, tid);
   assert(r == 0);
   tdisp_writec(td, c);
-  tdisp_focus_window(td, wid);
+  // tdisp_focus_window(td, wid);
 }
+
+void tdisp_writes_task(TDisplay *td, tid_t tid, const char *c, int len) {
+  assert(td->focused_window != 0);
+  int wid, r, i;
+  wid = td->focused_window->wid;
+  r = tdisp_focus_task_window(td, tid);
+  assert(r == 0);
+  for (i = 0; i < len; ++i) {
+    tdisp_writec(td, c[i]);
+  }
+}
+
+
 

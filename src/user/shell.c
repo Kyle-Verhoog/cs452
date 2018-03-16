@@ -1,19 +1,16 @@
 #include <user/shell.h>
-#include <stoppingcalibration_test.h> //TODO:Remove this
-#include <stop_at_test.h> //TODO:Remove this
 
 CIRCULAR_BUFFER_DEF(cmd_cb, char, CMD_BUF_MAX);
 
-int sh_args[4]; // kinda a bad hack
-
-void ShellDummyTask() {
+/*
+void ShellDummyTask(int *args) {
   tid_t tm_tid;
   int i, j, k, x, y, w, h;
 
-  x = sh_args[0];
-  y = sh_args[1];
-  w = sh_args[2];
-  h = sh_args[3];
+  x = args[0];
+  y = args[1];
+  w = args[2];
+  h = args[3];
 
   tm_tid = WhoIs(TERMINAL_MANAGER_ID);
   assert(tm_tid >= 0);
@@ -40,6 +37,7 @@ void ShellDummyTask() {
     }
   }
 }
+*/
 
 void cmd_cb_push_str(cmd_cb *buf, char *str) {
   while (*str != '\0') {
@@ -59,7 +57,7 @@ void shell_clear_cmd(shell *sh) {
 }
 
 void shell_prompt(shell *sh) {
-  cmd_cb_push_str(&sh->buf, " $ ");
+  cmd_cb_push_str(&sh->buf, " ⇒");
 }
 
 void shell_init(shell *sh) {
@@ -88,16 +86,18 @@ void shell_pre(shell *sh) {
   }
 }
 
+#define CHUNK 20
+
 void shell_print(shell *sh, tid_t tm_tid) {
   char c;
-  char buf[10];
+  char buf[CHUNK];
   int i;
 
   i = 0;
   while (sh->buf.size > 0) {
     cmd_cb_pop(&sh->buf, &c);
     buf[i++] = c;
-    if (i == 9) {
+    if (i == CHUNK-1) {
       TMPutStr(tm_tid, buf, i);
       i = 0;
     }
@@ -193,65 +193,57 @@ void shell_reset(shell *sh) {
   }
 }
 
-void shell_exec(shell *sh) {
-  int reply;
+void shell_exec(shell *sh, shell_cmd shell_path[], int shell_path_size) {
   char *cmd;
-  char *r;
-  int arg1, arg2, arg3, arg4;
+  int r;
 
-  tid_t tr_tid, sw_tid, sc_tid, sa_tid, pm_tid;
+  // tid_t sw_tid, sc_tid, sa_tid, pm_tid;
 
-  tr_tid = WhoIs(TRAIN_MANAGER_ID);
-  sw_tid = WhoIs(SWITCH_MANAGER_ID);
-  sc_tid = WhoIs(STOPPING_CALIBRATION_ID);
-  sa_tid = WhoIs(STOP_AT_SERVER_ID);
-  pm_tid = WhoIs(PREDICTION_MANAGER_ID);
-  assert(tr_tid > 0);
-  assert(sw_tid > 0);
-  assert(sc_tid > 0);
-  assert(sa_tid > 0);
-  assert(pm_tid > 0);
-
-  track_node track[TRACK_MAX];
-  init_tracka(track);
+  // sw_tid = WhoIs(SWITCH_MANAGER_ID);
+  // sc_tid = WhoIs(STOPPING_CALIBRATION_ID);
+  // sa_tid = WhoIs(STOP_AT_SERVER_ID);
+  // pm_tid = WhoIs(PREDICTION_MANAGER_ID);
+  // assert(sw_tid > 0);
+  // assert(sc_tid > 0);
+  // assert(sa_tid > 0);
+  // assert(pm_tid > 0);
 
   cmd = sh->cmd;
 
   if (sh->len == 0) {
     shell_skip(sh);
   }
-  else if (cmd[0] == 'q' && sh->len == 1) {
-    Halt();
-  }
-  else if (cmd[0] == 't' && cmd[1] == 'r') {
-    if ((r = parse_i32(cmd+2, &arg1)) == 0 || arg1 > 81 || arg1 < 0) {
-      shell_errorf(sh, "train number");
+  else {
+    int i;
+    char buf[CMD_BUF_MAX];
+
+    r = parse_str(cmd, buf, sizeof(buf));
+    if (!r) {
+      assert(0 && "TODO");
     }
-    else if ((r = parse_i32(r, &arg2)) == 0) {
-      shell_errorf(sh, "train cmd");
+
+    shell_cmd *sh_cmd;
+    tid_t tid;
+    sh_cmd = NULL;
+    for (i = 0; i < shell_path_size; ++i) {
+      if (streq(buf, shell_path[i].cmd)) {
+        sh_cmd = &shell_path[i];
+        break;
+      }
     }
-    else {
-      TMProtocol tm;
-      tm.tmc = TM_MOVE;
-      tm.arg1 = arg1; //train
-      tm.arg2 = arg2; //train speed
-      Send(tr_tid, &tm, sizeof(tm), &reply, sizeof(reply));
-      shell_info(sh);
-    }
-  }
-  else if (cmd[0] == 'r' && cmd[1] == 'v') {
-    if ((r = parse_i32(cmd+2, &arg1)) == 0 || arg1 > 81 || arg1 < 0) {
+
+    if (sh_cmd) {
+      // assert(strlen(cmd+r) +1 == 4);
+      tid = CreateArgs(sh_cmd->pri, sh_cmd->task, cmd+r, strlen(cmd+r)+1);
+      if (sh_cmd->sync) {
+        Send(tid, &r, sizeof(r), &r, sizeof(r));
+        cmd_cb_push_str(&sh->buf, "\n");
+      }
+    } else {
       shell_error(sh);
     }
-    else {
-      TMProtocol tm;
-      tm.tmc = TM_REVERSE;
-      tm.arg1 = arg1; //train
-      Send(tr_tid, &tm, sizeof(tm), &reply, sizeof(reply));
-
-      shell_info(sh);
-    }
   }
+  /*
   else if (cmd[0] == 's' && cmd[1] == 'w') {
     char swd;
     if ((r = parse_i32(cmd+2, &arg1)) == 0 || arg1 < 0) {
@@ -284,11 +276,16 @@ void shell_exec(shell *sh) {
         shell_error(sh);
       }
       else {
-        TMProtocol tm;
-        tm.tmc = TM_TRACK;
-        tm.arg1 = arg1; //train
-        tm.arg2 = s; //train track
-        Send(tr_tid, &tm, sizeof(tm), &reply, sizeof(reply));
+        // TMProtocol tm;
+        // tm.tmc = TM_TRACK;
+        // tm.arg1 = arg1; //train
+        // tm.arg2 = s; //train track
+        // Send(tr_tid, &tm, sizeof(tm), &reply, sizeof(reply));        
+        PMProtocol pm;
+        pm.pmc = PM_TRAIN;
+        pm.arg1 = arg1; //train
+        pm.arg2 = s;   //train track
+        Send(pm_tid, &pm, sizeof(pm), &reply, sizeof(reply));
         shell_info(sh);
       }
     }
@@ -298,10 +295,10 @@ void shell_exec(shell *sh) {
       shell_errorf(sh, "train number");
     }
     else {
-      TMProtocol tm;
-      tm.tmc = TM_MEASURE;
-      tm.arg1 = arg1; //train
-      Send(tr_tid, &tm, sizeof(tm), &reply, sizeof(reply));
+      PMProtocol pm;
+      pm.pmc = PM_MEASURE;
+      pm.arg1 = arg1; //train
+      Send(pm_tid, &pm, sizeof(pm), &reply, sizeof(reply));
       shell_info(sh);
     }
   }
@@ -325,53 +322,53 @@ void shell_exec(shell *sh) {
       shell_info(sh);
     }
   }
-  else if(cmd[0] == 's' && cmd[1] == 'a'){
-    if ((r = parse_i32(cmd+2, &arg1)) == 0 || arg1 > 81 || arg1 < 0) {
-      shell_errorf(sh, "train number");
-    }
-    else if ((r = parse_i32(r, &arg2)) == 0) {
-      shell_errorf(sh, "train cmd");
-    }
-    else if ((r = parse_i32(r, &arg3)) == 0) {
-      shell_errorf(sh, "track stop at");
-    }
-    else {
-      StopAtProtocol sap;
-      sap.sar = SAR_STOP;
-      sap.train = arg1;
-      sap.gear = arg2;
-      sap.stop_at = arg3;
-      sap.dist = -1;
+  // else if(cmd[0] == 's' && cmd[1] == 'a'){
+  //   if ((r = parse_i32(cmd+2, &arg1)) == 0 || arg1 > 81 || arg1 < 0) {
+  //     shell_errorf(sh, "train number");
+  //   }
+  //   else if ((r = parse_i32(r, &arg2)) == 0) {
+  //     shell_errorf(sh, "train cmd");
+  //   }
+  //   else if ((r = parse_i32(r, &arg3)) == 0) {
+  //     shell_errorf(sh, "track stop at");
+  //   }
+  //   else {
+  //     StopAtProtocol sap;
+  //     sap.sar = SAR_STOP;
+  //     sap.train = arg1;
+  //     sap.gear = arg2;
+  //     sap.stop_at = arg3;
+  //     sap.dist = -1;
 
-      Send(sa_tid, &sap, sizeof(sap), &reply, sizeof(reply));
-      shell_info(sh);
-    }
-  }
-  else if(cmd[0] == '2' && cmd[1] == 's' && cmd[2] == 'a'){
-    if ((r = parse_i32(cmd+3, &arg1)) == 0 || arg1 > 81 || arg1 < 0) {
-      shell_errorf(sh, "train number");
-    }
-    else if ((r = parse_i32(r, &arg2)) == 0) {
-      shell_errorf(sh, "train cmd");
-    }
-    else if ((r = parse_i32(r, &arg3)) == 0) {
-      shell_errorf(sh, "track stop at");
-    }
-    else if ((r = parse_i32(r, &arg4)) == 0) {
-      shell_errorf(sh, "specified distance");
-    }
-    else {
-      StopAtProtocol sap;
-      sap.sar = SAR_STOP;
-      sap.train = arg1;
-      sap.gear = arg2;
-      sap.stop_at = arg3;
-      sap.dist = arg4;
+  //     Send(sa_tid, &sap, sizeof(sap), &reply, sizeof(reply));
+  //     shell_info(sh);
+  //   }
+  // }
+  // else if(cmd[0] == '2' && cmd[1] == 's' && cmd[2] == 'a'){
+  //   if ((r = parse_i32(cmd+3, &arg1)) == 0 || arg1 > 81 || arg1 < 0) {
+  //     shell_errorf(sh, "train number");
+  //   }
+  //   else if ((r = parse_i32(r, &arg2)) == 0) {
+  //     shell_errorf(sh, "train cmd");
+  //   }
+  //   else if ((r = parse_i32(r, &arg3)) == 0) {
+  //     shell_errorf(sh, "track stop at");
+  //   }
+  //   else if ((r = parse_i32(r, &arg4)) == 0) {
+  //     shell_errorf(sh, "specified distance");
+  //   }
+  //   else {
+  //     StopAtProtocol sap;
+  //     sap.sar = SAR_STOP;
+  //     sap.train = arg1;
+  //     sap.gear = arg2;
+  //     sap.stop_at = arg3;
+  //     sap.dist = arg4;
 
-      Send(sa_tid, &sap, sizeof(sap), &reply, sizeof(reply));
-      shell_info(sh);
-    } 
-  }
+  //     Send(sa_tid, &sap, sizeof(sap), &reply, sizeof(reply));
+  //     shell_info(sh);
+  //   } 
+  // }
   else if (cmd[0] == 's' && cmd[1] == 'h') {
     int x, y, w, h;
     if ((r = parse_i32(cmd+2, &x)) == 0) {
@@ -480,10 +477,7 @@ void shell_exec(shell *sh) {
       }
     }
   }
-  else {
-    shell_error(sh);
-  }
-
+  */
   shell_reset(sh);
 }
 
@@ -494,6 +488,12 @@ void Shell(void *args) {
   shell sh;
   int *vars;
   int x, y, w, h;
+  shell_cmd shell_path[] = {
+    { "q", &Quit, 31, true },
+    { "tr", &TrainTR, 28, true },
+    { "rv", &TrainRV, 28, true },
+    { "tk", &TrainTK, 28, true },
+  };
 
   vars = (int *)args;
   x = vars[0];
@@ -513,7 +513,7 @@ void Shell(void *args) {
     shell_pre(&sh);
     switch (c) {
       case CARRIAGE_RETURN:
-        shell_exec(&sh);
+        shell_exec(&sh, shell_path, sizeof(shell_path)/ sizeof(shell_cmd));
         break;
       case BACKSPACE:
         shell_backspace(&sh);

@@ -6,10 +6,11 @@ int mypow(int x, int y) {
   return r;
 }
 
-char *parse_str(char *str, char *buf, int buf_len) {
-  char c;
+int parse_str(char *str, char *buf, int buf_len) {
+  char c, *s;
   int len;
   len = 0;
+  s = str;
   while ((c = *(str++)) == ' ');
   str--;
   while ((c = *str++) != ' ' && c != '\0') {
@@ -19,24 +20,26 @@ char *parse_str(char *str, char *buf, int buf_len) {
       return 0;
   }
   *buf++ = '\0';
-  return str-1;
+  return str - s;
 }
 
 
-char *parse_c(char *str, char *c) {
+int parse_c(char *str, char *c) {
+  char *s;
+  s = str;
   while ((*c = *(str++)) == ' ');
 
   if ((*c >= 'A' && *c <= 'Z') || (*c >= 'a' && *c <= 'z')) {
-    return str+1;
+    return str-s+1;
   }
   return 0;
 }
 
-char *parse_i32(char *str, int *i) {
-  char c;
-  int r;
-  int n = 0;
-  *i = 0;
+int parse_ui32(char *str, int *i) {
+  char *s, c;
+  int r, n, off;
+  *i = n = off = 0;
+  s = str;
 
   // skip all leading whitespace
   while ((c = *(str++)) == ' ');
@@ -51,6 +54,7 @@ char *parse_i32(char *str, int *i) {
   // we didn't get a number
   if (n < 1) return 0;
 
+  off = str - s;
   r = n;
   str--;
   for (; n > 0; n--) {
@@ -61,5 +65,5 @@ char *parse_i32(char *str, int *i) {
       *i += (c-'0')*mypow(10, r-n);
   }
 
-  return str+r;
+  return off;
 }
