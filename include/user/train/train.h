@@ -68,6 +68,16 @@ typedef struct TMSubscribe{
 
 CIRCULAR_BUFFER_DEC(tc_cb, TrainProtocol, TRAIN_COMMAND_BUFFER_SIZE);
 
+typedef struct Train {
+  int id;
+  int gear;
+  int dir; //forward is 1
+  bool exist;
+  track_node *pos;
+  int speed;
+  int time_stamp;
+} Train;
+
 typedef struct TrainDescriptor{
   int id;
   int gear;

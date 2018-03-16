@@ -30,6 +30,7 @@ typedef struct RawTrackEvent {
 } RawTrackEvent;
 
 
+#define MAX_TRACK_EVENT 1
 typedef enum TrackEventType {
   TE_TRAIN_MOVE = 0,
 } TrackEventType;

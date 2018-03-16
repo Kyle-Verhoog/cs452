@@ -1,41 +1,39 @@
 #include <user/train/interpreter.h>
 
-
-void InterpretSensorEvent(RawSensorEvent *se_event, Track *track, TrackUpdate *updates) {
+static void InterpretSensorEvent(RawSensorEvent *se_event, Track *track, TrackUpdate *update) {
   // TODO
 }
 
-void InterpretSwitchEvent(RawSwitchEvent *sw_event, Track *track, TrackUpdate *updates) {
+static void InterpretSwitchEvent(RawSwitchEvent *sw_event, Track *track, TrackUpdate *update) {
   // TODO
 }
 
-void InterpretTrainEvent(RawTrainEvent *tr_event, Track *track, TrackUpdate *updates) {
+static void InterpretTrainEvent(RawTrainEvent *tr_event, Track *track, TrackUpdate *update) {
+  // update->events[0] = 
   // TODO
 }
 
-
-void Interpret(tid_t rep_tid, RawTrackEvent *rte) {
+static void Interpret(tid_t rep_tid, RawTrackEvent *rte) {
   int r;
   TrackRequest rep_req;
   Track track;
-  TrackUpdate updates;
+  TrackUpdate update;
 
-  updates.num = 0;
+  update.num = 0;
 
   // Request for the previous track state
   rep_req.type = TRR_FETCH;
   Send(rep_tid, &rep_req, sizeof(rep_req), &track, sizeof(track));
 
-
   switch (rte->type) {
     case RTE_SENSOR:
-      InterpretSensorEvent(&rte->event.se_event, &track, &updates);
+      InterpretSensorEvent(&rte->event.se_event, &track, &update);
       break;
     case RTE_TRAIN:
-      InterpretTrainEvent(&rte->event.tr_event, &track, &updates);
+      InterpretTrainEvent(&rte->event.tr_event, &track, &update);
       break;
     case RTE_SWITCH:
-      InterpretSwitchEvent(&rte->event.sw_event, &track, &updates);
+      InterpretSwitchEvent(&rte->event.sw_event, &track, &update);
       break;
     default:
       assert(0);
@@ -44,25 +42,62 @@ void Interpret(tid_t rep_tid, RawTrackEvent *rte) {
 
   // Send the updated track state to the representer
   rep_req.type = TRR_UPDATE;
-  rep_req.update = updates;
+  rep_req.data.update = update;
   Send(rep_tid, &rep_req, sizeof(rep_req), &r, sizeof(r));
 }
 
+static void SensorSubscriber() {
+  tid_t se_pub;
+  se_pub = WhoIs(SENSOR_PUBLISHER_ID);
+  assert(se_pub > 0);
+
+  // TODO
+
+  Exit();
+}
+
+static void SwitchSubscriber() {
+  tid_t sw_pub;
+  sw_pub = WhoIs(SWITCH_PUBLISHER_ID);
+  assert(sw_pub > 0);
+
+  // TODO
+
+  Exit();
+}
+
+static void TrainSubscriber() {
+  int r;
+  TMSubscribe tmsub;
+  RawTrainEvent event;
+  tid_t tr_pub, inter_tid;
+
+  tr_pub = WhoIs(TRAIN_PUBLISHER_ID);
+  assert(tr_pub > 0);
+
+  inter_tid = MyParentTid();
+  assert(inter_tid > 0);
+
+  tmsub.tmc = TM_SUBSCRIBE;
+
+  while (true) {
+    Send(tr_pub, &tmsub, sizeof(tmsub), &event, sizeof(event));
+    Send(inter_tid, &event, sizeof(event), &r, sizeof(r));
+  }
+
+  Exit();
+}
 
 void Interpreter() {
   int r;
-  tid_t sw_pub, se_pub, tr_pub, rep_tid, req_tid;
-  TMSubscribe tmsub;
+  tid_t rep_tid, req_tid;
 
   rep_tid = WhoIs(REPRESENTER_ID);
 
-  // Subscribe to data providers
-  sw_pub = WhoIs(SWITCH_PUBLISHER_ID);
-  se_pub = WhoIs(SENSOR_PUBLISHER_ID);
-  tr_pub = WhoIs(TRAIN_PUBLISHER_ID);
-
-  tmsub.tmc = TM_SUBSCRIBE;
-  Send(tr_pub, &tmsub, sizeof(tmsub), &r, sizeof(r));
+  // Subscribers to data publishers
+  Create(25, &TrainSubscriber);
+  // TODO: Create(25, &SensorSubscriber);
+  // TODO: Create(25, &SwitchSubscriber);
 
   RawTrackEvent rte;
   while (true) {
@@ -70,4 +105,6 @@ void Interpreter() {
     Interpret(rep_tid, &rte);
     Reply(req_tid, &r, sizeof(r));
   }
+
+  Exit();
 }

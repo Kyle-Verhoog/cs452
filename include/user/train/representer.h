@@ -8,8 +8,12 @@
 #include <user/train/train_defines.h>
 #include <user/train/track_event.h>
 
+#define MAX_EVENT_SUBSCRIBERS 16
+
+CIRCULAR_BUFFER_DEC(trm_subscribers, tid_t, MAX_EVENT_SUBSCRIBERS);
+
 typedef struct Track {
-  TrainDescriptor train[TRAIN_SIZE]; // TODO: make a list data structure
+  Train train[TRAIN_SIZE]; // TODO: make a list data structure
   // trains..
   //  - locations
   //  - destinations
@@ -22,12 +26,17 @@ typedef enum TrackRequestType {
   TRR_SUBSCRIBE = 0,  // subscribe on an event
   TRR_FETCH     = 1,  // get all the track data
   TRR_UPDATE    = 2,  // update the track model given a list of updates
+  TRR_NOP       = 3,  // nop
 } TrackRequestType;
+
+union uTrackRequest {
+  Track track;
+  TrackUpdate update;
+};
 
 typedef struct TrackRequest {
   TrackRequestType type;
-  Track track;
-  TrackUpdate update;
+  union uTrackRequest data;
 } TrackRequest;
 
 void Representer();

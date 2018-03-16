@@ -17,10 +17,12 @@ void RailwayInit(){
     //Send Go
     PutC(tx_tid, 96);
 
-    Create(29, &TrainProvider);
-    Create(29, &SwitchProvider);
-    Create(29, &SensorProvider);
-    
+    Create(26, &TrainProvider);
+    Create(26, &SwitchProvider);
+    Create(26, &SensorProvider);
+    Create(26, &Representer);
+    Create(26, &Interpreter);
+
     Exit();
 }
 
