@@ -1,50 +1,27 @@
 #include <switch_provider.h>
 #include <prediction_manager.h>
 
-void init_switch(tid_t sw_handler, Switch *slist){
-	int reply = 0;
-	SWProtocol swp;
+void init_switch(){
+  int reply = 0;
+  SWProtocol swp;
 
-	//Send Commands to SwitchHandler
-	swp.swr = SW_FLIP;
-	swp.dir = SW_CURVE;
-	int node = 0;
-	int i;
-	for(i = NORMAL_SWITCH_SIZE_LOW; i <= NORMAL_SWITCH_SIZE_HIGH; ++i){
-		while(true){
-			if(track[node].type == NODE_BRANCH){
-				slist[i].branch = &track[node];
-				slist[i].merge = &track[node+1];
-				node+=2;
-				break;
-			}
-			node++;
-		}
-		slist[i].state = SW_CURVE;
-		swp.sw = i;
-		Send(sw_handler, &swp, sizeof(swp), &reply, sizeof(reply));
-	}
+  //Send Commands to the Switch Provider
+  swp.swr = SW_FLIP;
+  swp.dir = SW_CURVE;
 
-	// c.row++;
-	for(i = SPECIAL_SWITCH_SIZE_LOW; i <= SPECIAL_SWITCH_SIZE_HIGH; ++i){
-		while(true){
-			if(track[node].type == NODE_BRANCH){
-				slist[i].branch = &track[node];
-				slist[i].merge = &track[node+1];
-				node+=2;
-				break;
-			}
-			node++;
-		}
-		slist[i].state = SW_STRAIGHT+(i%2);
-		swp.dir = SW_STRAIGHT+(i%2);
-		swp.sw = i;
-		Send(sw_handler, &swp, sizeof(swp), &reply, sizeof(reply));
-	}
-}
+  tid_t sw_tid = MyParentTid();
+  int i;
+  for(i = NORMAL_SWITCH_SIZE_LOW; i <= NORMAL_SWITCH_SIZE_HIGH; ++i){
+    swp.sw = i;
+    Send(sw_tid, &swp, sizeof(swp), &reply, sizeof(reply));
+  }
+  for(i = SPECIAL_SWITCH_SIZE_LOW; i <= SPECIAL_SWITCH_SIZE_HIGH; ++i){
+    swp.sw = i;
+    swp.dir = SW_STRAIGHT+(i%2);
+    Send(sw_tid, &swp, sizeof(swp), &reply, sizeof(reply));
+  }
 
-void UpdateSwitchTable(Switch *table, int sw, SwitchState dir){
-  table[sw].state = dir;
+  Exit();
 }
 
 void SwitchHandler(void *args){
@@ -70,21 +47,18 @@ void SwitchHandler(void *args){
 		sw_command[0] = sw.dir;
 		sw_command[1] = sw.sw;
 
-		WriteCommandUART1(tx1_writer, sw_command, 2);
+    PutStr(tx1_writer, sw_command, 2);
 		Delay(cs_tid, my_tid, 15);	//delay 150 ms
-		WriteCommandUART1(tx1_writer, sol_command, 1);
+    PutStr(tx1_writer, sol_command, 1);
 	}
 
   Exit();
 }
 
-
-void SwitchPublisher(void *args){
-  void *data;
+void SwitchPublisher(){
   int reply;
-  tid_t req_tid;
-  SWProtocol swp;
-  Switch *switches = *(Switch**)args;
+  tid_t req_tid, sub;
+  SWSubscribe sws;
 
   tid_cb subscribers;
   tid_cb_init(&subscribers);
@@ -93,19 +67,15 @@ void SwitchPublisher(void *args){
   assert(r == 0);
 
   while(true){
-    Receive(&req_tid, &swp, sizeof(swp));
+    Receive(&req_tid, &sws, sizeof(sws));
 
-    switch(swp.swr){
+    switch(sws.swr){
       case SW_NOTIFY:
         Reply(req_tid, &reply, sizeof(reply));
-        Notify(&subscribers);
+        NOTIFY(&subscribers, &sub, sws.swp, sizeof(sws.swp));
         break;
       case SW_SUBSCRIBE:
         tid_cb_push(&subscribers, req_tid);
-        break;
-      case SW_GET_ALL:
-        data = (void *)switches;
-        Reply(req_tid, &data, sizeof(data));
         break;
       default:
         assert(0 && "Bad Command");
@@ -116,26 +86,45 @@ void SwitchPublisher(void *args){
 }
 
 void SwitchUpdateCourier(){
-  SMProtocol swp;
+  SWProtocol swp, data;
+  SWSubscribe sws;
   int reply;
 
   tid_t pub_tid = WhoIs(SWITCH_PUBLISHER_ID);
   tid_t sw_tid = MyParentTid();
 
   while(true){
-    swp.smr = SW_NOTIFY_READY;
-    Send(sw_tid, &swp, sizeof(swp), &reply, sizeof(reply));  
+    swp.swr = SW_NOTIFY_READY;
+    Send(sw_tid, &swp, sizeof(swp), &data, sizeof(data));
 
-    swp.smr = SW_NOTIFY;
-    Send(pub_tid, &swp, sizeof(swp), &reply, sizeof(reply));  
+    sws.swr = SW_NOTIFY;
+    sws.swp = data;
+    Send(pub_tid, &sws, sizeof(sws), &reply, sizeof(reply));
   }
   
   Exit();
 }
 
+void TestSWPublisher(){
+  SWSubscribe sws;
+  SWProtocol res;
+
+  tid_t pub_tid = WhoIs(SWITCH_PUBLISHER_ID);
+  assert(pub_tid >= 0);
+  tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+  assert(tm_tid >= 0);
+
+  sws.swr = SW_SUBSCRIBE;
+
+  while(true){
+    Send(pub_tid, &sws, sizeof(sws), &res, sizeof(res));
+    TMLogStrf(tm_tid, "Switch: %d, Arg: %d\n", res.sw, res.dir);
+  }
+
+  Exit();
+}
+
 void SwitchProvider(){
-	Switch switchList[SWITCH_SIZE];
-  Switch *swl = switchList;
   bool courierFlag = false;
   bool switchFlag = false;
 
@@ -147,19 +136,18 @@ void SwitchProvider(){
 
   // TODO: make switchList a global?
   	tid_t sw_handler = CreateArgs(29, &SwitchHandler, &tx1_writer, sizeof(tx1_writer));
-    CreateArgs(29, &SwitchPublisher, &swl, sizeof(Switch *));
+    Create(29, &SwitchPublisher);
     tid_t suc_tid = Create(29, &SwitchUpdateCourier);
-    init_switch(sw_handler, switchList);
-
+    Create(19, &TestSWPublisher); //TODO: Remove this
 
   	while(true){
   		tid_t req_tid;
-  		SWProtocol sw;
+  		SWProtocol sw, data;
 
       if(courierFlag && switchFlag){
         courierFlag = false;
         switchFlag = false;
-        Reply(suc_tid, &reply, sizeof(reply));
+        Reply(suc_tid, &data, sizeof(data));
       }
 
   		//Receive new SW request
@@ -169,10 +157,9 @@ void SwitchProvider(){
   			case SW_FLIP:
 	  			//Send the command switch handler
 	  			Send(sw_handler, &sw, sizeof(sw), &reply, sizeof(reply));
-	  			//Update the UI and table
-	  			UpdateSwitchTable(switchList, sw.sw, sw.dir);
 	  			Reply(req_tid, &reply, sizeof(reply));
           switchFlag = true;
+          data = sw;  //persist data until read
   				break;
         case SW_NOTIFY_READY:
           courierFlag = true;

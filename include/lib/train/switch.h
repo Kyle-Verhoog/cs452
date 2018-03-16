@@ -28,4 +28,9 @@ typedef struct SWProtocol{
 	SwitchState dir;
 }SWProtocol;
 
+typedef struct SWSubscribe{
+	SW_Request swr;
+	SWProtocol swp;
+}SWSubscribe;
+
 #endif

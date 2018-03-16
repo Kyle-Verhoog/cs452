@@ -13,7 +13,7 @@ typedef enum RawTrackEventType {
   RTE_TRAIN  = 2,
 } RawTrackEventType;
 
-typedef SMProtocol RawSensorEvent;
+typedef SNProtocol RawSensorEvent;
 typedef SWProtocol RawSwitchEvent;
 typedef TrainProtocol RawTrainCmdEvent;
 

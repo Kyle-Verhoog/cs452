@@ -13,6 +13,8 @@
 #include <switch.h>
 
 void SwitchProvider();
+void init_switch();
+
 
 #define TURN_SOLENOID_OFF 32
 

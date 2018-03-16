@@ -5,6 +5,10 @@
 #include <user/syscalls.h>
 
 CIRCULAR_BUFFER_DEC(tid_cb, tid_t, MAX_TASK);
-void Notify(tid_cb *subscribers);
+
+#define NOTIFY(SUBS, SUB, DATA, SIZE) \
+	while(tid_cb_pop(SUBS, SUB) != CB_E_EMPTY){ \
+		Reply(*SUB, &DATA, SIZE);	\
+	}	\
 
 #endif

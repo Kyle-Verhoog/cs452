@@ -11,23 +11,28 @@ typedef struct Sensor{
 	track_node *node;
 }Sensor;
 
-typedef enum SM_Request{
+typedef enum SN_Request{
 	//Manager Reqs
-	SM_HALT = -1,
-	SM_READBYTE = 0,
-	SM_CHECK = 1,
-	SM_RESET = 2,
+	SN_HALT = -1,
+	SN_READBYTE = 0,
+	SN_CHECK = 1,
+	SN_RESET = 2,
 	//User Reqs
-	SM_NOTIFY_READY = 3,
-	SM_NOTIFY = 4,
-	SM_SUBSCRIBE = 5,
-	SM_SUBSCRIBE_DELTA = 6,
-	SM_GET_ALL = 10
-} SM_Request;
+	SN_NOTIFY_READY = 3,
+	SN_NOTIFY = 4,
+	SN_SUBSCRIBE = 5,
+	SN_SUBSCRIBE_DELTA = 6,
+	SN_GET_ALL = 10
+} SN_Request;
 
-typedef struct SMProtocol{
-	SM_Request smr;
+typedef struct SNProtocol{
+	SN_Request snr;
 	char byte;
-}SMProtocol;
+}SNProtocol;
+
+typedef struct SNSubscribe{
+	SN_Request snr;
+	char sensors[DECODER_SIZE * 2];
+}SNSubscribe;
 
 #endif //SENSOR_H
