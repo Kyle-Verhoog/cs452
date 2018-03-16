@@ -131,7 +131,7 @@ void TestTMPublisher(){
 
 	while(true){
 		Send(pub_tid, &tms, sizeof(tms), &res, sizeof(res));
-		TMLogStrf(tm_tid, "Command: %d, Arg: %d\n\r", res.tc, res.arg1);
+		TMLogStrf(tm_tid, "Command: %d, Arg: %d\n", res.tc, res.arg1);
 	}
 
 	Exit();
@@ -157,7 +157,6 @@ void TrainManager(){
 
   	//Construct the Train Publisher
   	Create(29, &TrainPublisher);
-  	Create(19, &TestTMPublisher); //TODO: REMOVE THIS
 
 	while(true){
 		tid_t tid_req;
