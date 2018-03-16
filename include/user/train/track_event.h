@@ -13,15 +13,14 @@ typedef enum RawTrackEventType {
   RTE_TRAIN  = 2,
 } RawTrackEventType;
 
-// TODO: these protocols should be kept here
 typedef SMProtocol RawSensorEvent;
 typedef SWProtocol RawSwitchEvent;
-typedef TrainProtocol RawTrainEvent;
+typedef TrainProtocol RawTrainCmdEvent;
 
 union RawTrackEvents {
-  RawTrainEvent  tr_event;
-  RawSensorEvent se_event;
-  RawSwitchEvent sw_event;
+  RawTrainCmdEvent  tr_cmd_event;
+  RawSensorEvent    se_event;
+  RawSwitchEvent    sw_event;
 };
 
 typedef struct RawTrackEvent {
@@ -39,15 +38,17 @@ typedef enum TrackEventType {
 typedef struct TrackEventTrainPositionChange {
 } TETRPosition;
 
-typedef struct TrackEventTrainSpeedChange {
-} TETRSpeed;
+typedef struct TrackEventTrainGearChange {
+  int num;
+  int newgear;
+} TETRGear;
 
 typedef struct TrackEventSwitchChange {
 } TESWChange;
 
 union TrackEvents {
   TETRPosition tr_pos;
-  TETRSpeed tr_speed;
+  TETRGear tr_gear;
   TESWChange sw_toggle;
 };
 

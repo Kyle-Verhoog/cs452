@@ -8,9 +8,11 @@ static void InterpretSwitchEvent(RawSwitchEvent *sw_event, Track *track, TrackUp
   // TODO
 }
 
-static void InterpretTrainEvent(RawTrainEvent *tr_event, Track *track, TrackUpdate *update) {
-  // update->events[0] = 
-  // TODO
+static void InterpretTrainCmdEvent(RawTrainCmdEvent *cmd_event, Track *track, TrackUpdate *update) {
+  // TODO:
+  // TETRGear event;
+  // event.num = cmd_event->arg1;
+  // event.newgear = cmd_event->arg2;
 }
 
 static void Interpret(tid_t rep_tid, RawTrackEvent *rte) {
@@ -30,7 +32,7 @@ static void Interpret(tid_t rep_tid, RawTrackEvent *rte) {
       InterpretSensorEvent(&rte->event.se_event, &track, &update);
       break;
     case RTE_TRAIN:
-      InterpretTrainEvent(&rte->event.tr_event, &track, &update);
+      InterpretTrainCmdEvent(&rte->event.tr_cmd_event, &track, &update);
       break;
     case RTE_SWITCH:
       InterpretSwitchEvent(&rte->event.sw_event, &track, &update);
@@ -69,7 +71,7 @@ static void SwitchSubscriber() {
 static void TrainSubscriber() {
   int r;
   TMSubscribe tmsub;
-  RawTrainEvent event;
+  RawTrainCmdEvent event;
   tid_t tr_pub, inter_tid;
 
   tr_pub = WhoIs(TRAIN_PUBLISHER_ID);
