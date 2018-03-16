@@ -13,6 +13,7 @@
 #include <circular_buffer.h>
 #include <lib/train/path_finding.h>
 #include <tid_buffer.h>
+#include <user/terminal_manager.h>
 
 #define TRAIN_COMMAND_BUFFER_SIZE 64
 
@@ -26,7 +27,7 @@ typedef enum TM_Command{
 	TM_GET_ALL = 6,
 	//USER COMMANDS
 	TM_NOTIFY = 10,
-	1TM_SUBSCRIBE = 11
+	TM_SUBSCRIBE = 11
 }TM_Command;
 
 typedef struct TMProtocol{
@@ -76,7 +77,6 @@ typedef struct TrainDescriptor{
 } TrainDescriptor;
 
 void TrainManager();
-void TrainPublisher(void *args);
 
 /****************
 Train Manager Commands

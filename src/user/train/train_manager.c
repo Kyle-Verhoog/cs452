@@ -23,15 +23,15 @@ void TrainPublisher(){
 	assert(r == 0);
 
 	while(true){
-		Receive(&tid_req, &tms, sizeof(tms));
+		Receive(&req_tid, &tms, sizeof(tms));
 
 		switch(tms.tmc){
 			case TM_NOTIFY:				
-				Reply(tid_req, &reply, sizeof(reply));
+				Reply(req_tid, &reply, sizeof(reply));
 				NotifyTMSubscribers(&subscribers, tms.tp);
 				break;
 			case TM_SUBSCRIBE:
-				tid_cb_push(&subscribers, tid_req);
+				tid_cb_push(&subscribers, req_tid);
 				break;
 			default:
 				assert(0 && "Bad train command");
@@ -45,7 +45,7 @@ void TMWriteTask(void *args){
 	char buf[2];
 	int reply;
 	volatile TrainProtocol cmd;
-	volatile TMSubscribe tms;
+	TMSubscribe tms;
 	TrainDescriptor* td = *(TrainDescriptor **)args;
 
 	tid_t mytid = MyTid();
