@@ -445,7 +445,8 @@ void Shell(void *args) {
     { "q", &Quit, 31, true },
     { "tr", &TrainTR, 28, true },
     { "rv", &TrainRV, 28, true },
-    { "tk", &TrainTK, 28, true },
+    { "sw", &SwitchSW, 28, true },
+    //{ "tk", &TrainTK, 28, true },
   };
 
   vars = (int *)args;

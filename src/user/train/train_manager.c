@@ -34,7 +34,9 @@ void TMWriteTask(void *args){
   	assert(tx_tid >= 0);
 
 	volatile TrainProtocol cmd;
-	tc_cb_pop(&td->buf, &cmd);
+	if(tc_cb_pop(&td->buf, &cmd) == CB_E_EMPTY){
+		assert(0);
+	}
 
 	switch(cmd.tc){
 		case T_MOVE:
@@ -55,8 +57,10 @@ void TMWriteTask(void *args){
 	        PutStr(tx_tid, buf, 2);
 	        buf[0] = td->gear;
 	        PutStr(tx_tid, buf, 2);
-	        td->dir = !td->dir;
-	        td->node = td->node->reverse;
+	        td->dir = td->dir ? false:true;
+	        if(td->node != NULL){
+	        	td->node = td->node->reverse;	
+	        }	        
 			break;
 		case T_DELAY:
 			DelayCS(mytid, cmd.arg1);

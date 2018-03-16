@@ -12,6 +12,11 @@ void TrainTR(char *args);
 
 void TrainRV(char *args);
 
-void TrainTK(char *args);
+//void TrainTK(char *args);
+
+void SwitchSW(char *args);
+
+
+
 
 #endif
