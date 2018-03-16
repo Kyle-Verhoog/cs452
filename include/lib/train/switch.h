@@ -31,6 +31,6 @@ typedef struct SWProtocol{
 typedef struct SWSubscribe{
 	SW_Request swr;
 	SWProtocol swp;
-}
+}SWSubscribe;
 
 #endif
