@@ -111,12 +111,11 @@ void TrainPublisher(){
 // }
 
 void TWriteTask(void *args){
-	TrainProtocol cmd = (void *)args;
+	TrainProtocol cmd = *(TrainProtocol *)args;
 	char buf[2];
 	int reply;
 	TMSubscribe tms;
 
-	tid_t mytid = MyTid();
 	tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
   	assert(tx_tid >= 0);
   	tid_t pub_tid = WhoIs(TRAIN_PUBLISHER_ID);
@@ -167,7 +166,7 @@ void TrainProvider(){
 	int r = RegisterAs(TRAIN_PROVIDER_ID);
 	assert(r == 0);
 
-	tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+	tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
 	assert(tm_tid >= 0);
 	tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
 	assert(tx_tid >= 0);
