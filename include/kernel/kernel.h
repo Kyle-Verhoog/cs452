@@ -24,6 +24,7 @@
 #include <kernel/handlers/nameserver.h>
 #include <kernel/handlers/interrupt.h>
 
+#include <lib/terminal_escape_codes.h>
 
 //Bridges from C to ASM
 extern unsigned int kernel_stack_base;

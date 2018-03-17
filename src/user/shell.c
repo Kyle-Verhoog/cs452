@@ -2,43 +2,6 @@
 
 CIRCULAR_BUFFER_DEF(cmd_cb, char, CMD_BUF_MAX);
 
-/*
-void ShellDummyTask(int *args) {
-  tid_t tm_tid;
-  int i, j, k, x, y, w, h;
-
-  x = args[0];
-  y = args[1];
-  w = args[2];
-  h = args[3];
-
-  tm_tid = WhoIs(TERMINAL_MANAGER_ID);
-  assert(tm_tid >= 0);
-  TMRegister(tm_tid, x, y, w, h);
-
-  i = j = k = 0;
-  while (true) {
-    i++;
-    if (i > 2000000) {
-      if (j == w-2) {
-        TMPutC(tm_tid, '\n');
-        if (k == h-2) {
-          TMPutC(tm_tid, '\r');
-          k = 0;
-        } else {
-          k++;
-        }
-        j = 0;
-      } else {
-        TMPutC(tm_tid, 'a'+j);
-        j++;
-      }
-      i = 0;
-    }
-  }
-}
-*/
-
 void cmd_cb_push_str(cmd_cb *buf, char *str) {
   while (*str != '\0') {
     cmd_cb_push(buf, *str++);
@@ -57,7 +20,7 @@ void shell_clear_cmd(shell *sh) {
 }
 
 void shell_prompt(shell *sh) {
-  cmd_cb_push_str(&sh->buf, " ⇒");
+  cmd_cb_push_str(&sh->buf, " $ ");
 }
 
 void shell_init(shell *sh) {
@@ -162,7 +125,7 @@ void shell_info(shell *sh) {
 }
 
 void shell_skip(shell *sh) {
-  cmd_cb_push_str(&sh->buf, "\n\n");
+  cmd_cb_push_str(&sh->buf, "\n");
 }
 
 void shell_info_msg(shell *sh, char *msg) {
@@ -446,6 +409,7 @@ void Shell(void *args) {
     { "tr", &TrainTR, 28, true },
     //{ "rv", &TrainRV, 28, true }
     { "sw", &SwitchSW, 28, true },
+    { "dummy", &DummyTask, 1, true },
     //{ "tk", &TrainTK, 28, true },
   };
 

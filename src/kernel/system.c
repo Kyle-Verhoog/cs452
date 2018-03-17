@@ -38,7 +38,6 @@ int calc_mem_usage() {
   return (KERNEL_STACK_BASE - sp) / KERNEL_STACK_BASE;
 }
 
-
 void *memcpy(void *d, void *s, int len) {
   int i;
   for (i = 0; i < len; ++i) {

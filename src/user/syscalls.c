@@ -106,6 +106,8 @@ int CPUUsage(tid_t tid) {
   return r0;
 }
 
-
-
-
+int TaskInfo(char *c) {
+  register uint32_t r0 __asm__("r0");
+  asm("swi #19");
+  return r0;
+}

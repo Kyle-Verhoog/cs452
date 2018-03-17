@@ -1,9 +1,35 @@
 #include <user/train/interpreter.h>
 
-tid_t tm_tid;
+static tid_t tm_tid;
 
 static void InterpretSensorEvent(RawSensorEvent *se_event, Track *track, TrackUpdate *update) {
-  // TODO
+  char *new_sensors, *old_sensors, new_dec, old_dec;
+  int i, j;
+  TrackEvent event;
+
+  event.type = TE_SE_CHANGE;
+  new_sensors = se_event->sensors;
+  old_sensors = track->sensors;
+
+  // check new sensors for deltas with the old sensor data
+  // looping over decoders A->E
+  for (i = 0; i < DECODER_SIZE*2; ++i) {
+    new_dec = new_sensors[i];
+    old_dec = old_sensors[i];
+
+    if (new_dec == old_dec) continue;
+
+    // looping over bits of decoder byte
+    for (j = 0; j < 8; ++j) {
+      if (GET_SENSOR(new_dec, j) != GET_SENSOR(old_dec, j)) {
+        event.event.se_change.dec = i;
+        event.event.se_change.sen = j;
+        update->events[update->num++] = event;
+      }
+    }
+  }
+
+  // TODO: using updated sensors compare to predicted model...?
 }
 
 static void InterpretSwitchEvent(RawSwitchEvent *sw_event, Track *track, TrackUpdate *update) {

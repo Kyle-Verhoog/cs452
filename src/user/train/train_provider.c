@@ -48,6 +48,9 @@ void TWriteTask(void *args){
 			buf[1] = cmd.arg1;
 			PutStr(tx_tid, buf, 2);
 			break;
+    default:
+      assert(0);
+      break;
 	}
 
 	//Send the Updated Command to the publisher

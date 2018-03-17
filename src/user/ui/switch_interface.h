@@ -1,5 +1,5 @@
-#ifndef SENSOR_INTERFACE_H
-#define SENSOR_INTERFACE_H
+#ifndef SWITCH_INTERFACE_H
+#define SWITCH_INTERFACE_H
 
 #include <user/syscalls.h>
 #include <user/nameserver.h>
@@ -8,5 +8,5 @@
 #include <user/train/sensor_provider.h>
 #include <user/train/representer.h>
 
-void SensorInterface();
+void SwitchInterface();
 #endif

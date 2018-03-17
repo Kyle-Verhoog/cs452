@@ -90,8 +90,8 @@ void TerminalManager() {
   print_tdisp(tx_tid, &wm.td);
 
   int sh_args[4];
-  sh_args[0] = SH_OFFSET_X;
-  sh_args[1] = SH_OFFSET_Y;
+  sh_args[0] = SH_OFF_X;
+  sh_args[1] = SH_OFF_Y;
   sh_args[2] = SH_WIDTH;
   sh_args[3] = SH_HEIGHT;
   CreateArgs(29, &Shell, (void *)sh_args, sizeof(int)*sizeof(sh_args));

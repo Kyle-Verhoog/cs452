@@ -17,7 +17,7 @@ void TimerInterface() {
   clk_init(&clk);
 
   prev_ti = cur_ti = Time(cs_tid, my_tid);
-  TMRegister(tm_tid, TIME_OFFSET_X, TIME_OFFSET_Y, TIME_WIDTH, TIME_HEIGHT);
+  TMRegister(tm_tid, TIME_OFF_X, TIME_OFF_Y, TIME_WIDTH, TIME_HEIGHT);
 
   // TMLogStrf(tm_tid, clocks, strlen(clocks));
   while (true) {

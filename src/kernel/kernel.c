@@ -194,6 +194,32 @@ int calc_cpu_time(TaskDescriptor *td) {
   return (other->running_time * 100) / (other->start_time - *(int*)(TM_CLOCK_VAL));
 }
 
+int task_info(TaskDescriptor *td) {
+  int i, offset, status;
+  char *buf;
+  const char *stat[] = {
+    TEXT_GREEN"ACTIV"TEXT_BLACK,
+    TEXT_GREEN"READY"TEXT_BLACK,
+    TEXT_RED"REGBL"TEXT_BLACK,
+    TEXT_RED"UNINI"TEXT_BLACK,
+    TEXT_RED"ZOMBI"TEXT_BLACK,
+    TEXT_RED"RCVBL"TEXT_BLACK,
+    TEXT_RED"SNDBL"TEXT_BLACK,
+    TEXT_RED"RPLBL"TEXT_BLACK,
+  };
+  asm("ldr %0, [%1, #4];":"=r"(buf):"r"(td->sp));
+  offset = 0;
+
+  offset += buf_pack_str(buf+offset, "\vtid\tstatus\n");
+    offset += buf_pack_f(buf+offset, "┉┉┉┉┉┉┉┉┉┉┉┉┉\n");
+  for (i = 0; i < MAX_TASK; ++i) {
+    status = tasks[i].status;
+    if (status != TS_ZOMBIE && status != TS_UNINIT)
+      offset += buf_pack_f(buf+offset, "%d\t%s\n", i, stat[status]);
+  }
+  return offset;
+}
+
 void handle(TaskDescriptor *td, TaskRequest req) {
   switch (req) {
   case TR_IRQ:
@@ -269,6 +295,10 @@ void handle(TaskDescriptor *td, TaskRequest req) {
     break;
   case TR_INFO_CPU:
     td->ret = calc_cpu_time(td);
+    pq_push(&pq_tasks, td->priority, td);
+    break;
+  case TR_INFO_TASK:
+    td->ret = task_info(td);
     pq_push(&pq_tasks, td->priority, td);
     break;
   default:
