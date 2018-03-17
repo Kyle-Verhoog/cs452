@@ -118,7 +118,6 @@ void TestSWPublisher(){
 
   while(true){
     Send(pub_tid, &sws, sizeof(sws), &res, sizeof(res));
-    TMLogStrf(tm_tid, "Switch: %d, Arg: %d\n", res.sw, res.dir);
   }
 
   Exit();

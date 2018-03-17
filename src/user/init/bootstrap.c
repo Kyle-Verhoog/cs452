@@ -45,6 +45,7 @@ void Bootstrap() {
   // interfaces
   Create(10, &TrainTrackInterface);
   Create(10, &SensorInterface);
+  Create(10, &SwitchInterface);
   Create(5, &TimerInterface);
   Create(5, &NProcsInterface);
   Create(5, &MemUsageInterface);

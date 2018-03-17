@@ -47,6 +47,7 @@
 #define SENSOR_WIDTH    19
 #define SENSOR_HEIGHT   2
 
+
 // sensor window config
 #define M1_RESET_OFF_X   SH_OFFSET_X
 #define M1_RESET_OFF_Y   SH_OFFSET_Y + SH_HEIGHT + 1
@@ -55,7 +56,13 @@
 
 #define TRACK_OFF_X SH_OFFSET_X
 #define TRACK_OFF_Y SH_OFFSET_Y + SH_HEIGHT + 1
-#define TRACK_WIDTH SH_WIDTH
-#define TRACK_HEIGHT 40
+#define TRACK_WIDTH IDLE_OFF_X + IDLE_WIDTH - 2
+#define TRACK_HEIGHT 37
+
+// sensor window config
+#define SWITCH_OFFSET_X  IDLE_OFF_X + IDLE_WIDTH + 1
+#define SWITCH_OFFSET_Y  TRACK_OFF_Y
+#define SWITCH_WIDTH     SENSOR_WIDTH
+#define SWITCH_HEIGHT    37
 
 #endif

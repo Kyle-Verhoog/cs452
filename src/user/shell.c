@@ -57,7 +57,7 @@ void shell_clear_cmd(shell *sh) {
 }
 
 void shell_prompt(shell *sh) {
-  cmd_cb_push_str(&sh->buf, " ⇒");
+  cmd_cb_push_str(&sh->buf, " $ ");
 }
 
 void shell_init(shell *sh) {

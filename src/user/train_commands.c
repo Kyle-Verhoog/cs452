@@ -77,8 +77,22 @@ void SwitchSW(char *args){
 
   sw.swr = SW_FLIP;
   r = parse_args(args, "%d %c", &swn, &dir);
-  if(r) {
+  if (r) {
     TMLogStrf(tm_tid, "rv: error parsing arg %d\n", r);
+    r = -1;
+    Reply(tid, &r, sizeof(r));
+    Exit();
+  }
+  if (dir != 'C' && dir != 'S') {
+    TMLogStrf(tm_tid, "rv: invalid sw dir!\n");
+    r = -1;
+    Reply(tid, &r, sizeof(r));
+    Exit();
+  }
+
+  if (!((NORMAL_SWITCH_SIZE_LOW <= swn && swn <= NORMAL_SWITCH_SIZE_HIGH) ||
+        (SPECIAL_SWITCH_SIZE_LOW <= swn && swn <= SPECIAL_SWITCH_SIZE_HIGH))) {
+    TMLogStrf(tm_tid, "rv: invalid sw num!\n");
     r = -1;
     Reply(tid, &r, sizeof(r));
     Exit();

@@ -1,6 +1,6 @@
 #include <user/train/interpreter.h>
 
-tid_t tm_tid;
+static tid_t tm_tid;
 
 static void InterpretSensorEvent(RawSensorEvent *se_event, Track *track, TrackUpdate *update) {
   char *new_sensors, *old_sensors, new_dec, old_dec;

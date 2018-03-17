@@ -34,7 +34,6 @@ void SensorInterface() {
   assert(tm_tid > 0);
 
   TMRegister(tm_tid, SENSOR_OFFSET_X, SENSOR_OFFSET_Y, SENSOR_WIDTH, SENSOR_HEIGHT);
-  TMLogRegister(tm_tid);
 
   Create(11, &SensorSubscriber);
 

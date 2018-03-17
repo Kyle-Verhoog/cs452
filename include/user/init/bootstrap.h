@@ -11,6 +11,8 @@
 #include <user/init/track_data.h>
 #include <user/ui/train_track.h>
 #include <user/ui/timer_interface.h>
+#include <user/ui/sensor_interface.h>
+#include <user/ui/switch_interface.h>
 #include <user/ui/num_procs.h>
 #include <user/ui/mem_usage.h>
 #include <user/ui/idle_time.h>

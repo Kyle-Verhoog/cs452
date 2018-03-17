@@ -12,7 +12,6 @@ static void TrackInit(Track *track) {
 }
 
 static void NotifySubscribers(trm_subscribers *subs, TrackEventType type, union TrackEvents *event) {
-  assert(type == TE_SE_CHANGE);
   assert(type >= 0 && type < MAX_TRACK_EVENT);
   tid_t tid;
   trm_subscribers *event_subs;
@@ -29,7 +28,6 @@ static void AddSubscriber(trm_subscribers *subs, tid_t tid, TrackEventType type)
   int r;
   trm_subscribers *event_subs;
 
-  assert(type == TE_SE_CHANGE);
   event_subs = &subs[type];
   r = trm_subscribers_push(event_subs, tid);
   assert(r == 0);
@@ -58,7 +56,7 @@ static void ApplyUpdates(Track *track, TrackUpdate *updates, trm_subscribers *su
         //assert(0 && "TODO");
         break;
       case TE_SW_CHANGE:
-        assert(0 && "TODO");
+        // assert(0 && "TODO");
         break;
       default:
         assert(0);
