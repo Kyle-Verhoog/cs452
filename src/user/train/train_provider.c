@@ -17,7 +17,7 @@ void TrainPublisher(){
 		switch(ts.tc){
 			case T_NOTIFY:				
 				Reply(req_tid, &reply, sizeof(reply));
-				NOTIFY(&subscribers, &sub, tms.tp, sizeof(tms.tp))
+				NOTIFY(&subscribers, &sub, ts.tp, sizeof(ts.tp))
 				break;
 			case T_SUBSCRIBE:
 				tid_cb_push(&subscribers, req_tid);
@@ -53,7 +53,7 @@ void TWriteTask(void *args){
 	//Send the Updated Command to the publisher
 	ts.tc = T_NOTIFY;
 	ts.tp = cmd;
-	Send(pub_tid, &tms, sizeof(ts), &reply, sizeof(reply));
+	Send(pub_tid, &ts, sizeof(ts), &reply, sizeof(reply));
 
 	Exit();
 }
@@ -67,7 +67,7 @@ void TestTMPublisher(){
 	assert(tm_tid >= 0);
 
 
-	ts.tmc = T_SUBSCRIBE;
+	ts.tc = T_SUBSCRIBE;
 
 	while(true){
 		Send(pub_tid, &ts, sizeof(ts), &res, sizeof(res));
