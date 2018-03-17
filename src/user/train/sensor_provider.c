@@ -125,7 +125,7 @@ void TestSNPublisher(){
 
 	while(true){
 		Send(pub_tid, &sns, sizeof(sns), sensors, sizeof(sensors));
-		TMLogStrf(tm_tid, "Sensors:%d%d %d%d %d%d %d%d %d%d\n", sensors[0],sensors[1],sensors[2],sensors[3],sensors[4],sensors[5],sensors[6],sensors[7],sensors[8],sensors[9]);
+		// TMLogStrf(tm_tid, "Sensors:%d%d %d%d %d%d %d%d %d%d\n", sensors[0],sensors[1],sensors[2],sensors[3],sensors[4],sensors[5],sensors[6],sensors[7],sensors[8],sensors[9]);
 	}
 
 	Exit();

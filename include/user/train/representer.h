@@ -14,6 +14,7 @@ CIRCULAR_BUFFER_DEC(trm_subscribers, tid_t, MAX_EVENT_SUBSCRIBERS);
 
 typedef struct Track {
   Train train[TRAIN_SIZE]; // TODO: make a list data structure
+  char sensors[DECODER_SIZE*2];
   // trains..
   //  - locations
   //  - destinations
@@ -26,12 +27,12 @@ typedef enum TrackRequestType {
   TRR_SUBSCRIBE = 0,  // subscribe on an event
   TRR_FETCH     = 1,  // get all the track data
   TRR_UPDATE    = 2,  // update the track model given a list of updates
-  TRR_NOP       = 3,  // nop
 } TrackRequestType;
 
 union uTrackRequest {
-  Track track;
-  TrackUpdate update;
+  Track track;         // fetch
+  TrackUpdate update;  // interpreter
+  TrackEventType type; // subscribers
 };
 
 typedef struct TrackRequest {
