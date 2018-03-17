@@ -9,7 +9,7 @@ void init_switch(){
   swp.swr = SW_FLIP;
   swp.dir = SW_CURVE;
 
-  tid_t sw_tid = MyParentTid();
+  tid_t sw_tid = WhoIs(SWITCH_PROVIDER_ID); 
   int i;
   for(i = NORMAL_SWITCH_SIZE_LOW; i <= NORMAL_SWITCH_SIZE_HIGH; ++i){
     swp.sw = i;
