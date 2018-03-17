@@ -116,7 +116,7 @@ static void TrainSubscriber() {
   event.type = RTE_TR_CMD;
 
   while (true) {
-    Send(tr_pub, &tmsub, sizeof(tmsub), &event.event.tr_cmd_event, sizeof(RawTrainCmdEvent));
+    Send(tr_pub, &tsub, sizeof(tsub), &event.event.tr_cmd_event, sizeof(RawTrainCmdEvent));
     Send(inter_tid, &event, sizeof(event), &r, sizeof(r));
   }
 
