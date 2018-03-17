@@ -30,9 +30,13 @@ typedef struct SNProtocol{
 	char byte;
 }SNProtocol;
 
+typedef struct RawSensors {
+  char sensors[DECODER_SIZE * 2];
+} RawSensors;
+
 typedef struct SNSubscribe{
 	SN_Request snr;
-	char sensors[DECODER_SIZE * 2];
+  RawSensors sensors;
 }SNSubscribe;
 
 #endif //SENSOR_H

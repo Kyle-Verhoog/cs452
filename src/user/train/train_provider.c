@@ -2,6 +2,9 @@
 //#include <prediction_manager.h>
 //#include <stoppingcalibration_test.h>
 
+
+tid_t tm_tid;
+
 void NotifyTMSubscribers(tid_cb *subscribers, TrainProtocol cmd){
 	tid_t sub;
 
@@ -62,6 +65,7 @@ void TMWriteTask(void *args){
 	//Send the Updated Command to the publisher (TODO: Rare - Possible unwanted blocking)
 	tms.tmc = TM_NOTIFY;
 	tms.tp = cmd;
+  // TMLogStrf(tm_tid, "%x", MyTid());
 	Send(pub_tid, &tms, sizeof(tms), &reply, sizeof(reply));
 
 	//Handle Command
@@ -138,6 +142,9 @@ void TestTMPublisher(){
 
 void TrainProvider(){
 	void *data;
+
+  tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+
 	TrainDescriptor Trains[TRAIN_SIZE];
 	
   int r = RegisterAs(TRAIN_PROVIDER_ID);
@@ -156,7 +163,7 @@ void TrainProvider(){
 
   	//Construct the Train Publisher
   	Create(29, &TrainPublisher);
-  	Create(19, &TestTMPublisher); //TODO: REMOVE THIS
+  	// Create(19, &TestTMPublisher); //TODO: REMOVE THIS
 
 	while(true){
 		tid_t tid_req;

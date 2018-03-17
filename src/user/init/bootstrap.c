@@ -21,7 +21,6 @@ void RailwayInit(){
     Create(26, &SwitchProvider);
     Create(26, &SensorProvider);
     Create(26, &Representer);
-    Create(26, &Interpreter);
 
     Exit();
 }
@@ -37,6 +36,7 @@ void Bootstrap() {
 
   Create(30, &TrackDataInit);
 
+
   //Create(30, &SendGo);
   Create(30, &RailwayInit);
 
@@ -45,8 +45,9 @@ void Bootstrap() {
   Create(5, &TimerInterface);
   Create(5, &NProcsInterface);
   Create(5, &MemUsageInterface);
-  Create(0, &Logger);
   //DelayCS(mytid, 200);
+
+  Create(0, &Logger);
 
 
   // DelayCS(mytid, 200);

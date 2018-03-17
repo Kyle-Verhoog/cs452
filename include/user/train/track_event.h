@@ -8,12 +8,12 @@
 #define MAX_NUM_UPDATES 10
 
 typedef enum RawTrackEventType {
-  RTE_SENSOR = 0,
-  RTE_SWITCH = 1,
-  RTE_TRAIN  = 2,
+  RTE_SE = 0,
+  RTE_SW = 1,
+  RTE_TR_CMD  = 2,
 } RawTrackEventType;
 
-typedef SNProtocol RawSensorEvent;
+typedef RawSensors RawSensorEvent;
 typedef SWProtocol RawSwitchEvent;
 typedef TrainProtocol RawTrainCmdEvent;
 
@@ -29,9 +29,10 @@ typedef struct RawTrackEvent {
 } RawTrackEvent;
 
 
-#define MAX_TRACK_EVENT 1
+#define MAX_TRACK_EVENT 2
 typedef enum TrackEventType {
-  TE_TRAIN_MOVE = 0,
+  TE_TR_MOVE = 0,
+  TE_SW_CHANGE  = 1,
 } TrackEventType;
 
 
@@ -44,12 +45,14 @@ typedef struct TrackEventTrainGearChange {
 } TETRGear;
 
 typedef struct TrackEventSwitchChange {
+  int num;
+  int newdir;
 } TESWChange;
 
 union TrackEvents {
   TETRPosition tr_pos;
   TETRGear tr_gear;
-  TESWChange sw_toggle;
+  TESWChange sw_change;
 };
 
 typedef struct TrackEvent {

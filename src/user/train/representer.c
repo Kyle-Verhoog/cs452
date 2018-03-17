@@ -1,4 +1,5 @@
 #include <user/train/representer.h>
+#include <user/train/interpreter.h>
 
 CIRCULAR_BUFFER_DEF(trm_subscribers, tid_t, MAX_EVENT_SUBSCRIBERS);
 
@@ -32,8 +33,11 @@ static void ApplyUpdates(Track *track, TrackUpdate *updates, trm_subscribers *su
   for (i = 0; i < updates->num; ++i) {
     event = &updates->events[i];
     switch (event->type) {
-      case TE_TRAIN_MOVE:
+      case TE_TR_MOVE:
         assert(0 && "TODO");
+        break;
+      case TE_SW_CHANGE:
+        assert(0 && "this should work");
         break;
       default:
         assert(0);
@@ -49,12 +53,15 @@ void Representer() {
   TrackRequest req;
   Track track;
 
+  r = RegisterAs(REPRESENTER_ID);
+  assert(r == 0);
+
+  Create(26, &Interpreter);
+
   trm_subscribers subscribers[MAX_TRACK_EVENT];
   for (i = 0; i < MAX_TRACK_EVENT; ++i) {
     trm_subscribers_init(&subscribers[i]);
   }
-
-  r = RegisterAs(REPRESENTER_ID);
 
   while (true) {
     Receive(&req_tid, &req, sizeof(req));
