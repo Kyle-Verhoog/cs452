@@ -92,7 +92,6 @@ void TrainProvider(){
 
   	//Construct the Train Publisher
   	Create(29, &TrainPublisher);
-  	// Create(19, &TestTMPublisher); //TODO: REMOVE THIS
 
 	while(true){
 		Receive(&tid_req, &tp, sizeof(tp));

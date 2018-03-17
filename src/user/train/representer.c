@@ -34,10 +34,10 @@ static void ApplyUpdates(Track *track, TrackUpdate *updates, trm_subscribers *su
     event = &updates->events[i];
     switch (event->type) {
       case TE_TR_MOVE:
-        assert(0 && "TODO");
+        //assert(0 && "TODO");
         break;
       case TE_SW_CHANGE:
-        assert(0 && "this should work");
+        //assert(0 && "this should work");
         break;
       default:
         assert(0);

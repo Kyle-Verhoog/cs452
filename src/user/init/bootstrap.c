@@ -22,6 +22,8 @@ void RailwayInit(){
     Create(26, &SensorProvider);
     Create(26, &Representer);
 
+    Create(29, &init_switch);
+
     Exit();
 }
 
