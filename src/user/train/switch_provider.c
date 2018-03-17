@@ -134,7 +134,6 @@ void SwitchProvider(){
   tid_t tx1_writer = WhoIs(IOSERVER_UART1_TX_ID);
   assert(tx1_writer >= 0);
 
-  // TODO: make switchList a global?
   	tid_t sw_handler = CreateArgs(29, &SwitchHandler, &tx1_writer, sizeof(tx1_writer));
     Create(29, &SwitchPublisher);
     tid_t suc_tid = Create(29, &SwitchUpdateCourier);
