@@ -102,7 +102,7 @@ static void SwitchSubscriber() {
 
 static void TrainSubscriber() {
   int r;
-  TMSubscribe tmsub;
+  TSubscribe tsub;
   RawTrackEvent event;
   tid_t tr_pub, inter_tid;
 
@@ -112,7 +112,7 @@ static void TrainSubscriber() {
   inter_tid = MyParentTid();
   assert(inter_tid > 0);
 
-  tmsub.tmc = TM_SUBSCRIBE;
+  tsub.tc = T_SUBSCRIBE;
   event.type = RTE_TR_CMD;
 
   while (true) {

@@ -3,9 +3,9 @@
 void TrainTR(char *args) {
   int r, tn, ts;
   tid_t tr_tid, tm_tid, tid;
-  TMProtocol tm;
+  TrainProtocol tp;
 
-  tm.tmc = TM_MOVE;
+  tp.tc = T_MOVE;
 
   tr_tid = WhoIs(TRAIN_PROVIDER_ID);
   assert(tr_tid > 0);
@@ -22,45 +22,45 @@ void TrainTR(char *args) {
     Exit();
   }
 
-  tm.arg1 = (char)tn;
-  tm.arg2 = (char)ts;
-  TMLogStrf(tm_tid, "tr %d %d\n", tm.arg1, tm.arg2);
+  tp.arg1 = (char)tn;
+  tp.arg2 = (char)ts;
+  TMLogStrf(tm_tid, "tr %d %d\n", tp.arg1, tp.arg2);
 
-  Send(tr_tid, &tm, sizeof(tm), &r, sizeof(r));
+  Send(tr_tid, &tp, sizeof(tp), &r, sizeof(r));
   r = 0;
   Reply(tid, &r, sizeof(r));
   Exit();
 }
 
 
-void TrainRV(char *args) {
-  int tn, r;
-  tid_t tr_tid, tm_tid, tid;
-  TMProtocol tm;
+// void TrainRV(char *args) {
+//   int tn, r;
+//   tid_t tr_tid, tm_tid, tid;
+//   TMProtocol tm;
 
-  tm.tmc = TM_REVERSE;
+//   tm.tmc = TM_REVERSE;
 
-  tr_tid = WhoIs(TRAIN_PROVIDER_ID);
-  assert(tr_tid > 0);
-  tm_tid = WhoIs(TERMINAL_MANAGER_ID);
-  assert(tm_tid > 0);
+//   tr_tid = WhoIs(TRAIN_PROVIDER_ID);
+//   assert(tr_tid > 0);
+//   tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+//   assert(tm_tid > 0);
 
-  Receive(&tid, &r, sizeof(r));
-  r = parse_args(args, "%d", &tn);
-  if (r) {
-    TMLogStrf(tm_tid, "rv: error parsing arg %d\n", r);
-    r = -1;
-    Reply(tid, &r, sizeof(r));
-    Exit();
-  }
+//   Receive(&tid, &r, sizeof(r));
+//   r = parse_args(args, "%d", &tn);
+//   if (r) {
+//     TMLogStrf(tm_tid, "rv: error parsing arg %d\n", r);
+//     r = -1;
+//     Reply(tid, &r, sizeof(r));
+//     Exit();
+//   }
 
-  tm.arg1 = (char)tn;
+//   tm.arg1 = (char)tn;
 
-  Send(tr_tid, &tm, sizeof(tm), &r, sizeof(r));
-  r = 0;
-  Reply(tid, &r, sizeof(r));
-  Exit();
-}
+//   Send(tr_tid, &tm, sizeof(tm), &r, sizeof(r));
+//   r = 0;
+//   Reply(tid, &r, sizeof(r));
+//   Exit();
+// }
 
 void SwitchSW(char *args){
   int swn, r;

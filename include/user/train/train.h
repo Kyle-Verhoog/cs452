@@ -43,9 +43,9 @@ typedef enum TM_Command{
 
 typedef enum Train_Command{
   T_MOVE = 0,
-  T_REVERSE = 1,
-  T_DELAY = 2,
-  T_INIT = 3,
+  //USER COMMANDS
+  T_NOTIFY = 10,
+  T_SUBSCRIBE = 11
 }Train_Command;
 
 typedef struct TrainProtocol{
@@ -60,10 +60,10 @@ typedef struct TMProtocol{
   char arg2;
 }TMProtocol;
 
-typedef struct TMSubscribe{
-	TM_Command tmc;
+typedef struct TrainSubscribe{
+	Train_Command tc;
 	TrainProtocol tp;
-}TMSubscribe;
+}TSubscribe;
 
 
 CIRCULAR_BUFFER_DEC(tc_cb, TrainProtocol, TRAIN_COMMAND_BUFFER_SIZE);
