@@ -39,6 +39,8 @@ int MemUsage();
 
 int CPUUsage(tid_t tid);
 
+int TaskInfo(char *c);
+
 #ifdef DEBUG
 #include <io.h>
 

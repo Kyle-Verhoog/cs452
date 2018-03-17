@@ -16,6 +16,7 @@
 #include <user/ui/num_procs.h>
 #include <user/ui/mem_usage.h>
 #include <user/ui/idle_time.h>
+#include <user/ui/task_manager.h>
 
 #include <user/train/train_provider.h>
 #include <user/train/switch_provider.h>

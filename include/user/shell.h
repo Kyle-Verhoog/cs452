@@ -9,6 +9,7 @@
 #include <user/terminal_manager.h>
 #include <user/train/m1_reset.h>
 #include <user/train_commands.h>
+#include <user/dummy_task.h>
 #include <user/quit.h>
 
 #define CMD_MAX 41

@@ -33,7 +33,7 @@ void SensorInterface() {
   tm_tid = WhoIs(TERMINAL_MANAGER_ID);
   assert(tm_tid > 0);
 
-  TMRegister(tm_tid, SENSOR_OFFSET_X, SENSOR_OFFSET_Y, SENSOR_WIDTH, SENSOR_HEIGHT);
+  TMRegister(tm_tid, SENSOR_OFF_X, SENSOR_OFF_Y, SENSOR_WIDTH, SENSOR_HEIGHT);
 
   Create(11, &SensorSubscriber);
 

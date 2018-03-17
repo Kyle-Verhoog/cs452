@@ -41,7 +41,7 @@ void SwitchInterface() {
   tm_tid = WhoIs(TERMINAL_MANAGER_ID);
   assert(tm_tid > 0);
 
-  TMRegister(tm_tid, SWITCH_OFFSET_X, SWITCH_OFFSET_Y, SWITCH_WIDTH, SWITCH_HEIGHT);
+  TMRegister(tm_tid, SWITCH_OFF_X, SWITCH_OFF_Y, SWITCH_WIDTH, SWITCH_HEIGHT);
   TMLogRegister(tm_tid);
 
   Create(11, &SwitchSubscriber);
@@ -54,7 +54,7 @@ void SwitchInterface() {
 
     offset = 0;
     offset += buf_pack_c(buf+offset, TERM_RESET);
-    offset += buf_pack_f(buf+offset, "   sw\tdir\n");
+    offset += buf_pack_f(buf+offset, "   sw      dir\n");
     offset += buf_pack_f(buf+offset, "  ┉┉┉┉┉┉┉┉┉┉┉┉┉\n");
     for (i = 0; i < SWITCH_SIZE; ++i) {
       c = switches[i];

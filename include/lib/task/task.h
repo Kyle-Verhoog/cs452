@@ -45,6 +45,7 @@ typedef enum TaskRequest {
   TR_INFO_NPROC     = 16,
   TR_INFO_MEM       = 17,
   TR_INFO_CPU       = 18,
+  TR_INFO_TASK      = 19,
 } TaskRequest;
 
 typedef enum InterruptType{
