@@ -179,7 +179,8 @@ static void SendVirtualEvents(tid_t vep_tid, VEList *events) {
   VERequest ver;
   VirtualEvent ve;
 
-  ver.type = VER_EVENT;
+  //ver.type = VER_EVENT;
+  ver.type = VER_REGISTER;
 
   while (events->size > 0) {
     r = VEList_pop(events, &ve);

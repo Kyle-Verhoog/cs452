@@ -54,7 +54,7 @@ void VirtualProviderCourier(){
 }
 
 void RegisterTimeout(void *args){
-	int r;
+	int r, time;
 	VERequest ver = *(VERequest *)args;
 	tid_t my_tid = MyTid();
 	tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
@@ -64,7 +64,11 @@ void RegisterTimeout(void *args){
 	Send(vp_tid, &ver, sizeof(ver), &r, sizeof(r));
 
 	ver.type = VER_EVENT;
-	DelayUntil(cs_tid, my_tid, ver.ve.timestamp);
+	time = Time(cs_tid, my_tid);
+	//if(time < ver.ve.timestamp){
+		Delay(cs_tid, my_tid, ver.ve.timestamp);
+	//}
+	assert(0);
 	Send(vp_tid, &ver, sizeof(ver), &r, sizeof(r));
 	Exit();
 }
