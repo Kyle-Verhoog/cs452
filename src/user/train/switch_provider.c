@@ -101,7 +101,7 @@ void SwitchUpdateCourier(){
     Send(sw_tid, &swp, sizeof(swp), &data, sizeof(data));
 
     sws.swr = SW_NOTIFY;
-    sws.swp = data;
+    sws.re = data;
     Send(pub_tid, &sws, sizeof(sws), &reply, sizeof(reply));
   }
   
@@ -137,9 +137,9 @@ void SwitchProvider(){
 	int reply = 0;
 	int r = RegisterAs(SWITCH_PROVIDER_ID);
   assert(r == 0);
-  tid_t = my_tid = MyTid();
+  tid_t my_tid = MyTid();
   tid_t tx1_writer = WhoIs(IOSERVER_UART1_TX_ID);
-  tid_t cs_tid = Whois(CLOCKSERVER_ID);
+  tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
   assert(tx1_writer >= 0 && cs_tid > 0 && my_tid > 0);
 
 	tid_t sw_handler = CreateArgs(29, &SwitchHandler, &tx1_writer, sizeof(tx1_writer));

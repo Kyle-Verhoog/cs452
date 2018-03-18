@@ -60,7 +60,7 @@ void TWriteTask(void *args){
 	ts.tc = T_NOTIFY;
 	ts.re.type = RE_TR_CMD;
 	ts.re.timestamp = Time(cs_tid, my_tid);
-	ts.tp.event.tr_cmd_event = cmd;
+	ts.re.event.tr_cmd_event = cmd;
 	Send(pub_tid, &ts, sizeof(ts), &reply, sizeof(reply));
 
 	Exit();

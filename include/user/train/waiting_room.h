@@ -1,10 +1,14 @@
 #ifndef WAITING_ROOM_H
 #define WAITING_ROOM_H
 
+#include <defines.h>
 #include <train_defines.h>
 #include <user/clockserver.h>
 #include <user/train/events.h>
 #include <user/train/virtual_provider.h>
+#include <sensor_provider.h>
+#include <train_provider.h>
+#include <switch_provider.h>
 
 typedef enum EventGroupType {
   VRE_VE_RE,

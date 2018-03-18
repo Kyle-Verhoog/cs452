@@ -3,6 +3,7 @@
 
 #include <lib/train/train_defines.h>
 #include <user/train/events.h>
+#include <tid_buffer.h>
 
 #define KEY_SIZE SENSOR_SIZE
 
@@ -28,9 +29,7 @@ typedef struct VESubscribe{
 
 void VirtualProvider();
 
-/*
 #define VEREQ_BUFFER_SIZE 64
 
 CIRCULAR_BUFFER_DEC(vereq_cb, VERequest, VEREQ_BUFFER_SIZE);
-*/
 #endif

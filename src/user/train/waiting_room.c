@@ -39,6 +39,9 @@ static void SensorSubscriber() {
   sn_pub = WhoIs(SENSOR_PUBLISHER_ID);
   assert(sn_pub > 0);
 
+  cs_tid = WhoIs(CLOCKSERVER_ID);
+  assert(cs_tid > 0);
+
   wr_tid = MyParentTid();
   assert(wr_tid > 0);
 
@@ -53,7 +56,7 @@ static void SensorSubscriber() {
 
   while (true) {
     Send(sn_pub, &sn_sub, sizeof(sn_sub), &event, sizeof(event));
-    SendSensorDelta(wr_tid, cs_tid, my_tid, &event, &prev);
+    SendSensorDelta(wr_tid, cs_tid, my_tid, event.sensors, prev.sensors);
     memcpy(&prev, &event, sizeof(event));
   }
 
@@ -73,8 +76,8 @@ static void SwitchSubscriber() {
   wr_tid = MyParentTid();
   assert(wr_tid > 0);
 
-  my_tid = MyTid();
-  assert(my_tid > 0);
+ // my_tid = MyTid();
+ // assert(my_tid > 0);
 
   sw_sub.swr = SW_SUBSCRIBE;
   event.type = WR_RE;
@@ -99,8 +102,8 @@ static void TrainSubscriber() {
   wr_tid = MyParentTid();
   assert(wr_tid > 0);
 
-  my_tid = MyTid();
-  assert(my_tid > 0);
+  //my_tid = MyTid();
+  //iassert(my_tid > 0);
 
   tsub.tc = T_SUBSCRIBE;
   event.type = WR_RE;
@@ -125,8 +128,8 @@ static void VirtualEventSubscriber(){
   wr_tid = MyParentTid();
   assert(wr_tid > 0);
 
-  my_tid = MyTid();
-  assert(my_tid > 0);
+  //my_tid = MyTid();
+  //assert(my_tid > 0);
 
   vsub.type = VER_SUBSCRIBE;
   event.type = WR_VE;
@@ -151,9 +154,9 @@ void TimeoutWR_VE(void *args){
   assert(cs_tid > 0 && my_tid > 0 && wr_tid > 0);
 
   wrr.type = WR_TO;
-  wrr.data = *(VirtualEvent *) args;
+  wrr.data.ve = *(VirtualEvent *) args;
 
-  Delay(cs_tid, my_tid, ve.timeout);
+  Delay(cs_tid, my_tid, wrr.data.ve.timeout);
 
   Send(wr_tid, &wrr, sizeof(wrr), &r, sizeof(r));
   Exit();
@@ -161,7 +164,7 @@ void TimeoutWR_VE(void *args){
 
 void HandleWR_VE(WRRequest *event, VirtualEvent *waiting, int *sensorToVE){
   if(event->data.ve.type == VE_TR_AT){
-    if(waiting[event->data.ve.key] != VE_REG){
+    if(waiting[event->data.ve.key].type != VE_REG){
       return;
     }else{
       //Spawn a timeout handler  
@@ -179,7 +182,7 @@ void HandleWR_RE(WRRequest *event, VirtualEvent *waiting, int *sensorToVE, tid_t
 
   if(event->data.re.type != RE_SE){
     eg.type = RE;
-    eg.re = event.data.re;
+    eg.re = event->data.re;
   }
   else{
     sensor = event->data.re.event.se_event.id;
@@ -205,7 +208,7 @@ void HandleWR_TO(WRRequest *event, VirtualEvent *waiting, int *sensorToVE, tid_t
   int sensor;
 
   eg.type = VRE_VE;
-  eg.ve = event.data.ve; 
+  eg.ve = event->data.ve; 
 
   sensor = event->data.re.event.se_event.id;
   sensorToVE[sensor] = -1;
@@ -236,6 +239,7 @@ void WaitingRoom(){
   Create(29, &TrainSubscriber);
   Create(29, &SwitchSubscriber);
   Create(29, &SensorSubscriber);
+  Create(29, &VirtualEventSubscriber);
 
   while(true){
 
@@ -243,16 +247,16 @@ void WaitingRoom(){
 
     switch(event.type){
       case WR_VE:
-        HANDLEWR_VE(&event, rve, sensorToVE);
+        HandleWR_VE(&event, waiting, sensorToVE);
         Reply(req_tid, &r, sizeof(r));
         break;
       case WR_RE:
         //TODO: ASSERT COURIER DOESN'T EXIST
-        HandleWR_RE(&event, rve, sensorToVE, courier);
+        HandleWR_RE(&event, waiting, sensorToVE, courier, my_tid);
         Reply(req_tid, &r, sizeof(r));
         break;
       case WR_TO:
-        HandleWR_TO(&event, rve, sensorToVE, courier);
+        HandleWR_TO(&event, waiting, sensorToVE, courier);
         Reply(req_tid, &r, sizeof(r)); 
       case WR_CE:
         courier = req_tid;

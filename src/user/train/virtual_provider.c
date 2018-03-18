@@ -1,4 +1,4 @@
-#include <src/user/train/virtual_provider.h>
+#include <user/train/virtual_provider.h>
 
 CIRCULAR_BUFFER_DEF(vereq_cb, VERequest, VEREQ_BUFFER_SIZE);
 
@@ -10,7 +10,7 @@ void VirtualEventPublisher(){
 	tid_cb subscribers;
 	tid_cb_init(&subscribers);
 
-	int r = RegisterAs(VIRTUAL_PUBLISHER_ID);
+	r = RegisterAs(VIRTUAL_PUBLISHER_ID);
 	assert(r == 0);
 
 	while(true){
@@ -37,7 +37,7 @@ void VirtualProviderCourier(){
 	VESubscribe ves;
 	int r;
 
-	tid_t pub_id = WhoIs(VIRTUAL_PUBLISHER_ID);
+	tid_t pub_tid = WhoIs(VIRTUAL_PUBLISHER_ID);
 	tid_t vp_tid = MyParentTid();
 	assert(pub_tid > 0 && vp_tid > 0);
 
