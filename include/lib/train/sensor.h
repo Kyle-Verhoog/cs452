@@ -40,6 +40,12 @@ typedef struct SNProtocol{
 	char byte;
 }SNProtocol;
 
+typedef struct Sensor{
+	SensorState state;
+	int id;
+
+} Sensor;
+
 typedef struct Sensors {
   char sensors[DECODER_SIZE * 2];
 } Sensors;

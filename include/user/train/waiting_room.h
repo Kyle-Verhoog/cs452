@@ -1,6 +1,7 @@
 #ifndef WAITING_ROOM_H
 #define WAITING_ROOM_H
 
+#include <user/clockserver.h>
 #include <user/train/events.h>
 #include <user/train/virtual_provider.h>
 

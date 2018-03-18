@@ -16,7 +16,7 @@ typedef enum RawEventType {
   RE_TR_CMD = 3,
 } RawEventType;
 
-typedef Sensors RawSensorEvent;
+typedef Sensor RawSensorEvent;
 typedef SWProtocol RawSwitchEvent;
 typedef TrainProtocol RawTrainCmdEvent;
 
