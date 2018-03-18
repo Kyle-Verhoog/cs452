@@ -9,10 +9,10 @@
 typedef struct TrainModel{
 	int x[TRAIN_MODEL_SIZE];
 	int y[TRAIN_MODEL_SIZE];
-}
+}TrainModel;
 
 //Integer Square Root
-int sqrt(int x);
+unsigned int usqrt(int x);
 
 //Assumes integer division
 int mean(int * list, int size);

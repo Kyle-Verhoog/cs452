@@ -1,6 +1,6 @@
 #include <lib/train/train_model.h>
 
-int sqrt(int x)
+unsigned int usqrt(int x)
 {
 	unsigned int a = 0L;
 	unsigned int r = 0L;
@@ -35,17 +35,17 @@ int mean(int * list, int size){
 int standard_deviation(int *list, int size){
 	int diff;
 	int inter_sum = 0;
-	int mean = mean(list, size);
+	int avg = mean(list, size);
 
 	int i;
 	for(i = 0; i < size; i++){
-		diff = list[i] - mean;
+		diff = list[i] - avg;
 		inter_sum += diff * diff;
 	}
 
 	inter_sum = inter_sum / (size - 1);
 
-	return sqrt(inter_sum);
+	return usqrt(inter_sum);
 }
 
 int get_lagrange_basis(TrainModel *tm, int point, int x){
@@ -68,4 +68,5 @@ int interpolate(TrainModel *tm, int setting){
 	for(i = 0; i < TRAIN_MODEL_SIZE; i++){
 		val += get_lagrange_basis(tm, i, setting);
 	}
+	return val;
 }
