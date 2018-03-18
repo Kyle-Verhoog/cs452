@@ -24,7 +24,7 @@ static void UpdateSwitchEvent(RawSwitchEvent *sw_event, Track *track, TrackUpdat
 }
 
 // TODO: look in both directions of the node for other possible trains
-static void AttemptToAdoptTrain(RawSensorEvent *re, Track *track, TrackUpdate *update) {
+static void AttemptToAdoptTrain(RawSensorEvent *re, Track *track, TrackUpdate *update, VEList *vevents) {
   int r;
   Train *t;
 
@@ -42,6 +42,7 @@ static void AttemptToAdoptTrain(RawSensorEvent *re, Track *track, TrackUpdate *u
   ve.event.train_at.node = t->pos;
 
   r = train_list_push(&track->active_trains, t);
+  VEList_push(vevents, ve);
   assert(r == 0);
 }
 
@@ -151,14 +152,14 @@ static void InterpretVREVE(EventGroup *grp, Track *track, TrackUpdate *update, V
 }
 
 // If we just have an RE, then we just pass the RE through
-static void InterpretRE(RawEvent *re, Track *track, TrackUpdate *update) {
+static void InterpretRE(RawEvent *re, Track *track, TrackUpdate *update, VEList *vevents) {
   switch (re->type) {
     case RE_SE:
       TMLogStrf(tm_tid, "RE\n");
       // if there is an orphaned train, see if it makes sense to update its position
       // to this sensor
       if (track->orphan_trains.size > 0) {
-        AttemptToAdoptTrain(&re->event.se_event, track, update);
+        AttemptToAdoptTrain(&re->event.se_event, track, update, vevents);
       }
       UpdateSensorEvent(&re->event.se_event, track, update);
       break;
