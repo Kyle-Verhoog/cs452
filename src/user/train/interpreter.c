@@ -184,7 +184,6 @@ static void SendVirtualEvents(tid_t vep_tid, VEList *events) {
   while (events->size > 0) {
     r = VEList_pop(events, &ve);
     assert(r == 0);
-assert(0);
 
     ver.ve = ve;
     Send(vep_tid, &ver, sizeof(ver), &r, sizeof(r));
@@ -216,7 +215,7 @@ static void Interpret(tid_t rep_tid, tid_t vep_tid, Track *track, EventGroup *gr
       InterpretVRERE(grp, track, &update, &vevents);
       break;
     case RE:
-      InterpretRE(&grp->re, track, &update);
+      InterpretRE(&grp->re, track, &update, &vevents);
       break;
     default:
       assert(0);
