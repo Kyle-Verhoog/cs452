@@ -1,33 +1,7 @@
-#ifndef TRACK_EVENT_H
-#define TRACK_EVENT_H
-
-#include <user/train/train.h>
-#include <lib/train/switch.h>
-#include <lib/train/sensor.h>
+#ifndef UPDATES_H
+#define UPDATES_H
 
 #define MAX_NUM_UPDATES 10
-
-typedef enum RawTrackEventType {
-  RTE_SE = 0,
-  RTE_SW = 1,
-  RTE_TR_CMD  = 2,
-} RawTrackEventType;
-
-typedef Sensors RawSensorEvent;
-typedef SWProtocol RawSwitchEvent;
-typedef TrainProtocol RawTrainCmdEvent;
-
-union RawTrackEvents {
-  RawTrainCmdEvent  tr_cmd_event;
-  RawSensorEvent    se_event;
-  RawSwitchEvent    sw_event;
-};
-
-typedef struct RawTrackEvent {
-  RawTrackEventType type;
-  union RawTrackEvents event;
-} RawTrackEvent;
-
 
 typedef enum TrackEventType {
   TE_TR_MOVE,
@@ -71,5 +45,6 @@ typedef struct TrackUpdate {
   TrackEvent events[MAX_NUM_UPDATES];
   int num;
 } TrackUpdate;
+
 
 #endif

@@ -1,8 +1,11 @@
-#include <user/train/interpreter.h>
 
-static tid_t tm_tid;
+#include <user/train/waiting_room.h>
 
-static void InterpretSensorEvent(RawSensorEvent *se_event, Track *track, TrackUpdate *update) {
+
+void SensorDelta() {
+
+  /*
+   *
   char *new_sensors, *old_sensors, new_dec, old_dec;
   int i, j;
   TrackEvent event;
@@ -28,57 +31,9 @@ static void InterpretSensorEvent(RawSensorEvent *se_event, Track *track, TrackUp
       }
     }
   }
-
-  // TODO: using updated sensors compare to predicted model...?
+  */
 }
 
-static void InterpretSwitchEvent(RawSwitchEvent *sw_event, Track *track, TrackUpdate *update) {
-  TrackEvent event;
-  event.type = TE_SW_CHANGE;
-  event.event.sw_change.num = sw_event->sw;
-  event.event.sw_change.newdir = sw_event->dir;
-  update->events[update->num++] = event;
-}
-
-static void InterpretTrainCmdEvent(RawTrainCmdEvent *cmd_event, Track *track, TrackUpdate *update) {
-  // TODO:
-  // TETRGear event;
-  // event.num = cmd_event->arg1;
-  // event.newgear = cmd_event->arg2;
-}
-
-static void Interpret(tid_t rep_tid, RawEvent *rte) {
-  int r;
-  TrackRequest rep_req;
-  Track track;
-  TrackUpdate update;
-
-  update.num = 0;
-
-  // Request for the previous track state
-  rep_req.type = TRR_FETCH;
-  Send(rep_tid, &rep_req, sizeof(rep_req), &track, sizeof(track));
-
-  switch (rte->type) {
-    case RE_SE:
-      InterpretSensorEvent(&rte->event.se_event, &track, &update);
-      break;
-    case RE_TR_CMD:
-      InterpretTrainCmdEvent(&rte->event.tr_cmd_event, &track, &update);
-      break;
-    case RE_SW:
-      InterpretSwitchEvent(&rte->event.sw_event, &track, &update);
-      break;
-    default:
-      assert(0);
-      break;
-  }
-
-  // Send the updated track state to the representer
-  rep_req.type = TRR_UPDATE;
-  rep_req.data.update = update;
-  Send(rep_tid, &rep_req, sizeof(rep_req), &r, sizeof(r));
-}
 
 static void SensorSubscriber() {
   int r;
@@ -102,6 +57,7 @@ static void SensorSubscriber() {
 
   Exit();
 }
+
 
 static void SwitchSubscriber() {
   int r;
@@ -149,25 +105,4 @@ static void TrainSubscriber() {
   Exit();
 }
 
-void Interpreter() {
-  int r;
-  tid_t rep_tid, req_tid;
 
-  rep_tid = WhoIs(REPRESENTER_ID);
-  assert(rep_tid > 0);
-  tm_tid = WhoIs(TERMINAL_MANAGER_ID);
-
-  // Subscribers to data publishers
-  Create(25, &TrainSubscriber);
-  Create(25, &SensorSubscriber);
-  Create(25, &SwitchSubscriber);
-
-  RawEvent rte;
-  while (true) {
-    Receive(&req_tid, &rte, sizeof(rte));
-    Interpret(rep_tid, &rte);
-    Reply(req_tid, &r, sizeof(r));
-  }
-
-  Exit();
-}

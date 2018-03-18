@@ -5,8 +5,9 @@
 #include <user/syscalls.h>
 #include <user/nameserver.h>
 
+#include <user/train/train.h>
 #include <user/train/train_defines.h>
-#include <user/train/track_event.h>
+#include <user/train/updates.h>
 
 #define MAX_EVENT_SUBSCRIBERS 16
 
