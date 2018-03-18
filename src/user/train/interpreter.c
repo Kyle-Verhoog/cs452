@@ -30,7 +30,7 @@ static void AttemptToAdoptTrain(RawSensorEvent *re, Track *track, TrackUpdate *u
 
   r = train_list_pop(&track->orphan_trains, &t);
   assert(r == 0);
-  TMLogStrf(tm_tid, "adopting train %d\n", t->num);
+  TMLogStrf(tm_tid, "adopting train %d at %s\n", t->num, t->pos->name);
 
   t->pos = &TRACK[re->id];
   VirtualEvent ve;
@@ -183,6 +183,7 @@ static void SendVirtualEvents(tid_t vep_tid, VEList *events) {
   while (events->size > 0) {
     r = VEList_pop(events, &ve);
     assert(r == 0);
+assert(0);
 
     ver.ve = ve;
     Send(vep_tid, &ver, sizeof(ver), &r, sizeof(r));
