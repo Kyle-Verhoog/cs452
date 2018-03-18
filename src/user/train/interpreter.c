@@ -1,7 +1,6 @@
 #include <user/train/interpreter.h>
 
 static tid_t tm_tid;
-
 static void InterpretSensorEvent(RawSensorEvent *se_event, Track *track, TrackUpdate *update) {
   char *new_sensors, *old_sensors, new_dec, old_dec;
   int i, j;
@@ -149,6 +148,26 @@ static void TrainSubscriber() {
   Exit();
 }
 
+
+static void WaitingRoomCourier() {
+  int r;
+  tid_t int_tid, wr_tid;
+  WRRequest wrr;
+  EventGroup events;
+
+  int_tid = MyParentTid();
+  assert(int_tid > 0);
+
+  wr_tid = WhoIs(WAITING_ROOM_ID);
+  assert(wr_tid > 0);
+
+  wrr.type = WR_CE;
+  while (true) {
+    Send(wr_tid, &wrr, sizeof(wrr), &events, sizeof(events));
+    Send(int_tid, &events, sizeof(events), &r, sizeof(r));
+  }
+}
+
 void Interpreter() {
   int r;
   tid_t rep_tid, req_tid;
@@ -158,9 +177,7 @@ void Interpreter() {
   tm_tid = WhoIs(TERMINAL_MANAGER_ID);
 
   // Subscribers to data publishers
-  Create(25, &TrainSubscriber);
-  Create(25, &SensorSubscriber);
-  Create(25, &SwitchSubscriber);
+  Create(25, &WaitingRoomCourier);
 
   RawEvent rte;
   while (true) {

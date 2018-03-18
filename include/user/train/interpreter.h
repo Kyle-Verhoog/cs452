@@ -6,6 +6,7 @@
 #include <user/nameserver.h>
 #include <user/terminal_manager.h>
 #include <user/train/events.h>
+#include <user/train/waiting_room.h>
 #include <user/train/representer.h>
 
 void Interpreter();
