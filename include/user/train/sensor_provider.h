@@ -14,7 +14,7 @@
 #include <track_data.h>
 #include <tid_buffer.h>
 #include <user/ui/sensor_interface.h>
-#include <events.h>
+#include <sensor.h>
 
 #define GET_ALL_SENSORS 133
 
@@ -23,7 +23,7 @@
 
 typedef struct SNSubscribe{
 	SN_Request snr;
-	RawEvent re;
+  Sensors sensors;
 }SNSubscribe;
 
 void SensorProvider();
