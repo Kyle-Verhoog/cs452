@@ -132,11 +132,12 @@ void TestSNPublisher(){
 }
 
 void SensorProvider(){
+	tid_t tid_req;
+  	SNProtocol snp;
+
 	int scounter = 0;
 	int reply;
   	bool recFlag = false;
-  	//bool deltaFlag = false;
-  	//bool persistDeltaFlag = false;
   	bool courierFlag = false;
   	bool dataFlag = false;
 
@@ -154,9 +155,6 @@ void SensorProvider(){
   	//Kick start sensor gathering data
   	BLPutC(tx_tid, GET_ALL_SENSORS);
   	while(true){
-  		tid_t tid_req;
-  		SNProtocol snp;
-
   		//If courier is ready, send the data
   		if(dataFlag && courierFlag){
   			dataFlag = false;

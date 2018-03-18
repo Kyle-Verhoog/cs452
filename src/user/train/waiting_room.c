@@ -42,9 +42,6 @@ static void SensorSubscriber() {
   wr_tid = MyParentTid();
   assert(wr_tid > 0);
 
-  cs_tid = WhoIs(CLOCKSERVER_ID);
-  assert(cs_tid > 0);
-
   my_tid = MyTid();
   assert(my_tid > 0);  
 
@@ -76,19 +73,14 @@ static void SwitchSubscriber() {
   wr_tid = MyParentTid();
   assert(wr_tid > 0);
 
-  cs_tid = WhoIs(CLOCKSERVER_ID);
-  assert(cs_tid > 0);
-
   my_tid = MyTid();
   assert(my_tid > 0);
 
   sw_sub.swr = SW_SUBSCRIBE;
   event.type = WR_RE;
-  event.data.re.type = RE_SW;
 
   while (true) {
-    Send(sw_pub, &sw_sub, sizeof(sw_sub), &event.event.sw_event, sizeof(RawSwitchEvent));
-    event.data.re.timestamp = Time(cs_tid, my_tid);
+    Send(sw_pub, &sw_sub, sizeof(sw_sub), &event.data.re, sizeof(RawEvent));
     Send(wr_tid, &event, sizeof(event), &r, sizeof(r));
   }
 
@@ -107,20 +99,40 @@ static void TrainSubscriber() {
   wr_tid = MyParentTid();
   assert(wr_tid > 0);
 
-  cs_tid = WhoIs(CLOCKSERVER_ID);
-  assert(cs_tid > 0);
-
   my_tid = MyTid();
   assert(my_tid > 0);
 
   tsub.tc = T_SUBSCRIBE;
   event.type = WR_RE;
-  event.data.re.type = RE_TR_CMD;
-  event.data.re.timestamp = Time(cs_tid, my_tid);
 
   while (true) {
-    Send(tr_pub, &tsub, sizeof(tsub), &event.event.tr_cmd_event, sizeof(RawTrainCmdEvent));
-    event.data.re.timestamp = Time(cs_tid, my_tid);
+    Send(tr_pub, &tsub, sizeof(tsub), &event.data.re, sizeof(RawEvent));
+    Send(wr_tid, &event, sizeof(event), &r, sizeof(r));
+  }
+
+  Exit();
+}
+
+static void VirtualEventSubscriber(){
+  int r;
+  VESubscribe vsub;
+  WRRequest event;
+  tid_t ve_pub, wr_tid, cs_tid;
+
+  ve_pub = WhoIs(VIRTUAL_PUBLISHER_ID);
+  assert(ve_pub > 0);
+
+  wr_tid = MyParentTid();
+  assert(wr_tid > 0);
+
+  my_tid = MyTid();
+  assert(my_tid > 0);
+
+  vsub.type = VER_SUBSCRIBE;
+  event.type = WR_VE;
+  
+  while(true){
+    Send(ve_pub, &vsub, sizeof(vsub), &event.data.ve, sizeof(VirtualEvent));
     Send(wr_tid, &event, sizeof(event), &r, sizeof(r));
   }
 
@@ -161,21 +173,19 @@ void HandleWR_VE(WRRequest *event, VirtualEvent *waiting, int *sensorToVE){
   sensorToVE[event->data.ve.event.train_at.node->num] = event->data.ve.key;
 }
 
-void HandleWR_RE(WRRequest *event, VirtualEvent *waiting, int *sensorToVE, tid_t courier, tid_t cs_tid, tid_t my_tid){
+void HandleWR_RE(WRRequest *event, VirtualEvent *waiting, int *sensorToVE, tid_t courier, tid_t my_tid){
   EventGroup eg;
   int sensor;
 
   if(event->data.re.type != RE_SE){
     eg.type = RE;
     eg.re = event.data.re;
-    eg.re.timestamp = Time(cs_tid, my_tid);
   }
   else{
     sensor = event->data.re.event.se_event.id;
     if(sensorToVE[sensor] != -1){
       eg.type = waiting[sensorToVE[sensor]].type == VE_REG ? VRE_RE : VRE_VE_RE;
       eg.re = event->data.re;
-      eg.re.timestamp = Time(cs_tid, my_tid);
       eg.ve = waiting[sensorToVE[sensor]];
       sensorToVE[sensor] = -1;
       waiting[sensorToVE[sensor]].type = VE_NONE;
@@ -183,7 +193,6 @@ void HandleWR_RE(WRRequest *event, VirtualEvent *waiting, int *sensorToVE, tid_t
     else{
       eg.type = RE;
       eg.re = event->data.re;
-      eg.re.timestamp = Time(cs_tid, my_tid);
     }
   }
 
@@ -216,13 +225,12 @@ void WaitingRoom(){
   tid_t req_tid;
   tid_t courier = -1;
 
-  VirtualEvent waiting[WAITING_ROOM_SIZE];
+  VirtualEvent waiting[KEY_SIZE];
   int sensorToVE[SENSOR_SIZE];
   init_waiting_room(sensorToVE);
 
   r = RegisterAs(WAITING_ROOM_ID);
   assert(r == 0);
-  tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
   tid_t my_tid = MyTid();
 
   Create(29, &TrainSubscriber);
@@ -244,7 +252,7 @@ void WaitingRoom(){
         Reply(req_tid, &r, sizeof(r));
         break;
       case WR_TO:
-        HandleWR_TO(&event, rve, sensorToVE);
+        HandleWR_TO(&event, rve, sensorToVE, courier);
         Reply(req_tid, &r, sizeof(r)); 
       case WR_CE:
         courier = req_tid;

@@ -10,10 +10,16 @@
 #include <ioserver.h>
 #include <writerservice.h>
 #include <track_data.h>
-#include <switch.h>
+#include <events.h>
 
 void SwitchProvider();
 void init_switch();
+
+
+typedef struct SWSubscribe{
+	SW_Request swr;
+	RawEvent re;
+}SWSubscribe;
 
 
 #define TURN_SOLENOID_OFF 32

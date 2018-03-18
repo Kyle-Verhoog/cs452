@@ -6,8 +6,6 @@
 #include <user/train/events.h>
 #include <user/train/virtual_provider.h>
 
-#define WAITING_ROOM_SIZE SENSOR_SIZE
-
 typedef enum EventGroupType {
   VRE_VE_RE,
   VRE_VE,

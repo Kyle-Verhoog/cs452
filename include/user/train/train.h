@@ -60,11 +60,6 @@ typedef struct TMProtocol{
   char arg2;
 }TMProtocol;
 
-typedef struct TrainSubscribe{
-	Train_Command tc;
-	TrainProtocol tp;
-}TSubscribe;
-
 
 CIRCULAR_BUFFER_DEC(tc_cb, TrainProtocol, TRAIN_COMMAND_BUFFER_SIZE);
 

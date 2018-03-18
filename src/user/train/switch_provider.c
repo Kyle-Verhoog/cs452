@@ -72,7 +72,7 @@ void SwitchPublisher(){
     switch(sws.swr){
       case SW_NOTIFY:
         Reply(req_tid, &reply, sizeof(reply));
-        NOTIFY(&subscribers, &sub, sws.swp, sizeof(sws.swp));
+        NOTIFY(&subscribers, &sub, sws.re, sizeof(sws.re));
         break;
       case SW_SUBSCRIBE:
         tid_cb_push(&subscribers, req_tid);
@@ -86,12 +86,15 @@ void SwitchPublisher(){
 }
 
 void SwitchUpdateCourier(){
-  SWProtocol swp, data;
+  SWProtocol swp;
   SWSubscribe sws;
+  RawEvent data;
   int reply;
 
   tid_t pub_tid = WhoIs(SWITCH_PUBLISHER_ID);
+  assert(pub_tid > 0);
   tid_t sw_tid = MyParentTid();
+  assert(sw_tid > 0);
 
   while(true){
     swp.swr = SW_NOTIFY_READY;
@@ -124,47 +127,53 @@ void TestSWPublisher(){
 }
 
 void SwitchProvider(){
+  tid_t req_tid;
+  SWProtocol sw;
+  RawEvent data;
+
   bool courierFlag = false;
   bool switchFlag = false;
 
 	int reply = 0;
 	int r = RegisterAs(SWITCH_PROVIDER_ID);
   assert(r == 0);
+  tid_t = my_tid = MyTid();
   tid_t tx1_writer = WhoIs(IOSERVER_UART1_TX_ID);
-  assert(tx1_writer >= 0);
+  tid_t cs_tid = Whois(CLOCKSERVER_ID);
+  assert(tx1_writer >= 0 && cs_tid > 0 && my_tid > 0);
 
-  	tid_t sw_handler = CreateArgs(29, &SwitchHandler, &tx1_writer, sizeof(tx1_writer));
-    Create(29, &SwitchPublisher);
-    tid_t suc_tid = Create(29, &SwitchUpdateCourier);
-    Create(19, &TestSWPublisher); //TODO: Remove this
+	tid_t sw_handler = CreateArgs(29, &SwitchHandler, &tx1_writer, sizeof(tx1_writer));
+  Create(29, &SwitchPublisher);
+  tid_t suc_tid = Create(29, &SwitchUpdateCourier);
+  Create(19, &TestSWPublisher); //TODO: Remove this
 
-  	while(true){
-  		tid_t req_tid;
-  		SWProtocol sw, data;
+  data.type = RE_SW;
 
-      if(courierFlag && switchFlag){
-        courierFlag = false;
-        switchFlag = false;
-        Reply(suc_tid, &data, sizeof(data));
-      }
+	while(true){
+    if(courierFlag && switchFlag){
+      courierFlag = false;
+      switchFlag = false;
+      Reply(suc_tid, &data, sizeof(data));
+    }
 
-  		//Receive new SW request
-  		Receive(&req_tid, &sw, sizeof(sw));
+		//Receive new SW request
+		Receive(&req_tid, &sw, sizeof(sw));
 
-  		switch(sw.swr){
-  			case SW_FLIP:
-	  			//Send the command switch handler
-	  			Send(sw_handler, &sw, sizeof(sw), &reply, sizeof(reply));
-	  			Reply(req_tid, &reply, sizeof(reply));
-          switchFlag = true;
-          data = sw;  //persist data until read
-  				break;
-        case SW_NOTIFY_READY:
-          courierFlag = true;
-          break;
-  			default:
-  				assert(0 && "Bad Switch Command");
-  		}
-  	}
+		switch(sw.swr){
+			case SW_FLIP:
+  			//Send the command switch handler
+  			Send(sw_handler, &sw, sizeof(sw), &reply, sizeof(reply));
+  			Reply(req_tid, &reply, sizeof(reply));
+        switchFlag = true;
+        data.event.sw_event = sw;  //persist data until read
+        data.timestamp = Time(cs_tid, my_tid);
+				break;
+      case SW_NOTIFY_READY:
+        courierFlag = true;
+        break;
+			default:
+				assert(0 && "Bad Switch Command");
+		}
+	}
   Exit();
 }

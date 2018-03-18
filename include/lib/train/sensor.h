@@ -47,10 +47,6 @@ typedef struct Sensors {
   char sensors[DECODER_SIZE * 2];
 } Sensors;
 
-typedef struct SNSubscribe{
-	SN_Request snr;
-  Sensors sensors;
-}SNSubscribe;
 
 void init_sensors(Sensors *sensors);
 

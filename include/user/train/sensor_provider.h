@@ -14,12 +14,17 @@
 #include <track_data.h>
 #include <tid_buffer.h>
 #include <user/ui/sensor_interface.h>
-#include <sensor.h>
+#include <events.h>
 
 #define GET_ALL_SENSORS 133
 
 #define SENSOR_TIMEOUT 4
 #define SENSOR_WAIT 4
+
+typedef struct SNSubscribe{
+	SN_Request snr;
+	RawEvent re;
+}SNSubscribe;
 
 void SensorProvider();
 

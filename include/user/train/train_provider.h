@@ -3,7 +3,6 @@
 
 #include <ts7200.h>
 #include <defines.h>
-#include <user/train/train.h>
 #include <train_defines.h>
 #include <user/syscalls.h>
 #include <io.h>
@@ -15,7 +14,12 @@
 #include <lib/train/path_finding.h>
 #include <tid_buffer.h>
 #include <user/terminal_manager.h>
+#include <user/train/events.h>
 
+typedef struct TrainSubscribe{
+	Train_Command tc;
+	RawEvent re;
+}TSubscribe;
 
 void TrainProvider();
 
