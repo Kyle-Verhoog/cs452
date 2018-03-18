@@ -2,7 +2,7 @@
 
 track_node track_a[TRACK_MAX];
 track_node track_b[TRACK_MAX];
-track_node *track;
+track_node *TRACK;
 
 static void *memset(void *s, int c, unsigned int n) {
   unsigned char *p = s;
@@ -18,11 +18,11 @@ static void add_ids(track_node *track) {
 
 
 void set_track_a() {
-  track = track_a;
+  TRACK = track_a;
 }
 
 void set_track_b() {
-  track = track_b;
+  TRACK = track_b;
 }
 
 int trhr(track_node *track, const char *name) {

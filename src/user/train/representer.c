@@ -3,14 +3,6 @@
 
 CIRCULAR_BUFFER_DEF(trm_subscribers, tid_t, MAX_EVENT_SUBSCRIBERS);
 
-static void TrackInit(Track *track) {
-  int i;
-
-  for (i = 0; i < DECODER_SIZE*2; ++i) {
-    track->sensors[i] = 0;
-  }
-}
-
 static void NotifySubscribers(trm_subscribers *subs, TrackEventType type, union TrackEvents *event) {
   assert(type >= 0 && type < MAX_TRACK_EVENT);
   tid_t tid;

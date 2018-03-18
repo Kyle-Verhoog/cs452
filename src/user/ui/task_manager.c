@@ -19,7 +19,7 @@ void TaskManagerInterface() {
   while (true) {
     len = TaskInfo(buf);
     TMPutStr(tm_tid, buf, len);
-    Delay(cs_tid, my_tid, 20);
+    Delay(cs_tid, my_tid, 100);
   }
   Exit();
 }

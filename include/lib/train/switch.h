@@ -1,6 +1,8 @@
 #ifndef SWITCH_H
 #define SWITCH_H
 
+#include <lib/train/track_node.h>
+
 typedef enum SwitchState{
 	SW_STRAIGHT = 33,
 	SW_CURVE = 34

@@ -1,10 +1,10 @@
-#ifndef TRAIN_H
-#define TRAIN_H
+#ifndef UTRAIN_H
+#define UTRAIN_H
 
 #include <types.h>
 #include <lib/train/track_node.h>
 #include <lib/train/path_finding.h>
-#include <user/train/train_defines.h>
+#include <lib/train/train_defines.h>
 
 #define TRAIN_COMMAND_BUFFER_SIZE 64
 
@@ -62,16 +62,6 @@ typedef struct TMProtocol{
 
 
 CIRCULAR_BUFFER_DEC(tc_cb, TrainProtocol, TRAIN_COMMAND_BUFFER_SIZE);
-
-typedef struct Train {
-  int id;
-  int gear;
-  int dir; //forward is 1
-  bool exist;
-  track_node *pos;
-  int speed;
-  int time_stamp;
-} Train;
 
 typedef struct TrainDescriptor{
   int id;

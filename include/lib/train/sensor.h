@@ -2,6 +2,7 @@
 #define SENSOR_H
 
 #include <user/train/train_defines.h>
+#include <lib/train/track_node.h>
 
 #define GET_DEC_NUM(dec) (dec/2)
 

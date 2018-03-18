@@ -9,6 +9,11 @@
 #include <user/train/waiting_room.h>
 #include <user/train/representer.h>
 
+
+#define VIRTUAL_EVENT_LIST_SIZE 10
+
+CIRCULAR_BUFFER_DEC(VEList, VirtualEvent, VIRTUAL_EVENT_LIST_SIZE);
+
 void Interpreter();
 
 #endif

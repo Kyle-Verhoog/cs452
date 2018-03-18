@@ -6,7 +6,7 @@
 // The track initialization functions expect an array of this size.
 #define TRACK_MAX 144
 
-extern track_node track_a[TRACK_MAX], track_b[TRACK_MAX], *track;
+extern track_node track_a[TRACK_MAX], track_b[TRACK_MAX], *TRACK;
 
 void init_tracka();
 

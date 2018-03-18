@@ -182,7 +182,7 @@ int path_generate(path *p) {
   sid = p->start->id;
   eid = p->end->id;
 
-  dij_path_find(track, p->start, p->end, p->pred);
+  dij_path_find(TRACK, p->start, p->end, p->pred);
   KASSERT(p->pred[sid] == -1);
 
   n = 0;
