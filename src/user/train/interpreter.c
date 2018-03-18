@@ -156,13 +156,17 @@ static void InterpretRE(RawEvent *re, Track *track, TrackUpdate *update) {
 
 static void SendVirtualEvents(tid_t vep_tid, VEList *events) {
   int r;
+  VERequest ver;
   VirtualEvent ve;
+
+  ver.type = VER_EVENT;
 
   while (events->size > 0) {
     r = VEList_pop(events, &ve);
     assert(r == 0);
 
-    Send(vep_tid, &ve, sizeof(ve), &r, sizeof(r));
+    ver.ve = ve;
+    Send(vep_tid, &ver, sizeof(ver), &r, sizeof(r));
   }
 }
 
