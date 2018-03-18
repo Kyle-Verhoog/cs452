@@ -19,4 +19,20 @@ typedef struct EventGroup {
   VirtualEvent   ve;
 } EventGroup;
 
+typedef enum WRRequestType {
+  WR_VE,
+  WR_RE,
+  WR_CE,
+} WRRequestType;
+
+union WRRequestData {
+  VirtualEvent ve;
+  RawEvent     re;
+};
+
+typedef struct WRRequest {
+  WRRequestType type;
+  union WRRequestData data;
+} WRRequest;
+
 #endif
