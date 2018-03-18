@@ -1,6 +1,7 @@
 #ifndef VIRTUAL_PROVIDER_H
 #define VIRTUAL_PROVIDER_H
 
+#include <lib/train/train_defines.h>
 #include <user/train/events.h>
 
 #define KEY_SIZE SENSOR_SIZE
@@ -24,10 +25,12 @@ typedef struct VESubscribe{
 	VERequest req;
 }VESubscribe;
 
+
 void VirtualProvider();
 
+/*
 #define VEREQ_BUFFER_SIZE 64
 
-CIRCULAR_BUFFER_DEF(vereq_cb, VERequest, VEREQ_BUFFER_SIZE);
-
+CIRCULAR_BUFFER_DEC(vereq_cb, VERequest, VEREQ_BUFFER_SIZE);
+*/
 #endif

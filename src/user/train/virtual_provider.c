@@ -1,6 +1,6 @@
 #include <src/user/train/virtual_provider.h>
 
-CIRCULAR_BUFFER_DEC(vereq_cb, VERequest, VEREQ_BUFFER_SIZE);
+CIRCULAR_BUFFER_DEF(vereq_cb, VERequest, VEREQ_BUFFER_SIZE);
 
 void VirtualEventPublisher(){
 	int r;
