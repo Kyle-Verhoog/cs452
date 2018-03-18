@@ -1,6 +1,8 @@
 #ifndef SENSOR_H
 #define SENSOR_H
 
+#include <user/train/train_defines.h>
+
 #define GET_DEC_NUM(dec) (dec/2)
 
 #define GET_SEN_NUM(dec, sen) (((dec&1) ? 15 : 7) - sen)

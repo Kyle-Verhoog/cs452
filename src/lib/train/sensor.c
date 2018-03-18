@@ -1,7 +1,8 @@
 #include <lib/train/sensor.h>
 
 void init_sensors(Sensors *sensors){
-	for(int i = 0; i < SENSOR_SIZE; i++){
-		sensors[i] = SEN_OFF;
+	int i;
+	for(i = 0; i < DECODER_SIZE * 2; i++){
+		sensors->sensors[i] = 0;
 	}
 }
