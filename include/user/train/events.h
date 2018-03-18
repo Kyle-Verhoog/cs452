@@ -37,8 +37,9 @@ typedef struct RawEvent {
 
 
 typedef enum VirtualEventType {
-  VE_REG = 0,
-  VE_TR_AT = 1,
+  VE_NONE = 0,
+  VE_REG = 1,
+  VE_TR_AT = 2,
 } VirtualEventType;
 
 typedef struct VirtualTrainAtEvent {
@@ -53,6 +54,7 @@ union VirtualEvents {
 typedef struct VirtualEvent {
   VirtualEventType type;
   int timestamp;
+  int timeout;    //TODO: HACK
   int key;
   RawEventType depend;
   union VirtualEvents event;

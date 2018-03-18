@@ -16,11 +16,6 @@ typedef enum SensorState{
 	SEN_ON = 1
 }SensorState;
 
-typedef struct Sensor{
-	SensorState state;
-	track_node *node;
-}Sensor;
-
 typedef enum SN_Request{
 	//Manager Reqs
 	SN_HALT = -1,
@@ -54,5 +49,7 @@ typedef struct SNSubscribe{
 	SN_Request snr;
   Sensors sensors;
 }SNSubscribe;
+
+void init_sensors(Sensors *sensors);
 
 #endif //SENSOR_H

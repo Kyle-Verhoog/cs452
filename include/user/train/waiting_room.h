@@ -1,9 +1,12 @@
 #ifndef WAITING_ROOM_H
 #define WAITING_ROOM_H
 
+#include <train_defines.h>
 #include <user/clockserver.h>
 #include <user/train/events.h>
 #include <user/train/virtual_provider.h>
+
+#define WAITING_ROOM_SIZE SENSOR_SIZE
 
 typedef enum EventGroupType {
   VRE_VE_RE,
@@ -23,6 +26,7 @@ typedef enum WRRequestType {
   WR_VE,
   WR_RE,
   WR_CE,
+  WR_TO,
 } WRRequestType;
 
 union WRRequestData {
@@ -34,5 +38,7 @@ typedef struct WRRequest {
   WRRequestType type;
   union WRRequestData data;
 } WRRequest;
+
+void WaitingRoom();
 
 #endif
