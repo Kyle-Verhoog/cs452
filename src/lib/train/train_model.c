@@ -1,4 +1,4 @@
-#include <train_model.h>
+#include <lib/train/train_model.h>
 
 int sqrt(int x)
 {
@@ -7,7 +7,6 @@ int sqrt(int x)
 	unsigned int e = 0L;
 
 	int i;
-
 	for (i = 0; i < BITSPERINT; i++)
 	{
 	    r = (r << 2) + TOP2BITS(x); x <<= 2;
@@ -25,7 +24,8 @@ int sqrt(int x)
 
 int mean(int * list, int size){
 	int sum = 0;
-	for(int i = 0; i < size; i++){
+	int i;
+	for(i = 0; i < size; i++){
 		sum += list[i];
 	}
 
@@ -37,7 +37,8 @@ int standard_deviation(int *list, int size){
 	int inter_sum = 0;
 	int mean = mean(list, size);
 
-	for(int i = 0; i < sie; i++){
+	int i;
+	for(i = 0; i < size; i++){
 		diff = list[i] - mean;
 		inter_sum += diff * diff;
 	}
@@ -45,4 +46,26 @@ int standard_deviation(int *list, int size){
 	inter_sum = inter_sum / (size - 1);
 
 	return sqrt(inter_sum);
+}
+
+int get_lagrange_basis(TrainModel *tm, int point, int x){
+	int frac = tm->y[point];
+	int i;
+	for(i = 0; i < TRAIN_MODEL_SIZE; i++){
+		if(i != point){
+			frac *= (x - tm->x[i]);
+			frac /= (tm->x[point] - tm->x[i]);
+		}
+	}
+	
+	return frac;
+}
+
+
+int interpolate(TrainModel *tm, int setting){
+	int val = 0;
+	int i;
+	for(i = 0; i < TRAIN_MODEL_SIZE; i++){
+		val += get_lagrange_basis(tm, i, setting);
+	}
 }

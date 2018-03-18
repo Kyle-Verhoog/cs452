@@ -7,8 +7,8 @@
 #define TRAIN_MODEL_SIZE 15
 
 typedef struct TrainModel{
-	int x[15];
-	int y[15];
+	int x[TRAIN_MODEL_SIZE];
+	int y[TRAIN_MODEL_SIZE];
 }
 
 //Integer Square Root
@@ -18,5 +18,8 @@ int sqrt(int x);
 int mean(int * list, int size);
 int standard_deviation(int *list, int size);
 
+//Get Values from Lagrange Form
+//NOTE: TO AVOID FLOATING POINT, INTERPOLATE MULTIPLIES GEAR SETTING BY 10
+int interpolate(TrainModel *tm, int setting);
 
 #endif //TRAIN_MODEL_H
