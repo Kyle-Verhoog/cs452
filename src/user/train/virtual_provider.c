@@ -61,12 +61,9 @@ void RegisterTimeout(void *args){
 	tid_t vp_tid = MyParentTid();
 	assert(my_tid > 0 && cs_tid > 0 && vp_tid > 0);
 
-	VirtualEventType old = ver.ve.type;
-	ver.ve.type = VE_REG;
 	Send(vp_tid, &ver, sizeof(ver), &r, sizeof(r));
 
 	ver.type = VER_EVENT;
-	ver.ve.type = old;
 	DelayUntil(cs_tid, my_tid, ver.ve.timestamp);
 	Send(vp_tid, &ver, sizeof(ver), &r, sizeof(r));
 	Exit();
