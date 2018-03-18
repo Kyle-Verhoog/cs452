@@ -17,12 +17,8 @@ void RailwayInit(){
     //Send Go
     PutC(tx_tid, 96);
 
-    Create(26, &TrainProvider);
-    Create(26, &SwitchProvider);
-    Create(26, &SensorProvider);
+    Create(26, &WaitingRoom);
     Create(26, &Representer);
-
-    Create(19, &init_switch);
 
     Exit();
 }
@@ -39,7 +35,7 @@ void Bootstrap() {
   Create(30, &TrackDataInit);
 
 
-  //Create(30, &SendGo);
+  // Create(30, &SendGo);
   Create(30, &RailwayInit);
 
   // interfaces
@@ -52,6 +48,8 @@ void Bootstrap() {
   Create(5, &TaskManagerInterface);
 
   Create(0, &Logger);
+
+  Create(19, &init_switch);
 
   Exit();
 }

@@ -1,5 +1,7 @@
 #include <user/ui/sensor_interface.h>
 
+static tid_t tm_tid;
+
 static void SensorSubscriber() {
   int r, sen_num;
   tid_t rep_tid, par_tid;
@@ -16,14 +18,14 @@ static void SensorSubscriber() {
 
   while (true) {
     Send(rep_tid, &tr_req, sizeof(tr_req), &event, sizeof(event));
-    sen_num = (GET_DEC_NUM(event.dec) << 16) | GET_SEN_NUM(event.dec, event.sen);
+    sen_num = (event.dec << 16) | event.sen;
     Send(par_tid, &sen_num, sizeof(sen_num), &r, sizeof(r));
   }
   Exit();
 }
 
 void SensorInterface() {
-  tid_t sub_tid, tm_tid;
+  tid_t sub_tid;
   int i, offset;
   char buf[256];
   rec_buffer rb;

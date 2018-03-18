@@ -21,8 +21,10 @@
 #include <user/train/train_provider.h>
 #include <user/train/switch_provider.h>
 #include <user/train/sensor_provider.h>
+#include <user/train/virtual_provider.h>
 #include <user/train/representer.h>
 #include <user/train/interpreter.h>
+#include <user/train/waiting_room.h>
 
 #include <stoppingcalibration_test.h>	//TODO: REMOVE THIS
 #include <stop_at_test.h>	//TODO: REMOVE THIS

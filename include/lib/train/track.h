@@ -5,6 +5,8 @@
 
 #include <user/syscalls.h>
 #include <lib/train/train_defines.h>
+#include <lib/train/track_node.h>
+#include <lib/train/track_data.h>
 #include <lib/train/sensor.h>
 #include <lib/train/switch.h>
 #include <lib/train/train.h>

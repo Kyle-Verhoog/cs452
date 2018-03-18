@@ -1,10 +1,18 @@
 #include <user/nameserver.h>
 #include <defines.h>
 
+CIRCULAR_BUFFER_DEF(ns_q, tid_t, NS_MAX_TASK_QUEUE_SIZE);
+
 
 void NameServer() {
-  int ret;
+  int i, r, ret, size;
+  tid_t tid;
+  ns_q name_q[NS_MAX_ENTRY];
   RegisterNS();
+
+  for (i = 0; i < NS_MAX_ENTRY; ++i) {
+    ns_q_init(&name_q[i]);
+  }
 
   nameserver_store store;
   nss_init(&store);
@@ -18,12 +26,22 @@ void NameServer() {
     switch(request.type) {
       case NS_WHOIS:
         ret = nss_get(&store, request.name);
-        // assert(ret >= 0);
-        Reply(requestor, &ret, sizeof(ret));
+        if (ret == -1) {
+          r = ns_q_push(&name_q[request.name], requestor);
+          assert(r == 0);
+        } else {
+          assert(ret >= 0);
+          Reply(requestor, &ret, sizeof(ret));
+        }
         break;
       case NS_REGISTERAS:
         ret = nss_set(&store, request.name, requestor);
-        // assert(ret == 0);
+        size = name_q[request.name].size;
+        for (i = 0; i < size; ++i) {
+          r = ns_q_pop(&name_q[request.name], &tid);
+          assert(r == 0);
+          Reply(tid, &requestor, sizeof(requestor));
+        }
         Reply(requestor, &ret, sizeof(ret));
         break;
       case NS_STOP:

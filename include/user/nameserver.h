@@ -2,7 +2,12 @@
 #define NAMESERVER_H
 
 #include <user/syscalls.h>
+#include <lib/circular_buffer.h>
 #include <lib/nameserver_store.h>
+
+#define NS_MAX_TASK_QUEUE_SIZE 5
+
+CIRCULAR_BUFFER_DEC(ns_q, tid_t, NS_MAX_TASK_QUEUE_SIZE);
 
 typedef enum NSService {
   NS_WHOIS = 0,

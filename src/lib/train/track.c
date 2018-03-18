@@ -11,6 +11,17 @@ void TrackInit(Track *track) {
   train_list_init(&track->orphan_trains);
   train_list_init(&track->active_trains);
 
+  Train *train;
+  Train t;
+  t.num = 24;
+  t.speed = 0;
+  t.pos = &TRACK[4];
+  t.timestamp = 0;
+  train_cb_push(&track->all_trains, t);
+  train = &track->all_trains.buf[0];
+  train_list_push(&track->orphan_trains, train);
+  //assert(&track->orphan_trains.size == 1);
+
   for (i = 0; i < DECODER_SIZE*2; ++i) {
     track->sensors[i] = 0;
   }
@@ -34,10 +45,11 @@ Train *GetActiveTrain(Track *track, int train_num) {
 
 // TODO: replace with proper list datastructure
 Train *RemoveActiveTrain(Track *track, int train_num) {
-  int i,r;
+  int i, r, size;
   Train *train;
 
-  for (i = 0; i < track->active_trains.size; ++i) {
+  size = track->active_trains.size;
+  for (i = 0; i < size; ++i) {
     r = train_list_pop(&track->active_trains, &train);
     assert(r == 0);
 

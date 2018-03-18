@@ -2,9 +2,16 @@
 
 CIRCULAR_BUFFER_DEF(VEList, VirtualEvent, VIRTUAL_EVENT_LIST_SIZE);
 
+
 static tid_t tm_tid;
 static void UpdateSensorEvent(RawSensorEvent *se_event, Track *track, TrackUpdate *update) {
   // TODO once new se_event defined
+  TrackEvent event;
+  event.type = TE_SE_CHANGE;
+
+  event.event.se_change.dec = se_event->id/16;
+  event.event.se_change.sen = se_event->id%16;
+  update->events[update->num++] = event;
 }
 
 
@@ -23,8 +30,16 @@ static void AttemptToAdoptTrain(RawSensorEvent *re, Track *track, TrackUpdate *u
 
   r = train_list_pop(&track->orphan_trains, &t);
   assert(r == 0);
+  TMLogStrf(tm_tid, "adopting train %d\n", t->num);
 
-  // t->pos = track[re->sen_num];
+  t->pos = &TRACK[re->id];
+  VirtualEvent ve;
+  ve.type = VE_TR_AT;
+  ve.timestamp = 2000;
+  ve.timeout = 2000;
+  ve.depend = 38;
+  ve.event.train_at.train_num = t->num;
+  ve.event.train_at.node = t->pos;
 
   r = train_list_push(&track->active_trains, t);
   assert(r == 0);
@@ -41,9 +56,10 @@ static void UpdateTrainCmdEvent(RawTrainCmdEvent *cmd_event, Track *track, Track
 // recalculate a rough estimate of velocity
 static void UpdateTrain(Train *train, track_node *new_pos, Track *track, VEList *events, int ts) {
   int dist, i, r, old_speed, new_speed;
-  track_node *old_pos, *next_pos, *sensor;
+  track_node *old_pos, *sensor;
   poss_node_list pnl;
 
+  TMLogStrf(tm_tid, "updating train %d\n", train->num);
   poss_node_list_init(&pnl);
 
   old_speed = train->speed;
@@ -60,9 +76,10 @@ static void UpdateTrain(Train *train, track_node *new_pos, Track *track, VEList 
   train->speed = (alpha*new_speed + (100-alpha)*train->speed) / 100;
   train->pos = new_pos;
 
-  r = TrackGetNextPossibleSensors(&track, new_pos, &pnl);
+  r = TrackGetNextPossibleSensors(track, new_pos, &pnl);
   assert(pnl.size > 0);
   VirtualEvent ve;
+  ve.type = VE_TR_AT;
   for (i = 0; i < pnl.size; ++i) {
     r = poss_node_list_pop(&pnl, &sensor);
     assert(r == 0);
@@ -76,6 +93,7 @@ static void UpdateTrain(Train *train, track_node *new_pos, Track *track, VEList 
 }
 
 static void InterpretVREVERE(EventGroup *grp, Track *track, TrackUpdate *update, VEList *vevents) {
+  TMLogStrf(tm_tid, "VRE VE RE\n");
   int vts, rts, delta;
   Train *train;
   track_node *new_pos;
@@ -89,13 +107,13 @@ static void InterpretVREVERE(EventGroup *grp, Track *track, TrackUpdate *update,
   assert(IS_VALID_TR_NUM(grp->ve.event.train_at.train_num));
   train = GetActiveTrain(track, grp->ve.event.train_at.train_num);
 
-  // new_pos = &TRACK[re->sen_num];
-  assert(0 && "UNCOMMENT THE ABOVE LINE");
+  new_pos = &TRACK[grp->re.event.se_event.id];
 
   UpdateTrain(train, new_pos, track, vevents, rts);
 }
 
 static void InterpretVRERE(EventGroup *grp, Track *track, TrackUpdate *update, VEList *vevents) {
+  TMLogStrf(tm_tid, "VRE RE\n");
   int vts, rts, delta;
   Train *train;
   track_node *new_pos;
@@ -109,14 +127,14 @@ static void InterpretVRERE(EventGroup *grp, Track *track, TrackUpdate *update, V
   assert(IS_VALID_TR_NUM(grp->ve.event.train_at.train_num));
   train = GetActiveTrain(track, grp->ve.event.train_at.train_num);
 
-  // new_pos = &TRACK[re->sen_num];
-  assert(0 && "UNCOMMENT THE ABOVE LINE");
+  new_pos = &TRACK[grp->re.event.se_event.id];
 
   UpdateTrain(train, new_pos, track, vevents, rts);
 }
 
 // We didn't get a raw event, so we orphan the train for now
 static void InterpretVREVE(EventGroup *grp, Track *track, TrackUpdate *update, VEList *vevents) {
+  TMLogStrf(tm_tid, "VRE VE\n");
   int r, tr_num;
   Train *train;
 
@@ -136,6 +154,7 @@ static void InterpretVREVE(EventGroup *grp, Track *track, TrackUpdate *update, V
 static void InterpretRE(RawEvent *re, Track *track, TrackUpdate *update) {
   switch (re->type) {
     case RE_SE:
+      TMLogStrf(tm_tid, "RE\n");
       // if there is an orphaned train, see if it makes sense to update its position
       // to this sensor
       if (track->orphan_trains.size > 0) {
@@ -234,13 +253,15 @@ void Interpreter() {
   tid_t rep_tid, req_tid, vep_tid;
   Track track;
 
+  TrackInit(&track);
+
   rep_tid = WhoIs(REPRESENTER_ID);
-  // vep_tid  = WhoIs(VIRTUAL_EVENT_PROVIDER_ID);
+  vep_tid = WhoIs(VIRTUAL_PROVIDER_ID);
   tm_tid  = WhoIs(TERMINAL_MANAGER_ID);
   assert(tm_tid > 0 && rep_tid > 0 && vep_tid > 0);
 
   // Subscribers to data publishers
-  Create(25, &WaitingRoomCourier);
+  Create(26, &WaitingRoomCourier);
 
   EventGroup group;
   while (true) {

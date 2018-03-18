@@ -8,7 +8,7 @@ void SendSensorDelta(tid_t wr_tid, tid_t cs_tid, tid_t my_tid, char *new_sensors
   char old_dec;
 
   event.type = WR_RE;
-  event.data.re.type = RE_SW;
+  event.data.re.type = RE_SE;
   event.data.re.timestamp = Time(cs_tid, my_tid);
 
   // looping over decoders A->E
@@ -21,7 +21,7 @@ void SendSensorDelta(tid_t wr_tid, tid_t cs_tid, tid_t my_tid, char *new_sensors
     // looping over bits of decoder byte
     for (j = 0; j < 8; ++j) {
       if (GET_SENSOR(new_dec, j) != GET_SENSOR(old_dec, j)) {
-        event.data.re.event.se_event.id = i*8 + j;
+        event.data.re.event.se_event.id = i*8 + (7-j);
         event.data.re.event.se_event.state = GET_SENSOR(new_dec, j);
         Send(wr_tid, &event, sizeof(event), &r, sizeof(r));
       }
@@ -199,7 +199,6 @@ void HandleWR_RE(WRRequest *event, VirtualEvent *waiting, int *sensorToVE, tid_t
     }
   }
 
-  courier = -1;
   Reply(courier, &eg, sizeof(eg));
 }
 
@@ -213,6 +212,7 @@ void HandleWR_TO(WRRequest *event, VirtualEvent *waiting, int *sensorToVE, tid_t
   sensor = event->data.re.event.se_event.id;
   sensorToVE[sensor] = -1;
   waiting[sensorToVE[sensor]].type = VE_NONE;
+  Reply(courier, &eg, sizeof(eg));
 }
 
 void init_waiting_room(int *map){
@@ -236,10 +236,15 @@ void WaitingRoom(){
   assert(r == 0);
   tid_t my_tid = MyTid();
 
-  Create(29, &TrainSubscriber);
-  Create(29, &SwitchSubscriber);
-  Create(29, &SensorSubscriber);
-  Create(29, &VirtualEventSubscriber);
+  Create(26, &TrainProvider);
+  Create(26, &SwitchProvider);
+  Create(26, &SensorProvider);
+  Create(26, &VirtualProvider);
+
+  Create(26, &TrainSubscriber);
+  Create(26, &SwitchSubscriber);
+  Create(26, &SensorSubscriber);
+  Create(26, &VirtualEventSubscriber);
 
   while(true){
 
@@ -251,12 +256,15 @@ void WaitingRoom(){
         Reply(req_tid, &r, sizeof(r));
         break;
       case WR_RE:
-        //TODO: ASSERT COURIER DOESN'T EXIST
+        assert(courier != -1);
         HandleWR_RE(&event, waiting, sensorToVE, courier, my_tid);
+        courier = -1;
         Reply(req_tid, &r, sizeof(r));
         break;
       case WR_TO:
+        assert(courier != -1);
         HandleWR_TO(&event, waiting, sensorToVE, courier);
+        courier = -1;
         Reply(req_tid, &r, sizeof(r)); 
       case WR_CE:
         courier = req_tid;

@@ -42,6 +42,7 @@ void SwitchHandler(void *args){
   	SWProtocol sw;
 
 		Receive(&req_tid, &sw, sizeof(sw));
+    assert(IS_VALID_ID(TID_ID(req_tid)));
 		Reply(req_tid, &reply, sizeof(reply));
 
 		sw_command[0] = sw.dir;
@@ -71,6 +72,7 @@ void SwitchPublisher(){
 
     switch(sws.swr){
       case SW_NOTIFY:
+        assert(IS_VALID_ID(TID_ID(req_tid)));
         Reply(req_tid, &reply, sizeof(reply));
         NOTIFY(&subscribers, &sub, sws.re, sizeof(sws.re));
         break;
@@ -145,7 +147,7 @@ void SwitchProvider(){
 	tid_t sw_handler = CreateArgs(29, &SwitchHandler, &tx1_writer, sizeof(tx1_writer));
   Create(29, &SwitchPublisher);
   tid_t suc_tid = Create(29, &SwitchUpdateCourier);
-  Create(19, &TestSWPublisher); //TODO: Remove this
+  // Create(19, &TestSWPublisher); //TODO: Remove this
 
   data.type = RE_SW;
 
@@ -153,6 +155,7 @@ void SwitchProvider(){
     if(courierFlag && switchFlag){
       courierFlag = false;
       switchFlag = false;
+      assert(IS_VALID_ID(TID_ID(suc_tid)));
       Reply(suc_tid, &data, sizeof(data));
     }
 
@@ -163,6 +166,7 @@ void SwitchProvider(){
 			case SW_FLIP:
   			//Send the command switch handler
   			Send(sw_handler, &sw, sizeof(sw), &reply, sizeof(reply));
+        assert(IS_VALID_ID(TID_ID(req_tid)));
   			Reply(req_tid, &reply, sizeof(reply));
         switchFlag = true;
         data.event.sw_event = sw;  //persist data until read
