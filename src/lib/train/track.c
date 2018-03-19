@@ -63,30 +63,54 @@ Train *RemoveActiveTrain(Track *track, int train_num) {
   return 0;
 }
 
+// int TrackGetNextPossibleSensors(Track *track, track_node *node, poss_node_list *pnl) {
+//   int r;
+//   assert(node != NULL);
+//   assert(node->type == NODE_SENSOR);
 
-int TrackGetNextPossibleSensors(Track *track, track_node *node, poss_node_list *pnl) {
+//   node = node->edge[DIR_AHEAD].dest;
+
+//   while (node->type != NODE_SENSOR) {
+//     if (node->type == NODE_BRANCH) {
+//       TrackGetNextPossibleSensors(track, node->edge[DIR_STRAIGHT].dest, pnl);
+//       TrackGetNextPossibleSensors(track, node->edge[DIR_CURVED].dest, pnl);
+//       return 0;
+//     }
+//     else if (node->type == NODE_EXIT) {
+//       return 0;
+//     }
+//     node = node->edge[DIR_AHEAD].dest;
+//   }
+
+//   assert(node->type == NODE_SENSOR);
+//   r = poss_node_list_push(pnl, node);
+//   assert(r == 0);
+//   return 0;
+// }
+
+int TrackGetNextPossibleSensors(Track *track, track_node *node, poss_node_list *pnl){
   int r;
   assert(node != NULL);
   assert(node->type == NODE_SENSOR);
+  poss_node_list bfs;
+  poss_node_list_init(&bfs);
 
-  node = node->edge[DIR_AHEAD].dest;
-
-  while (node->type != NODE_SENSOR) {
-    if (node->type == NODE_BRANCH) {
-      TrackGetNextPossibleSensors(track, node->edge[DIR_STRAIGHT].dest, pnl);
-      TrackGetNextPossibleSensors(track, node->edge[DIR_CURVED].dest, pnl);
-      return 0;
+  do{
+    if(node->type == NODE_BRANCH){
+    poss_node_list_push(&bfs, node->edge[DIR_STRAIGHT].dest);
+    poss_node_list_push(&bfs, node->edge[DIR_CURVED].dest);
     }
-    else if (node->type == NODE_EXIT) {
-      return 0;
+    else if(node->type == NODE_EXIT){
+      assert(0 && "TRAIN IS ABOUT TO RUN OFF TRACK");
     }
-    node = node->edge[DIR_AHEAD].dest;
-  }
+    else if(node->type == NODE_SENSOR){
+      poss_node_list_push(pnl, node);
+    }  
+    else{
+      poss_node_list_push(&bfs, node->edge[DIR_AHEAD].dest);
+    }
 
-  assert(node->type == NODE_SENSOR);
-  r = poss_node_list_push(pnl, node);
-  assert(r == 0);
-  return 0;
+    r = poss_node_list_pop(&bfs, &node);
+    assert(r == CB_E_NONE);
+  } while(bfs.size > 0);
 }
-
-

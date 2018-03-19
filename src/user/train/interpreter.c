@@ -187,9 +187,6 @@ static void SendVirtualEvents(tid_t vep_tid, VEList *events) {
     assert(r == 0);
 
     ver.ve = ve;
-tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
-TMLogStrf(tm_tid, "s: %d\n", ve.event.train_at.node->num);
-
     Send(vep_tid, &ver, sizeof(ver), &r, sizeof(r));
   }
 }
