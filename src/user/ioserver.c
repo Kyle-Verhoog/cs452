@@ -22,6 +22,7 @@ void IOServerNotifier(void *args) {
     assert(r == 0);
     assert(rep == 0);
   }
+  Exit();
 }
 
 void IOServerRX(void *args) {
@@ -103,6 +104,7 @@ void IOServerRX(void *args) {
         break;
     }
   }
+  Exit();
 }
 
 void IOServerTX(void *args) {

@@ -18,7 +18,8 @@
 
 #define USER_STACK_BASE 0x02000000
 // #define USER_STACK_SIZE 0xf0000  //1 MB User stacks
-#define USER_STACK_SIZE 0x78000  // 512 KB User stacks
+//#define USER_STACK_SIZE 0x78000  // 512 KB User stacks
+#define USER_STACK_SIZE 0x3c000  // 256 KB User stacks
 
 
 //Kernel Modes
@@ -28,7 +29,8 @@
 #define SYSTEM_MODE 31
 
 // The number of tasks in the system
-#define MAX_TASK  64
+//#define MAX_TASK  64
+#define MAX_TASK  128
 #define MAX_PRIORITY 32
 #define NS_MAX_ENTRY 64
 #define CSQ_MAX_SIZE MAX_TASK

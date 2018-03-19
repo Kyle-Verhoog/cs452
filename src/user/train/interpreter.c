@@ -248,6 +248,8 @@ static void WaitingRoomCourier() {
     Send(wr_tid, &wrr, sizeof(wrr), &group, sizeof(group));
     Send(int_tid, &group, sizeof(group), &r, sizeof(r));
   }
+
+  Exit();
 }
 
 void Interpreter() {

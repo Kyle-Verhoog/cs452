@@ -19,6 +19,7 @@ void TerminalInputHandler() {
     req.data = &c;
     Send(tman_tid, &req, sizeof(req), &rep, sizeof(rep));
   }
+  Exit();
 }
 
 void wm_init(WManager *wm) {
@@ -184,6 +185,7 @@ void TerminalManager() {
     }
     print_tdisp(tx_tid, &wm.td);
   }
+  Exit();
 }
 
 void TMRegister(tid_t tm_tid, char offsetx, char offsety, char width, char height) {

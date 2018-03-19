@@ -442,4 +442,6 @@ void Shell(void *args) {
     }
     shell_print(&sh, tm_tid);
   }
+
+  Exit();
 }

@@ -94,7 +94,7 @@ void ClockServerNotifier() {
     assert(reply.ntids >= -1 && reply.ntids <= CS_PROCESS_NUM);
     assert(reply.tids != NULL);
     if (reply.ntids == CSN_EXIT_CODE) {
-      Exit();
+      break;
     }
 
     for (i = 0; i < reply.ntids; ++i) {
@@ -104,6 +104,7 @@ void ClockServerNotifier() {
       Reply(tid, &ureply, sizeof(ureply));
     }
   }
+  Exit();
 }
 
 /**

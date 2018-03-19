@@ -46,6 +46,8 @@ void SensorTimeout(){
 
 		Delay(cs_tid, my_tid, SENSOR_WAIT);
 	}
+	
+	Exit();
 }
 
 void SensorReceiver(){
