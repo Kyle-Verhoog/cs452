@@ -50,6 +50,8 @@ static void next_sensors_test(track_node *tr) {
   TrackGetNextPossibleSensors(&track, start, &pnl);
   poss_node_list_pop(&pnl, &tn);
   assert(pnl.size == 0);
+
+  //start = &tr[70]
 }
 
 static void basic_test(track_node *g) {
@@ -90,13 +92,12 @@ static void basic_test(track_node *g) {
   event.type = VRE_RE;
   event.re.timestamp = 1100;
   event.re.type = RE_SE;
-  event.re.event.se_event.id = 44; // A1
+  event.re.event.se_event.id = 44; // C13
   event.re.event.se_event.state = 1;
   event.ve = ve;
   TrackInterpretEventGroup(&track, &event);
   assert(track.lost_trains.size == 0);
   assert(track.active_trains.size == 1);
-  assert(track.train[24].sen_ts == 1100);
   assert(track.train[24].sen_ts == 1100);
   assert(track.train[24].speed == 2310);
   assert(track.vevents.size == 1);
@@ -106,12 +107,35 @@ static void basic_test(track_node *g) {
   assert(ve.timestamp == 1100+378);
   assert(ve.event.train_at.train_num == 24);
   assert(ve.event.train_at.node->num == 70);
+
+  // simulate the next sensor hit at D7 with the VER AFTER the VE has come in
+  // (model was too quick in prediction)
+  event.type = VRE_VE_RE;
+  event.re.timestamp = 1500;
+  event.re.type = RE_SE;
+  event.re.event.se_event.id = 70; // D7
+  event.re.event.se_event.state = 1;
+  event.ve = ve;
+  assert(track.train[24].status == TR_KNOWN);
+  TrackInterpretEventGroup(&track, &event);
+  assert(track.lost_trains.size == 0);
+  assert(track.active_trains.size == 1);
+  assert(track.train[24].sen_ts == 1500);
+  assert(track.train[24].speed == 2199);
+  assert(track.vevents.size == 1);
+  ve_list_pop(&track.vevents, &ve);
+  assert(ve.type == VE_TR_AT);
+  assert(ve.timeout == 174);
+  assert(ve.timestamp == 1500+174);
+  assert(ve.event.train_at.train_num == 24);
+  // printf("%s\n", ve.event.train_at.node->name);
+  assert(ve.event.train_at.node->num == 54);
 }
 
 void track_tests() {
   track_node graph[TRACK_MAX];
   init_tracka(graph);
   track_init_test(graph);
-  next_sensors_test(graph);
+  // next_sensors_test(graph);
   basic_test(graph);
 }

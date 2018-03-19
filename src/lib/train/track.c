@@ -80,6 +80,7 @@ int TrackGetNextPossibleSensors(Track *track, track_node *node, poss_node_list *
     node = node->edge[DIR_AHEAD].dest;
   }
 
+  // printf("%s\n", node->name);
   assert(node->type == NODE_SENSOR);
   r = poss_node_list_push(pnl, node);
   assert(r == 0);
@@ -135,7 +136,6 @@ static void TrackGenerateTrainVEvents(Track *track, Train *train) {
   poss_node_list_init(&pnl);
 
   r = TrackGetNextPossibleSensors(track, NEXT_NODE(train->pos), &pnl);
-  assert(pnl.size > 0);
 
   VirtualEvent ve;
   ve.timeout = -1;
@@ -234,6 +234,7 @@ void TrackLocateLostTrain(Track *track, Train *train, int sen_num, int ts) {
 
   // now we just don't know the train's speed
   train->status = TR_UN_SPEED;
+  train->speed = -1;
 
   TrackUpdateTrain(track, train, new_pos, ts);
 
@@ -311,7 +312,7 @@ static void TrackInterpretVRERE(Track *track, EventGroup *grp) {
 
   vts = grp->ve.timestamp;
   rts = grp->re.timestamp;
-  assert(vts >= rts);
+  // assert(vts >= rts);
 
   delta = rts - vts;
 
