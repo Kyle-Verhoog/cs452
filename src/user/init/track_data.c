@@ -1,8 +1,8 @@
 #include <user/init/track_data.h>
 
 void TrackDataInit() {
-  init_tracka();
-  init_trackb();
+  init_tracka(track_a);
+  init_trackb(track_b);
 
   set_track_a();
 

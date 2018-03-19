@@ -2,7 +2,7 @@
 #define VIRTUAL_PROVIDER_H
 
 #include <lib/train/train_defines.h>
-#include <user/train/events.h>
+#include <lib/train/events.h>
 #include <tid_buffer.h>
 
 #define KEY_SIZE SENSOR_SIZE

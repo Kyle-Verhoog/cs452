@@ -35,10 +35,7 @@ int trhr(track_node *track, const char *name) {
   return -1;
 }
 
-void init_tracka() {
-  track_node *track;
-  track = track_a;
-
+void init_tracka(track_node *track) {
   // note: this memset is necessary to account for NULL values
   memset(track, 0, TRACK_MAX*sizeof(track_node));
   add_ids(track);
@@ -1224,10 +1221,7 @@ void init_tracka() {
   track[143].reverse = &track[142];
 }
 
-void init_trackb() {
-  track_node *track;
-  track = track_b;
-
+void init_trackb(track_node *track) {
   memset(track, 0, TRACK_MAX*sizeof(track_node));
   add_ids(track);
   track[0].name = "A1";

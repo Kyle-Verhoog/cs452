@@ -239,7 +239,7 @@ void WaitingRoom(){
   Create(26, &TrainProvider);
   Create(26, &SwitchProvider);
   Create(26, &SensorProvider);
-  Create(26, &VirtualProvider);
+  Create(27, &VirtualProvider);
 
   Create(26, &TrainSubscriber);
   Create(26, &SwitchSubscriber);

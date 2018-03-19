@@ -25,8 +25,8 @@ typedef struct TrackEventSwitchChange {
 } TESWChange;
 
 typedef struct TrackEventSensorChange {
-  int dec;
-  int sen;
+  int num;
+  int state;
 } TESEChange;
 
 union TrackEvents {

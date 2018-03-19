@@ -44,6 +44,24 @@ int TaskInfo(char *c);
 #ifdef DEBUG
 #include <io.h>
 
+#define assertf(exp, ...)                              \
+  do {                                                 \
+    if (__predict_false(!(exp))) {                     \
+*(int *)(VIC1_BASE + VIC_INTENCLEAR_OFFSET) = VIC1_ENABLED; \
+*(int *)(VIC2_BASE + VIC_INTENCLEAR_OFFSET) = VIC2_ENABLED; \
+      PRINTF(                                          \
+          "\033[31m\033[?9l\r\n"                       \
+          "USER TASK "                                 \
+          "ASSERTION '"STR(exp)"' FAILED <%s:%d>\r\n", \
+          __FILE__,                                    \
+          __LINE__                                     \
+              );                                       \
+      PRINTF(__VA_ARGS__);                             \
+      PRINTF("\033[0m");                               \
+      Assert();                                        \
+    }                                                  \
+  } while (0)
+
 #define assert(exp)                                    \
   do {                                                 \
     if (__predict_false(!(exp))) {                     \

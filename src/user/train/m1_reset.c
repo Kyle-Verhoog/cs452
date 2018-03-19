@@ -31,7 +31,7 @@ void loop_switches(tid_t sw_tid, tid_t swpub_tid) {
   Send(swpub_tid, &sw, sizeof(sw), &data, sizeof(data));
   swlist = (Switch *)data;
 
-  for(i = NORMAL_SWITCH_SIZE_LOW; i <= NORMAL_SWITCH_SIZE_HIGH; ++i){
+  for(i = NORM_SW_LOW; i <= NORM_SW_HIGH; ++i){
     if (swlist[i].state == SW_STRAIGHT) {
       sw.swr = SW_FLIP;
       sw.sw = i;
@@ -41,7 +41,7 @@ void loop_switches(tid_t sw_tid, tid_t swpub_tid) {
     }
   }
 
-  for(i = SPECIAL_SWITCH_SIZE_LOW; i <= SPECIAL_SWITCH_SIZE_HIGH; ++i){
+  for(i = SPEC_SW_LOW; i <= SPEC_SW_HIGH; ++i){
     if (swlist[i].state != SW_STRAIGHT+(i%2)) {
       sw.dir = SW_STRAIGHT+(i%2);
       sw.sw = i;

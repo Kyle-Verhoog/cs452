@@ -9,6 +9,7 @@
 #include <test/terminal.h>
 #include <test/train/priority_queue.h>
 #include <test/train/path_finding.h>
+#include <test/train/track.h>
 #include <test/string.h>
 #include <test/parse.h>
 #include <test/parse_args.h>
@@ -61,6 +62,10 @@ int main(void) {
 
   PTEST_START("train/path_finding");
   train_pathing_tests();
+  PTEST_END();
+
+  PTEST_START("train/track");
+  track_tests();
   PTEST_END();
 
   PRINTF("+----------------------+---+\n");

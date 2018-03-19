@@ -3,26 +3,12 @@
 
 #include <defines.h>
 #include <train_defines.h>
+#include <lib/train/events.h>
 #include <user/clockserver.h>
-#include <user/train/events.h>
 #include <user/train/virtual_provider.h>
 #include <sensor_provider.h>
 #include <train_provider.h>
 #include <switch_provider.h>
-
-typedef enum EventGroupType {
-  VRE_VE_RE,
-  VRE_VE,
-  VRE_RE,
-  RE,
-} EventGroupType;
-
-
-typedef struct EventGroup {
-  EventGroupType type;
-  RawEvent       re;
-  VirtualEvent   ve;
-} EventGroup;
 
 typedef enum WRRequestType {
   WR_VE,

@@ -26,23 +26,24 @@ static void AddSubscriber(trm_subscribers *subs, tid_t tid, TrackEventType type)
 }
 
 static void ApplySensorChange(Track *track, TESEChange *event) {
-  char *sensors;
-
-  sensors = track->sensors;
-  TOGGLE_SENSOR(sensors, event->dec, event->sen);
+  track->sensors[event->num].state = event->state;
 }
 
-static void ApplyUpdates(Track *track, TrackUpdate *updates, trm_subscribers *subs) {
+static void ApplyUpdates(Track *track, update_list *updates, trm_subscribers *subs) {
   int i;
-  TrackEvent *event;
+  TrackEvent event;
 
-  assert(updates->num < MAX_NUM_UPDATES);
+  if (!(0 <= updates->size && updates->size < UPDATE_LIST_SIZE)) {
+    PRINTF("%d\n", updates->size);
+  }
+  assert(0 <= updates->size && updates->size < UPDATE_LIST_SIZE);
 
-  for (i = 0; i < updates->num; ++i) {
-    event = &updates->events[i];
-    switch (event->type) {
+  for (i = 0; i < updates->size; ++i) {
+    update_list_get(updates, i, &event);
+
+    switch (event.type) {
       case TE_SE_CHANGE:
-        ApplySensorChange(track, &event->event.se_change);
+        ApplySensorChange(track, &event.event.se_change);
         break;
       case TE_TR_MOVE:
         //assert(0 && "TODO");
@@ -54,7 +55,7 @@ static void ApplyUpdates(Track *track, TrackUpdate *updates, trm_subscribers *su
         assert(0);
     }
 
-    NotifySubscribers(subs, event->type, &event->event);
+    NotifySubscribers(subs, event.type, &event.event);
   }
 }
 
@@ -67,7 +68,7 @@ void Representer() {
   r = RegisterAs(REPRESENTER_ID);
   assert(r == 0);
 
-  TrackInit(&track);
+  TrackInit(&track, TRACK);
 
   Create(27, &Interpreter);
 

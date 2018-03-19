@@ -31,9 +31,9 @@ void SwitchInterface() {
 
   for (i = 0; i < SWITCH_SIZE; ++i)
     switches[i] = '\0';
-  for (i = NORMAL_SWITCH_SIZE_LOW; i <= NORMAL_SWITCH_SIZE_HIGH; ++i)
+  for (i = NORM_SW_LOW; i <= NORM_SW_HIGH; ++i)
     switches[i] = '?';
-  for (i = SPECIAL_SWITCH_SIZE_LOW; i <= SPECIAL_SWITCH_SIZE_HIGH; ++i)
+  for (i = SPEC_SW_LOW; i <= SPEC_SW_HIGH; ++i)
     switches[i] = '?';
 
   rec_buffer_init(&rb);

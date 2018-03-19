@@ -14,7 +14,7 @@
 #include <lib/train/path_finding.h>
 #include <tid_buffer.h>
 #include <user/terminal_manager.h>
-#include <user/train/events.h>
+#include <lib/train/events.h>
 
 typedef struct TrainSubscribe{
 	Train_Command tc;

@@ -90,8 +90,8 @@ void SwitchSW(char *args){
     Exit();
   }
 
-  if (!((NORMAL_SWITCH_SIZE_LOW <= swn && swn <= NORMAL_SWITCH_SIZE_HIGH) ||
-        (SPECIAL_SWITCH_SIZE_LOW <= swn && swn <= SPECIAL_SWITCH_SIZE_HIGH))) {
+  if (!((NORM_SW_LOW <= swn && swn <= NORM_SW_HIGH) ||
+        (SPEC_SW_LOW <= swn && swn <= SPEC_SW_HIGH))) {
     TMLogStrf(tm_tid, "rv: invalid sw num!\n");
     r = -1;
     Reply(tid, &r, sizeof(r));

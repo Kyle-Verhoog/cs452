@@ -8,11 +8,11 @@
 
 extern track_node track_a[TRACK_MAX], track_b[TRACK_MAX], *TRACK;
 
-void init_tracka();
+void init_tracka(track_node *track);
 
 void set_track_a();
 
-void init_trackb();
+void init_trackb(track_node *track);
 
 void set_track_b();
 

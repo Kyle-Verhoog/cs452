@@ -3,7 +3,7 @@
 static tid_t tm_tid;
 
 static void SensorSubscriber() {
-  int r, sen_num;
+  int r;
   tid_t rep_tid, par_tid;
   TrackRequest tr_req;
   TESEChange event;
@@ -18,8 +18,7 @@ static void SensorSubscriber() {
 
   while (true) {
     Send(rep_tid, &tr_req, sizeof(tr_req), &event, sizeof(event));
-    sen_num = (event.dec << 16) | event.sen;
-    Send(par_tid, &sen_num, sizeof(sen_num), &r, sizeof(r));
+    Send(par_tid, &event.num, sizeof(event.num), &r, sizeof(r));
   }
   Exit();
 }
@@ -52,9 +51,9 @@ void SensorInterface() {
     for(i = 0; i < min(rb.num, 4); ++i) {
       sen_num = rec_buffer_get(&rb, i);
       offset += buf_pack_c(buf+offset, ' ');
-      offset += buf_pack_c(buf+offset, (sen_num >> 16) + 'A');
-      offset += buf_pack_i32(buf+offset, (sen_num & 15) + 1);
-      if ((sen_num&15)+1 < 10)
+      offset += buf_pack_c(buf+offset, sen_num/16 + 'A');
+      offset += buf_pack_i32(buf+offset, sen_num%16 + 1);
+      if ((sen_num%16)+1 < 10)
         offset += buf_pack_c(buf+offset, ' ');
     }
 

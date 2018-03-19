@@ -11,11 +11,11 @@ void init_switch(){
 
   tid_t sw_tid = WhoIs(SWITCH_PROVIDER_ID); 
   int i;
-  for(i = NORMAL_SWITCH_SIZE_LOW; i <= NORMAL_SWITCH_SIZE_HIGH; ++i){
+  for(i = NORM_SW_LOW; i <= NORM_SW_HIGH; ++i){
     swp.sw = i;
     Send(sw_tid, &swp, sizeof(swp), &reply, sizeof(reply));
   }
-  for(i = SPECIAL_SWITCH_SIZE_LOW; i <= SPECIAL_SWITCH_SIZE_HIGH; ++i){
+  for(i = SPEC_SW_LOW; i <= SPEC_SW_HIGH; ++i){
     swp.sw = i;
     swp.dir = SW_STRAIGHT+(i%2);
     Send(sw_tid, &swp, sizeof(swp), &reply, sizeof(reply));

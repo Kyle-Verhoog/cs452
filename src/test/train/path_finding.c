@@ -1,5 +1,5 @@
 #include <test/train/path_finding.h>
-#include <user/train/train_defines.h>
+#include <lib/train/train_defines.h>
 
 #define T(str) trhr(t, str)
 
@@ -230,8 +230,8 @@ static void switch_flipping(track_node *t) {
   path_generate(&p);
 
   Switch slist[SWITCH_SIZE];
-	int node = 0;
-  for(i = NORMAL_SWITCH_SIZE_LOW; i <= NORMAL_SWITCH_SIZE_HIGH; ++i){
+  int node = 0;
+  for(i = NORM_SW_LOW; i <= NORM_SW_HIGH; ++i){
     while(true){
       if(t[node].type == NODE_BRANCH){
         slist[i].branch = &t[node];
@@ -302,7 +302,7 @@ static void print_path(track_node *t) {
   path_set_destination(&p, start, end);
   path_generate(&p);
   path_to_str(&p, buf);
-  printf("%s\n", buf);
+  // printf("%s\n", buf);
 }
 
 static void generate_longer_path(track_node *t) {

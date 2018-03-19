@@ -6,8 +6,6 @@
 #include <user/nameserver.h>
 
 #include <lib/train/track.h>
-#include <lib/train/train.h>
-#include <user/train/updates.h>
 
 #define MAX_EVENT_SUBSCRIBERS 16
 
@@ -21,8 +19,7 @@ typedef enum TrackRequestType {
 } TrackRequestType;
 
 union uTrackRequest {
-  Track track;         // fetch
-  TrackUpdate update;  // interpreter
+  update_list update;  // interpreter
   TrackEventType type; // subscribers
 };
 

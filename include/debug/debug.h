@@ -77,6 +77,4 @@
 #define IS_VALID_PRIORITY(p)
 #endif
 
-
-
 #endif /* DEBUG_H */

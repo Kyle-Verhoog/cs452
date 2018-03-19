@@ -64,7 +64,7 @@ test: LD  = $(X86_LD)
 test: CFLAGS = $(TEST_CFLAGS)
 test: CFLAGS += -DX86
 test: LDFLAGS = $(TEST_LDFLAGS)
-test: clean $(BUILD_DIR)/$(TEST_EXEC)
+test: $(BUILD_DIR)/$(TEST_EXEC)
 	./$(BUILD_DIR)/$(TEST_EXEC)
 
 o2: CFLAGS += -O2

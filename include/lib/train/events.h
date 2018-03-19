@@ -60,4 +60,17 @@ typedef struct VirtualEvent {
 } VirtualEvent;
 
 
+typedef enum EventGroupType {
+  VRE_VE_RE,
+  VRE_VE,
+  VRE_RE,
+  RE,
+} EventGroupType;
+
+typedef struct EventGroup {
+  EventGroupType type;
+  RawEvent       re;
+  VirtualEvent   ve;
+} EventGroup;
+
 #endif
