@@ -63,10 +63,14 @@ void RegisterTimeout(void *args){
 
 	ver.type = VER_EVENT;
 	time = Time(cs_tid, my_tid);
-	if(time < ver.ve.timestamp){
-		Delay(cs_tid, my_tid, ver.ve.timestamp - time);
+
+	if(ver.ve.timestamp != NO_TIMESTAMP){
+		if(time < ver.ve.timestamp){
+			Delay(cs_tid, my_tid, ver.ve.timestamp - time);
+		}
+		Send(vp_tid, &ver, sizeof(ver), &r, sizeof(r));
 	}
-	Send(vp_tid, &ver, sizeof(ver), &r, sizeof(r));
+	
 	Exit();
 }
 

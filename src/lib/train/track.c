@@ -152,8 +152,9 @@ static void TrackGenerateTrainVEvents(Track *track, Train *train) {
       ve.timestamp = ve.timeout + train->sen_ts;
     }
     else if (train->status == TR_UN_SPEED) {
-      ve.timeout = INT_MAX;    // TODO: figure this out
-      ve.timestamp = INT_MAX;
+      // ve.timeout = INT_MAX;    // TODO: figure this out
+      // ve.timestamp = INT_MAX;
+      ve.timestamp = NO_TIMESTAMP;
     }
     else {
       assert(0);

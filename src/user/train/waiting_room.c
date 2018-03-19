@@ -175,10 +175,12 @@ TMLogStrf(tm_tid, "Already handled location %s\n", event->data.ve.event.train_at
       return;
     }else{
       //Spawn a timeout handler  
-tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
-TMLogStrf(tm_tid, "Adding window for location %s\n", event->data.ve.event.train_at.node->name);
       CreateArgs(26, &TimeoutWR_VE, (void *)&event->data.ve, sizeof(VirtualEvent)); //TODO: UPDATE PRIORITY
     }
+  }
+  else{
+tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+TMLogStrf(tm_tid, "VRE on %s\n", event->data.ve.event.train_at.node->name);
   }
   waiting[event->data.ve.key] = event->data.ve;
   sensorToVE[event->data.ve.event.train_at.node->num] = event->data.ve.key;
