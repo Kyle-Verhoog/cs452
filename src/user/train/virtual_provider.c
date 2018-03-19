@@ -32,43 +32,52 @@ void VirtualEventPublisher(){
   Exit();
 }
 
-void VirtualProviderCourier(){
-	VERequest ver, data;
-	VESubscribe ves;
-	int r;
+// void VirtualProviderCourier(){
+// 	VERequest ver, data;
+// 	VESubscribe ves;
+// 	int r;
 
-	tid_t pub_tid = WhoIs(VIRTUAL_PUBLISHER_ID);
-	tid_t vp_tid = MyParentTid();
-	assert(pub_tid > 0 && vp_tid > 0);
+// 	tid_t pub_tid = WhoIs(VIRTUAL_PUBLISHER_ID);
+// 	tid_t vp_tid = MyParentTid();
+// 	assert(pub_tid > 0 && vp_tid > 0);
 
-	while(true){
-		ver.type = VER_NOTIFY_READY;
-		Send(vp_tid, &ver, sizeof(ver), &data, sizeof(data));
+// 	while(true){
+// 		ver.type = VER_NOTIFY_READY;
+// 		Send(vp_tid, &ver, sizeof(ver), &data, sizeof(data));
 
-		ves.type = VER_NOTIFY;
-		ves.req = data;
-		Send(pub_tid, &ves, sizeof(ves), &r, sizeof(r));
-	}
+// 		ves.type = VER_NOTIFY;
+// 		ves.req = data;
+// 		Send(pub_tid, &ves, sizeof(ves), &r, sizeof(r));
+// 	}
 
-	Exit();
-}
+// 	Exit();
+// }
 
-void RegisterTimeout(void *args){
+void AdHocVirtualEvent(void *args){
 	int r, time;
 	VERequest ver = *(VERequest *)args;
+	VESubscribe ves;
+
 	tid_t my_tid = MyTid();
 	tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
-	tid_t vp_tid = MyParentTid();
+	tid_t pub_tid = WhoIs(VIRTUAL_PUBLISHER_ID);
+
 	assert(my_tid > 0 && cs_tid > 0 && vp_tid > 0);
 
-	ver.type = VER_EVENT;
+	ves.type = VER_NOTIFY;
+	ves.req = ver;
+
+	ves.req.ve.type = VE_REG;
+	Send(pub_tid, &ves, sizeof(ves), &r, sizeof(r)); //send reg to publisher
+
+	ves.req = ver;	//Reset the type to the old
 	time = Time(cs_tid, my_tid);
 
-	if(ver.ve.timestamp != NO_TIMESTAMP){
-		if(time < ver.ve.timestamp){
-			Delay(cs_tid, my_tid, ver.ve.timestamp - time);
+	if(ves.req.ve.timestamp != NO_TIMESTAMP){
+		if(time < ves.req.ve.timestamp){
+			Delay(cs_tid, my_tid, ves.req.ve.timestamp - time);
 		}
-		Send(vp_tid, &ver, sizeof(ver), &r, sizeof(r));
+		Send(pub_tid, &ves, sizeof(ves), &r, sizeof(r)); //send event to publisher
 	}
 	
 	Exit();
@@ -80,7 +89,6 @@ void VirtualProvider(){
 	tid_t req_tid;
 	VERequest ver, data;
 	int r;
-	bool courierFlag = false;
 
 	vereq_cb requests;
 	vereq_cb_init(&requests);
@@ -89,16 +97,8 @@ void VirtualProvider(){
 	assert(r == 0);
 
 	Create(26, &VirtualEventPublisher);
-	tid_t courier = Create(26, &VirtualProviderCourier);
 
 	while(true){
-
-		if(requests.size > 0 && courierFlag){
-			r = vereq_cb_pop(&requests, &data);
-			assert(r == CB_E_NONE);
-			Reply(courier, &data, sizeof(data));
-			courierFlag = false;
-		}
 
 		Receive(&req_tid, &ver, sizeof(ver));
 
@@ -106,23 +106,13 @@ void VirtualProvider(){
 			case VER_REGISTER:
 				ver.ve.key = key;
 				key = (key + 1) % KEY_SIZE;
-				CreateArgs(26, &RegisterTimeout, (void *)&ver, sizeof(ver)); //TODO: FIX PRIORITY
-				ver.ve.type = VE_REG;
-				vereq_cb_push(&requests, ver);
+				CreateArgs(26, &AdHocVirtualEvent, (void *)&ver, sizeof(ver)); //TODO: FIX PRIORITY
 				Reply(req_tid, &r, sizeof(r));
-				break;
-			case VER_EVENT:
-				vereq_cb_push(&requests, ver);
-				Reply(req_tid, &r, sizeof(r));
-				break;
-			case VER_NOTIFY_READY:
-				courierFlag = true;
 				break;
 			default:
 				assert(0 && "Bad Command");
 				break;
 		}
 	}
-
 	Exit();
 }
