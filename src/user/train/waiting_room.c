@@ -1,4 +1,5 @@
 #include <user/train/waiting_room.h>
+#include <terminal_manager.h>
 
 
 void SendSensorDelta(tid_t wr_tid, tid_t cs_tid, tid_t my_tid, char *new_sensors, char *old_sensors) {
@@ -23,6 +24,7 @@ void SendSensorDelta(tid_t wr_tid, tid_t cs_tid, tid_t my_tid, char *new_sensors
       if (GET_SENSOR(new_dec, j) != GET_SENSOR(old_dec, j)) {
         event.data.re.event.se_event.id = i*8 + (7-j);
         event.data.re.event.se_event.state = GET_SENSOR(new_dec, j);
+	assert(GET_SENSOR(new_dec, j) == 0 || GET_SENSOR(new_dec, j) == 1);
         Send(wr_tid, &event, sizeof(event), &r, sizeof(r));
       }
     }
@@ -171,7 +173,7 @@ void HandleWR_VE(WRRequest *event, VirtualEvent *waiting, int *sensorToVE){
       CreateArgs(19, &TimeoutWR_VE, (void *)&waiting[event->data.ve.key], sizeof(VirtualEvent)); //TODO: UPDATE PRIORITY
     }
   }
-
+	assert(event->data.ve.key != -1);
   waiting[event->data.ve.key] = event->data.ve;
   sensorToVE[event->data.ve.event.train_at.node->num] = event->data.ve.key;
 }
@@ -196,6 +198,7 @@ void HandleWR_RE(WRRequest *event, VirtualEvent *waiting, int *sensorToVE, tid_t
     else{
       eg.type = RE;
       eg.re = event->data.re;
+assert(event->data.re.event.se_event.state == SEN_ON || event->data.re.event.se_event.state == SEN_OFF);
     }
   }
 

@@ -30,7 +30,6 @@ static void AttemptToAdoptTrain(RawSensorEvent *re, Track *track, TrackUpdate *u
 
   r = train_list_pop(&track->orphan_trains, &t);
   assert(r == 0);
-  TMLogStrf(tm_tid, "adopting train %d at %s\n", t->num, t->pos->name);
 
   t->pos = &TRACK[re->id];
   VirtualEvent ve;
@@ -41,6 +40,7 @@ static void AttemptToAdoptTrain(RawSensorEvent *re, Track *track, TrackUpdate *u
   ve.event.train_at.train_num = t->num;
   ve.event.train_at.node = t->pos;
 
+  TMLogStrf(tm_tid, "adopting train %d at %s\n", t->num, t->pos->name);
   r = train_list_push(&track->active_trains, t);
   VEList_push(vevents, ve);
   assert(r == 0);
@@ -60,7 +60,7 @@ static void UpdateTrain(Train *train, track_node *new_pos, Track *track, VEList 
   track_node *old_pos, *sensor;
   poss_node_list pnl;
 
-  TMLogStrf(tm_tid, "updating train %d\n", train->num);
+  TMLogStrf(tm_tid, "updating train %d at %s\n", train->num, new_pos->name);
   poss_node_list_init(&pnl);
 
   old_speed = train->speed;
@@ -94,7 +94,7 @@ static void UpdateTrain(Train *train, track_node *new_pos, Track *track, VEList 
 }
 
 static void InterpretVREVERE(EventGroup *grp, Track *track, TrackUpdate *update, VEList *vevents) {
-  TMLogStrf(tm_tid, "VRE VE RE\n");
+  TMLogStrf(tm_tid, "VRE VE RE - %s, %d\n", grp->ve.event.train_at.node->name, grp->re.event.se_event.id);
   int vts, rts, delta;
   Train *train;
   track_node *new_pos;
@@ -114,7 +114,7 @@ static void InterpretVREVERE(EventGroup *grp, Track *track, TrackUpdate *update,
 }
 
 static void InterpretVRERE(EventGroup *grp, Track *track, TrackUpdate *update, VEList *vevents) {
-  TMLogStrf(tm_tid, "VRE RE\n");
+  TMLogStrf(tm_tid, "VRE RE - %d\n", grp->re.event.se_event.id);
   int vts, rts, delta;
   Train *train;
   track_node *new_pos;
@@ -135,7 +135,7 @@ static void InterpretVRERE(EventGroup *grp, Track *track, TrackUpdate *update, V
 
 // We didn't get a raw event, so we orphan the train for now
 static void InterpretVREVE(EventGroup *grp, Track *track, TrackUpdate *update, VEList *vevents) {
-  TMLogStrf(tm_tid, "VRE VE\n");
+  TMLogStrf(tm_tid, "VRE VE - %s\n", grp->ve.event.train_at.node->name);
   int r, tr_num;
   Train *train;
 
@@ -155,7 +155,7 @@ static void InterpretVREVE(EventGroup *grp, Track *track, TrackUpdate *update, V
 static void InterpretRE(RawEvent *re, Track *track, TrackUpdate *update, VEList *vevents) {
   switch (re->type) {
     case RE_SE:
-      TMLogStrf(tm_tid, "RE\n");
+      TMLogStrf(tm_tid, "RE - %d\n", re->event.se_event.id);
       // if there is an orphaned train, see if it makes sense to update its position
       // to this sensor
       if (track->orphan_trains.size > 0) {
@@ -187,6 +187,9 @@ static void SendVirtualEvents(tid_t vep_tid, VEList *events) {
     assert(r == 0);
 
     ver.ve = ve;
+tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+TMLogStrf(tm_tid, "s: %d\n", ve.event.train_at.node->num);
+
     Send(vep_tid, &ver, sizeof(ver), &r, sizeof(r));
   }
 }
@@ -204,15 +207,15 @@ static void Interpret(tid_t rep_tid, tid_t vep_tid, Track *track, EventGroup *gr
 
   switch (grp->type) {
     case VRE_VE_RE:
-      assert(grp->type == RE_SE);
+      //assert(grp->type == RE_SE);
       InterpretVREVERE(grp, track, &update, &vevents);
       break;
     case VRE_VE:
-      assert(grp->type == RE_SE);
+      //assert(grp->type == RE_SE);
       InterpretVREVE(grp, track, &update, &vevents);
       break;
     case VRE_RE:
-      assert(grp->type == RE_SE);
+      //assert(grp->type == RE_SE);
       InterpretVRERE(grp, track, &update, &vevents);
       break;
     case RE:

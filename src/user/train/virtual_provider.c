@@ -19,7 +19,7 @@ void VirtualEventPublisher(){
 		switch(ves.type){
 		  case VER_NOTIFY:
 		  	Reply(req_tid, &r, sizeof(r));
-		  	NOTIFY(&subscribers, &sub, ves.req, sizeof(ves.req));
+		  	NOTIFY(&subscribers, &sub, ves.req.ve, sizeof(ves.req.ve));
 		  	break;
 		  case VER_SUBSCRIBE:
 		  	tid_cb_push(&subscribers, req_tid);
@@ -63,7 +63,6 @@ void RegisterTimeout(void *args){
 
 	ver.type = VER_EVENT;
 	time = Time(cs_tid, my_tid);
-	assert(ver.ve.timestamp == 2000);
 	if(time < ver.ve.timestamp){
 		Delay(cs_tid, my_tid, ver.ve.timestamp);
 	}
@@ -75,7 +74,7 @@ void VirtualProvider(){
 	int key = 0;
 
 	tid_t req_tid;
-	VERequest ver;
+	VERequest ver, data;
 	int r;
 	bool courierFlag = false;
 
@@ -91,8 +90,9 @@ void VirtualProvider(){
 	while(true){
 
 		if(requests.size > 0 && courierFlag){
-			vereq_cb_pop(&requests, &ver);	//Re-using ver as temp
-			Reply(courier, &ver, sizeof(ver));
+			r = vereq_cb_pop(&requests, &data);
+			assert(r == CB_E_NONE);
+			Reply(courier, &data, sizeof(data));
 			courierFlag = false;
 		}
 
