@@ -62,7 +62,7 @@ void AdHocVirtualEvent(void *args){
 	tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
 	tid_t pub_tid = WhoIs(VIRTUAL_PUBLISHER_ID);
 
-	assert(my_tid > 0 && cs_tid > 0 && vp_tid > 0);
+	assert(my_tid > 0 && cs_tid > 0 && pub_tid > 0);
 
 	ves.type = VER_NOTIFY;
 	ves.req = ver;

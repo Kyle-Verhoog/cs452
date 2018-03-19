@@ -223,22 +223,26 @@ TMLogStrf(tm_tid, "RE on %d\n", event->data.re.event.se_event.id);
 void HandleWR_TO(WRRequest *event, VirtualEvent *waiting, int *sensorToVE, tid_t courier){
   EventGroup eg;
   int sensor;
-
-  eg.type = VRE_VE;
-  eg.ve = event->data.ve; 
-
+  
   sensor = event->data.ve.event.train_at.node->num;
-  waiting[sensorToVE[sensor]].type = VE_NONE;
-  sensorToVE[sensor] = -1;
+  //if(waiting[sensorToVE[sensor]].type != VE_NONE){
+  if(sensorToVE[sensor] != -1){
+    eg.type = VRE_VE;
+    eg.ve = event->data.ve;
 
+    waiting[sensorToVE[sensor]].type = VE_NONE;
+    sensorToVE[sensor] = -1;
 tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
 TMLogStrf(tm_tid, "VRE VE on %s\n", event->data.ve.event.train_at.node->name);
-
-  if(courier >= 0){
-    Reply(courier, &eg, sizeof(eg)); 
+    if(courier >= 0){
+      Reply(courier, &eg, sizeof(eg));
+    }
+  }
+  else{
+tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+TMLogStrf(tm_tid, "Timeout Ignored\n");
   }
 }
-
 void init_waiting_room(int *map){
   int i;
   for(i = 0; i < SENSOR_SIZE; i++){
@@ -299,10 +303,10 @@ void WaitingRoom(){
   Create(26, &SensorProvider);
   Create(26, &VirtualProvider);
 
-  Create(26, &TrainSubscriber);
-  Create(26, &SwitchSubscriber);
-  Create(26, &SensorSubscriber);
-  Create(26, &VirtualEventSubscriber);
+  Create(29, &TrainSubscriber);
+  Create(29, &SwitchSubscriber);
+  Create(29, &SensorSubscriber);
+  Create(29, &VirtualEventSubscriber);
 
   // Create(26, &test_waiting_room);
   while(true){
