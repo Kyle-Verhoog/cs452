@@ -158,7 +158,10 @@ void TimeoutWR_VE(void *args){
   wrr.type = WR_TO;
   wrr.data.ve = *(VirtualEvent *) args;
 
+tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+TMLogStrf(tm_tid, "Timestart for location %s\n", wrr.data.ve.event.train_at.node->name);
   Delay(cs_tid, my_tid, wrr.data.ve.timeout);
+TMLogStrf(tm_tid, "Timeout for location %s\n", wrr.data.ve.event.train_at.node->name);
 
   Send(wr_tid, &wrr, sizeof(wrr), &r, sizeof(r));
   Exit();
@@ -167,13 +170,16 @@ void TimeoutWR_VE(void *args){
 void HandleWR_VE(WRRequest *event, VirtualEvent *waiting, int *sensorToVE){
   if(event->data.ve.type == VE_TR_AT){
     if(waiting[event->data.ve.key].type != VE_REG){
+tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+TMLogStrf(tm_tid, "Already handled location %s\n", event->data.ve.event.train_at.node->name);
       return;
     }else{
       //Spawn a timeout handler  
-      CreateArgs(19, &TimeoutWR_VE, (void *)&waiting[event->data.ve.key], sizeof(VirtualEvent)); //TODO: UPDATE PRIORITY
+tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+TMLogStrf(tm_tid, "Adding window for location %s\n", event->data.ve.event.train_at.node->name);
+      CreateArgs(26, &TimeoutWR_VE, (void *)&event->data.ve, sizeof(VirtualEvent)); //TODO: UPDATE PRIORITY
     }
   }
-	assert(event->data.ve.key != -1);
   waiting[event->data.ve.key] = event->data.ve;
   sensorToVE[event->data.ve.event.train_at.node->num] = event->data.ve.key;
 }
@@ -185,20 +191,25 @@ void HandleWR_RE(WRRequest *event, VirtualEvent *waiting, int *sensorToVE, tid_t
   if(event->data.re.type != RE_SE){
     eg.type = RE;
     eg.re = event->data.re;
+tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+TMLogStrf(tm_tid, "RE NOT SENSOR\n");
   }
   else{
     sensor = event->data.re.event.se_event.id;
     if(sensorToVE[sensor] != -1){
+tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+TMLogStrf(tm_tid, "VRE RE or VRE VE RE on %d\n", event->data.re.event.se_event.id);
       eg.type = waiting[sensorToVE[sensor]].type == VE_REG ? VRE_RE : VRE_VE_RE;
       eg.re = event->data.re;
       eg.ve = waiting[sensorToVE[sensor]];
-      sensorToVE[sensor] = -1;
       waiting[sensorToVE[sensor]].type = VE_NONE;
+      sensorToVE[sensor] = -1;
     }
     else{
+tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+TMLogStrf(tm_tid, "RE on %d\n", event->data.re.event.se_event.id);
       eg.type = RE;
       eg.re = event->data.re;
-assert(event->data.re.event.se_event.state == SEN_ON || event->data.re.event.se_event.state == SEN_OFF);
     }
   }
 
@@ -214,9 +225,12 @@ void HandleWR_TO(WRRequest *event, VirtualEvent *waiting, int *sensorToVE, tid_t
   eg.type = VRE_VE;
   eg.ve = event->data.ve; 
 
-  sensor = event->data.re.event.se_event.id;
-  sensorToVE[sensor] = -1;
+  sensor = event->data.ve.event.train_at.node->num;
   waiting[sensorToVE[sensor]].type = VE_NONE;
+  sensorToVE[sensor] = -1;
+
+tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+TMLogStrf(tm_tid, "VRE VE on %s\n", event->data.ve.event.train_at.node->name);
 
   if(courier >= 0){
     Reply(courier, &eg, sizeof(eg)); 
@@ -245,19 +259,20 @@ void test_waiting_room(){
   assert(my_tid > 0 && wr_tid > 0 && cs_tid > 0 && tm_tid > 0 && vp_tid > 0);
 
   ve.type = VE_TR_AT;
-  ve.timestamp = 2000;
-  ve.timeout = 2000;
+  ve.timestamp = Time(cs_tid, my_tid) + 500;
+  ve.timeout = 500;
   ve.depend = 38;
   ve.event.train_at.train_num = 24;
   ve.event.train_at.node = &TRACK[4];
 
-  ver.type = VER_EVENT;
+  ver.type = VER_REGISTER;
   ver.ve = ve;
 
   while(true){
+    ver.ve.timestamp = Time(cs_tid, my_tid) + 500;
     TMLogStrf(tm_tid, "Sending train %d at %s\n", ver.ve.event.train_at.train_num, ver.ve.event.train_at.node->name);
-    Send(wr_tid, &ver, sizeof(ver), r, sizeof(r));
-    Delay(cs_tid, my_tid, 1000);  //Every 10 seconds
+    Send(vp_tid, &ver, sizeof(ver), &r, sizeof(r));
+    Delay(cs_tid, my_tid, 1200);  //Every 120 seconds
   }
 
   Exit();
@@ -288,7 +303,6 @@ void WaitingRoom(){
   Create(26, &VirtualEventSubscriber);
 
   Create(26, &test_waiting_room);
-
   while(true){
 
     Receive(&req_tid, &event, sizeof(event));    
@@ -309,6 +323,7 @@ void WaitingRoom(){
         HandleWR_TO(&event, waiting, sensorToVE, courier);
         courier = -1;
         Reply(req_tid, &r, sizeof(r)); 
+	break;
       case WR_CE:
         courier = req_tid;
         break;
