@@ -187,6 +187,7 @@ static void SendVirtualEvents(tid_t vep_tid, VEList *events) {
     assert(r == 0);
 
     ver.ve = ve;
+assert(ver.ve.timestamp == 0);
     Send(vep_tid, &ver, sizeof(ver), &r, sizeof(r));
   }
 }

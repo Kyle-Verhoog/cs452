@@ -61,10 +61,7 @@ void RegisterTimeout(void *args){
 	tid_t vp_tid = MyParentTid();
 	assert(my_tid > 0 && cs_tid > 0 && vp_tid > 0);
 
-	Send(vp_tid, &ver, sizeof(ver), &r, sizeof(r));
-
 	ver.type = VER_EVENT;
-	time = Time(cs_tid, my_tid);
 	//if(time < ver.ve.timestamp){
 		Delay(cs_tid, my_tid, ver.ve.timestamp);
 	//}
