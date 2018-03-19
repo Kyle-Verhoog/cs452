@@ -1,6 +1,6 @@
 #include <user/train/waiting_room.h>
 #include <terminal_manager.h>
-
+#include <track_data.h> //TODO: REMOVE THIS
 
 void SendSensorDelta(tid_t wr_tid, tid_t cs_tid, tid_t my_tid, char *new_sensors, char *old_sensors) {
   int i, j, r;
@@ -230,6 +230,39 @@ void init_waiting_room(int *map){
   }
 }
 
+void test_waiting_room(){
+  int r;
+  tid_t cs_tid, my_tid, wr_tid, tm_tid, vp_tid;
+  VERequest ver;
+  VirtualEvent ve;
+
+  my_tid = MyTid();
+  wr_tid = MyParentTid();
+  cs_tid = WhoIs(CLOCKSERVER_ID);
+  tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+  vp_tid = WhoIs(VIRTUAL_PROVIDER_ID);
+
+  assert(my_tid > 0 && wr_tid > 0 && cs_tid > 0 && tm_tid > 0 && vp_tid > 0);
+
+  ve.type = VE_TR_AT;
+  ve.timestamp = 2000;
+  ve.timeout = 2000;
+  ve.depend = 38;
+  ve.event.train_at.train_num = 24;
+  ve.event.train_at.node = &TRACK[4];
+
+  ver.type = VER_EVENT;
+  ver.ve = ve;
+
+  while(true){
+    TMLogStrf(tm_tid, "Sending train %d at %s\n", ver.ve.event.train_at.train_num, ver.ve.event.train_at.node->name);
+    Send(wr_tid, &ver, sizeof(ver), r, sizeof(r));
+    Delay(cs_tid, my_tid, 1000);  //Every 10 seconds
+  }
+
+  Exit();
+}
+
 void WaitingRoom(){
   int r;
   WRRequest event;
@@ -253,6 +286,8 @@ void WaitingRoom(){
   Create(26, &SwitchSubscriber);
   Create(26, &SensorSubscriber);
   Create(26, &VirtualEventSubscriber);
+
+  Create(26, &test_waiting_room);
 
   while(true){
 
