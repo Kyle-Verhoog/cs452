@@ -7,7 +7,7 @@ void RailwayInit(){
     assert(rx_tid >= 0);
 
     //Send Reset Commands to Terminal
-    //BLPutC(tx_tid, 'X');
+    BLPutC(tx_tid, 'X');
     BLPutC(tx_tid, 192);
 
     //Flush the IO
