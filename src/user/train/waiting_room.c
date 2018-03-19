@@ -202,7 +202,9 @@ assert(event->data.re.event.se_event.state == SEN_ON || event->data.re.event.se_
     }
   }
 
-  Reply(courier, &eg, sizeof(eg));
+  if(courier >= 0){
+     Reply(courier, &eg, sizeof(eg));
+  }
 }
 
 void HandleWR_TO(WRRequest *event, VirtualEvent *waiting, int *sensorToVE, tid_t courier){
@@ -215,7 +217,10 @@ void HandleWR_TO(WRRequest *event, VirtualEvent *waiting, int *sensorToVE, tid_t
   sensor = event->data.re.event.se_event.id;
   sensorToVE[sensor] = -1;
   waiting[sensorToVE[sensor]].type = VE_NONE;
-  Reply(courier, &eg, sizeof(eg));
+
+  if(courier >= 0){
+    Reply(courier, &eg, sizeof(eg)); 
+  }
 }
 
 void init_waiting_room(int *map){
@@ -259,13 +264,13 @@ void WaitingRoom(){
         Reply(req_tid, &r, sizeof(r));
         break;
       case WR_RE:
-        assert(courier != -1);
+        //assert(courier != -1);
         HandleWR_RE(&event, waiting, sensorToVE, courier, my_tid);
         courier = -1;
         Reply(req_tid, &r, sizeof(r));
         break;
       case WR_TO:
-        assert(courier != -1);
+        //assert(courier != -1);
         HandleWR_TO(&event, waiting, sensorToVE, courier);
         courier = -1;
         Reply(req_tid, &r, sizeof(r)); 

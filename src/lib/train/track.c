@@ -94,8 +94,23 @@ int TrackGetNextPossibleSensors(Track *track, track_node *node, poss_node_list *
   assert(node->type == NODE_SENSOR);
   poss_node_list bfs;
   poss_node_list_init(&bfs);
+  
+  //Kick Start
+  if(node->type == NODE_BRANCH){
+    poss_node_list_push(&bfs, node->edge[DIR_STRAIGHT].dest);
+    poss_node_list_push(&bfs, node->edge[DIR_CURVED].dest);
+  }
+  else if(node->type == NODE_EXIT){
+    assert(0 && "TRAIN IS ABOUT TO RUN OFF TRACK");
+  }
+  else{
+    poss_node_list_push(&bfs, node->edge[DIR_AHEAD].dest);
+  }
 
-  do{
+  while(bfs.size > 0){
+    r = poss_node_list_pop(&bfs, &node);
+    assert(r == CB_E_NONE);
+
     if(node->type == NODE_BRANCH){
     poss_node_list_push(&bfs, node->edge[DIR_STRAIGHT].dest);
     poss_node_list_push(&bfs, node->edge[DIR_CURVED].dest);
@@ -109,8 +124,7 @@ int TrackGetNextPossibleSensors(Track *track, track_node *node, poss_node_list *
     else{
       poss_node_list_push(&bfs, node->edge[DIR_AHEAD].dest);
     }
-
-    r = poss_node_list_pop(&bfs, &node);
-    assert(r == CB_E_NONE);
-  } while(bfs.size > 0);
+  }
+  
+  return 0;
 }
