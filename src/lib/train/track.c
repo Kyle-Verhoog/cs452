@@ -2,11 +2,12 @@
 
 CIRCULAR_BUFFER_DEF(train_cb, Train, TRAIN_LIST_SIZE);
 CIRCULAR_BUFFER_DEF(train_list, Train *, TRAIN_LIST_SIZE);
-CIRCULAR_BUFFER_DEF(poss_node_list, track_node *, POSSIBLE_NODE_LIST_SIZE);
+CIRCULAR_BUFFER_DEF(poss_node_list, PossibleSensor, POSSIBLE_NODE_LIST_SIZE);
 CIRCULAR_BUFFER_DEF(update_list, TrackEvent, UPDATE_LIST_SIZE);
 CIRCULAR_BUFFER_DEF(ve_list, VirtualEvent, VEVENT_LIST_SIZE);
 
 #define NEXT_NODE(x) x->edge[DIR_AHEAD].dest
+#define NEXT_DIST(x) x->edge[DIR_AHEAD].dist
 
 void TrackInit(Track *track, track_node *tr) {
   int i;
@@ -64,25 +65,30 @@ Train *TrackRemoveActiveTrain(Track *track, int train_num) {
 }
 
 
-int TrackGetNextPossibleSensors(Track *track, track_node *node, poss_node_list *pnl) {
+int GetNextPossibleSensors(track_node *node, int dist, poss_node_list *pnl) {
   int r;
+  PossibleSensor sensor;
   assert(node != NULL);
+  assert(dist > 0 && dist < 10000);
 
   while (node->type != NODE_SENSOR) {
     if (node->type == NODE_BRANCH) {
-      TrackGetNextPossibleSensors(track, node->edge[DIR_STRAIGHT].dest, pnl);
-      TrackGetNextPossibleSensors(track, node->edge[DIR_CURVED].dest, pnl);
+      GetNextPossibleSensors(node->edge[DIR_STRAIGHT].dest, dist + node->edge[DIR_STRAIGHT].dist, pnl);
+      GetNextPossibleSensors(node->edge[DIR_CURVED].dest, dist + node->edge[DIR_CURVED].dist, pnl);
       return 0;
     }
     else if (node->type == NODE_EXIT) {
       return 0;
     }
+
+    dist += node->edge[DIR_AHEAD].dist;
     node = node->edge[DIR_AHEAD].dest;
   }
 
-  // printf("%s\n", node->name);
+  sensor.node = node;
+  sensor.dist = dist;
   assert(node->type == NODE_SENSOR);
-  r = poss_node_list_push(pnl, node);
+  r = poss_node_list_push(pnl, sensor);
   assert(r == 0);
   return 0;
 }
@@ -130,12 +136,12 @@ static void TrackGenerateTrainVEvents(Track *track, Train *train) {
   assert(train->status == TR_KNOWN || train->status == TR_UN_SPEED);
   int i, n, r, dist;
   poss_node_list pnl;
-  track_node *sensor;
+  PossibleSensor sensor;
   assert(train->status != TR_UNINIT);
 
   poss_node_list_init(&pnl);
 
-  r = TrackGetNextPossibleSensors(track, NEXT_NODE(train->pos), &pnl);
+  r = GetNextPossibleSensors(NEXT_NODE(train->pos), NEXT_DIST(train->pos), &pnl);
 
   VirtualEvent ve;
   ve.timeout = -1;
@@ -146,7 +152,7 @@ static void TrackGenerateTrainVEvents(Track *track, Train *train) {
   for (i = 0; i < n; ++i) {
     r = poss_node_list_pop(&pnl, &sensor);
     assert(r == 0);
-    dist = track_node_dist(train->pos, sensor);
+    dist = sensor.dist;
     if (train->status == TR_KNOWN) {
       ve.timeout = (dist*1000) / train->speed;
       ve.timestamp = ve.timeout + train->sen_ts;
@@ -159,9 +165,9 @@ static void TrackGenerateTrainVEvents(Track *track, Train *train) {
     else {
       assert(0);
     }
-    ve.depend = sensor->num;
+    ve.depend = sensor.node->num;
     ve.event.train_at.train_num = train->num;
-    ve.event.train_at.node = sensor;
+    ve.event.train_at.node = sensor.node;
     r = ve_list_push(&track->vevents, ve);
     assert(r == 0);
   }

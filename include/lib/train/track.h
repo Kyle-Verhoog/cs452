@@ -26,8 +26,13 @@ CIRCULAR_BUFFER_DEC(update_list, TrackEvent, UPDATE_LIST_SIZE);
 #define VEVENT_LIST_SIZE 8
 CIRCULAR_BUFFER_DEC(ve_list, VirtualEvent, VEVENT_LIST_SIZE);
 
+typedef struct PossibleSensor {
+  int dist;
+  track_node *node;
+} PossibleSensor;
+
 #define POSSIBLE_NODE_LIST_SIZE 5
-CIRCULAR_BUFFER_DEC(poss_node_list, track_node *, POSSIBLE_NODE_LIST_SIZE);
+CIRCULAR_BUFFER_DEC(poss_node_list, PossibleSensor, POSSIBLE_NODE_LIST_SIZE);
 
 typedef struct Track {
   track_node *graph;
@@ -49,7 +54,7 @@ Train *RemoveActiveTrain(Track *track, int train_num);
 
 void TrackAddLostTrain(Track *track, Train *t);
 
-int TrackGetNextPossibleSensors(Track *track, track_node *node, poss_node_list *pnl);
+int GetNextPossibleSensors(track_node *node, int dist, poss_node_list *pnl);
 
 int TrackInterpretEventGroup(Track *track, EventGroup *grp);
 #endif
