@@ -62,10 +62,11 @@ void RegisterTimeout(void *args){
 	assert(my_tid > 0 && cs_tid > 0 && vp_tid > 0);
 
 	ver.type = VER_EVENT;
-	//if(time < ver.ve.timestamp){
+	time = Time(cs_tid, my_tid);
+	assert(ver.ve.timestamp == 2000);
+	if(time < ver.ve.timestamp){
 		Delay(cs_tid, my_tid, ver.ve.timestamp);
-	//}
-	assert(0);
+	}
 	Send(vp_tid, &ver, sizeof(ver), &r, sizeof(r));
 	Exit();
 }
