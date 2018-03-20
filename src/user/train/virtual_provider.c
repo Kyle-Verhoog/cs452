@@ -83,8 +83,6 @@ void AdHocVirtualEvent(void *args){
 }
 
 void VirtualProvider(){
-	int key = 0;
-
 	tid_t req_tid;
 	VERequest ver, data;
 	int r;
@@ -103,8 +101,6 @@ void VirtualProvider(){
 
 		switch(ver.type){
 			case VER_REGISTER:
-				ver.ve.key = key;
-				key = (key + 1) % KEY_SIZE;
 				CreateArgs(26, &AdHocVirtualEvent, (void *)&ver, sizeof(ver)); //TODO: FIX PRIORITY
 				Reply(req_tid, &r, sizeof(r));
 				break;

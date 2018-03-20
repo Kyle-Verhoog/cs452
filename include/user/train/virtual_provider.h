@@ -5,7 +5,6 @@
 #include <lib/train/events.h>
 #include <tid_buffer.h>
 
-#define KEY_SIZE SENSOR_SIZE
 #define NO_TIMESTAMP -1
 
 typedef enum VirtualEventRequestType{
