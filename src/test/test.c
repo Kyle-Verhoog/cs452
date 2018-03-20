@@ -7,6 +7,7 @@
 #include <test/buffer_pack.h>
 #include <test/ioserver_buffer.h>
 #include <test/terminal.h>
+#include <test/train/event_window.h>
 #include <test/train/priority_queue.h>
 #include <test/train/path_finding.h>
 #include <test/train/track.h>
@@ -54,6 +55,10 @@ int main(void) {
 
   PTEST_START("task/priority_queue");
   priority_queue_tests();
+  PTEST_END();
+
+  PTEST_START("train/event_window");
+  event_window_tests();
   PTEST_END();
 
   PTEST_START("train/priority_queue");
