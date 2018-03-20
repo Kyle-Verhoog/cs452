@@ -136,7 +136,7 @@ static void UpdateTrainCmd(Track *track, int tr_num, int cmd) {
 
 static void TrackAddVEvent(Track *track, VirtualEvent *ve) {
   int r;
-  track->key = (track->key + 1) % KEY_SIZE;
+  track->key = ev_window_inc_key(track->key);
   ve->key = track->key;
   r = ve_list_push(&track->vevents, *ve);
   assert(r == 0);
@@ -144,7 +144,7 @@ static void TrackAddVEvent(Track *track, VirtualEvent *ve) {
 
 static void TrackGenerateUnknownSpeedTrainVEvents(Track *track, Train *train) {
   assert(train->status == TR_UN_SPEED);
-  int r, dist;
+  int r;
   poss_node_list pnl;
   PossibleSensor sensor;
   assert(train->status != TR_UNINIT);
@@ -159,7 +159,6 @@ static void TrackGenerateUnknownSpeedTrainVEvents(Track *track, Train *train) {
   while (pnl.size > 0) {
     r = poss_node_list_pop(&pnl, &sensor);
     assert(r == 0);
-    dist = sensor.dist;
     ve.timeout = -1;
     ve.timestamp = -1;
     ve.depend = sensor.node->num;
@@ -262,6 +261,7 @@ static void TrackUpdateLostTrain(Track *track, Train *train, track_node *new_pos
   TrackGenerateUnknownSpeedTrainVEvents(track, train);
 }
 
+// UNINIT -> TR_LOST
 void TrackAddTrain(Track *track, Train *t) {
   int r;
   assert(t->num >= 0 && t->num <= TRAIN_SIZE);
@@ -282,7 +282,6 @@ static void TrackLoseTrain(Track *track, Train *t) {
   assert(t == &track->train[t->num]);
   t->last_seen = t->pos;
   t->status = TR_LOST;
-  ev_window_shift_all(&t->window);
 }
 
 static void TrackLocateLostTrain(Track *track, Train *train, int sen_num, int ts) {
@@ -346,7 +345,7 @@ static void TrackHandleRawEvent(Track *track, RawEvent *re) {
 }
 
 static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
-  int train_num, ekey, vts, rts, delta;
+  int r, train_num, ekey, vts, rts, delta;
   Train *train;
   track_node *new_pos;
 
@@ -360,10 +359,22 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
   assert(IS_VALID_TR_NUM(train_num));
   train = &track->train[train_num];
 
+  // if we get an unexpected key (from a past window) then:
+  //   1) we got a false positive from a sensor
+  //   2) something really weird is happening
   if (ev_window_is_unexpected(&train->window, ekey)) {
     TrackLoseTrain(track, train);
+    r = ev_window_remove_key(&train->window, ekey);
+    assert(r == 0);
+    r = ev_window_shift_all(&train->window);
+    assert(r == 0);
+    return;
   }
-  else if (train->status == TR_KNOWN) {
+
+  // we got an expected key, so shift the window
+  ev_window_shift_all(&train->window);
+
+  if (train->status == TR_KNOWN) {
     new_pos = &track->graph[grp->re.event.se_event.id];
     TrackUpdateKnownTrain(track, train, new_pos, rts);
   }
@@ -374,12 +385,23 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
   else {
     assert(0);
   }
+
+  // if there are virtual events to be sent, then they form a new window
+  // so we shift the current window from being expected to unexpected
+  // and add the keys of the new virtual events to the current window
+  int i;
+  VirtualEvent ve;
+  for (i = 0; i < track->vevents.size; ++i) {
+    ve_list_get(&track->vevents, i, &ve);
+    r = ev_window_add_key(&train->window, ve.key);
+    assert(r == 0);
+  }
 }
 
 
 // We didn't get a raw event, so we lose the train for now
 static void TrackHandleTrainAtTimeout(Track *track, EventGroup *grp) {
-  int r, train_num, ekey;
+  int esize, r, train_num, ekey;
   Train *train;
 
   ekey = grp->ve.key;
@@ -389,8 +411,34 @@ static void TrackHandleTrainAtTimeout(Track *track, EventGroup *grp) {
   train = &track->train[train_num];
 
   if (ev_window_is_unexpected(&train->window, ekey)) {
-    // ignore this event
+    // remove the key and ignore this event
+    r = ev_window_remove_key(&train->window, ekey);
+    assert(r == 0);
     return;
+  }
+
+  // we now have an expected event that has timed out
+
+  // Here we have a potential problem:
+
+  // if the timeout occurs with more than one item in the expected window
+  // then we just remove the event key from the window
+  esize = train->window.size;
+  if (esize > 1) {
+    r = ev_window_remove_key(&train->window, ekey);
+    assert(r == 0);
+  }
+  // else if the timeout occurs with only one item in the expected window
+  // then we have lost track of where the train is
+  else if (esize == 1) {
+    TrackLoseTrain(track, train);
+    r = ev_window_remove_key(&train->window, ekey);
+    assert(r == 0);
+    ev_window_shift_all(&train->window);
+  }
+  else {
+    // this should never happen
+    assert(0);
   }
 }
 

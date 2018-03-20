@@ -56,7 +56,7 @@ void Interpreter() {
 
   Train test;
   test.num = 24;
-  TrackAddLostTrain(&track, &test);
+  TrackAddTrain(&track, &test);
 
   rep_tid = WhoIs(REPRESENTER_ID);
   vep_tid = WhoIs(VIRTUAL_PROVIDER_ID);

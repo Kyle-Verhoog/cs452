@@ -99,6 +99,7 @@ static void basic_test(track_node *g) {
   assert(ve.event.train_at.train_num == 24);
   assert(ve.event.train_at.node->num == 44);
 
+
   // simulate the next sensor hit at C13 with the VER
   event.type = VRE_RE;
   event.re.timestamp = 1100;

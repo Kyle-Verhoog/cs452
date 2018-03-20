@@ -18,7 +18,6 @@
 #include <lib/train/switch.h>
 #include <lib/train/train.h>
 
-#define KEY_SIZE 256
 
 #define TRAIN_LIST_SIZE 2
 CIRCULAR_BUFFER_DEC(train_cb, Train, TRAIN_LIST_SIZE);
