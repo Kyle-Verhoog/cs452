@@ -62,15 +62,18 @@ static void next_sensors_test(track_node *tr) {
   //start = &tr[70]
 }
 
+
+// A basic test of a train being picked up at A1 and being tracked to D7
 static void basic_test(track_node *g) {
   Track track;
   Train train;
   EventGroup event;
+  VirtualEvent ve;
   TrackInit(&track, g);
 
   // emulate finding train 24
   train.num = 24;
-  TrackAddLostTrain(&track, &train);
+  TrackAddTrain(&track, &train);
   assert(track.train[24].num == 24);
   assert(track.train[24].status == TR_LOST);
 
@@ -81,20 +84,21 @@ static void basic_test(track_node *g) {
   event.re.event.se_event.id = 0; // A1
   event.re.event.se_event.state = 1;
   TrackInterpretEventGroup(&track, &event);
+  // printf("%d\n", track.lost_trains.size);
   assert(track.lost_trains.size == 0);
   assert(track.active_trains.size == 1);
   assert(track.vevents.size == 1);
-  VirtualEvent ve;
   ve_list_pop(&track.vevents, &ve);
   assert(ve.type == VE_TR_AT);
-  // printf("%d\n", ve.timestamp);
-  assert(ve.timeout == INT_MAX);
-  assert(ve.timestamp == INT_MAX);
+  assert(ve.key == 1);
+  assert(ve.timeout == -1);
+  assert(ve.timestamp == -1);
   assert(track.train[24].num == 24);
   assert(track.train[24].sen_ts == 1000);
   assert(track.train[24].speed == -1);
   assert(ve.event.train_at.train_num == 24);
   assert(ve.event.train_at.node->num == 44);
+
 
   // simulate the next sensor hit at C13 with the VER
   event.type = VRE_RE;
@@ -110,6 +114,7 @@ static void basic_test(track_node *g) {
   assert(track.train[24].speed == 2310);
   assert(track.vevents.size == 1);
   ve_list_pop(&track.vevents, &ve);
+  assert(ve.key == 2);
   assert(ve.type == VE_TR_AT);
   assert(ve.timeout == 378);
   assert(ve.timestamp == 1100+378);
