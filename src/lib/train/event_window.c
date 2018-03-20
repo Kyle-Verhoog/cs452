@@ -30,9 +30,13 @@ int ev_window_is_expected(event_window *ew, int key) {
 }
 
 
-bool ev_window_is_unexpected(event_window *ew, int key) {
-  if (ew->size == 0 || key < 0 || key >= KEY_MAX) {
-    return false;
+int ev_window_is_unexpected(event_window *ew, int key) {
+  if (key < 0 || key >= KEY_MAX) {
+    return EV_E_OOB;
+  }
+
+  if (!ew->keys[key]) {
+    return EV_E_DNE;
   }
 
   if (ew->start < ew->end && ew->start <= key && key < ew->end) {

@@ -12,6 +12,7 @@
 #define EV_E_EXIST      3
 #define EV_E_CONTIG     4
 #define EV_E_EMPTY      5
+#define EV_E_DNE        6
 
 typedef struct event_window {
   int keys[KEY_MAX];

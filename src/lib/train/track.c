@@ -134,11 +134,13 @@ static void UpdateTrainCmd(Track *track, int tr_num, int cmd) {
   // event.newgear = cmd_event->arg2;
 }
 
-static void TrackAddVEvent(Track *track, VirtualEvent *ve) {
+static void TrackAddVEvent(Track *track, Train *train, VirtualEvent *ve) {
   int r;
   track->key = ev_window_inc_key(track->key);
   ve->key = track->key;
   r = ve_list_push(&track->vevents, *ve);
+  r = ev_window_add_key(&train->window, ve->key);
+  assertf(r == 0, "%d, %d %d %d %d %d %d\r\n", r, ve->key, train->window.start, train->window.end, train->window.size, train->window.unexp_size);
   assert(r == 0);
 }
 
@@ -156,16 +158,21 @@ static void TrackGenerateUnknownSpeedTrainVEvents(Track *track, Train *train) {
   VirtualEvent ve;
   ve.type = VE_TR_AT;
 
+  if (pnl.size > 0) {
+    // we're sending new events, so invalidate the old ones
+    ev_window_shift_all(&train->window);
+  }
+
   while (pnl.size > 0) {
     r = poss_node_list_pop(&pnl, &sensor);
     assert(r == 0);
     ve.timeout = -1;
-    ve.timestamp = -1;
+    ve.timestamp = 200 + train->sen_ts;
     ve.depend = sensor.node->num;
     ve.event.train_at.train_num = train->num;
     ve.event.train_at.node = sensor.node;
 
-    TrackAddVEvent(track, &ve);
+    TrackAddVEvent(track, train, &ve);
   }
 }
 
@@ -183,6 +190,11 @@ static void TrackGenerateKnownTrainVEvents(Track *track, Train *train) {
   VirtualEvent ve;
   ve.type = VE_TR_AT;
 
+  if (pnl.size > 0) {
+    // we're sending new events, so invalidate the old ones
+    ev_window_shift_all(&train->window);
+  }
+
   while (pnl.size > 0) {
     r = poss_node_list_pop(&pnl, &sensor);
     assert(r == 0);
@@ -195,7 +207,7 @@ static void TrackGenerateKnownTrainVEvents(Track *track, Train *train) {
     ve.event.train_at.train_num = train->num;
     ve.event.train_at.node = sensor.node;
 
-    TrackAddVEvent(track, &ve);
+    TrackAddVEvent(track, train, &ve);
   }
 }
 
@@ -329,29 +341,11 @@ static Train *TrackAttemptToLocateTrain(Track *track, int sen_num, int ts) {
 
 
 static void TrackHandleTrainAtSensorRaw(Track *track, RawSensorEvent *se, int ts) {
-  int r;
   Train *train;
   train = NULL;
 
   if (track->lost_trains.size > 0) {
     train = TrackAttemptToLocateTrain(track, se->id, ts);
-  }
-
-  if (!train)
-    return;
-
-  // we're sending new events, so invalidate the old ones
-  ev_window_shift_all(&train->window);
-
-  // if there are virtual events to be sent, then they form a new window
-  // so we shift the current window from being expected to unexpected
-  // and add the keys of the new virtual events to the current window
-  int i;
-  VirtualEvent ve;
-  for (i = 0; i < track->vevents.size; ++i) {
-    ve_list_get(&track->vevents, i, &ve);
-    r = ev_window_add_key(&train->window, ve.key);
-    assertf(r == 0, "%d, %d %d %d %d %d %d\r\n", i, r, ve.key, train->window.start, train->window.end, train->window.size, train->window.unexp_size);
   }
 }
 
@@ -381,7 +375,7 @@ static void TrackHandleRawEvent(Track *track, RawEvent *re) {
 }
 
 static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
-  int r, train_num, ekey, vts, rts, delta;
+  int r, train_num, ekey, vts, rts, delta, exp;
   Train *train;
   track_node *new_pos;
 
@@ -398,15 +392,19 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
   // if we get an unexpected key (from a past window) then:
   //   1) we got a false positive from a sensor
   //   2) something really weird is happening
-  if (ev_window_is_unexpected(&train->window, ekey)) {
+  exp = ev_window_is_unexpected(&train->window, ekey);
+  assertf(exp == 0 || exp == 1, "%d\n", exp);
+  if (exp) {
     assertf(0, "%d %d\n", train->window.size, train->window.unexp_size);
     TrackLoseTrain(track, train);
     r = ev_window_remove_key(&train->window, ekey);
     assert(r == 0);
-    r = ev_window_shift_all(&train->window);
-    assert(r == 0);
+    ev_window_shift_all(&train->window);
     return;
   }
+
+  r = ev_window_remove_key(&train->window, ekey);
+  assertf(r == 0, "%d %d\r\n", ekey, r);
 
   if (train->status == TR_KNOWN) {
     new_pos = &track->graph[grp->re.event.se_event.id];
@@ -419,29 +417,12 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
   else {
     assert(0);
   }
-
-  r = ev_window_remove_key(&train->window, ekey);
-  assertf(r == 0, "%d %d\r\n", ekey, r);
-
-  // we got an expected key, so shift the window
-  ev_window_shift_all(&train->window);
-
-  // if there are virtual events to be sent, then they form a new window
-  // so we shift the current window from being expected to unexpected
-  // and add the keys of the new virtual events to the current window
-  int i;
-  VirtualEvent ve;
-  for (i = 0; i < track->vevents.size; ++i) {
-    ve_list_get(&track->vevents, i, &ve);
-    r = ev_window_add_key(&train->window, ve.key);
-    assertf(r == 0, "%d %d %d %d %d %d %d\r\n", i, r, ve.key, train->window.start, train->window.end, train->window.size, train->window.unexp_size);
-  }
 }
 
 
 // We didn't get a raw event, so we lose the train for now
 static void TrackHandleTrainAtTimeout(Track *track, EventGroup *grp) {
-  int esize, r, train_num, ekey;
+  int esize, r, train_num, ekey, exp;
   Train *train;
 
   ekey = grp->ve.key;
@@ -450,7 +431,10 @@ static void TrackHandleTrainAtTimeout(Track *track, EventGroup *grp) {
   assert(IS_VALID_TR_NUM(train_num));
   train = &track->train[train_num];
 
-  if (ev_window_is_unexpected(&train->window, ekey)) {
+  exp = ev_window_is_unexpected(&train->window, ekey);
+  assertf(exp == 0 || exp == 1, "%d\n", exp);
+
+  if (exp) {
     // remove the key and ignore this event
     r = ev_window_remove_key(&train->window, ekey);
     assert(r == 0);

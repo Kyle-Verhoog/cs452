@@ -12,7 +12,7 @@ static void ev_add_remove() {
   event_window ev;
   ev_window_init(&ev);
 
-  assert(!ev_window_is_unexpected(&ev, 0));
+  assert(ev_window_is_unexpected(&ev, 0) == EV_E_DNE);
   assert(!ev_window_is_expected(&ev, 0));
   r = ev_window_add_key(&ev, 0);
   assert(r == 0);
@@ -31,7 +31,7 @@ static void ev_add_remove() {
   r = ev_window_remove_key(&ev, 0);
   assert(r == 0);
   assert(ev.size == 1);
-  assert(ev_window_is_unexpected(&ev, 0));
+  assert(ev_window_is_unexpected(&ev, 0) == EV_E_DNE);
   assert(!ev_window_is_expected(&ev, 0));
   assert(!ev_window_is_unexpected(&ev, 1));
   assert(ev_window_is_expected(&ev, 1));
@@ -39,9 +39,9 @@ static void ev_add_remove() {
   r = ev_window_remove_key(&ev, 1);
   assert(r == 0);
   assert(ev.size == 0);
-  assert(!ev_window_is_unexpected(&ev, 0));
+  assert(ev_window_is_unexpected(&ev, 0) == EV_E_DNE);
   assert(!ev_window_is_expected(&ev, 0));
-  assert(!ev_window_is_unexpected(&ev, 1));
+  assert(ev_window_is_unexpected(&ev, 1) == EV_E_DNE);
   assert(!ev_window_is_expected(&ev, 1));
 
   r = ev_window_add_key(&ev, 3);
@@ -109,7 +109,7 @@ static void ev_shift() {
   assert(ev.size == 1);
 
   ev_window_shift_all(&ev);
-  assert(!ev_window_is_unexpected(&ev, 10));
+  assert(ev_window_is_unexpected(&ev, 10));
   assert(!ev_window_is_expected(&ev, 10));
   r = ev_window_remove_key(&ev, 10);
   assert(r == 0);
