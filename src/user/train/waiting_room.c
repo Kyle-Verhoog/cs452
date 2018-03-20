@@ -2,6 +2,8 @@
 #include <terminal_manager.h>
 #include <track_data.h> //TODO: REMOVE THIS
 
+CIRCULAR_BUFFER_DEC(eg_cb, EventGroup, EVENT_GROUP_BUFFER_SIZE);
+
 static void AdHocWRRequest(void *args){
   int r;
   WRRequest wrr = *(WRRequest *)args;
@@ -198,7 +200,7 @@ TMLogStrf(tm_tid, "VRE on %s\n", event->data.ve.event.train_at.node->name);
   sensorToVE[event->data.ve.event.train_at.node->num] = event->data.ve.key;
 }
 
-void HandleWR_RE(WRRequest *event, VirtualEvent *waiting, int *sensorToVE, tid_t courier, tid_t my_tid){
+void HandleWR_RE(WRRequest *event, VirtualEvent *waiting, int *sensorToVE, eg_cb *dataBuf, tid_t my_tid){
   EventGroup eg;
   int sensor;
 
@@ -227,12 +229,10 @@ TMLogStrf(tm_tid, "RE on %d\n", event->data.re.event.se_event.id);
     }
   }
 
-  if(courier >= 0){
-     Reply(courier, &eg, sizeof(eg));
-  }
+  eg_cb_push(dataBuf, eg);
 }
 
-void HandleWR_TO(WRRequest *event, VirtualEvent *waiting, int *sensorToVE, tid_t courier){
+void HandleWR_TO(WRRequest *event, VirtualEvent *waiting, int *sensorToVE, eg_cb *dataBuf){
   EventGroup eg;
   int sensor;
   
@@ -246,9 +246,7 @@ void HandleWR_TO(WRRequest *event, VirtualEvent *waiting, int *sensorToVE, tid_t
     sensorToVE[sensor] = -1;
 tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
 TMLogStrf(tm_tid, "VRE VE on %s\n", event->data.ve.event.train_at.node->name);
-    if(courier >= 0){
-      Reply(courier, &eg, sizeof(eg));
-    }
+    eg_cb_push(dataBuf, eg);
   }
   else{
 tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
@@ -299,11 +297,14 @@ void test_waiting_room(){
 void WaitingRoom(){
   int r;
   WRRequest event;
+  EventGroup data;
   tid_t req_tid;
   tid_t courier = -1;
 
   VirtualEvent waiting[KEY_SIZE];
   int sensorToVE[SENSOR_SIZE];
+  eg_cb dataBuf;
+  eg_cb_init(&dataBuf);
   init_waiting_room(sensorToVE);
 
   r = RegisterAs(WAITING_ROOM_ID);
@@ -322,6 +323,13 @@ void WaitingRoom(){
 
   // Create(26, &test_waiting_room);
   while(true){
+
+    if(dataBuf.size > 0 && courier > 0){
+      eg_cb_pop(&dataBuf, &data);
+      Reply(courier, &data, sizeof(data));
+      courier = -1;
+    }
+
     Receive(&req_tid, &event, sizeof(event));    
 
     switch(event.type){
@@ -330,16 +338,14 @@ void WaitingRoom(){
         HandleWR_VE(&event, waiting, sensorToVE);
         break;
       case WR_RE:
-        assert(courier != -1);
+        //assert(courier != -1);
         Reply(req_tid, &r, sizeof(r));
-        HandleWR_RE(&event, waiting, sensorToVE, courier, my_tid);
-        courier = -1;
+        HandleWR_RE(&event, waiting, sensorToVE, &dataBuf, my_tid);
         break;
       case WR_TO:
-        assert(courier != -1);
+        //assert(courier != -1);
         Reply(req_tid, &r, sizeof(r)); 
-        HandleWR_TO(&event, waiting, sensorToVE, courier);
-        courier = -1;
+        HandleWR_TO(&event, waiting, sensorToVE, &dataBuf);
 	break;
       case WR_CE:
         courier = req_tid;

@@ -29,4 +29,8 @@ typedef struct WRRequest {
 
 void WaitingRoom();
 
+#define EVENT_GROUP_BUFFER_SIZE 32
+
+CIRCULAR_BUFFER_DEC(eg_cb, EventGroup, EVENT_GROUP_BUFFER_SIZE);
+
 #endif
