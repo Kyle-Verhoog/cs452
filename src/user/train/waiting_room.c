@@ -310,7 +310,6 @@ void WaitingRoom(){
 
   // Create(26, &test_waiting_room);
   while(true){
-
     Receive(&req_tid, &event, sizeof(event));    
 
     switch(event.type){

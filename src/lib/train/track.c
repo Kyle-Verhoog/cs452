@@ -306,10 +306,10 @@ static void TrackInterpretVREVERE(Track *track, EventGroup *grp) {
 
   assert(IS_VALID_TR_NUM(grp->ve.event.train_at.train_num));
   train = TrackGetActiveTrain(track, grp->ve.event.train_at.train_num);
-
-  new_pos = &track->graph[grp->re.event.se_event.id];
-
-  TrackUpdateTrain(track, train, new_pos, rts);
+  if(train != 0){
+    new_pos = &track->graph[grp->re.event.se_event.id];
+    TrackUpdateTrain(track, train, new_pos, rts);
+  }
 }
 
 static void TrackInterpretVRERE(Track *track, EventGroup *grp) {
@@ -326,9 +326,10 @@ static void TrackInterpretVRERE(Track *track, EventGroup *grp) {
   assert(IS_VALID_TR_NUM(grp->ve.event.train_at.train_num));
   train = TrackGetActiveTrain(track, grp->ve.event.train_at.train_num);
 
-  new_pos = &track->graph[grp->re.event.se_event.id];
-
-  TrackUpdateTrain(track, train, new_pos, rts);
+  if(train != 0){
+    new_pos = &track->graph[grp->re.event.se_event.id];
+    TrackUpdateTrain(track, train, new_pos, rts);
+  }
 }
 
 // We didn't get a raw event, so we lose the train for now
