@@ -15,7 +15,6 @@ static void DispatchVirtualEvents(tid_t vep_tid, ve_list *events) {
 
     ver.ve = ve;
     Send(vep_tid, &ver, sizeof(ver), &r, sizeof(r));
-TMLogStrf(tm_tid, "sending\n");
   }
 }
 

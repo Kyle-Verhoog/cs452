@@ -298,10 +298,10 @@ void WaitingRoom(){
   assert(r == 0);
   tid_t my_tid = MyTid();
 
-  Create(26, &TrainProvider);
-  Create(26, &SwitchProvider);
-  Create(26, &SensorProvider);
-  Create(26, &VirtualProvider);
+  Create(27, &TrainProvider);
+  Create(27, &SwitchProvider);
+  Create(27, &SensorProvider);
+  Create(27, &VirtualProvider);
 
   Create(29, &TrainSubscriber);
   Create(29, &SwitchSubscriber);

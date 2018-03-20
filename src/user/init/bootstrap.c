@@ -17,7 +17,7 @@ void RailwayInit(){
     //Send Go
     PutC(tx_tid, 96);
 
-    Create(26, &WaitingRoom);
+    Create(27, &WaitingRoom);
     Create(26, &Representer);
 
     Exit();

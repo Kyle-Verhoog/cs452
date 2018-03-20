@@ -66,7 +66,6 @@ void AdHocVirtualEvent(void *args){
 
 	ves.type = VER_NOTIFY;
 	ves.req = ver;
-
 	ves.req.ve.type = VE_REG;
 	Send(pub_tid, &ves, sizeof(ves), &r, sizeof(r)); //send reg to publisher
 
