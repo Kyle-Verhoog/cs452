@@ -64,7 +64,7 @@ void SensorReceiver(){
 }
 
 void SensorPublisher(){
-	int reply;
+	int i, reply;
 	tid_t tid_req, sub;
   	SNSubscribe sns;
 
@@ -80,9 +80,11 @@ void SensorPublisher(){
 		switch(sns.snr){
 			case SN_NOTIFY:
 				Reply(tid_req, &reply, sizeof(reply));
-				NOTIFY(&subscribers, &sub, sns.sensors, sizeof(sns.sensors));
+				//NOTIFY(&subscribers, &sub, sns.sensors, sizeof(sns.sensors));
+				NOTIFYBL(subscribers, sub, i, sns.sensors, sizeof(sns.sensors), reply, sizeof(reply))
 				break;
 			case SN_SUBSCRIBE:
+				Reply(tid_req, &reply, sizeof(reply));
 				tid_cb_push(&subscribers, tid_req);
 				break;
 			default:

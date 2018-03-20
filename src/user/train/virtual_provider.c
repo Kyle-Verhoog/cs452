@@ -3,7 +3,7 @@
 CIRCULAR_BUFFER_DEF(vereq_cb, VERequest, VEREQ_BUFFER_SIZE);
 
 void VirtualEventPublisher(){
-	int r;
+	int i, r;
 	tid_t req_tid, sub;
 	VESubscribe ves;
 
@@ -19,9 +19,11 @@ void VirtualEventPublisher(){
 		switch(ves.type){
 		  case VER_NOTIFY:
 		  	Reply(req_tid, &r, sizeof(r));
-		  	NOTIFY(&subscribers, &sub, ves.req.ve, sizeof(ves.req.ve));
+		  	//NOTIFY(&subscribers, &sub, ves.req.ve, sizeof(ves.req.ve));
+		  	NOTIFYBL(subscribers, sub, i, ves.req.ve, sizeof(ves.req.ve), reply, sizeof(reply))
 		  	break;
 		  case VER_SUBSCRIBE:
+		  	Reply(req_tid, &r, sizeof(r));
 		  	tid_cb_push(&subscribers, req_tid);
 		  	break;
 		  default:

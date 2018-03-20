@@ -2,7 +2,7 @@
 #include <terminal_manager.h>
 #include <track_data.h> //TODO: REMOVE THIS
 
-CIRCULAR_BUFFER_DEC(eg_cb, EventGroup, EVENT_GROUP_BUFFER_SIZE);
+CIRCULAR_BUFFER_DEF(eg_cb, EventGroup, EVENT_GROUP_BUFFER_SIZE);
 
 static void AdHocWRRequest(void *args){
   int r;
@@ -34,9 +34,7 @@ void SendSensorDelta(tid_t wr_tid, tid_t cs_tid, tid_t my_tid, char *new_sensors
       if (GET_SENSOR(new_dec, j) != GET_SENSOR(old_dec, j)) {
         event.data.re.event.se_event.id = i*8 + (7-j);
         event.data.re.event.se_event.state = GET_SENSOR(new_dec, j);
-	assert(GET_SENSOR(new_dec, j) == 0 || GET_SENSOR(new_dec, j) == 1);
-        //Send(wr_tid, &event, sizeof(event), &r, sizeof(r));
-	CreateArgs(29, &AdHocWRRequest, (void *)&event, sizeof(event));
+        Send(wr_tid, &event, sizeof(event), &r, sizeof(r));
       }
     }
   }
@@ -67,8 +65,13 @@ static void SensorSubscriber() {
   init_sensors(&event);
   init_sensors(&prev);
 
+  //Initial Subscribe
+  Send(sn_pub, &sn_sub, sizeof(sn_sub), &r, sizeof(r));
+
   while (true) {
-    Send(sn_pub, &sn_sub, sizeof(sn_sub), &event, sizeof(event));
+    //Send(sn_pub, &sn_sub, sizeof(sn_sub), &event, sizeof(event));
+    Receive(&sn_pub, &event, sizeof(event));
+    Reply(sn_pub, &r, sizeof(r));
     SendSensorDelta(wr_tid, cs_tid, my_tid, event.sensors, prev.sensors);
     memcpy(&prev, &event, sizeof(event));
   }
@@ -95,10 +98,14 @@ static void SwitchSubscriber() {
   sw_sub.swr = SW_SUBSCRIBE;
   event.type = WR_RE;
 
+  //Initial Subscribe
+  Send(sw_pub, &sw_sub, sizeof(sw_sub), &r, sizeof(r));
+
   while (true) {
-    Send(sw_pub, &sw_sub, sizeof(sw_sub), &event.data.re, sizeof(RawEvent));
-    CreateArgs(29, &AdHocWRRequest, (void *)&event, sizeof(event));
-    //Send(wr_tid, &event, sizeof(event), &r, sizeof(r));
+    //Send(sw_pub, &sw_sub, sizeof(sw_sub), &event.data.re, sizeof(RawEvent));
+    Receive(&sw_pub, &event.data.re, sizeof(RawEvent));
+    Reply(sw_pub, &r, sizeof(r));
+    Send(wr_tid, &event, sizeof(event), &r, sizeof(r));
   }
 
   Exit();
@@ -122,10 +129,14 @@ static void TrainSubscriber() {
   tsub.tc = T_SUBSCRIBE;
   event.type = WR_RE;
 
+  //Intial Subscribe
+  Send(tr_pub, &tsub, sizeof(tsub), &r, sizeof(r));
+
   while (true) {
-    Send(tr_pub, &tsub, sizeof(tsub), &event.data.re, sizeof(RawEvent));
-    CreateArgs(29, &AdHocWRRequest, (void *)&event, sizeof(event));
-    //Send(wr_tid, &event, sizeof(event), &r, sizeof(r));
+    //Send(tr_pub, &tsub, sizeof(tsub), &event.data.re, sizeof(RawEvent));
+    Receive(&tr_pub, &event.data.re, sizeof(RawEvent));
+    Reply(tr_pub, &r, sizeof(r));
+    Send(wr_tid, &event, sizeof(event), &r, sizeof(r));
   }
 
   Exit();
@@ -149,10 +160,14 @@ static void VirtualEventSubscriber(){
   vsub.type = VER_SUBSCRIBE;
   event.type = WR_VE;
   
+  //Initial Subscribe
+  Send(ve_pub, &vsub, sizeof(vsub), &r, sizeof(r));
+
   while(true){
-    Send(ve_pub, &vsub, sizeof(vsub), &event.data.ve, sizeof(VirtualEvent));
-    CreateArgs(29, &AdHocWRRequest, (void *)&event, sizeof(event));
-    //Send(wr_tid, &event, sizeof(event), &r, sizeof(r));
+    //Send(ve_pub, &vsub, sizeof(vsub), &event.data.ve, sizeof(VirtualEvent));
+    Receive(&ve_pub, &event.data.ve, sizeof(event.data.ve));
+    Reply(ve_pub, &r, sizeof(r));
+    Send(wr_tid, &event, sizeof(event), &r, sizeof(r));
   }
 
   Exit();

@@ -1,7 +1,7 @@
 #include <train_provider.h>
 
 void TrainPublisher(){
-	int reply;
+	int i, reply;
 	tid_t req_tid, sub;
 	TSubscribe ts;
 
@@ -17,9 +17,11 @@ void TrainPublisher(){
 		switch(ts.tc){
 			case T_NOTIFY:				
 				Reply(req_tid, &reply, sizeof(reply));
-				NOTIFY(&subscribers, &sub, ts.re, sizeof(ts.re))
+				//NOTIFY(&subscribers, &sub, ts.re, sizeof(ts.re))
+				NOTIFYBL(subscribers, sub, i, ts.re, sizeof(ts.re), reply, sizeof(reply))
 				break;
 			case T_SUBSCRIBE:
+				Reply(tid_req, &reply, sizeof(reply));
 				tid_cb_push(&subscribers, req_tid);
 				break;
 			default:

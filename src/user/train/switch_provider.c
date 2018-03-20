@@ -57,7 +57,7 @@ void SwitchHandler(void *args){
 }
 
 void SwitchPublisher(){
-  int reply;
+  int i, reply;
   tid_t req_tid, sub;
   SWSubscribe sws;
 
@@ -74,9 +74,11 @@ void SwitchPublisher(){
       case SW_NOTIFY:
         assert(IS_VALID_ID(TID_ID(req_tid)));
         Reply(req_tid, &reply, sizeof(reply));
-        NOTIFY(&subscribers, &sub, sws.re, sizeof(sws.re));
+        //NOTIFY(&subscribers, &sub, sws.re, sizeof(sws.re));
+        NOTIFYBL(subscribers, sub, i, sws.re, sizeof(sws.re), reply, sizeof(reply));
         break;
       case SW_SUBSCRIBE:
+        Reply(tid_req, &reply, sizeof(reply));
         tid_cb_push(&subscribers, req_tid);
         break;
       default:
