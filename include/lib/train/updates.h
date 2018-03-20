@@ -13,7 +13,8 @@ typedef enum TrackEventType {
 
 typedef enum TrackDataType{
   TD_ALL,
-  TD_TR,
+  TD_TR_A,
+  TD_TR_L,
   TD_SW,
   TD_SE
 } TrackDataType;

@@ -30,7 +30,7 @@ static void ApplySensorChange(Track *track, TESEChange *event) {
 }
 
 static void ApplySwitchChange(Track *track, TESWChange *event){
-  track->switches[event->num] = event->newdir;
+  track->switches[event->num].state = event->newdir;
 }
 
 static void ApplyUpdates(Track *track, update_list *updates, trm_subscribers *subs) {
@@ -64,15 +64,22 @@ static void ApplyUpdates(Track *track, update_list *updates, trm_subscribers *su
   }
 }
 
-static void ReplyByDataType(uTrackRequest data, Track *track){
+static void ReplyByDataType(tid_t req_tid, uTrackRequest data, Track *track){
   switch(data.dtype){
     case TD_ALL:
+      Reply(req_tid, track, sizeof(Track));
       break;
-    case TD_TR:
+    case TD_TR_A:
+      Reply(req_tid, &track->active_trains, sizeof(track->active_trains));
+      break;
+    case TD_TR_L:
+      Reply(req_tid, &track->lost_trains, sizeof(track->lost_trains));
       break;
     case TD_SW:
+      Reply(req_tid, &track->switches, sizeof(track->switches));
       break;
     case TD_SE:
+      Reply(req_tid, &track->sensors, sizeof(track->sensors));
       break;
     default:
       assert(0 && "Bad Data Request");
@@ -117,6 +124,6 @@ void Representer() {
         break;
     }
   }
-
+  
   Exit();
 }

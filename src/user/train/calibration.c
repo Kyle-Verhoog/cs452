@@ -10,6 +10,8 @@ void Calibration(void *args){
 	TETRPosition event;
 	TrainProtocol tp;
 	track_node *start, *end;
+	Switch switches[SWITCH_SIZE];
+
 
 	cargs = *(Calibration *)args;
 
@@ -22,7 +24,7 @@ void Calibration(void *args){
 
 	//Initialize subscription
 	tr_req.type = TRR_SUBSCRIBE;
-	tr_req_data.type = TE_TR_POSITION;
+	tr_req.data.type = TE_TR_POSITION;
 
 	//Send Speed
 	tp.tc = T_MOVE;
@@ -76,11 +78,18 @@ void Calibration(void *args){
 	tp.arg2 = 0;
 	Send(tr_tid, &tp, sizeof(tp), &r, sizeof(r));
 
+	//Get Switch Configuration
+	tr_req.type = TRR_FETCH;
+	tr_req.data.dtype = TD_SW;
+	Send(rep_tid, &tr_req, sizeof(tr_req), &switches, sizeof(switches));
+
 	//DO SOME CALCULATION TO DETERMINE TOTAL DISTANCE HERE
 	//NEED THE SWITCH STATE AT THIS POINT
 	start = &TRACK[cargs.target_node];
 	end = &TRACK[event.node];
 
+	
+	
 	Exit();
 }
 
@@ -101,7 +110,7 @@ void MeasuringVelocity(){
 
 	//Initialize subscription
 	tr_req.type = TRR_SUBSCRIBE;
-	tr_req_data.type = TE_TR_POSITION;
+	tr_req.data.type = TE_TR_POSITION;
 
 	tp.tc = T_MOVE;
 	tp.arg1 = cargs.train;
@@ -136,6 +145,11 @@ void MeasuringVelocity(){
 	tp.arg1 = cargs.train;
 	tp.arg2 = 0;
 	Send(tr_tid, &tp, sizeof(tp), &r, sizeof(r));	
+
+	//Get Switch Configuration
+	tr_req.type = TRR_FETCH;
+	tr_req.data.dtype = TD_SW;
+	Send(rep_tid, &tr_req, sizeof(tr_req), &switches, sizeof(switches));
 
 	//COMPUTE THE VELOCITY
 

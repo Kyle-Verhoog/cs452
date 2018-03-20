@@ -61,5 +61,11 @@ void TrackAddTrain(Track *track, Train *t);
 
 int GetNextPossibleSensors(track_node *node, int dist, poss_node_list *pnl);
 
+int GetPrevSensorINC(Switch *sw, track_node *n, PossibleSensor *pos); //Inclusive, Overshoots distance
+int GetPrevSensorEXC(Switch *sw, track_node *n, PossibleSensor *pos); //Exclusive, Undershoots distance
+int GetNextSensorINC(Switch *sw, track_node *n, PossibleSensor *pos); //Inclusive, Overshoots distance
+int GetNextSensorEXC(Switch *sw, track_node *n, PossibleSensor *pos); //Exclusive, Undershoots distance
+int DistanceBetweenNodes(Switch *sw, track_node *start, track_node *end);
+
 int TrackInterpretEventGroup(Track *track, EventGroup *grp);
 #endif

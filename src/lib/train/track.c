@@ -95,6 +95,48 @@ int GetNextPossibleSensors(track_node *node, int dist, poss_node_list *pnl) {
   return 0;
 }
 
+int GetPrevSensorINC(Switch *sw, track_node *n, PossibleSensor *pos){
+  return 0;
+}
+int GetPrevSensorEXC(Switch *sw, track_node *n, PossibleSensor *pos){
+  return 0;
+}
+int GetNextSensorINC(Switch *sw, track_node *n, PossibleSensor *pos){
+  return 0;
+}
+int GetNextSensorEXC(Switch *sw, track_node *n, PossibleSensor *pos){
+  return 0;
+}
+
+int DistanceBetweenNodes(Switch *sw, track_node *start, track_node *end){
+  int dist = 0;
+  track_node *n = start;
+  
+  while(n != end){
+    if(n->type == NODE_EXIT){
+     return -1;
+    }
+    else if(n->type == NODE_BRANCH){
+     if(sw[n->num].state == SW_STRAIGHT){
+       dist += n->edge[DIR_STRAIGHT].dist;
+       n = n->edge[DIR_STRAIGHT].dest;
+     }
+     else{
+       dist += n->edge[DIR_CURVED].dist;
+       n = n->edge[DIR_CURVED].dest;
+     }
+    }
+    else{
+     dist += n->edge[DIR_AHEAD].dist;
+     n = n->edge[DIR_AHEAD].dest;
+    }
+    
+    assert(dist > 0 && dist < 50000); //Probably inf loop
+  }
+
+  return dist;
+}
+
 
 //------------------------STATE MUTATORS-----------------------------------------
 
