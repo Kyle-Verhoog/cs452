@@ -99,7 +99,7 @@ void TrainProvider(){
 	assert(tx_tid >= 0);
 
   	//Construct the Train Publisher
-  	Create(29, &TrainPublisher);
+  	Create(27, &TrainPublisher);
 
 	while(true){
 		Receive(&tid_req, &tp, sizeof(tp));
@@ -107,7 +107,7 @@ void TrainProvider(){
 		switch(tp.tc){
 			case T_MOVE:
 				Reply(tid_req, &reply, sizeof(reply));
-				CreateArgs(29, &TWriteTask, &tp, sizeof(tp));
+				CreateArgs(27, &TWriteTask, &tp, sizeof(tp));
 				break;
 			default:
 				assert(0 && "Bad Train Command");

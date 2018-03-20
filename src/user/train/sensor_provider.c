@@ -146,10 +146,10 @@ void SensorProvider(){
     tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
     assert(tx_tid >= 0);
 
-    Create(26, &SensorReceiver);
-  	Create(26, &SensorTimeout);
-  	Create(26, &SensorPublisher);
-    tid_t suc_tid = Create(26, &SensorUpdateCourier);
+    Create(27, &SensorReceiver);
+  	Create(27, &SensorTimeout);
+  	Create(27, &SensorPublisher);
+    tid_t suc_tid = Create(27, &SensorUpdateCourier);
    	// Create(19, &TestSNPublisher);
 
   	//Kick start sensor gathering data

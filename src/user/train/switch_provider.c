@@ -144,9 +144,9 @@ void SwitchProvider(){
   tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
   assert(tx1_writer >= 0 && cs_tid > 0 && my_tid > 0);
 
-	tid_t sw_handler = CreateArgs(29, &SwitchHandler, &tx1_writer, sizeof(tx1_writer));
-  Create(29, &SwitchPublisher);
-  tid_t suc_tid = Create(29, &SwitchUpdateCourier);
+	tid_t sw_handler = CreateArgs(27, &SwitchHandler, &tx1_writer, sizeof(tx1_writer));
+  Create(27, &SwitchPublisher);
+  tid_t suc_tid = Create(27, &SwitchUpdateCourier);
   // Create(19, &TestSWPublisher); //TODO: Remove this
 
   data.type = RE_SW;

@@ -95,7 +95,7 @@ void VirtualProvider(){
 	r = RegisterAs(VIRTUAL_PROVIDER_ID);
 	assert(r == 0);
 
-	Create(26, &VirtualEventPublisher);
+	Create(27, &VirtualEventPublisher);
 
 	while(true){
 
@@ -105,7 +105,7 @@ void VirtualProvider(){
 			case VER_REGISTER:
 				ver.ve.key = key;
 				key = (key + 1) % KEY_SIZE;
-				CreateArgs(26, &AdHocVirtualEvent, (void *)&ver, sizeof(ver)); //TODO: FIX PRIORITY
+				CreateArgs(27, &AdHocVirtualEvent, (void *)&ver, sizeof(ver)); //TODO: FIX PRIORITY
 				Reply(req_tid, &r, sizeof(r));
 				break;
 			default:

@@ -2,6 +2,14 @@
 #include <terminal_manager.h>
 #include <track_data.h> //TODO: REMOVE THIS
 
+static void AdHocWRRequest(void *args){
+  int r;
+  WRRequest wrr = *(WRRequest *)args;
+  tid_t wr_tid = WhoIs(WAITING_ROOM_ID);
+  Send(wr_tid, &wrr, sizeof(wrr), &r, sizeof(r));
+  Exit();
+}
+
 void SendSensorDelta(tid_t wr_tid, tid_t cs_tid, tid_t my_tid, char *new_sensors, char *old_sensors) {
   int i, j, r;
   WRRequest event;
@@ -25,7 +33,8 @@ void SendSensorDelta(tid_t wr_tid, tid_t cs_tid, tid_t my_tid, char *new_sensors
         event.data.re.event.se_event.id = i*8 + (7-j);
         event.data.re.event.se_event.state = GET_SENSOR(new_dec, j);
 	assert(GET_SENSOR(new_dec, j) == 0 || GET_SENSOR(new_dec, j) == 1);
-        Send(wr_tid, &event, sizeof(event), &r, sizeof(r));
+        //Send(wr_tid, &event, sizeof(event), &r, sizeof(r));
+	CreateArgs(29, &AdHocWRRequest, (void *)&event, sizeof(event));
       }
     }
   }
@@ -86,7 +95,8 @@ static void SwitchSubscriber() {
 
   while (true) {
     Send(sw_pub, &sw_sub, sizeof(sw_sub), &event.data.re, sizeof(RawEvent));
-    Send(wr_tid, &event, sizeof(event), &r, sizeof(r));
+    CreateArgs(29, &AdHocWRRequest, (void *)&event, sizeof(event));
+    //Send(wr_tid, &event, sizeof(event), &r, sizeof(r));
   }
 
   Exit();
@@ -112,7 +122,8 @@ static void TrainSubscriber() {
 
   while (true) {
     Send(tr_pub, &tsub, sizeof(tsub), &event.data.re, sizeof(RawEvent));
-    Send(wr_tid, &event, sizeof(event), &r, sizeof(r));
+    CreateArgs(29, &AdHocWRRequest, (void *)&event, sizeof(event));
+    //Send(wr_tid, &event, sizeof(event), &r, sizeof(r));
   }
 
   Exit();
@@ -138,7 +149,8 @@ static void VirtualEventSubscriber(){
   
   while(true){
     Send(ve_pub, &vsub, sizeof(vsub), &event.data.ve, sizeof(VirtualEvent));
-    Send(wr_tid, &event, sizeof(event), &r, sizeof(r));
+    CreateArgs(29, &AdHocWRRequest, (void *)&event, sizeof(event));
+    //Send(wr_tid, &event, sizeof(event), &r, sizeof(r));
   }
 
   Exit();
@@ -175,7 +187,7 @@ TMLogStrf(tm_tid, "Already handled location %s\n", event->data.ve.event.train_at
       return;
     }else{
       //Spawn a timeout handler  
-      CreateArgs(26, &TimeoutWR_VE, (void *)&event->data.ve, sizeof(VirtualEvent)); //TODO: UPDATE PRIORITY
+      CreateArgs(27, &TimeoutWR_VE, (void *)&event->data.ve, sizeof(VirtualEvent)); //TODO: UPDATE PRIORITY
     }
   }
   else{
@@ -314,20 +326,20 @@ void WaitingRoom(){
 
     switch(event.type){
       case WR_VE:
-        HandleWR_VE(&event, waiting, sensorToVE);
         Reply(req_tid, &r, sizeof(r));
+        HandleWR_VE(&event, waiting, sensorToVE);
         break;
       case WR_RE:
-        //assert(courier != -1);
+        assert(courier != -1);
+        Reply(req_tid, &r, sizeof(r));
         HandleWR_RE(&event, waiting, sensorToVE, courier, my_tid);
         courier = -1;
-        Reply(req_tid, &r, sizeof(r));
         break;
       case WR_TO:
-        //assert(courier != -1);
+        assert(courier != -1);
+        Reply(req_tid, &r, sizeof(r)); 
         HandleWR_TO(&event, waiting, sensorToVE, courier);
         courier = -1;
-        Reply(req_tid, &r, sizeof(r)); 
 	break;
       case WR_CE:
         courier = req_tid;
