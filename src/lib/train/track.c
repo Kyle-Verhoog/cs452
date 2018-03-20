@@ -172,7 +172,7 @@ static void TrackGenerateUnknownSpeedTrainVEvents(Track *track, Train *train) {
 
 static void TrackGenerateKnownTrainVEvents(Track *track, Train *train) {
   assert(train->status == TR_KNOWN);
-  int r, dist;
+  int r, dist, next_dist;
   poss_node_list pnl;
   PossibleSensor sensor;
   assert(train->status != TR_UNINIT);
@@ -188,9 +188,10 @@ static void TrackGenerateKnownTrainVEvents(Track *track, Train *train) {
     r = poss_node_list_pop(&pnl, &sensor);
     assert(r == 0);
     dist = sensor.dist;
+    next_dist = NEXT_DIST(sensor.node);
 
-    ve.timeout = (dist*1000) / train->speed;
-    ve.timestamp = ve.timeout + train->sen_ts;
+    ve.timestamp = ((dist*1000) / train->speed) + train->sen_ts;
+    ve.timeout = ((next_dist*1000) / train->speed);
     ve.depend = sensor.node->num;
     ve.event.train_at.train_num = train->num;
     ve.event.train_at.node = sensor.node;
@@ -374,6 +375,7 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
 
   // we got an expected key, so shift the window
   ev_window_shift_all(&train->window);
+  ev_window_remove_key(&train->window, ekey);
 
   if (train->status == TR_KNOWN) {
     new_pos = &track->graph[grp->re.event.se_event.id];
@@ -395,7 +397,7 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
   for (i = 0; i < track->vevents.size; ++i) {
     ve_list_get(&track->vevents, i, &ve);
     r = ev_window_add_key(&train->window, ve.key);
-    assert(r == 0);
+    assertf(r == 0, "%d\r\n", r);
   }
 }
 

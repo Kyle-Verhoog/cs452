@@ -102,7 +102,7 @@ int ev_window_add_key(event_window *ew, int key) {
     ew->size++;
     return EV_E_NONE;
   }
-  return 0;
+  return EV_E_NONE;
 }
 
 int ev_window_inc_key(int key) {

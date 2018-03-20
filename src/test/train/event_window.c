@@ -136,10 +136,31 @@ static void ev_shift_wrap() {
 
 }
 
+static void ev_shift_wrap2() {
+  int r;
+  event_window ev;
+  ev_window_init(&ev);
+
+  r = ev_window_add_key(&ev, KEY_MAX-5);
+  assert(r == 0);
+  r = ev_window_add_key(&ev, KEY_MAX-4);
+  assert(r == 0);
+  r = ev_window_add_key(&ev, KEY_MAX-3);
+  assert(r == 0);
+  r = ev_window_add_key(&ev, KEY_MAX-2);
+  assert(r == 0);
+  r = ev_window_add_key(&ev, KEY_MAX-1);
+  assert(r == 0);
+  r = ev_window_add_key(&ev, 0);
+  assert(r == 0);
+}
+
+
 void event_window_tests() {
   ev_init();
   ev_add_remove();
   ev_shift();
   ev_wrap();
   ev_shift_wrap();
+  ev_shift_wrap2();
 }
