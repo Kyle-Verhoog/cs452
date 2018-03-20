@@ -21,7 +21,7 @@ void TrainPublisher(){
 				NOTIFYBL(subscribers, sub, i, ts.re, sizeof(ts.re), reply, sizeof(reply))
 				break;
 			case T_SUBSCRIBE:
-				Reply(tid_req, &reply, sizeof(reply));
+				Reply(req_tid, &reply, sizeof(reply));
 				tid_cb_push(&subscribers, req_tid);
 				break;
 			default:

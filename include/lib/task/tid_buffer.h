@@ -14,7 +14,7 @@ CIRCULAR_BUFFER_DEC(tid_cb, tid_t, MAX_TASK);
 #define NOTIFYBL(SUBS, SUB, ITR, DATA, SIZE, REPLY, SIZER) \
 	for(ITR = 0; ITR < SUBS.size; ITR++){ \
 		tid_cb_get(&SUBS, ITR, &SUB); \
-		Send(&SUB, &DATA, SIZE, &REPLY, SIZER); \
+		Send(SUB, &DATA, SIZE, &REPLY, SIZER); \
 	} \
 
 #endif

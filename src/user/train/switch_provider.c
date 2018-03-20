@@ -78,7 +78,7 @@ void SwitchPublisher(){
         NOTIFYBL(subscribers, sub, i, sws.re, sizeof(sws.re), reply, sizeof(reply));
         break;
       case SW_SUBSCRIBE:
-        Reply(tid_req, &reply, sizeof(reply));
+        Reply(req_tid, &reply, sizeof(reply));
         tid_cb_push(&subscribers, req_tid);
         break;
       default:
