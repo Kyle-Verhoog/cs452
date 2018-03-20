@@ -5,12 +5,14 @@
 
 #define KEY_MAX 256
 
-#define EV_UNINIT_KEY -1
+#define EV_UNINIT_KEY  -1
 #define EV_E_NONE       0
 #define EV_E_OOB        1
 #define EV_E_REM_UNINIT 2
 #define EV_E_EXIST      3
 #define EV_E_CONTIG     4
+#define EV_E_EMPTY      5
+#define EV_E_DNE        6
 
 typedef struct event_window {
   int keys[KEY_MAX];
