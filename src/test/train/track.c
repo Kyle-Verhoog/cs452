@@ -116,7 +116,7 @@ static void basic_test(track_node *g) {
   ve_list_pop(&track.vevents, &ve);
   assert(ve.key == 2);
   assert(ve.type == VE_TR_AT);
-  assert(ve.timeout == 378);
+  assert(ve.timeout == 166);
   assert(ve.timestamp == 1100+378);
   assert(ve.event.train_at.train_num == 24);
   assert(ve.event.train_at.node->num == 70);
@@ -138,7 +138,7 @@ static void basic_test(track_node *g) {
   assert(track.vevents.size == 1);
   ve_list_pop(&track.vevents, &ve);
   assert(ve.type == VE_TR_AT);
-  assert(ve.timeout == 174);
+  assert(ve.timeout == 140);
   assert(ve.timestamp == 1500+174);
   assert(ve.event.train_at.train_num == 24);
   // printf("%s\n", ve.event.train_at.node->name);
@@ -163,15 +163,15 @@ static void basic_test(track_node *g) {
   ve_list_pop(&track.vevents, &ve);
   assert(ve.type == VE_TR_AT);
   // printf("%d\n", ve.timeout);
-  assert(ve.timeout == 212);
+  assert(ve.timeout == 100);
   assert(ve.timestamp == 1600+212);
   assert(ve.event.train_at.train_num == 24);
   // printf("%s\n", ve.event.train_at.node->name);
   assert(ve.event.train_at.node->num == 56);
   ve_list_pop(&track.vevents, &ve);
   assert(ve.type == VE_TR_AT);
-  //printf("%d\n", ve.timeout);
-  assert(ve.timeout == 191);
+  // printf("%d\n", ve.timeout);
+  assert(ve.timeout == 102);
   assert(ve.timestamp == 1600+191);
   assert(ve.event.train_at.train_num == 24);
   // printf("%s\n", ve.event.train_at.node->name);

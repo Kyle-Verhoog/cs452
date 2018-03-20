@@ -55,10 +55,14 @@ int ev_window_remove_key(event_window *ew, int key) {
   }
 
   if (ew->start < ew->end && ew->start <= key && key < ew->end) {
+    if (ew->size == 0)
+      return EV_E_EMPTY;
     ew->keys[key] = 0;
     ew->size--;
   }
   else if (ew->start > ew->end && (key >= ew->start || key < ew->end)) {
+    if (ew->size == 0)
+      return EV_E_EMPTY;
     ew->keys[key] = 0;
     ew->size--;
   }

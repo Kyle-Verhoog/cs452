@@ -7,6 +7,7 @@
 #include <user/syscalls.h>
 #else
 #include <assert.h>
+#define assertf(...)
 #endif
 
 #include <lib/train/events.h>
