@@ -6,6 +6,7 @@
 #include <user/clockserver.h>
 #include <user/train/representer.h>
 #include <user/train/train_provider.h>
+#include <lib/train/updates.h>
 
 #define MEASURING_GEAR 4
 
@@ -16,6 +17,6 @@ typedef struct CalibrationArgs{
 }CalibrationArgs;
 
 void Calibration(void *args);
-void MeasuringVelocity();
+void MeasuringVelocity( void *args);
 
 #endif //CALIBRATION_H

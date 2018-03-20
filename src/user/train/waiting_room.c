@@ -217,7 +217,7 @@ TMLogStrf(tm_tid, "Timeout for location %s\n", wrr.data.ve.event.train_at.node->
 void HandleWR_VE(WRRequest *event, VirtualEvent *waiting, int *sensorToVE){
   if(event->data.ve.type == VE_TR_AT){
     if(waiting[event->data.ve.key].type != VE_REG){
-      reset_waiting_room_ve(waiting, sensorToVE, &event->data.ve);
+      //reset_waiting_room_ve(waiting, sensorToVE, &event->data.ve);
 
 tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
 TMLogStrf(tm_tid, "Already handled location %s\n", event->data.ve.event.train_at.node->name);

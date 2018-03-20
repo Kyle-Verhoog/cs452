@@ -64,7 +64,7 @@ static void ApplyUpdates(Track *track, update_list *updates, trm_subscribers *su
   }
 }
 
-static void ReplyByDataType(tid_t req_tid, uTrackRequest data, Track *track){
+static void ReplyByDataType(tid_t req_tid, union uTrackRequest data, Track *track){
   switch(data.dtype){
     case TD_ALL:
       Reply(req_tid, track, sizeof(Track));
@@ -109,7 +109,7 @@ void Representer() {
 
     switch (req.type) {
       case TRR_FETCH:
-        ReplyByDataType(req.data);
+        ReplyByDataType(req_tid, req.data, &track);
         //Reply(req_tid, &track, sizeof(track));
         break;
       case TRR_UPDATE:

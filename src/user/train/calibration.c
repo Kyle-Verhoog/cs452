@@ -6,21 +6,21 @@ void Calibration(void *args){
 	int r, stime, etime;
 	CalibrationArgs cargs;
 	TrackRequest tr_req;
-	tid_t cs_tid, sub_tid, tm_tid, rep_tid, tr_tid;
+	tid_t cs_tid, sub_tid, tm_tid, rep_tid, tr_tid, my_tid;
 	TETRPosition event;
 	TrainProtocol tp;
 	track_node *start, *end;
 	Switch switches[SWITCH_SIZE];
 
 
-	cargs = *(Calibration *)args;
+	cargs = *(CalibrationArgs *)args;
 
 	my_tid = MyTid();
 	cs_tid = WhoIs(CLOCKSERVER_ID);
 	tm_tid = WhoIs(TERMINAL_MANAGER_ID);
 	rep_tid = WhoIs(REPRESENTER_ID);
 	tr_tid = WhoIs(TRAIN_PROVIDER_ID);
-	assert(tm_tid > 0 && cs_tid > 0 && rep_tid > 0, tr_tid > 0);
+	assert(tm_tid > 0 && cs_tid > 0 && rep_tid > 0 && tr_tid > 0);
 
 	//Initialize subscription
 	tr_req.type = TRR_SUBSCRIBE;
@@ -39,7 +39,7 @@ void Calibration(void *args){
 	//Wait until starting point
 	while(true){
 		Send(rep_tid, &tr_req, sizeof(tr_req), &event, sizeof(event));
-		if(TRACK[event.node]->num == cargs.target_node &&
+		if(TRACK[event.node].num == cargs.target_node &&
 			event.num == cargs.train){
 			break;
 		}	
@@ -63,7 +63,7 @@ void Calibration(void *args){
 	//Wait Reach Next Sensor Destination
 	while(true){
 		Send(rep_tid, &tr_req, sizeof(tr_req), &event, sizeof(event));
-		if(TRACK[event.node]->type == NODE_SENSOR &&
+		if(TRACK[event.node].type == NODE_SENSOR &&
 			event.num == cargs.train){
 			break;
 		}	
@@ -93,20 +93,24 @@ void Calibration(void *args){
 	Exit();
 }
 
-void MeasuringVelocity(){
+void MeasuringVelocity(void *args){
 	int r, stime, etime;
+	CalibrationArgs cargs;
 	TrackRequest tr_req;
-	tid_t cs_tid, sub_tid, tm_tid, rep_tid, tr_tid;
+	tid_t cs_tid, sub_tid, tm_tid, rep_tid, tr_tid, my_tid;
 	TETRPosition event;
 	track_node *start, *end;
 	TrainProtocol tp;
+	Switch switches[SWITCH_SIZE];
+	
+	cargs = *(CalibrationArgs *)args;
 
 	my_tid = MyTid();
 	cs_tid = WhoIs(CLOCKSERVER_ID);
 	tm_tid = WhoIs(TERMINAL_MANAGER_ID);
 	rep_tid = WhoIs(REPRESENTER_ID);
 	tr_tid = WhoIs(TRAIN_PROVIDER_ID);
-	assert(tm_tid > 0 && cs_tid > 0 && rep_tid > 0, tr_tid > 0);
+	assert(tm_tid > 0 && cs_tid > 0 && rep_tid > 0 && tr_tid > 0);
 
 	//Initialize subscription
 	tr_req.type = TRR_SUBSCRIBE;
@@ -119,7 +123,7 @@ void MeasuringVelocity(){
 	//Wait until starting point
 	while(true){
 		Send(rep_tid, &tr_req, sizeof(tr_req), &event, sizeof(event));
-		if(TRACK[event.node]->type == NODE_SENSOR &&
+		if(TRACK[event.node].type == NODE_SENSOR &&
 			event.num == cargs.train){
 			break;
 		}	
@@ -131,7 +135,7 @@ void MeasuringVelocity(){
 	//Wait until end point
 	while(true){
 		Send(rep_tid, &tr_req, sizeof(tr_req), &event, sizeof(event));
-		if(TRACK[event.node]->type == NODE_SENSOR &&
+		if(TRACK[event.node].type == NODE_SENSOR &&
 			event.num == cargs.train){
 			break;
 		}	
