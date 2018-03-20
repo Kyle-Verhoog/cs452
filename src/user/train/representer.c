@@ -64,6 +64,21 @@ static void ApplyUpdates(Track *track, update_list *updates, trm_subscribers *su
   }
 }
 
+static void ReplyByDataType(uTrackRequest data, Track *track){
+  switch(data.dtype){
+    case TD_ALL:
+      break;
+    case TD_TR:
+      break;
+    case TD_SW:
+      break;
+    case TD_SE:
+      break;
+    default:
+      assert(0 && "Bad Data Request");
+  }
+}
+
 void Representer() {
   int i, r;
   tid_t req_tid;
@@ -87,7 +102,8 @@ void Representer() {
 
     switch (req.type) {
       case TRR_FETCH:
-        Reply(req_tid, &track, sizeof(track));
+        ReplyByDataType(req.data);
+        //Reply(req_tid, &track, sizeof(track));
         break;
       case TRR_UPDATE:
         ApplyUpdates(&track, &req.data.update, subscribers);

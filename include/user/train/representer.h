@@ -21,6 +21,7 @@ typedef enum TrackRequestType {
 union uTrackRequest {
   update_list update;  // interpreter
   TrackEventType type; // subscribers
+  TrackDataType dtype; // subscribers
 };
 
 typedef struct TrackRequest {

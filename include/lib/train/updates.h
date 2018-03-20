@@ -11,6 +11,13 @@ typedef enum TrackEventType {
   MAX_TRACK_EVENT  // NOTE: keep as last element in enum
 } TrackEventType;
 
+typedef enum TrackDataType{
+  TD_ALL,
+  TD_TR,
+  TD_SW,
+  TD_SE
+} TrackDataType;
+
 
 typedef struct TrackEventTrainPositionChange {
   int num;
