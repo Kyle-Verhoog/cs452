@@ -20,7 +20,7 @@ void VirtualEventPublisher(){
 		  case VER_NOTIFY:
 		  	Reply(req_tid, &r, sizeof(r));
 		  	//NOTIFY(&subscribers, &sub, ves.req.ve, sizeof(ves.req.ve));
-		  	NOTIFYBL(subscribers, sub, i, ves.req.ve, sizeof(ves.req.ve), reply, sizeof(reply))
+		  	NOTIFYBL(subscribers, sub, i, ves.req.ve, sizeof(ves.req.ve), r, sizeof(r))
 		  	break;
 		  case VER_SUBSCRIBE:
 		  	Reply(req_tid, &r, sizeof(r));
@@ -88,7 +88,7 @@ void VirtualProvider(){
 	int key = 0;
 
 	tid_t req_tid;
-	VERequest ver, data;
+	VERequest ver;
 	int r;
 
 	vereq_cb requests;

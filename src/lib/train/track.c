@@ -53,6 +53,7 @@ Train *TrackRemoveActiveTrain(Track *track, int train_num) {
   for (i = 0; i < size; ++i) {
     r = train_list_pop(&track->active_trains, &train);
     assert(r == 0);
+assert(0);
 
     if (train->num == train_num)
       return train;

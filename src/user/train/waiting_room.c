@@ -4,14 +4,6 @@
 
 CIRCULAR_BUFFER_DEF(eg_cb, EventGroup, EVENT_GROUP_BUFFER_SIZE);
 
-static void AdHocWRRequest(void *args){
-  int r;
-  WRRequest wrr = *(WRRequest *)args;
-  tid_t wr_tid = WhoIs(WAITING_ROOM_ID);
-  Send(wr_tid, &wrr, sizeof(wrr), &r, sizeof(r));
-  Exit();
-}
-
 void SendSensorDelta(tid_t wr_tid, tid_t cs_tid, tid_t my_tid, char *new_sensors, char *old_sensors) {
   int i, j, r;
   WRRequest event;
@@ -84,16 +76,13 @@ static void SwitchSubscriber() {
   int r;
   SWSubscribe sw_sub;
   WRRequest event;
-  tid_t sw_pub, wr_tid, cs_tid;
+  tid_t sw_pub, wr_tid;
 
   sw_pub = WhoIs(SWITCH_PUBLISHER_ID);
   assert(sw_pub > 0);
 
   wr_tid = MyParentTid();
   assert(wr_tid > 0);
-
- // my_tid = MyTid();
- // assert(my_tid > 0);
 
   sw_sub.swr = SW_SUBSCRIBE;
   event.type = WR_RE;
@@ -115,16 +104,13 @@ static void TrainSubscriber() {
   int r;
   TSubscribe tsub;
   WRRequest event;
-  tid_t tr_pub, wr_tid, cs_tid;
+  tid_t tr_pub, wr_tid;
 
   tr_pub = WhoIs(TRAIN_PUBLISHER_ID);
   assert(tr_pub > 0);
 
   wr_tid = MyParentTid();
   assert(wr_tid > 0);
-
-  //my_tid = MyTid();
-  //iassert(my_tid > 0);
 
   tsub.tc = T_SUBSCRIBE;
   event.type = WR_RE;
@@ -146,16 +132,13 @@ static void VirtualEventSubscriber(){
   int r;
   VESubscribe vsub;
   WRRequest event;
-  tid_t ve_pub, wr_tid, cs_tid;
+  tid_t ve_pub, wr_tid;
 
   ve_pub = WhoIs(VIRTUAL_PUBLISHER_ID);
   assert(ve_pub > 0);
 
   wr_tid = MyParentTid();
   assert(wr_tid > 0);
-
-  //my_tid = MyTid();
-  //assert(my_tid > 0);
 
   vsub.type = VER_SUBSCRIBE;
   event.type = WR_VE;
@@ -353,12 +336,10 @@ void WaitingRoom(){
         HandleWR_VE(&event, waiting, sensorToVE);
         break;
       case WR_RE:
-        //assert(courier != -1);
         Reply(req_tid, &r, sizeof(r));
         HandleWR_RE(&event, waiting, sensorToVE, &dataBuf, my_tid);
         break;
       case WR_TO:
-        //assert(courier != -1);
         Reply(req_tid, &r, sizeof(r)); 
         HandleWR_TO(&event, waiting, sensorToVE, &dataBuf);
 	break;
