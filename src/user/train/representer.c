@@ -29,6 +29,10 @@ static void ApplySensorChange(Track *track, TESEChange *event) {
   track->sensors[event->num].state = event->state;
 }
 
+static void ApplySwitchChange(Track *track, TESWChange *event){
+  track->switches[event->num] = event->newdir;
+}
+
 static void ApplyUpdates(Track *track, update_list *updates, trm_subscribers *subs) {
   int i;
   TrackEvent event;
@@ -50,6 +54,7 @@ static void ApplyUpdates(Track *track, update_list *updates, trm_subscribers *su
         break;
       case TE_SW_CHANGE:
         // assert(0 && "TODO");
+        ApplySwitchChange(track, &event.event.sw_change);
         break;
       default:
         assert(0);

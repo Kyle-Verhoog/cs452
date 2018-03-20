@@ -5,6 +5,7 @@
 
 typedef enum TrackEventType {
   TE_TR_MOVE,
+  TE_TR_POSITION,
   TE_SW_CHANGE,
   TE_SE_CHANGE,
   MAX_TRACK_EVENT  // NOTE: keep as last element in enum
@@ -12,6 +13,8 @@ typedef enum TrackEventType {
 
 
 typedef struct TrackEventTrainPositionChange {
+  int num;
+  int node;
 } TETRPosition;
 
 typedef struct TrackEventTrainGearChange {
