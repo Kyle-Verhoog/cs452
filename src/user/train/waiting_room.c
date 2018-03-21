@@ -3,7 +3,7 @@
 #include <track_data.h> //TODO: REMOVE THIS
 
 CIRCULAR_BUFFER_DEF(eg_cb, EventGroup, EVENT_GROUP_BUFFER_SIZE);
-CIRCULAR_BUFFER_DEF(ve_key_cb, int, VE_KEY_BUFFER_SIZE;
+CIRCULAR_BUFFER_DEF(ve_key_cb, int, VE_KEY_BUFFER_SIZE);
 
 void SendSensorDelta(tid_t wr_tid, tid_t cs_tid, tid_t my_tid, char *new_sensors, char *old_sensors) {
   int i, j, r;
@@ -162,10 +162,6 @@ static void reset_waiting_room(VirtualEvent *ve){
   ve->type = VE_NONE;
 }
 
-static void reset_waiting_reference(){
-
-}
-
 void TimeoutWR_VE(void *args){
   WRRequest wrr;
   int r;
@@ -255,7 +251,7 @@ static void handle_re_se(RawEvent re, VirtualEvent *waiting, ve_key_cb *sensorTo
   }else{
     //Just an RE
     eg.type = RE;
-    eg.re = event->data.re;
+    eg.re = re;
     eg_cb_push(dataBuf, eg);
     TMLogStrf(tm_tid, "RE on %d\n", re.event.se_event.id);
   }
@@ -316,10 +312,8 @@ static void handle_to_tr_at(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *s
 }
 
 void HandleWR_TO(WRRequest *event, VirtualEvent *waiting, ve_key_cb *sensorToVE, eg_cb *dataBuf){
-  EventGroup eg;
-  int sensor;
-  
-  switch(event->data.type){
+
+  switch(event->data.ve.type){
     case VE_TR_AT:
       handle_to_tr_at(event->data.ve, waiting, sensorToVE, dataBuf);
       break;
@@ -328,7 +322,7 @@ void HandleWR_TO(WRRequest *event, VirtualEvent *waiting, ve_key_cb *sensorToVE,
   }
 }
 
-void init_waiting_room(int *map){
+void init_waiting_room(ve_key_cb *map){
   int i;
   for(i = 0; i < SENSOR_SIZE; i++){
     ve_key_cb_init(&map[i]);
