@@ -33,6 +33,18 @@ static void parse_args_multi() {
   assert(c == 'C');
 }
 
+static void parse_str_str() {
+  int i, r;
+  char *buf = "dr 24 A1 A2";
+  char *args = "%s %d %s %s";
+  char c, cmd[32];
+  char node1[5], node2[5];
+  r = parse_args(buf, args, cmd, sizeof(cmd), &i, node1, sizeof(node1), node2, sizeof(node2));
+  assert(streq(cmd, "dr"));
+  assert(streq(node1, "A1"));
+  assert(streq(node2, "A2"));
+}
+
 static void parse_args_fail() {
   char *buf = "tr asdf 14 C";
   char *args = "%s %d %d %c";
@@ -62,5 +74,6 @@ void parse_args_tests() {
   parse_args_int();
   parse_args_multi();
   parse_args_fail();
+  parse_str_str();
   parse_cmd();
 }
