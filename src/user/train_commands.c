@@ -145,3 +145,21 @@ void SwitchSW(char *args){
 //   Reply(tid, &r, sizeof(r));
 //   Exit();
 // }
+
+
+void TrainMS(char *args) {
+  int train;
+  
+  r = parse_args(args, "%d", &train);
+  if (r) {
+    TMLogStrf(tm_tid, "ms: error parsing arg %d\n", r);
+    r = -1;
+    Reply(tid, &r, sizeof(r));
+    Exit();
+  }
+  
+  CreateArgs(19, &MeasuringVelocity, (void *)&train, sizeof(train));
+
+  Reply(tid, &r, sizeof(r));
+  Exit();
+}
