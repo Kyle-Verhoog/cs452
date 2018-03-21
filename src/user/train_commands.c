@@ -193,6 +193,7 @@ void TrainMS(char *args) {
 }
 
 void TrainTST(char *args){
+  int r;
   TestCalibArgs tcargs;
   tid_t tm_tid, tid;
 

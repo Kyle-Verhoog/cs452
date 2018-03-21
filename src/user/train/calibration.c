@@ -175,7 +175,7 @@ int GetLastAvailableSensor(track_node *start, track_node *end, Switch *sw, int m
 	target->dist = 0;
 	pos.node = start;
 	dist = DistanceBetweenNodes(sw, start, end);
-	if(dist < min_dist){
+	if(dist*1000 < min_dist){
 		return -1;
 	}
 
@@ -184,7 +184,7 @@ int GetLastAvailableSensor(track_node *start, track_node *end, Switch *sw, int m
 		r = GetNextSensorEXC(sw, n, &pos);
 		assert(r == 0);		
 
-		if((dist - pos.dist) < min_dist){
+		if((dist - pos.dist)*1000 < min_dist){
 			break;
 		}
 
