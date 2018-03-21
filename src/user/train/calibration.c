@@ -228,28 +228,32 @@ void TrainSpeedSubscriber(void * args){
 void TrainSpeedUpdate(void *args){
 	int train, r, speed, command;
 	tid_t tc_tid, req_tid;
+	bool canExit = false;
 
 	train = *(int *)args;
 
 	tc_tid = MyParentTid();
-	CreateArgs(19, &TrainSpeedSubscriber, (void*)&train, sizeof(train))
+	CreateArgs(19, &TrainSpeedSubscriber, (void*)&train, sizeof(train));
 	r = 0;
 	speed = 0;
 
-	while(true){
+	while(!canExit){
 		Receive(&req_tid, &command, sizeof(command));
 		
 		switch(command){
 			case 0:
 				r = -1;
-				Reply(req_tid, speed, sizeof(speed));
+				Reply(req_tid, &speed, sizeof(speed));
 				break;
 			case 1:
-				Reply(req_tid, speed, sizeof(speed));		
+				Reply(req_tid, &speed, sizeof(speed));		
 				break;
 			default:
 				speed = command;
-				Reply(req_tid, r, sizeof(r));
+				Reply(req_tid, &r, sizeof(r));
+				if(r == -1){
+					canExit = true;
+				}
 		}
 
 	}
@@ -336,4 +340,5 @@ void TestCalibration(void *args){
 	tp.arg1 = tcargs.train;
 	tp.arg2 = 0;
 	Send(tr_tid, &tp, sizeof(tp), &r, sizeof(r));
+	Exit();
 }
