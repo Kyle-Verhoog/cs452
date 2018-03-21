@@ -1,5 +1,8 @@
 #include <user/train/m1_reset.h>
 
+/*DEPRECATED*/
+/*
+
 static tid_t tm_tid;
 
 void init_train(tid_t tr_tid, int tr_num) {
@@ -95,3 +98,4 @@ void M1Reset(void *arg) {
   // TMExit(tm_tid);
   Exit();
 }
+*/

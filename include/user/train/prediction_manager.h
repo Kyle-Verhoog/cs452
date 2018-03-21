@@ -19,7 +19,7 @@
 #include <sensor_provider.h>
 #include <user/terminal_manager.h>
 #include <user/test/stop_at_test.h>
-
+/*
 #define MAX_STEPS_AHEAD 16
 
 #define INIT_LIVE_TRAINS(live) live.size = 0; \
@@ -65,5 +65,5 @@ int DistanceBetweenNodes(Switch *sw, track_node *start, track_node *end);
 // Destination GetNextSensor(Switch *sw, track_node *n);	//Inclusive, Overshoots distance
 // Destination GetNextSensorNI(Switch *sw, track_node *n);	//Exclusive, Undershoots distance
 void PredictionManager();
-
+*/
 #endif //PREDICTION_MANAGER_H
