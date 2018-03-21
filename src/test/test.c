@@ -10,6 +10,7 @@
 #include <test/train/event_window.h>
 #include <test/train/priority_queue.h>
 #include <test/train/path_finding.h>
+#include <test/train/train_model.h>
 #include <test/train/track.h>
 #include <test/string.h>
 #include <test/parse.h>
@@ -71,6 +72,10 @@ int main(void) {
 
   PTEST_START("train/track");
   track_tests();
+  PTEST_END();
+
+  PTEST_START("train/train_model");
+  train_model_tests();
   PTEST_END();
 
   PRINTF("+----------------------+---+\n");

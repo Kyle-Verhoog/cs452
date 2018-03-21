@@ -48,6 +48,7 @@ int standard_deviation(int *list, int size){
 	return usqrt(inter_sum);
 }
 
+// ============= FULL INTERPOLATION ================//
 int get_lagrange_basis(TrainModel *tm, int point, int x){
 	int frac = tm->y[point];
 	int i;
@@ -69,4 +70,35 @@ int interpolate(TrainModel *tm, int setting){
 		val += get_lagrange_basis(tm, i, setting);
 	}
 	return val;
+}
+
+// ============= PARTIAL INTERPOLATION ================//
+
+int get_lagrange_basis_partial(TrainModel *tm, int point, int x, int head, int tail){
+	int frac = tm->y[point];
+	int i;
+	for(i = head; i < tail; i++){
+		if(i != point){
+			frac *= (x - tm->x[i]);
+			frac /= (tm->x[point] - tm->x[i]);
+		}
+	}
+	
+	return frac;
+}
+
+//Non-inclusive tail
+int interpolatePartial(TrainModel *tm, int setting, int head, int tail){
+	int val = 0;
+	int i;
+
+#ifndef X86
+	assert(head >= 0 && head < tail);
+	assert(tail > head && tail <= TRAIN_MODEL_SIZE);
+#endif
+
+	for(i = head; i < tail; i++){
+		val += get_lagrange_basis_partial(tm, i, setting, head, tail);
+	}
+	return val;	
 }
