@@ -411,6 +411,7 @@ void Shell(void *args) {
     { "sw", &SwitchSW, 28, true },
     { "dummy", &DummyTask, 1, true },
     //{ "tk", &TrainTK, 28, true },
+    { "ms", &TrainMS, 28, true },
   };
 
   vars = (int *)args;
