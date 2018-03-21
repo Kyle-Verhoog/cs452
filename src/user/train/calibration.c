@@ -196,17 +196,77 @@ int GetLastAvailableSensor(track_node *start, track_node *end, Switch *sw, int m
 	return dist;
 }
 
+void TrainSpeedSubscriber(void * args){
+	int train, r;
+	tid_t rep_tid, up_tid;
+	TrackRequest tr_req;
+	TETRSpeed event;
+
+	train = *(int *)args;
+
+	rep_tid = WhoIs(REPRESENTER_ID);
+	up_tid = MyParentTid();
+	assert(rep_tid > 0 && up_tid > 0);
+
+	//Init Request
+	tr_req.type = TRR_SUBSCRIBE;
+	tr_req.data.type = TE_TR_SPEED;
+
+	while(true){
+		Send(rep_tid, &tr_req, sizeof(tr_req), &event, sizeof(event));
+		if(event.num == train){
+			Send(up_tid, &event.new, sizeof(event.new), &r, sizeof(r));
+			if(r == -1){
+				break;
+			}
+		}		
+	}
+
+	Exit();
+}
+
+void TrainSpeedUpdate(void *args){
+	int train, r, speed, command;
+	tid_t tc_tid, req_tid;
+
+	train = *(int *)args;
+
+	tc_tid = MyParentTid();
+	CreateArgs(19, &TrainSpeedSubscriber, (void*)&train, sizeof(train))
+	r = 0;
+	speed = 0;
+
+	while(true){
+		Receive(&req_tid, &command, sizeof(command));
+		
+		switch(command){
+			case 0:
+				r = -1;
+				Reply(req_tid, speed, sizeof(speed));
+				break;
+			case 1:
+				Reply(req_tid, speed, sizeof(speed));		
+				break;
+			default:
+				speed = command;
+				Reply(req_tid, r, sizeof(r));
+		}
+
+	}
+
+	Exit();
+}
+
 void TestCalibration(void *args){
-	int r, dist, delayDist;
+	int r, dist, delayDist, velocity;
 	TestCalibArgs tcargs;
 	TrackRequest tr_req;
-	tid_t cs_tid, tm_tid, rep_tid, tr_tid, my_tid;
+	tid_t cs_tid, tm_tid, rep_tid, tr_tid, my_tid, spd_tid;
 	TETRPosition event;
 	track_node *start, *end;
 	PossibleSensor target;
 	TrainProtocol tp;
 	Switch switches[SWITCH_SIZE];
-	Train trains[TRAIN_SIZE];
 
 	tcargs = *(TestCalibArgs *)args;
 
@@ -216,6 +276,8 @@ void TestCalibration(void *args){
 	rep_tid = WhoIs(REPRESENTER_ID);
 	tr_tid = WhoIs(TRAIN_PROVIDER_ID);
 	assert(tm_tid > 0 && cs_tid > 0 && rep_tid > 0 && tr_tid > 0);
+
+	spd_tid = CreateArgs(19, &TrainSpeedUpdate, (void *)&tcargs.train, sizeof(tcargs.train));
 
 	//Get Switch Configuration
 	tr_req.type = TRR_FETCH;
@@ -248,6 +310,8 @@ void TestCalibration(void *args){
 	dist = GetLastAvailableSensor(start, end, switches, tcargs.dist, &target);
 	assert(dist >= 0);
 
+	TMLogStrf(tm_tid, "Last Sensor to Stop: %s\n", target.node->name);
+
 	//Wait for the last possible sensor
 	while(true){
 		Send(rep_tid, &tr_req, sizeof(tr_req), &event, sizeof(event));
@@ -261,12 +325,11 @@ void TestCalibration(void *args){
 	delayDist = dist*1000 - tcargs.dist;
 
 	//Get Velocity
-	tr_req.type = TRR_FETCH;
-	tr_req.data.dtype = TD_TR;
-	Send(rep_tid, &tr_req, sizeof(tr_req), &trains, sizeof(trains));
+	r = 0;
+	Send(spd_tid, &r, sizeof(r), &velocity, sizeof(velocity));
 
 	//Delay given time
-	Delay(cs_tid, my_tid, delayDist/trains[tcargs.train].speed);
+	Delay(cs_tid, my_tid, delayDist/velocity);
 
 	//Send Stop
 	tp.tc = T_MOVE;
