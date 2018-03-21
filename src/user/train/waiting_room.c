@@ -281,7 +281,7 @@ void HandleWR_RE(WRRequest *event, VirtualEvent *waiting, ve_key_cb *sensorToVE,
 
 static void handle_to_tr_at(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *sensorToVE, eg_cb *dataBuf){
   EventGroup eg;
-  int sensor, key;
+  int sensor, key, size, i;
 
   tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
   assert(tm_tid > 0);
@@ -290,8 +290,9 @@ static void handle_to_tr_at(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *s
   assert(sensor >= 0);
 
   if(sensorToVE[sensor].size > 0){
+    size = sensorToVE[sensor].size;
     //Remove Virtual Event Due to Timeout
-    while(true){
+    for(i = 0; i < size; i++){
       ve_key_cb_pop(&sensorToVE[sensor], &key);
       if(key == ve.key){
         eg.type = VRE_VE;
