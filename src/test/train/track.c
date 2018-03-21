@@ -20,6 +20,10 @@ static EventGroup MockSensor(int type, int rts, char *sname, VirtualEvent *ve) {
   return event;
 }
 
+static void TrackClearEvents(Track *track) {
+  update_list_init(&track->updates);
+  ve_list_init(&track->vevents);
+}
 
 static void next_sensors_test(track_node *tr) {
   int dist;
@@ -228,7 +232,7 @@ static void track_events_test() {
   update_list_pop(&track.updates, &te);
   assert(te.type == TE_TR_POS);
   assert(te.event.tr_pos.num == 24);
-  assert(te.event.tr_pos.pos == &T[trhr(T, "A1")]);
+  assert(te.event.tr_pos.node == &T[trhr(T, "A1")]);
   update_list_pop(&track.updates, &te);
   assert(te.type == TE_SE_CHANGE);
   assert(te.event.se_change.num == trhr(T, "A1"));
@@ -255,7 +259,7 @@ static void track_events_test() {
   update_list_pop(&track.updates, &te);
   assert(te.type == TE_TR_POS);
   assert(te.event.tr_pos.num == 24);
-  assert(te.event.tr_pos.pos == &T[trhr(T, "C13")]);
+  assert(te.event.tr_pos.node == &T[trhr(T, "C13")]);
 
   update_list_pop(&track.updates, &te);
   assert(te.type == TE_SE_CHANGE);
@@ -264,6 +268,88 @@ static void track_events_test() {
   assert(track.updates.size == 0);
 }
 
+
+static void lost_train_test() {
+  Track track;
+  Train train;
+  EventGroup event;
+  TrackEvent te;
+  VirtualEvent ve;
+  TrackInit(&track, T);
+
+  train.num = 24;
+  TrackAddTrain(&track, &train);
+
+  event = MockSensor(RE, 1000, "A1", NULL);
+  TrackInterpretEventGroup(&track, &event);
+  ve_list_pop(&track.vevents, &ve);
+  TrackClearEvents(&track);
+
+  event = MockSensor(VRE_RE, 1500, "C13", &ve);
+  TrackInterpretEventGroup(&track, &event);
+  ve_list_pop(&track.vevents, &ve);
+  TrackClearEvents(&track);
+
+  assert(track.train[24].status == TR_KNOWN);
+  event = MockSensor(VRE_VE, -1, "C13", &ve);
+  TrackInterpretEventGroup(&track, &event);
+  ve_list_pop(&track.vevents, &ve);
+  TrackClearEvents(&track);
+
+  assert(track.train[24].status == TR_LOST);
+
+  event = MockSensor(RE, 1700, "E7", &ve);
+  TrackInterpretEventGroup(&track, &event);
+  ve_list_pop(&track.vevents, &ve);
+  TrackClearEvents(&track);
+
+  assert(track.train[24].status == TR_UN_SPEED);
+
+  event = MockSensor(VRE_RE, 1800, "D7", &ve);
+  TrackInterpretEventGroup(&track, &event);
+  ve_list_pop(&track.vevents, &ve);
+  TrackClearEvents(&track);
+
+  assert(track.train[24].status == TR_KNOWN);
+}
+
+// test a sensor being activated nowhere near the lost train
+static void lost_train_false_positive_test() {
+  Track track;
+  Train train;
+  EventGroup event;
+  TrackEvent te;
+  VirtualEvent ve;
+  TrackInit(&track, T);
+
+  train.num = 24;
+  TrackAddTrain(&track, &train);
+
+  event = MockSensor(RE, 1000, "A1", NULL);
+  TrackInterpretEventGroup(&track, &event);
+  ve_list_pop(&track.vevents, &ve);
+  TrackClearEvents(&track);
+
+  event = MockSensor(VRE_RE, 1500, "C13", &ve);
+  TrackInterpretEventGroup(&track, &event);
+  ve_list_pop(&track.vevents, &ve);
+  TrackClearEvents(&track);
+
+  assert(track.train[24].status == TR_KNOWN);
+  event = MockSensor(VRE_VE, -1, "C13", &ve);
+  TrackInterpretEventGroup(&track, &event);
+  ve_list_pop(&track.vevents, &ve);
+  TrackClearEvents(&track);
+
+  assert(track.train[24].status == TR_LOST);
+
+  event = MockSensor(RE, 1700, "E13", &ve);
+  TrackInterpretEventGroup(&track, &event);
+  ve_list_pop(&track.vevents, &ve);
+  TrackClearEvents(&track);
+
+  assert(track.train[24].status == TR_LOST);
+}
 
 static void two_trains_test() {
   Track track;
@@ -275,12 +361,45 @@ static void two_trains_test() {
   // emulate finding train 24
   train.num = 24;
   TrackAddTrain(&track, &train);
-  ve_list_pop(&track.vevents, &ve);
-  assert(track.train[24].num == 24);
-  assert(track.train[24].status == TR_LOST);
 
   event = MockSensor(RE, 1000, "A1", NULL);
   TrackInterpretEventGroup(&track, &event);
+  ve_list_pop(&track.vevents, &ve);
+  ve_list_init(&track.vevents);
+  update_list_init(&track.updates);
+
+  event = MockSensor(VRE_RE, 1500, "C13", &ve);
+  TrackInterpretEventGroup(&track, &event);
+  ve_list_pop(&track.vevents, &ve);
+  ve_list_init(&track.vevents);
+  update_list_init(&track.updates);
+  assert(track.train[24].status == TR_KNOWN);
+
+  event = MockSensor(VRE_RE, 2000, "E7", &ve);
+  TrackInterpretEventGroup(&track, &event);
+  ve_list_pop(&track.vevents, &ve);
+  ve_list_init(&track.vevents);
+  update_list_init(&track.updates);
+  assert(track.train[24].status == TR_KNOWN);
+
+
+  // emulate finding train 74
+  train.num = 74;
+  TrackAddTrain(&track, &train);
+
+  event = MockSensor(RE, 1000, "A1", NULL);
+  TrackInterpretEventGroup(&track, &event);
+  ve_list_pop(&track.vevents, &ve);
+  TrackClearEvents(&track);
+  ve_list_init(&track.vevents);
+  update_list_init(&track.updates);
+
+  event = MockSensor(VRE_RE, 1200, "C13", &ve);
+  TrackInterpretEventGroup(&track, &event);
+
+  // check that both trains are known
+  assert(track.train[24].status == TR_KNOWN);
+  assert(track.train[74].status == TR_KNOWN);
 }
 
 void track_tests() {
@@ -290,5 +409,7 @@ void track_tests() {
   next_sensors_test(T);
   basic_test(T);
   track_events_test();
+  lost_train_test();
   two_trains_test();
+  lost_train_false_positive_test();
 }

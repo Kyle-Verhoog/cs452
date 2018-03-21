@@ -48,7 +48,7 @@ typedef struct TrackEventTrainSpeed {
 
 typedef struct TrackEventTrainPosition {
   int num;
-  track_node *pos;
+  track_node *node;
 } TETRPosition;
 
 typedef struct TrackEventTrainStatus {

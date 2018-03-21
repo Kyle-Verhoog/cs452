@@ -76,6 +76,7 @@ int GetNextPossibleSensors(track_node *node, int dist, poss_node_list *pnl) {
 
   while (node->type != NODE_SENSOR) {
     if (node->type == NODE_BRANCH) {
+      // TODO: replace with stack data structure once we have one
       GetNextPossibleSensors(node->edge[DIR_STRAIGHT].dest, dist + node->edge[DIR_STRAIGHT].dist, pnl);
       GetNextPossibleSensors(node->edge[DIR_CURVED].dest, dist + node->edge[DIR_CURVED].dist, pnl);
       return 0;
@@ -168,7 +169,7 @@ static void TrackGenerateTrainPositionTEvent(Track *track, Train *train) {
   TrackEvent event;
   event.type = TE_TR_POS;
   event.event.tr_pos.num = train->num;
-  event.event.tr_pos.pos = train->pos;
+  event.event.tr_pos.node = train->pos;
   r = update_list_push(&track->updates, event);
   assert(r == 0);
 }
@@ -390,7 +391,6 @@ static void TrackLoseTrain(Track *track, Train *train) {
   TrainStatus old_status;
 
   assert(train== &track->train[train->num]);
-  train->last_seen = train->pos;
   old_status = train->status;
   train->status = TR_LOST;
 
@@ -401,37 +401,56 @@ static void TrackLoseTrain(Track *track, Train *train) {
   TrackGenerateTrainStatusTEvent(track, train, old_status, TR_LOST);
 }
 
-static void TrackLocateLostTrain(Track *track, Train *train, int sen_num, int ts) {
+static void TrackLocateLostTrain(Track *track, Train *train, track_node *sen, int ts) {
   int r;
-  track_node *new_pos;
 
-  r = train_list_pop(&track->lost_trains, &train);
-  assert(r == 0);
-
-  // set train position to the sensor
-  new_pos = &track->graph[sen_num];
-
-  TrackUpdateLostTrain(track, train, new_pos, ts);
+  TrackUpdateLostTrain(track, train, sen, ts);
 
   r = train_list_push(&track->active_trains, train);
   assert(r == 0);
 }
 
-static Train *TrackAttemptToLocateTrain(Track *track, int sen_num, int ts) {
+static bool TrainNearby(track_node *node, track_node *dest, int d) {
+  if (!d--) return false;
+  if (node == dest) return true;
+
   int r;
-  Train *t;
-  t = NULL;
-
-  r = train_list_get(&track->lost_trains, 0, &t);
-  assert(r == 0);
-
-  // TODO: look in both directions of the node for other possible trains
-  //       that this could be
-  if (1) {
-    TrackLocateLostTrain(track, t, sen_num, ts);
+  if (node->type == NODE_BRANCH) {
+    // TODO: replace with stack data structure once we have one
+    r = TrainNearby(node->edge[DIR_STRAIGHT].dest, dest, d);
+    if (r) return true;
+    return TrainNearby(node->edge[DIR_CURVED].dest, dest, d);
+  }
+  else if (node->type == NODE_EXIT) {
+    return false;
   }
 
-  return t;
+  return TrainNearby(NEXT_NODE(node), dest, d);
+}
+
+static Train *TrackAttemptToLocateTrain(Track *track, int sen_num, int ts) {
+  int r, i, n;
+  Train *train;
+  track_node *node;
+
+  n = track->lost_trains.size;
+  node = &track->graph[sen_num];
+
+  // loop over the lost trains checking to see which is nearby the sensor
+  for (i = 0; i < n; ++i) {
+    r = train_list_pop(&track->lost_trains, &train);
+    assert(r == 0);
+
+    if (!train->pos || TrainNearby(train->pos, node, 4)) {
+      TrackLocateLostTrain(track, train, node, ts);
+      return train;
+    }
+
+    r = train_list_push(&track->lost_trains, &train);
+    assert(r == 0);
+  }
+
+  return NULL;
 }
 
 

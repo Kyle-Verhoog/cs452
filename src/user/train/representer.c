@@ -34,7 +34,7 @@ static void ApplySwitchChange(Track *track, TESWChange *event){
 }
 
 static void ApplyTrainSpeedChange(Track *track, TETRSpeed *event) {
-  track->train[event->num].speed = event->speed;
+  track->train[event->num].speed = event->new;
 }
 
 static void ApplyTrainStatusChange(Track *track, TETRSpeed *event) {
