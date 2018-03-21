@@ -21,6 +21,8 @@ void TrainMS(char *args);
 
 void TrainCAL(char *args);
 
+void TrainTST(char *args);
+
 
 
 

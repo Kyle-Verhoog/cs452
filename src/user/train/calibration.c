@@ -206,6 +206,7 @@ void TestCalibration(void *args){
 	PossibleSensor target;
 	TrainProtocol tp;
 	Switch switches[SWITCH_SIZE];
+	Train trains[TRAIN_SIZE];
 
 	tcargs = *(TestCalibArgs *)args;
 
@@ -257,8 +258,15 @@ void TestCalibration(void *args){
 	}
 
 	//Delay the amount needed (NEED TRAIN VELOCITY)
-	delayDist = dist - tcargs.dist;
-	//Delay(cs_tid, my_tid, delayDist/velocity);
+	delayDist = dist*1000 - tcargs.dist;
+
+	//Get Velocity
+	tr_req.type = TRR_FETCH;
+	tr_req.data.dtype = TD_TR;
+	Send(rep_tid, &tr_req, sizeof(tr_req), &trains, sizeof(trains));
+
+	//Delay given time
+	Delay(cs_tid, my_tid, delayDist/trains[tcargs.train].speed);
 
 	//Send Stop
 	tp.tc = T_MOVE;

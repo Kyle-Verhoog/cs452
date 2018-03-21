@@ -89,6 +89,9 @@ static void ReplyByDataType(tid_t req_tid, union uTrackRequest data, Track *trac
     case TD_ALL:
       Reply(req_tid, track, sizeof(Track));
       break;
+    case TD_TR:
+      Reply(req_tid, track->train, sizeof(track->train));
+      break;
     case TD_TR_A:
       Reply(req_tid, &track->active_trains, sizeof(track->active_trains));
       break;

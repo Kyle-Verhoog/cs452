@@ -191,3 +191,25 @@ void TrainMS(char *args) {
   Reply(tid, &r, sizeof(r));
   Exit();
 }
+
+void TrainTST(char *args){
+  TestCalibArgs tcargs;
+  tid_t tm_tid, tid;
+
+  tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+  assert(tm_tid > 0);
+
+  Receive(&tid, &r, sizeof(r));
+  r = parse_args(args, "%d %d %d %d", &tcargs.train, &tcargs.gear, &tcargs.dist, &tcargs.target_node);
+  if (r) {
+    TMLogStrf(tm_tid, "ms: error parsing arg %d\n", r);
+    r = -1;
+    Reply(tid, &r, sizeof(r));
+    Exit();
+  }
+  
+  CreateArgs(19, &TestCalibration, (void *)&tcargs, sizeof(tcargs));
+
+  Reply(tid, &r, sizeof(r));
+  Exit();
+}
