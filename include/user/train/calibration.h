@@ -12,11 +12,19 @@
 
 typedef struct CalibrationArgs{
 	int train;
-	int init_speed;
+	int init_gear;
 	int target_node;
 }CalibrationArgs;
 
+typedef struct TestCalibArgs{
+	int train;
+	int gear;
+	int dist;
+	int target_node;
+}TestCalibArgs;
+
 void Calibration(void *args);
-void MeasuringVelocity( void *args);
+void MeasuringVelocity(void *args);
+void TestCalibration(void *args);
 
 #endif //CALIBRATION_H
