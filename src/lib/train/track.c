@@ -97,17 +97,68 @@ int GetNextPossibleSensors(track_node *node, int dist, poss_node_list *pnl) {
   return 0;
 }
 
-int GetPrevSensorINC(Switch *sw, track_node *n, PossibleSensor *pos){
-  return 0;
-}
-int GetPrevSensorEXC(Switch *sw, track_node *n, PossibleSensor *pos){
-  return 0;
-}
 int GetNextSensorINC(Switch *sw, track_node *n, PossibleSensor *pos){
+  pos->dist = 0;
+  track_node *node = n;
+
+  while(node->type != NODE_SENSOR){
+    if(node->type == NODE_EXIT){
+      return -1;
+    }
+    else if(node->type == NODE_BRANCH){
+      if(sw[node->num].state == SW_STRAIGHT){
+        pos->dist += node->edge[DIR_STRAIGHT].dist;
+        node = node->edge[DIR_STRAIGHT].dest;
+      }
+      else{
+        pos->dist += node->edge[DIR_CURVED].dist;
+        node = node->edge[DIR_CURVED].dest;
+      }
+    }
+    else{
+      pos->dist += node->edge[DIR_AHEAD].dist;
+      node = node->edge[DIR_AHEAD].dest;
+    }
+  }
+
+  pos->node = node;
   return 0;
 }
+
 int GetNextSensorEXC(Switch *sw, track_node *n, PossibleSensor *pos){
+  pos->dist = 0;
+  track_node *node = n;
+
+  do{
+    if(node->type == NODE_EXIT){
+      return -1;
+    }
+    else if(node->type == NODE_BRANCH){
+      if(sw[node->num].state == SW_STRAIGHT){
+        pos->dist += node->edge[DIR_STRAIGHT].dist;
+        node = node->edge[DIR_STRAIGHT].dest;
+      }
+      else{
+        pos->dist += node->edge[DIR_CURVED].dist;
+        node = node->edge[DIR_CURVED].dest;
+      }
+    }
+    else{
+      pos->dist += node->edge[DIR_AHEAD].dist;
+      node = node->edge[DIR_AHEAD].dest;
+    }
+  }while(node->type != NODE_SENSOR);
+
+  pos->node = node;
   return 0;
+}
+
+int GetPrevSensorINC(Switch *sw, track_node *n, PossibleSensor *pos){
+  return GetNextSensorINC(sw, n->reverse, pos);
+}
+
+int GetPrevSensorEXC(Switch *sw, track_node *n, PossibleSensor *pos){
+  return GetNextSensorEXC(sw, n->reverse, pos);
 }
 
 int DistanceBetweenNodes(Switch *sw, track_node *start, track_node *end){

@@ -37,8 +37,12 @@ static void ApplyTrainSpeedChange(Track *track, TETRSpeed *event) {
   track->train[event->num].speed = event->new;
 }
 
-static void ApplyTrainStatusChange(Track *track, TETRSpeed *event) {
+static void ApplyTrainStatusChange(Track *track, TETRStatus *event) {
   track->train[event->num].status = event->new;
+}
+
+static void ApplyTrainPositionChange(Track *track, TETRPosition *event){
+  track->train[event->num].pos = event->node;
 }
 
 static void ApplyUpdates(Track *track, update_list *updates, trm_subscribers *subs) {
@@ -58,7 +62,10 @@ static void ApplyUpdates(Track *track, update_list *updates, trm_subscribers *su
         ApplyTrainSpeedChange(track, &event.event.tr_speed);
         break;
       case TE_TR_STATUS:
-        ApplyTrainSpeedChange(track, &event.event.tr_status);
+        ApplyTrainStatusChange(track, &event.event.tr_status);
+        break;
+      case TE_TR_POSITION:
+        ApplyTrainPositionChange(track, &event.event.tr_pos);
         break;
       case TE_SE_CHANGE:
         ApplySensorChange(track, &event.event.se_change);

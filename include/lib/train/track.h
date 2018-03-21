@@ -18,6 +18,7 @@
 #include <lib/train/sensor.h>
 #include <lib/train/switch.h>
 #include <lib/train/train.h>
+#include <lib/train/path_finding.h>
 
 
 #define TRAIN_LIST_SIZE 2

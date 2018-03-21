@@ -8,51 +8,20 @@
 
 #define TRAIN_COMMAND_BUFFER_SIZE 64
 
-/****************
-Train Manager Commands
-
-MOVE 		- <Train> <Speed>
-REVERSE 	- <Train>
-DELAY		- <Train> <Duration>
-TSKCOMPL	- <Train>
-
-****************/
-
-/****************
-Train Commands
-
-MOVE 		- <Train> <Speed>
-REVERSE 	- <Train>
-DELAY		- <Duration>
-
-****************/
+/* ========DEPRECATED========= */
 
 typedef enum TM_Command{
-	TM_MOVE = 0,
-	TM_REVERSE = 1,
-	TM_DELAY = 2,
-	TM_TASK_COMPLETE = 3,
-	TM_TRACK = 4,
-	TM_MEASURE = 5,
-	TM_GET_ALL = 6,
-	//USER COMMANDS
-	TM_NOTIFY = 10,
-	TM_SUBSCRIBE = 11
-}TM_Command;
-
-
-typedef enum Train_Command{
-  T_MOVE = 0,
+  TM_MOVE = 0,
+  TM_REVERSE = 1,
+  TM_DELAY = 2,
+  TM_TASK_COMPLETE = 3,
+  TM_TRACK = 4,
+  TM_MEASURE = 5,
+  TM_GET_ALL = 6,
   //USER COMMANDS
-  T_NOTIFY = 10,
-  T_SUBSCRIBE = 11
-}Train_Command;
-
-typedef struct TrainProtocol{
-  Train_Command tc;
-  char arg1;
-  char arg2;
-}TrainProtocol;
+  TM_NOTIFY = 10,
+  TM_SUBSCRIBE = 11
+}TM_Command;
 
 typedef struct TMProtocol{
   TM_Command tmc;

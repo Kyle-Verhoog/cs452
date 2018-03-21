@@ -12,6 +12,8 @@
 
 #define INCHING_GEAR 5
 
+/*
+
 typedef struct StopReference{
 	track_node *ref;
 	track_node *target;
@@ -41,5 +43,6 @@ int InchForward(InchingArgs args);
 
 void StoppingCalibrationTest(void *args);
 void StoppingServerTest();
+*/
 
 #endif
