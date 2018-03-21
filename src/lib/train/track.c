@@ -441,12 +441,12 @@ static Train *TrackAttemptToLocateTrain(Track *track, int sen_num, int ts) {
     r = train_list_pop(&track->lost_trains, &train);
     assert(r == 0);
 
-    if (!train->pos || TrainNearby(train->pos, node, 4)) {
+    if (!train->pos || TrainNearby(train->pos, node, 8)) {
       TrackLocateLostTrain(track, train, node, ts);
       return train;
     }
 
-    r = train_list_push(&track->lost_trains, &train);
+    r = train_list_push(&track->lost_trains, train);
     assert(r == 0);
   }
 

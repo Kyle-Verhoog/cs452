@@ -5,7 +5,7 @@
 #define LOG_OFF_X  72
 #define LOG_OFF_Y   1
 #define LOG_WIDTH     40
-#define LOG_HEIGHT    50
+#define LOG_HEIGHT    60
 
 #define CAL_OFF_X  72
 #define CAL_OFF_Y  43
@@ -74,5 +74,11 @@
 #define TASK_OFF_Y  LOG_OFF_Y
 #define TASK_WIDTH  15
 #define TASK_HEIGHT LOG_HEIGHT
+
+// trains
+#define TRAIN_OFF_X  1
+#define TRAIN_OFF_Y  TRACK_OFF_Y + TRACK_HEIGHT + 1
+#define TRAIN_WIDTH  SH_WIDTH
+#define TRAIN_HEIGHT 7
 
 #endif

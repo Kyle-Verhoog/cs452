@@ -54,8 +54,8 @@ void SwitchInterface() {
 
     offset = 0;
     offset += buf_pack_c(buf+offset, TERM_RESET);
-    offset += buf_pack_f(buf+offset, "   sw      dir\n");
-    offset += buf_pack_f(buf+offset, "  ┉┉┉┉┉┉┉┉┉┉┉┉┉\n");
+    offset += buf_pack_f(buf+offset, "   sw      dir   \n");
+    offset += buf_pack_f(buf+offset, "  ┉┉┉┉┉┉┉┉┉┉┉┉┉ \n");
     for (i = 0; i < SWITCH_SIZE; ++i) {
       c = switches[i];
       if (c != '\0') {

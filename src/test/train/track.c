@@ -343,7 +343,7 @@ static void lost_train_false_positive_test() {
 
   assert(track.train[24].status == TR_LOST);
 
-  event = MockSensor(RE, 1700, "E13", &ve);
+  event = MockSensor(RE, 1700, "E16", &ve);
   TrackInterpretEventGroup(&track, &event);
   ve_list_pop(&track.vevents, &ve);
   TrackClearEvents(&track);
