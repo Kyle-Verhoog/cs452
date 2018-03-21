@@ -54,10 +54,6 @@ void Interpreter() {
 
   TrackInit(&track, TRACK);
 
-  Train test;
-  test.num = 24;
-  TrackAddTrain(&track, &test);
-
   rep_tid = WhoIs(REPRESENTER_ID);
   vep_tid = WhoIs(VIRTUAL_PROVIDER_ID);
   tm_tid  = WhoIs(TERMINAL_MANAGER_ID);

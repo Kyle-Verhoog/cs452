@@ -1,13 +1,14 @@
 #include <user/ui/train_interface.h>
 
-static struct InterfaceTrain {
+struct InterfaceTrain {
   bool exists;
-  int tr_num;
+  int num;
   int speed;
-  track_node *node;
+  int status;
+  track_node *pos;
 };
 
-static union InterfaceDatum {
+union InterfaceDatum {
   TETRSpeed    speed;
   TETRPosition pos;
   TETRStatus   status;
@@ -17,7 +18,7 @@ static union InterfaceDatum {
 #define POS    2
 #define STATUS 3
 
-static struct InterfaceData {
+struct InterfaceData {
   int type;
   union InterfaceDatum event;
 };
@@ -26,7 +27,7 @@ static void TrainSpeedSubscriber() {
   int r;
   tid_t rep_tid, par_tid;
   TrackRequest tr_req;
-  InterfaceData data;
+  struct InterfaceData data;
 
   data.type = SPEED;
 
@@ -48,7 +49,7 @@ static void TrainPositionSubscriber() {
   int r;
   tid_t rep_tid, par_tid;
   TrackRequest tr_req;
-  InterfaceData data;
+  struct InterfaceData data;
 
   data.type = POS;
 
@@ -58,7 +59,7 @@ static void TrainPositionSubscriber() {
   assert(rep_tid > 0);
 
   tr_req.type = TRR_SUBSCRIBE;
-  tr_req.data.type = TE_TR_POS;
+  tr_req.data.type = TE_TR_POSITION;
 
   while (true) {
     Send(rep_tid, &tr_req, sizeof(tr_req), &data.event, sizeof(data.event));
@@ -68,13 +69,17 @@ static void TrainPositionSubscriber() {
 
 void TrainInterface() {
   tid_t sub_tid, tm_tid;
-  int i;
-  struct InterfaceTrain trains[MAX_TRAIN];
-  InterfaceData req;
+  int i, offset;
+  char buf[2048];
+  struct InterfaceTrain trains[TRAIN_SIZE];
+  struct InterfaceData req;
+  struct InterfaceTrain t;
 
-  for (i = 0; i < MAX_TRAIN; ++i) {
+  for (i = 0; i < TRAIN_SIZE; ++i) {
     trains[i].num = i;
     trains[i].exists = false;
+    trains[i].speed = -1;
+    trains[i].pos = NULL;
   }
 
   tm_tid = WhoIs(TERMINAL_MANAGER_ID);
@@ -87,32 +92,32 @@ void TrainInterface() {
 
   char c;
   while (true) {
-    Receive(&sub_tid, &event, sizeof(event));
+    Receive(&sub_tid, &req, sizeof(req));
     switch (req.type) {
       case SPEED:
-        trains[req.event.num].exists = true;
-        trains[req.event.num].speed = req.event.speed;
+        trains[req.event.speed.num].exists = true;
+        trains[req.event.speed.num].speed = req.event.speed.new;
         break;
       case POS:
-        trains[req.event.num].exists = true;
-        trains[req.event.num].pos = req.event.pos;
+        trains[req.event.pos.num].exists = true;
+        trains[req.event.pos.num].pos = req.event.pos.node;
         break;
       case STATUS:
-        trains[req.event.num].exists = true;
-        trains[req.event.num].status = req.event.status;
+        trains[req.event.status.num].exists = true;
+        trains[req.event.status.num].status = req.event.status.new;
         break;
       default: assert(0);
     }
     Reply(sub_tid, &i, sizeof(i));
 
     offset = 0;
-    offset += buf_pack_c(buf+offset, TERM_RESET);
-    offset += buf_pack_f(buf+offset, "   tr node    speed   \n");
+    offset += buf_pack_c(buf+offset, TERM_RETURN);
+    offset += buf_pack_f(buf+offset, "   tr node  speed   \n");
     offset += buf_pack_f(buf+offset, "  ┉┉┉┉┉┉┉┉┉┉┉┉┉┉┉┉┉┉┉  \n");
-    for (i = 0; i < MAX_TRAIN; ++i) {
+    for (i = 0; i < TRAIN_SIZE; ++i) {
       t = trains[i];
       if (t.exists) {
-        offset += buf_pack_f(buf+offset, "   %d  %s    %d\n", t.num, t.pos->num, t.speed);
+        offset += buf_pack_f(buf+offset, "   %d  %s    %d\n", t.num, t.pos ? t.pos->name : "???", t.speed);
       }
     }
     TMPutStr(tm_tid, buf, offset);

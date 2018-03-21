@@ -12,7 +12,6 @@ typedef enum TrackEventType {
   TE_SE_CHANGE,
   TE_TR_SPEED,
   TE_TR_STATUS,
-  TE_TR_POS,
   MAX_TRACK_EVENT  // NOTE: keep as last element in enum
 } TrackEventType;
 

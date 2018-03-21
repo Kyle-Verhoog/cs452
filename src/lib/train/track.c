@@ -218,7 +218,7 @@ static void TrackGenerateTrainStatusTEvent(Track *track, Train *train, TrainStat
 static void TrackGenerateTrainPositionTEvent(Track *track, Train *train) {
   int r;
   TrackEvent event;
-  event.type = TE_TR_POS;
+  event.type = TE_TR_POSITION;
   event.event.tr_pos.num = train->num;
   event.event.tr_pos.node = train->pos;
   r = update_list_push(&track->updates, event);
@@ -517,6 +517,14 @@ static void TrackHandleTrainAtSensorRaw(Track *track, RawSensorEvent *se, int ts
   }
 }
 
+static void TrackHandleTrainCmd(Track *track, int train_num, int cmd) {
+  Train t;
+  if (track->train[train_num].status == TR_UNINIT) {
+    t.num = train_num;
+    TrackAddTrain(track, &t);
+  }
+}
+
 // If we just have an RE, then we just pass the RE through
 static void TrackHandleRawEvent(Track *track, RawEvent *re) {
   RawSensorEvent *se_event;
@@ -535,6 +543,7 @@ static void TrackHandleRawEvent(Track *track, RawEvent *re) {
       break;
     case RE_TR_CMD:
       tr_cmd_event = &re->event.tr_cmd_event;
+      TrackHandleTrainCmd(track, tr_cmd_event->arg1, tr_cmd_event->arg2);
       UpdateTrainCmd(track, tr_cmd_event->arg1, tr_cmd_event->arg2);
       break;
     default:

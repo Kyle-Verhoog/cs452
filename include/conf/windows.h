@@ -78,7 +78,7 @@
 // trains
 #define TRAIN_OFF_X  1
 #define TRAIN_OFF_Y  TRACK_OFF_Y + TRACK_HEIGHT + 1
-#define TRAIN_WIDTH  SH_WIDTH
+#define TRAIN_WIDTH  SH_WIDTH/2
 #define TRAIN_HEIGHT 7
 
 #endif

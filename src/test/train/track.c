@@ -81,6 +81,31 @@ static void next_sensors_test(track_node *tr) {
   //start = &tr[70]
 }
 
+static void next_sensors_test2() {
+  int dist;
+  Track track;
+  TrackInit(&track, T);
+
+  track_node T[TRACK_MAX];
+  init_trackb(T);
+  poss_node_list pnl;
+  poss_node_list_init(&pnl);
+
+  track_node *start;
+  start = &tr[trhr(T, "A1")];
+  assert(start->type == NODE_SENSOR);
+  dist = start->edge[DIR_AHEAD].dist;
+  start = start->edge[DIR_AHEAD].dest;
+  GetNextPossibleSensors(start, dist, &pnl);
+  assert(pnl.size == 1);
+
+  PossibleSensor sensor;
+  poss_node_list_pop(&pnl, &sensor);
+  assert(sensor.node->num == 44);
+  assert(sensor.dist == 231+188+43);
+
+}
+
 
 // A basic test of a train being picked up at A1 and being tracked to D7
 static void basic_test(track_node *g) {
@@ -230,7 +255,7 @@ static void track_events_test() {
   assert(te.event.tr_status.old == TR_LOST);
   assert(te.event.tr_status.new == TR_UN_SPEED);
   update_list_pop(&track.updates, &te);
-  assert(te.type == TE_TR_POS);
+  assert(te.type == TE_TR_POSITION);
   assert(te.event.tr_pos.num == 24);
   assert(te.event.tr_pos.node == &T[trhr(T, "A1")]);
   update_list_pop(&track.updates, &te);
@@ -257,7 +282,7 @@ static void track_events_test() {
   assert(te.event.tr_speed.new == 462);
 
   update_list_pop(&track.updates, &te);
-  assert(te.type == TE_TR_POS);
+  assert(te.type == TE_TR_POSITION);
   assert(te.event.tr_pos.num == 24);
   assert(te.event.tr_pos.node == &T[trhr(T, "C13")]);
 
@@ -412,4 +437,5 @@ void track_tests() {
   lost_train_test();
   two_trains_test();
   lost_train_false_positive_test();
+  next_sensors_test2();
 }
