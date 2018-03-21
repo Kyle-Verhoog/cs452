@@ -3,6 +3,7 @@
 #include <track_data.h> //TODO: REMOVE THIS
 
 CIRCULAR_BUFFER_DEF(eg_cb, EventGroup, EVENT_GROUP_BUFFER_SIZE);
+CIRCULAR_BUFFER_DEF(ve_key_cb, int, VE_KEY_BUFFER_SIZE;
 
 void SendSensorDelta(tid_t wr_tid, tid_t cs_tid, tid_t my_tid, char *new_sensors, char *old_sensors) {
   int i, j, r;
@@ -31,7 +32,6 @@ void SendSensorDelta(tid_t wr_tid, tid_t cs_tid, tid_t my_tid, char *new_sensors
     }
   }
 }
-
 
 static void SensorSubscriber() {
   int r;
@@ -158,37 +158,12 @@ static void VirtualEventSubscriber(){
 
 // ------------- WAITING ROOM SERVER ---------------- //
 
-void reset_waiting_room_ve(VirtualEvent *waiting, int *sensorToVE, VirtualEvent *ve){
-  int ve_ref = sensorToVE[ve->event.train_at.node->num];
-  int sensor = ve->event.train_at.node->num;
-
-  assert(ve_ref != -1);
-  assert(sensor >= 0);
-
-  waiting[ve_ref].type = VE_NONE;
-  sensorToVE[sensor] = -1;
+static void reset_waiting_room(VirtualEvent *ve){
+  ve->type = VE_NONE;
 }
 
-void reset_waiting_room_re(VirtualEvent *waiting, int *sensorToVE, RawEvent *re){
-  int sensor = re->event.se_event.id;
-  int ve_ref = sensorToVE[re->event.se_event.id];
-  
-  assert(ve_ref != -1);
-  assert(sensor >= 0);
+static void reset_waiting_reference(){
 
-  waiting[ve_ref].type = VE_NONE;
-  sensorToVE[sensor] = -1; 
-}
-
-void set_waiting_room(VirtualEvent *waiting, int *sensorToVE, WRRequest *wrr){
-  int sensor = wrr->data.ve.event.train_at.node->num;
-  int key = wrr->data.ve.key;
-
-  assert(key >= 0);
-  assert(sensor >= 0);
-
-  waiting[key] = wrr->data.ve;
-  sensorToVE[sensor] = key;
 }
 
 void TimeoutWR_VE(void *args){
@@ -198,103 +173,165 @@ void TimeoutWR_VE(void *args){
   tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
   tid_t my_tid = MyTid();
   tid_t wr_tid = MyParentTid();
-  assert(cs_tid > 0 && my_tid > 0 && wr_tid > 0);
+  tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+  assert(cs_tid > 0 && my_tid > 0 && wr_tid > 0 && tm_tid > 0);
 
   wrr.type = WR_TO;
   wrr.data.ve = *(VirtualEvent *) args;
 
-tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
-TMLogStrf(tm_tid, "Timestart for location %s\n", wrr.data.ve.event.train_at.node->name);
-  
+  TMLogStrf(tm_tid, "Timestart for location %s\n", wrr.data.ve.event.train_at.node->name);
   Delay(cs_tid, my_tid, wrr.data.ve.timeout);
-
-TMLogStrf(tm_tid, "Timeout for location %s\n", wrr.data.ve.event.train_at.node->name);
+  TMLogStrf(tm_tid, "Timeout for location %s\n", wrr.data.ve.event.train_at.node->name);
 
   Send(wr_tid, &wrr, sizeof(wrr), &r, sizeof(r));
   Exit();
 }
 
-void HandleWR_VE(WRRequest *event, VirtualEvent *waiting, int *sensorToVE){
-  if(event->data.ve.type == VE_TR_AT){
-    if(waiting[event->data.ve.key].type != VE_REG){
-      //reset_waiting_room_ve(waiting, sensorToVE, &event->data.ve);
+static void handle_ve_tr_at(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *sensorToVE){
+  int key;
 
-tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
-TMLogStrf(tm_tid, "Already handled location %s\n", event->data.ve.event.train_at.node->name);
-      return;
-    }else{
-      //Spawn a timeout handler  
-      CreateArgs(27, &TimeoutWR_VE, (void *)&event->data.ve, sizeof(VirtualEvent)); //TODO: UPDATE PRIORITY
-    }
+  key = ve.key;
+  assert(key >= 0);
+
+  tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+  assert(tm_tid > 0);
+
+  if(waiting[key].type == VE_REG){
+    //Spawn a timeout handler  
+    CreateArgs(27, &TimeoutWR_VE, (void *)&ve, sizeof(VirtualEvent)); //TODO: UPDATE PRIORITY    
+  }else{
+    TMLogStrf(tm_tid, "Already handled location %s\n", ve.event.train_at.node->name);    
   }
-  else{
-tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
-TMLogStrf(tm_tid, "VRE on %s\n", event->data.ve.event.train_at.node->name);
-  }
-  // waiting[event->data.ve.key] = event->data.ve;
-  // sensorToVE[event->data.ve.event.train_at.node->num] = event->data.ve.key;
-  set_waiting_room(waiting, sensorToVE, event);
 }
 
-void HandleWR_RE(WRRequest *event, VirtualEvent *waiting, int *sensorToVE, eg_cb *dataBuf, tid_t my_tid){
-  EventGroup eg;
-  int sensor;
+static void handle_ve_reg(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *sensorToVE){
+  int sensor = ve.event.train_at.node->num;
+  int key = ve.key;
 
-  if(event->data.re.type != RE_SE){
+  tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+  assert(tm_tid > 0);
+
+  assert(sensor >= 0);
+  assert(key >= 0);
+
+  ve_key_cb_push(&sensorToVE[sensor], key);
+  waiting[key] = ve;
+  TMLogStrf(tm_tid, "VRE on %s\n", ve.event.train_at.node->name);
+}
+
+void HandleWR_VE(WRRequest *event, VirtualEvent *waiting, ve_key_cb *sensorToVE){
+  switch(event->data.ve.type){
+    case VE_TR_AT:
+      handle_ve_tr_at(event->data.ve, waiting, sensorToVE);
+      break;
+    case VE_REG:
+      handle_ve_reg(event->data.ve, waiting, sensorToVE);
+      break;
+    default:
+      assert(0 && "Bad Virtual Event");
+  }
+}
+
+static void handle_re_se(RawEvent re, VirtualEvent *waiting, ve_key_cb *sensorToVE, eg_cb *dataBuf){
+  EventGroup eg;
+  int sensor, key;
+
+  tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+  assert(tm_tid > 0);
+
+  sensor = re.event.se_event.id;
+  assert(sensor >= 0);
+
+  if(sensorToVE[sensor].size > 0){
+    //Possible conflict, but we'll assume they all ran over it
+    while(ve_key_cb_pop(&sensorToVE[sensor], &key) != CB_E_EMPTY){
+      eg.type = waiting[key].type == VE_REG ? VRE_RE : VRE_VE_RE; 
+      eg.re = re;
+      eg.ve = waiting[key];
+      eg_cb_push(dataBuf, eg);
+      reset_waiting_room(&waiting[key]);
+      TMLogStrf(tm_tid, "VRE RE or VRE VE RE on %d\n", re.event.se_event.id);
+    }
+  }else{
+    //Just an RE
     eg.type = RE;
     eg.re = event->data.re;
-
-tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
-TMLogStrf(tm_tid, "RE NOT SENSOR\n");
+    eg_cb_push(dataBuf, eg);
+    TMLogStrf(tm_tid, "RE on %d\n", re.event.se_event.id);
   }
-  else{
-    sensor = event->data.re.event.se_event.id;
-    if(sensorToVE[sensor] != -1){
-      eg.type = waiting[sensorToVE[sensor]].type == VE_REG ? VRE_RE : VRE_VE_RE;
-      eg.re = event->data.re;
-      eg.ve = waiting[sensorToVE[sensor]];
-      reset_waiting_room_re(waiting, sensorToVE, &event->data.re);
-
-tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
-TMLogStrf(tm_tid, "VRE RE or VRE VE RE on %d\n", event->data.re.event.se_event.id);
-    }
-    else{
-      eg.type = RE;
-      eg.re = event->data.re;
-
-tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
-TMLogStrf(tm_tid, "RE on %d\n", event->data.re.event.se_event.id);
-    }
-  }
-
-  eg_cb_push(dataBuf, eg);
 }
 
-void HandleWR_TO(WRRequest *event, VirtualEvent *waiting, int *sensorToVE, eg_cb *dataBuf){
+void HandleWR_RE(WRRequest *event, VirtualEvent *waiting, ve_key_cb *sensorToVE, eg_cb *dataBuf){
+  EventGroup eg;
+
+  tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+  assert(tm_tid > 0);
+
+  switch(event->data.re.type){
+    case RE_SE:
+      handle_re_se(event->data.re, waiting, sensorToVE, dataBuf);
+      break;
+    case RE_SW:
+    case RE_TR_CMD:
+      eg.type = RE;
+      eg.re = event->data.re;
+      eg_cb_push(dataBuf, eg);
+      TMLogStrf(tm_tid, "RE NOT SENSOR\n");
+      break;
+    default:
+      assert(0 && "Bad Raw Event");
+  }
+}
+
+static void handle_to_tr_at(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *sensorToVE, eg_cb *dataBuf){
+  EventGroup eg;
+  int sensor, key;
+
+  tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+  assert(tm_tid > 0);
+
+  sensor = ve.event.train_at.node->num;
+  assert(sensor >= 0);
+
+  if(sensorToVE[sensor].size > 0){
+    //Remove Virtual Event Due to Timeout
+    while(true){
+      ve_key_cb_pop(&sensorToVE[sensor], &key);
+      if(key == ve.key){
+        eg.type = VRE_VE;
+        eg.ve = ve;
+        eg_cb_push(dataBuf, eg);
+        reset_waiting_room(&waiting[key]);
+        TMLogStrf(tm_tid, "VRE VE on %s\n", ve.event.train_at.node->name);
+        break;
+      }
+      else{
+        ve_key_cb_push(&sensorToVE[sensor], key);
+      }
+    }
+  }else{
+    //Vitual Event Already Handled
+    TMLogStrf(tm_tid, "Timeout Ignored\n");
+  } 
+}
+
+void HandleWR_TO(WRRequest *event, VirtualEvent *waiting, ve_key_cb *sensorToVE, eg_cb *dataBuf){
   EventGroup eg;
   int sensor;
   
-  sensor = event->data.ve.event.train_at.node->num;
-  //if(waiting[sensorToVE[sensor]].type != VE_NONE){
-  if(sensorToVE[sensor] != -1 || waiting[event->data.ve.key].type != VE_NONE){
-    eg.type = VRE_VE;
-    eg.ve = event->data.ve;
-    reset_waiting_room_ve(waiting, sensorToVE, &event->data.ve);
-    eg_cb_push(dataBuf, eg);
-
-tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
-TMLogStrf(tm_tid, "VRE VE on %s\n", event->data.ve.event.train_at.node->name);    
-  }
-  else{
-tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
-TMLogStrf(tm_tid, "Timeout Ignored\n");
+  switch(event->data.type){
+    case VE_TR_AT:
+      handle_to_tr_at(event->data.ve, waiting, sensorToVE, dataBuf);
+      break;
+    default:
+      assert(0 && "Timeout from bad data");
   }
 }
 
 void init_waiting_room(int *map){
   int i;
   for(i = 0; i < SENSOR_SIZE; i++){
-    map[i] = -1;
+    ve_key_cb_init(&map[i]);
   }
 }
 
@@ -340,7 +377,7 @@ void WaitingRoom(){
   tid_t courier = -1;
 
   VirtualEvent waiting[KEY_SIZE];
-  int sensorToVE[SENSOR_SIZE];
+  ve_key_cb sensorToVE[SENSOR_SIZE];
   eg_cb dataBuf;
   eg_cb_init(&dataBuf);
   init_waiting_room(sensorToVE);
@@ -359,7 +396,6 @@ void WaitingRoom(){
   Create(29, &SensorSubscriber);
   Create(29, &VirtualEventSubscriber);
 
-  // Create(26, &test_waiting_room);
   while(true){
 
     if(dataBuf.size > 0 && courier > 0){
@@ -377,7 +413,7 @@ void WaitingRoom(){
         break;
       case WR_RE:
         Reply(req_tid, &r, sizeof(r));
-        HandleWR_RE(&event, waiting, sensorToVE, &dataBuf, my_tid);
+        HandleWR_RE(&event, waiting, sensorToVE, &dataBuf);
         break;
       case WR_TO:
         Reply(req_tid, &r, sizeof(r)); 
