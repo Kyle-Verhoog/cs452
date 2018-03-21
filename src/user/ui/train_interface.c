@@ -90,7 +90,6 @@ void TrainInterface() {
   Create(11, &TrainSpeedSubscriber);
   Create(11, &TrainPositionSubscriber);
 
-  char c;
   while (true) {
     Receive(&sub_tid, &req, sizeof(req));
     switch (req.type) {
@@ -113,11 +112,11 @@ void TrainInterface() {
     offset = 0;
     offset += buf_pack_c(buf+offset, TERM_RETURN);
     offset += buf_pack_f(buf+offset, "   tr node  speed   \n");
-    offset += buf_pack_f(buf+offset, "  ┉┉┉┉┉┉┉┉┉┉┉┉┉┉┉┉┉┉┉  \n");
+    offset += buf_pack_f(buf+offset, "  ┉┉┉┉┉┉┉┉┉┉┉┉┉┉┉┉  \n");
     for (i = 0; i < TRAIN_SIZE; ++i) {
       t = trains[i];
       if (t.exists) {
-        offset += buf_pack_f(buf+offset, "   %d  %s    %d\n", t.num, t.pos ? t.pos->name : "???", t.speed);
+        offset += buf_pack_f(buf+offset, "   %d  %s  %d\n", t.num, t.pos ? t.pos->name : "???", t.speed);
       }
     }
     TMPutStr(tm_tid, buf, offset);

@@ -76,9 +76,9 @@
 #define TASK_HEIGHT LOG_HEIGHT
 
 // trains
-#define TRAIN_OFF_X  1
+#define TRAIN_OFF_X  2
 #define TRAIN_OFF_Y  TRACK_OFF_Y + TRACK_HEIGHT + 1
-#define TRAIN_WIDTH  SH_WIDTH/2
-#define TRAIN_HEIGHT 7
+#define TRAIN_WIDTH  24
+#define TRAIN_HEIGHT 5
 
 #endif

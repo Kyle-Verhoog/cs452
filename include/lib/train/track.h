@@ -29,6 +29,9 @@ CIRCULAR_BUFFER_DEC(update_list, TrackEvent, UPDATE_LIST_SIZE);
 #define VEVENT_LIST_SIZE 8
 CIRCULAR_BUFFER_DEC(ve_list, VirtualEvent, VEVENT_LIST_SIZE);
 
+#define BFS_Q_SIZE 16
+CIRCULAR_BUFFER_DEC(bfs_q, track_node*, BFS_Q_SIZE);
+
 typedef struct PossibleSensor {
   int dist;
   track_node *node;

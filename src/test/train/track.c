@@ -20,6 +20,20 @@ static EventGroup MockSensor(int type, int rts, char *sname, VirtualEvent *ve) {
   return event;
 }
 
+static void GetDistBetweenNodesTest() {
+  int d;
+  track_node T[TRACK_MAX];
+  init_trackb(T);
+  // d = GetDistanceBetweenNodes(&T[trhr(T, "A12")], &T[trhr(T, "A16")], 0, 4);
+  // assert(d == 814);
+  d = FindDistToNode(&T[trhr(T, "A12")], &T[trhr(T, "A16")]);
+  assert(d == 814);
+  // printf("%s\n", T[trhr(T, "C8")].name);
+  // d = GetDistanceBetweenNodes(&T[trhr(T, "C8")], &T[trhr(T, "A12")], 0, 4);
+  d = FindDistToNode(&T[trhr(T, "C8")], &T[trhr(T, "A12")]);
+  assert(d == 128+185+188+282);
+}
+
 static void TrackClearEvents(Track *track) {
   update_list_init(&track->updates);
   ve_list_init(&track->vevents);
@@ -83,27 +97,32 @@ static void next_sensors_test(track_node *tr) {
 
 static void next_sensors_test2() {
   int dist;
+  track_node T[TRACK_MAX];
+  init_trackb(T);
   Track track;
   TrackInit(&track, T);
 
-  track_node T[TRACK_MAX];
-  init_trackb(T);
+
   poss_node_list pnl;
   poss_node_list_init(&pnl);
 
   track_node *start;
-  start = &tr[trhr(T, "A1")];
+  start = &T[trhr(T, "A3")];
   assert(start->type == NODE_SENSOR);
   dist = start->edge[DIR_AHEAD].dist;
   start = start->edge[DIR_AHEAD].dest;
   GetNextPossibleSensors(start, dist, &pnl);
-  assert(pnl.size == 1);
+  assert(pnl.size == 2);
 
   PossibleSensor sensor;
   poss_node_list_pop(&pnl, &sensor);
-  assert(sensor.node->num == 44);
-  assert(sensor.dist == 231+188+43);
+  assert(sensor.node == &T[trhr(T, "C13")]);
+  assert(sensor.dist == 43+495+50);
+  poss_node_list_pop(&pnl, &sensor);
+  assert(sensor.node == &T[trhr(T, "C11")]);
+  assert(sensor.dist == 43+333);
 
+  // int dist = track_node_dist(T[trhr()])
 }
 
 
@@ -429,13 +448,13 @@ static void two_trains_test() {
 
 void track_tests() {
   init_tracka(T);
-
-  track_init_test(T);
-  next_sensors_test(T);
-  basic_test(T);
-  track_events_test();
-  lost_train_test();
-  two_trains_test();
-  lost_train_false_positive_test();
-  next_sensors_test2();
+  // track_init_test(T);
+  // next_sensors_test2();
+  // next_sensors_test(T);
+  // basic_test(T);
+  // track_events_test();
+  // lost_train_test();
+  // two_trains_test();
+  // lost_train_false_positive_test();
+  GetDistBetweenNodesTest();
 }

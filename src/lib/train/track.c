@@ -5,6 +5,7 @@ CIRCULAR_BUFFER_DEF(train_list, Train *, TRAIN_LIST_SIZE);
 CIRCULAR_BUFFER_DEF(poss_node_list, PossibleSensor, POSSIBLE_NODE_LIST_SIZE);
 CIRCULAR_BUFFER_DEF(update_list, TrackEvent, UPDATE_LIST_SIZE);
 CIRCULAR_BUFFER_DEF(ve_list, VirtualEvent, VEVENT_LIST_SIZE);
+CIRCULAR_BUFFER_DEF(bfs_q, track_node *, BFS_Q_SIZE);
 
 #define NEXT_NODE(x) x->edge[DIR_AHEAD].dest
 #define NEXT_DIST(x) x->edge[DIR_AHEAD].dist
@@ -67,6 +68,67 @@ Train *TrackRemoveActiveTrain(Track *track, int train_num) {
   return 0;
 }
 
+// TODO: recursion bad
+int GetDistanceBetweenNodes(track_node *node, track_node *dest, int dist, int d) {
+  // printf("%s\n", node->name);
+  if (!d-- || node == dest) return dist;
+
+  int r;
+  if (node->type == NODE_BRANCH) {
+    r = GetDistanceBetweenNodes(node->edge[DIR_STRAIGHT].dest, dest, dist + node->edge[DIR_STRAIGHT].dist, d);
+    if (r > 0) return r;
+    return GetDistanceBetweenNodes(node->edge[DIR_CURVED].dest, dest, dist + node->edge[DIR_CURVED].dist, d);
+  }
+  else if (node->type == NODE_EXIT) {
+    assert(0);
+    return 0;
+  }
+
+  return GetDistanceBetweenNodes(NEXT_NODE(node), dest, dist+NEXT_DIST(node), d);
+}
+
+int FindDistToNode(track_node *node, track_node *dest) {
+  int r, d;
+  int dist[TRACK_MAX];
+  bfs_q q;
+  track_node *next;
+  bfs_q_init(&q);
+
+  dist[node->id] = 0;
+  r = bfs_q_push(&q, node);
+  d = BFS_Q_SIZE;
+
+  while (q.size > 0 && d-- > 0) {
+    r = bfs_q_pop(&q, &node);
+    assert(r == 0);
+
+    if (node == dest)
+      return dist[node->id];
+
+    if (node->type == NODE_BRANCH) {
+      next = node->edge[DIR_CURVED].dest;
+      r = bfs_q_push(&q, next);
+      dist[next->id] = node->edge[DIR_CURVED].dist + dist[node->id];
+      assert(r == 0);
+      next = node->edge[DIR_STRAIGHT].dest;
+      r = bfs_q_push(&q, node->edge[DIR_STRAIGHT].dest);
+      dist[next->id] = node->edge[DIR_STRAIGHT].dist + dist[node->id];
+      assert(r == 0);
+    }
+    else if (node->type == NODE_EXIT) {
+      continue;
+    }
+    else {
+      next = node->edge[DIR_AHEAD].dest;
+      r = bfs_q_push(&q, node->edge[DIR_AHEAD].dest);
+      dist[next->id] = node->edge[DIR_AHEAD].dist + dist[node->id];
+      assert(r == 0);
+    }
+  }
+
+  return -1;
+}
+
 
 int GetNextPossibleSensors(track_node *node, int dist, poss_node_list *pnl) {
   int r;
@@ -91,7 +153,6 @@ int GetNextPossibleSensors(track_node *node, int dist, poss_node_list *pnl) {
 
   sensor.node = node;
   sensor.dist = dist;
-  assert(node->type == NODE_SENSOR);
   r = poss_node_list_push(pnl, sensor);
   assert(r == 0);
   return 0;
@@ -353,7 +414,10 @@ static void TrackUpdateKnownTrain(Track *track, Train *train, track_node *new_po
 
   if (old_speed > 0) {
     // TODO: the below will not work across branches?
-    dist = track_node_dist(train->pos, new_pos); // dist is in mm
+    // dist = track_node_dist(train->pos, new_pos); // dist is in mm
+    // TODO: replace this with something better?
+    dist = FindDistToNode(train->pos, new_pos);
+    assert(dist > 0);
     assert(dist >= 0 && dist <= 10000);
 
     assert(0 <= old_speed && old_speed <= 10000);
@@ -461,6 +525,7 @@ static void TrackLocateLostTrain(Track *track, Train *train, track_node *sen, in
   assert(r == 0);
 }
 
+/*
 static bool TrainNearby(track_node *node, track_node *dest, int d) {
   if (!d--) return false;
   if (node == dest) return true;
@@ -478,6 +543,78 @@ static bool TrainNearby(track_node *node, track_node *dest, int d) {
 
   return TrainNearby(NEXT_NODE(node), dest, d);
 }
+*/
+
+static bool TrainNearby(track_node *node, track_node *dest) {
+  int r, d;
+  bfs_q q;
+  bfs_q_init(&q);
+
+  r = bfs_q_push(&q, node);
+  d = BFS_Q_SIZE;
+
+  while (q.size > 0 && d-- > 0) {
+    r = bfs_q_pop(&q, &node);
+    assert(r == 0);
+
+    if (node == dest)
+      return true;
+
+    if (node->type == NODE_BRANCH) {
+      r = bfs_q_push(&q, node->edge[DIR_CURVED].dest);
+      assert(r == 0);
+      r = bfs_q_push(&q, node->edge[DIR_STRAIGHT].dest);
+      assert(r == 0);
+    }
+    else if (node->type == NODE_EXIT) {
+      continue;
+    }
+    else {
+      r = bfs_q_push(&q, node->edge[DIR_AHEAD].dest);
+      assert(r == 0);
+    }
+  }
+
+  return false;
+}
+
+/*
+// BFS
+static int GetDistanceBetweenNodes(track_node *node, track_node *dest) {
+  int r, d, dist;
+  bfs_q q;
+  bfs_q_init(&q);
+
+  r = bfs_q_push(&q, node);
+  d = BFS_DEPTH;
+
+  dist = 0;
+
+  while (q.size > 0 && d-- > 0) {
+    r = bfs_q_pop(&q, &node);
+    assert(r == 0);
+
+    if (node == dest)
+      return dist;
+
+    if (node->type == NODE_BRANCH) {
+      r = bfs_q_push(&q, node->edge[DIR_CURVED].dest);
+      assert(r == 0);
+      r = bfs_q_push(&q, node->edge[DIR_STRAIGHT].dest);
+      assert(r == 0);
+    }
+    else if (node->type == NODE_EXIT) {
+      continue;
+    }
+    else {
+      r = bfs_q_push(&q, node->edge[DIR_AHEAD].dest);
+      assert(r == 0);
+    }
+  }
+
+  return -1;
+}*/
+
 
 static Train *TrackAttemptToLocateTrain(Track *track, int sen_num, int ts) {
   int r, i, n;
@@ -492,7 +629,7 @@ static Train *TrackAttemptToLocateTrain(Track *track, int sen_num, int ts) {
     r = train_list_pop(&track->lost_trains, &train);
     assert(r == 0);
 
-    if (!train->pos || TrainNearby(train->pos, node, 8)) {
+    if (!train->pos || TrainNearby(train->pos, node)) {
       TrackLocateLostTrain(track, train, node, ts);
       return train;
     }
@@ -572,6 +709,8 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
   exp = ev_window_is_unexpected(&train->window, ekey);
   assertf(exp == 0 || exp == 1, "%d\n", exp);
   if (exp) {
+    // TODO: move the train back a node
+    // train->pos = train->prev_pos;
     // assertf(0, "%d %d\n", train->window.size, train->window.unexp_size);
     TrackLoseTrain(track, train);
     r = ev_window_remove_key(&train->window, ekey);
@@ -583,12 +722,11 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
   r = ev_window_remove_key(&train->window, ekey);
   assertf(r == 0, "%d %d\r\n", ekey, r);
 
+  new_pos = &track->graph[grp->re.event.se_event.id];
   if (train->status == TR_KNOWN) {
-    new_pos = &track->graph[grp->re.event.se_event.id];
     TrackUpdateKnownTrain(track, train, new_pos, rts);
   }
   else if (train->status == TR_UN_SPEED) {
-    new_pos = &track->graph[grp->re.event.se_event.id];
     TrackUpdateUnknownSpeedTrain(track, train, new_pos, rts);
   }
   else {
