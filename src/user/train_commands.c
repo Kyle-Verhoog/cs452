@@ -149,11 +149,12 @@ void SwitchSW(char *args){
 
 void TrainMS(char *args) {
   int train, r;
-  tid_t tm_tid;
+  tid_t tm_tid, tid;
 
   tm_tid = WhoIs(TERMINAL_MANAGER_ID);
   assert(tm_tid > 0);
-  
+
+  Receive(&tid, &r, sizeof(r));
   r = parse_args(args, "%d", &train);
   if (r) {
     TMLogStrf(tm_tid, "ms: error parsing arg %d\n", r);
