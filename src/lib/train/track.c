@@ -24,6 +24,7 @@ void TrackInit(Track *track, track_node *tr) {
   }
 
   for (i = 0; i < TRAIN_SIZE; ++i) {
+    track->train[i].num = i;
     track->train[i].status = TR_UNINIT;
   }
 
@@ -75,6 +76,7 @@ int GetNextPossibleSensors(track_node *node, int dist, poss_node_list *pnl) {
 
   while (node->type != NODE_SENSOR) {
     if (node->type == NODE_BRANCH) {
+      // TODO: replace with stack data structure once we have one
       GetNextPossibleSensors(node->edge[DIR_STRAIGHT].dest, dist + node->edge[DIR_STRAIGHT].dist, pnl);
       GetNextPossibleSensors(node->edge[DIR_CURVED].dest, dist + node->edge[DIR_CURVED].dist, pnl);
       return 0;
@@ -162,7 +164,7 @@ int GetPrevSensorEXC(Switch *sw, track_node *n, PossibleSensor *pos){
 int DistanceBetweenNodes(Switch *sw, track_node *start, track_node *end){
   int dist = 0;
   track_node *n = start;
-  
+
   while(n != end){
     if(n->type == NODE_EXIT){
      return -1;
@@ -181,7 +183,7 @@ int DistanceBetweenNodes(Switch *sw, track_node *start, track_node *end){
      dist += n->edge[DIR_AHEAD].dist;
      n = n->edge[DIR_AHEAD].dest;
     }
-    
+
     assert(dist > 0 && dist < 50000); //Probably inf loop
   }
 
@@ -189,42 +191,38 @@ int DistanceBetweenNodes(Switch *sw, track_node *start, track_node *end){
 }
 
 
-//------------------------STATE MUTATORS-----------------------------------------
+//-----------------------------EVENT GENERATORS--------------------------------
 
-static void UpdateSensor(Track *track, int sen_num, int state) {
+static void TrackGenerateTrainSpeedTEvent(Track *track, Train *train, int old, int new) {
   int r;
   TrackEvent event;
-
-  assert(sen_num >= 0 && sen_num < DECODER_SIZE*2*16);
-  assert(state == 0 || state == 1);
-  track->sensors[sen_num].state = state;
-
-  event.type = TE_SE_CHANGE;
-  event.event.se_change.num = sen_num;
-  event.event.se_change.state = state;
+  event.type = TE_TR_SPEED;
+  event.event.tr_speed.num = train->num;
+  event.event.tr_speed.old = old;
+  event.event.tr_speed.new = new;
   r = update_list_push(&track->updates, event);
   assert(r == 0);
 }
 
-static void UpdateSwitch(Track *track, int sw_num, int state) {
+static void TrackGenerateTrainStatusTEvent(Track *track, Train *train, TrainStatus old, TrainStatus new) {
   int r;
-
-  assert((NORM_SW_LOW <= sw_num && sw_num <= NORM_SW_HIGH) ||
-      (SPEC_SW_LOW <= sw_num && sw_num <= SPEC_SW_HIGH));
-
   TrackEvent event;
-  event.type = TE_SW_CHANGE;
-  event.event.sw_change.num = sw_num;
-  event.event.sw_change.newdir = state;
+  event.type = TE_TR_STATUS;
+  event.event.tr_status.num = train->num;
+  event.event.tr_status.old = old;
+  event.event.tr_status.new = new;
   r = update_list_push(&track->updates, event);
   assert(r == 0);
 }
 
-static void UpdateTrainCmd(Track *track, int tr_num, int cmd) {
-  // TODO:
-  // TETRGear event;
-  // event.num = cmd_event->arg1;
-  // event.newgear = cmd_event->arg2;
+static void TrackGenerateTrainPositionTEvent(Track *track, Train *train) {
+  int r;
+  TrackEvent event;
+  event.type = TE_TR_POS;
+  event.event.tr_pos.num = train->num;
+  event.event.tr_pos.node = train->pos;
+  r = update_list_push(&track->updates, event);
+  assert(r == 0);
 }
 
 static void TrackAddVEvent(Track *track, Train *train, VirtualEvent *ve) {
@@ -305,27 +303,71 @@ static void TrackGenerateKnownTrainVEvents(Track *track, Train *train) {
 }
 
 
+
+//------------------------------STATE MUTATORS---------------------------------
+
+static void UpdateSensor(Track *track, int sen_num, int state) {
+  int r;
+  TrackEvent event;
+
+  assert(sen_num >= 0 && sen_num < DECODER_SIZE*2*16);
+  assert(state == 0 || state == 1);
+  track->sensors[sen_num].state = state;
+
+  event.type = TE_SE_CHANGE;
+  event.event.se_change.num = sen_num;
+  event.event.se_change.state = state;
+  r = update_list_push(&track->updates, event);
+  assert(r == 0);
+}
+
+static void UpdateSwitch(Track *track, int sw_num, int state) {
+  int r;
+
+  assert((NORM_SW_LOW <= sw_num && sw_num <= NORM_SW_HIGH) ||
+      (SPEC_SW_LOW <= sw_num && sw_num <= SPEC_SW_HIGH));
+
+  TrackEvent event;
+  event.type = TE_SW_CHANGE;
+  event.event.sw_change.num = sw_num;
+  event.event.sw_change.newdir = state;
+  r = update_list_push(&track->updates, event);
+  assert(r == 0);
+}
+
+static void UpdateTrainCmd(Track *track, int tr_num, int cmd) {
+  // TODO:
+  // TETRGear event;
+  // event.num = cmd_event->arg1;
+  // event.newgear = cmd_event->arg2;
+}
+
+
 #define alpha 90
 // recalculate a rough estimate of velocity
 static void TrackUpdateKnownTrain(Track *track, Train *train, track_node *new_pos, int ts) {
-  int dist, new_speed;
+  int dist, old_speed, new_speed;
   assert(train->status == TR_KNOWN);
 
-  if (train->speed > 0) {
+  old_speed = train->speed;
+
+  if (old_speed > 0) {
     // TODO: the below will not work across branches?
     dist = track_node_dist(train->pos, new_pos); // dist is in mm
     assert(dist >= 0 && dist <= 10000);
 
-    assert(0 <= train->speed && train->speed <= 10000);
+    assert(0 <= old_speed && old_speed <= 10000);
     assert(0 <= train->sen_ts);
 
     assert(ts - train->sen_ts != 0);
     new_speed = (dist*1000) / (ts - train->sen_ts); // speed in um/tick
 
-    train->speed = (alpha*new_speed + (100-alpha)*train->speed) / 100;
+    train->speed = (alpha*new_speed + (100-alpha)*old_speed) / 100;
     train->sen_ts = ts;
     train->pos = new_pos;
     TrackGenerateKnownTrainVEvents(track, train);
+    TrackGenerateTrainSpeedTEvent(track, train, old_speed, new_speed);
+    TrackGenerateTrainPositionTEvent(track, train);
   }
   else if (train->speed == 0) {
     train->sen_ts = ts;
@@ -352,6 +394,9 @@ static void TrackUpdateUnknownSpeedTrain(Track *track, Train *train, track_node 
   train->sen_ts = ts;
   train->pos = new_pos;
   TrackGenerateKnownTrainVEvents(track, train);
+  TrackGenerateTrainStatusTEvent(track, train, TR_UN_SPEED, TR_KNOWN);
+  TrackGenerateTrainSpeedTEvent(track, train, -1, train->speed);
+  TrackGenerateTrainPositionTEvent(track, train);
 }
 
 // LOST -> UN_SPEED
@@ -364,69 +409,99 @@ static void TrackUpdateLostTrain(Track *track, Train *train, track_node *new_pos
 
   train->sen_ts = ts;
   train->pos = new_pos;
+  TrackGenerateTrainStatusTEvent(track, train, TR_LOST, TR_UN_SPEED);
   TrackGenerateUnknownSpeedTrainVEvents(track, train);
+  TrackGenerateTrainPositionTEvent(track, train);
 }
 
 // UNINIT -> TR_LOST
-void TrackAddTrain(Track *track, Train *t) {
+void TrackAddTrain(Track *track, Train *tr) {
   int r;
-  assert(t->num >= 0 && t->num <= TRAIN_SIZE);
+  Train *train;
 
-  ev_window_init(&t->window);
+  assert(tr->num >= 0 && tr->num <= TRAIN_SIZE);
+  train = &track->train[tr->num];
+  assert(train->status == TR_UNINIT);
 
-  t->speed  = -1;
-  t->pos    = NULL;
-  t->sen_ts = -1;
-  t->status = TR_LOST;
+  ev_window_init(&train->window);
 
-  track->train[t->num] = *t;
-  r = train_list_push(&track->lost_trains, &track->train[t->num]);
+  train->speed  = -1;
+  train->pos    = NULL;
+  train->sen_ts = -1;
+  train->status = TR_LOST;
+
+  r = train_list_push(&track->lost_trains, train);
   assert(r == 0);
+
+  TrackGenerateTrainStatusTEvent(track, train, TR_UNINIT, TR_LOST);
 }
 
+// * -> TR_LOST
 static void TrackLoseTrain(Track *track, Train *train) {
   int r;
+  TrainStatus old_status;
+
   assert(train== &track->train[train->num]);
-  train->last_seen = train->pos;
+  old_status = train->status;
   train->status = TR_LOST;
 
   TrackRemoveActiveTrain(track, train->num);
 
   r = train_list_push(&track->lost_trains, train);
   assert(r == 0);
+  TrackGenerateTrainStatusTEvent(track, train, old_status, TR_LOST);
 }
 
-static void TrackLocateLostTrain(Track *track, Train *train, int sen_num, int ts) {
+static void TrackLocateLostTrain(Track *track, Train *train, track_node *sen, int ts) {
   int r;
-  track_node *new_pos;
 
-  r = train_list_pop(&track->lost_trains, &train);
-  assert(r == 0);
-
-  // set train position to the sensor
-  new_pos = &track->graph[sen_num];
-
-  TrackUpdateLostTrain(track, train, new_pos, ts);
+  TrackUpdateLostTrain(track, train, sen, ts);
 
   r = train_list_push(&track->active_trains, train);
   assert(r == 0);
 }
 
-static Train *TrackAttemptToLocateTrain(Track *track, int sen_num, int ts) {
+static bool TrainNearby(track_node *node, track_node *dest, int d) {
+  if (!d--) return false;
+  if (node == dest) return true;
+
   int r;
-  Train *t;
-  t = NULL;
-
-  r = train_list_get(&track->lost_trains, 0, &t);
-  assert(r == 0);
-
-  // TODO: look in both directions of the node for other possible trains
-  //       that this could be
-  if (1) {
-    TrackLocateLostTrain(track, t, sen_num, ts);
+  if (node->type == NODE_BRANCH) {
+    // TODO: replace with stack data structure once we have one
+    r = TrainNearby(node->edge[DIR_STRAIGHT].dest, dest, d);
+    if (r) return true;
+    return TrainNearby(node->edge[DIR_CURVED].dest, dest, d);
+  }
+  else if (node->type == NODE_EXIT) {
+    return false;
   }
 
-  return t;
+  return TrainNearby(NEXT_NODE(node), dest, d);
+}
+
+static Train *TrackAttemptToLocateTrain(Track *track, int sen_num, int ts) {
+  int r, i, n;
+  Train *train;
+  track_node *node;
+
+  n = track->lost_trains.size;
+  node = &track->graph[sen_num];
+
+  // loop over the lost trains checking to see which is nearby the sensor
+  for (i = 0; i < n; ++i) {
+    r = train_list_pop(&track->lost_trains, &train);
+    assert(r == 0);
+
+    if (!train->pos || TrainNearby(train->pos, node, 4)) {
+      TrackLocateLostTrain(track, train, node, ts);
+      return train;
+    }
+
+    r = train_list_push(&track->lost_trains, &train);
+    assert(r == 0);
+  }
+
+  return NULL;
 }
 
 
@@ -488,7 +563,7 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
   exp = ev_window_is_unexpected(&train->window, ekey);
   assertf(exp == 0 || exp == 1, "%d\n", exp);
   if (exp) {
-    assertf(0, "%d %d\n", train->window.size, train->window.unexp_size);
+    // assertf(0, "%d %d\n", train->window.size, train->window.unexp_size);
     TrackLoseTrain(track, train);
     r = ev_window_remove_key(&train->window, ekey);
     assert(r == 0);
@@ -565,6 +640,7 @@ int TrackInterpretEventGroup(Track *track, EventGroup *grp) {
     case VRE_VE_RE:
     case VRE_RE:
       TrackHandleTrainAtSensor(track, grp);
+      TrackHandleRawEvent(track, &grp->re);
       break;
     case VRE_VE:
       TrackHandleTrainAtTimeout(track, grp);
