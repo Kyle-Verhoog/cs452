@@ -81,4 +81,9 @@
 #define TRAIN_WIDTH  24
 #define TRAIN_HEIGHT 5
 
+#define DRIVER1_OFF_X  2 + TRAIN_WIDTH
+#define DRIVER1_OFF_Y  TRACK_OFF_Y + TRACK_HEIGHT + 1
+#define DRIVER1_WIDTH  48
+#define DRIVER1_HEIGHT 5
+
 #endif

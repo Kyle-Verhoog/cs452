@@ -3,16 +3,16 @@
 
 #define T(str) trhr(t, str)
 
-typedef enum SwitchState{
-	SW_STRAIGHT = 33,
-	SW_CURVE = 34
+typedef enum SwitchState {
+  SW_STRAIGHT = 33,
+  SW_CURVE = 34
 } SwitchState;
 
-typedef struct Switch{
+typedef struct Switch {
   SwitchState state;
   track_node *branch;
   track_node *merge;
-}Switch;
+} Switch;
 
 static void trhr_test(track_node *t) {
   assert(trhr(t, "BR15") == 108);

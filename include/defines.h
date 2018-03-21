@@ -69,5 +69,10 @@
 #define VIC1_ENABLED VIC_TC1UI
 #define VIC2_ENABLED VIC_TC3UI | VIC_INT_UART1 | VIC_INT_UART2
 
+
+// Priorities
+
+#define PRI_TRAIN_DRIVER 15
+
 #endif // DEFINES_H
 

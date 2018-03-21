@@ -8,12 +8,13 @@
 #include <user/terminal_manager.h>
 #include <user/train/train_provider.h>
 #include <user/train/calibration.h>
+#include <user/train/driver.h>
+
+void TrainDR(char *args);
 
 void TrainTR(char *args);
 
 void TrainRV(char *args);
-
-//void TrainTK(char *args);
 
 void SwitchSW(char *args);
 
