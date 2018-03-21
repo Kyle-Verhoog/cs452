@@ -145,7 +145,7 @@ int GetNextSensorEXC(Switch *sw, track_node *n, PossibleSensor *pos){
       pos->dist += node->edge[DIR_AHEAD].dist;
       node = node->edge[DIR_AHEAD].dest;
     }
-  }while(node->type != NODE_SENSOR)
+  }while(node->type != NODE_SENSOR);
 
   pos->node = node;
   return 0;

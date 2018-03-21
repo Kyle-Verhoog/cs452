@@ -127,7 +127,7 @@ void MeasuringVelocity(void *args){
 	while(true){
 		Send(rep_tid, &tr_req, sizeof(tr_req), &event, sizeof(event));
 		if(TRACK[event.node].type == NODE_SENSOR &&
-			event.num == cargs.train){
+			event.num == train){
 			break;
 		}	
 	}
@@ -139,7 +139,7 @@ void MeasuringVelocity(void *args){
 	while(true){
 		Send(rep_tid, &tr_req, sizeof(tr_req), &event, sizeof(event));
 		if(TRACK[event.node].type == NODE_SENSOR &&
-			event.num == cargs.train){
+			event.num == train){
 			break;
 		}	
 	}
@@ -149,7 +149,7 @@ void MeasuringVelocity(void *args){
 
 	//Send Stop
 	tp.tc = T_MOVE;
-	tp.arg1 = cargs.train;
+	tp.arg1 = train;
 	tp.arg2 = 0;
 	Send(tr_tid, &tp, sizeof(tp), &r, sizeof(r));	
 
@@ -167,12 +167,12 @@ void MeasuringVelocity(void *args){
 	Exit();
 }
 
-int GetLastAvailableSensor(track_node *start, track_node *end, Switches *sw, int min_dist, PossibleSensor *target){
+int GetLastAvailableSensor(track_node *start, track_node *end, Switch *sw, int min_dist, PossibleSensor *target){
 	PossibleSensor pos;
 	track_node *n;
 	int dist, r;
 
-	target.dist = 0;
+	target->dist = 0;
 	pos.node = start;
 	dist = DistanceBetweenNodes(sw, start, end);
 	if(dist < min_dist){
@@ -189,16 +189,16 @@ int GetLastAvailableSensor(track_node *start, track_node *end, Switches *sw, int
 		}
 
 		dist -= pos.dist;
-		target.dist += pos.dist;
+		target->dist += pos.dist;
 	}
 
-	target.node = n;
+	target->node = n;
 	return dist;
 }
 
 void TestCalibration(void *args){
 	int r, stime, etime, dist, delayDist;
-	TestCalibArgs tcargs = *(TestCalibArgs *)args;
+	TestCalibArgs tcargs;
 	TrackRequest tr_req;
 	tid_t cs_tid, sub_tid, tm_tid, rep_tid, tr_tid, my_tid;
 	TETRPosition event;
@@ -207,7 +207,7 @@ void TestCalibration(void *args){
 	TrainProtocol tp;
 	Switch switches[SWITCH_SIZE];
 
-	train = *(int *)args;
+	tcargs = *(TestCalibArgs *)args;
 
 	my_tid = MyTid();
 	cs_tid = WhoIs(CLOCKSERVER_ID);
@@ -250,14 +250,14 @@ void TestCalibration(void *args){
 	//Wait for the last possible sensor
 	while(true){
 		Send(rep_tid, &tr_req, sizeof(tr_req), &event, sizeof(event));
-		if(TRACK[event.node].num == target.node.num &&
+		if(TRACK[event.node].num == target.node->num &&
 			event.num == tcargs.train){
 			break;
 		}	
 	}
 
 	//Delay the amount needed (NEED TRAIN VELOCITY)
-	delayDist = r - tcargs;
+	delayDist = r - tcargs.dist;
 	//Delay(cs_tid, my_tid, delayDist/velocity);
 
 	//Send Stop
