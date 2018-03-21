@@ -148,7 +148,11 @@ void SwitchSW(char *args){
 
 
 void TrainMS(char *args) {
-  int train;
+  int train, r;
+  tid_t tm_tid;
+
+  tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+  assert(tm_tid > 0);
   
   r = parse_args(args, "%d", &train);
   if (r) {
