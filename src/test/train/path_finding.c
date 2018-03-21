@@ -211,6 +211,7 @@ static void follow_path(track_node *t) {
   assert(p.behind.buf[3] == &t[T("C13")]);
 
   sw_configs sw_cfgs;
+  sw_configs_init(&sw_cfgs);
   sw_config sw_cfg;
   path_switches_in_next_dist(&p, &sw_cfgs, 500);
   assert(sw_cfgs.size == 1);

@@ -33,6 +33,14 @@ static void ApplySwitchChange(Track *track, TESWChange *event){
   track->switches[event->num].state = event->newdir;
 }
 
+static void ApplyTrainSpeedChange(Track *track, TETRSpeed *event) {
+  track->train[event->num].speed = event->speed;
+}
+
+static void ApplyTrainStatusChange(Track *track, TETRSpeed *event) {
+  track->train[event->num].status = event->new;
+}
+
 static void ApplyUpdates(Track *track, update_list *updates, trm_subscribers *subs) {
   int i;
   TrackEvent event;
@@ -46,6 +54,12 @@ static void ApplyUpdates(Track *track, update_list *updates, trm_subscribers *su
     update_list_get(updates, i, &event);
 
     switch (event.type) {
+      case TE_TR_SPEED:
+        ApplyTrainSpeedChange(track, &event.event.tr_speed);
+        break;
+      case TE_TR_STATUS:
+        ApplyTrainSpeedChange(track, &event.event.tr_status);
+        break;
       case TE_SE_CHANGE:
         ApplySensorChange(track, &event.event.se_change);
         break;
@@ -53,7 +67,6 @@ static void ApplyUpdates(Track *track, update_list *updates, trm_subscribers *su
         //assert(0 && "TODO");
         break;
       case TE_SW_CHANGE:
-        // assert(0 && "TODO");
         ApplySwitchChange(track, &event.event.sw_change);
         break;
       default:
@@ -124,6 +137,6 @@ void Representer() {
         break;
     }
   }
-  
+
   Exit();
 }

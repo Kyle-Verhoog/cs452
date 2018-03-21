@@ -19,7 +19,6 @@ typedef struct Train {
   int num;
   int gear;
   int dir; //forward is 1
-  bool exist;
   event_window window;
   track_node *pos;
   track_node *last_seen;
