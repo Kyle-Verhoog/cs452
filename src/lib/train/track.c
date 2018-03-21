@@ -497,7 +497,7 @@ static Train *TrackAttemptToLocateTrain(Track *track, int sen_num, int ts) {
       return train;
     }
 
-    r = train_list_push(&track->lost_trains, &train);
+    r = train_list_push(&track->lost_trains, train);
     assert(r == 0);
   }
 

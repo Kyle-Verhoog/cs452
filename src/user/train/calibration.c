@@ -6,7 +6,7 @@ void Calibration(void *args){
 	int r, stime, etime, dist;
 	CalibrationArgs cargs;
 	TrackRequest tr_req;
-	tid_t cs_tid, sub_tid, tm_tid, rep_tid, tr_tid, my_tid;
+	tid_t cs_tid, tm_tid, rep_tid, tr_tid, my_tid;
 	TETRPosition event;
 	TrainProtocol tp;
 	track_node *start, *end;
@@ -99,7 +99,7 @@ void Calibration(void *args){
 void MeasuringVelocity(void *args){
 	int r, stime, etime, dist, train;
 	TrackRequest tr_req;
-	tid_t cs_tid, sub_tid, tm_tid, rep_tid, tr_tid, my_tid;
+	tid_t cs_tid, tm_tid, rep_tid, tr_tid, my_tid;
 	TETRPosition event;
 	track_node *start, *end;
 	TrainProtocol tp;
@@ -197,10 +197,10 @@ int GetLastAvailableSensor(track_node *start, track_node *end, Switch *sw, int m
 }
 
 void TestCalibration(void *args){
-	int r, stime, etime, dist, delayDist;
+	int r, dist, delayDist;
 	TestCalibArgs tcargs;
 	TrackRequest tr_req;
-	tid_t cs_tid, sub_tid, tm_tid, rep_tid, tr_tid, my_tid;
+	tid_t cs_tid, tm_tid, rep_tid, tr_tid, my_tid;
 	TETRPosition event;
 	track_node *start, *end;
 	PossibleSensor target;
@@ -244,8 +244,8 @@ void TestCalibration(void *args){
 	end = &TRACK[tcargs.target_node];
 
 	//Decide which is the last sensor  (returns dist from end)
-	r = GetLastAvailableSensor(start, end, switches, tcargs.dist, &target);
-	assert(r >= 0);
+	dist = GetLastAvailableSensor(start, end, switches, tcargs.dist, &target);
+	assert(dist >= 0);
 
 	//Wait for the last possible sensor
 	while(true){
@@ -257,7 +257,7 @@ void TestCalibration(void *args){
 	}
 
 	//Delay the amount needed (NEED TRAIN VELOCITY)
-	delayDist = r - tcargs.dist;
+	delayDist = dist - tcargs.dist;
 	//Delay(cs_tid, my_tid, delayDist/velocity);
 
 	//Send Stop
