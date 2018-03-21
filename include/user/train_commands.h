@@ -19,6 +19,8 @@ void SwitchSW(char *args);
 
 void TrainMS(char *args);
 
+void TrainCAL(char *args);
+
 
 
 
