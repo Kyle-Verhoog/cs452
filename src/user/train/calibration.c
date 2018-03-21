@@ -40,7 +40,7 @@ void Calibration(void *args){
 	//Wait until starting point
 	while(true){
 		Send(rep_tid, &tr_req, sizeof(tr_req), &event, sizeof(event));
-		if(TRACK[event.node].num == cargs.target_node &&
+		if(event.node->num == cargs.target_node &&
 			event.num == cargs.train){
 			break;
 		}	
@@ -64,7 +64,7 @@ void Calibration(void *args){
 	//Wait Reach Next Sensor Destination
 	while(true){
 		Send(rep_tid, &tr_req, sizeof(tr_req), &event, sizeof(event));
-		if(TRACK[event.node].type == NODE_SENSOR &&
+		if(event.node->type == NODE_SENSOR &&
 			event.num == cargs.train){
 			break;
 		}	
@@ -87,7 +87,7 @@ void Calibration(void *args){
 	//DO SOME CALCULATION TO DETERMINE TOTAL DISTANCE HERE
 	//NEED THE SWITCH STATE AT THIS POINT
 	start = &TRACK[cargs.target_node];
-	end = &TRACK[event.node];
+	end = event.node;
 	dist = DistanceBetweenNodes(switches, start, end)*1000 - (etime - stime)*measuring_velocity;
 
 	//Log
@@ -126,26 +126,26 @@ void MeasuringVelocity(void *args){
 	//Wait until starting point
 	while(true){
 		Send(rep_tid, &tr_req, sizeof(tr_req), &event, sizeof(event));
-		if(TRACK[event.node].type == NODE_SENSOR &&
+		if(event.node->type == NODE_SENSOR &&
 			event.num == train){
 			break;
 		}	
 	}
 
 	stime = Time(cs_tid, my_tid);
-	start = &TRACK[event.node];
+	start = event.node;
 
 	//Wait until end point
 	while(true){
 		Send(rep_tid, &tr_req, sizeof(tr_req), &event, sizeof(event));
-		if(TRACK[event.node].type == NODE_SENSOR &&
+		if(event.node->type == NODE_SENSOR &&
 			event.num == train){
 			break;
 		}	
 	}
 
 	etime = Time(cs_tid, my_tid);
-	end = &TRACK[event.node];
+	end = event.node;
 
 	//Send Stop
 	tp.tc = T_MOVE;
@@ -233,14 +233,14 @@ void TestCalibration(void *args){
 	//Get Current Position
 	while(true){
 		Send(rep_tid, &tr_req, sizeof(tr_req), &event, sizeof(event));
-		if(TRACK[event.node].type == NODE_SENSOR &&
+		if(event.node->type == NODE_SENSOR &&
 			event.num == tcargs.train){
 			break;
 		}	
 	}
 
 	//Determine Start & End
-	start = &TRACK[event.node];
+	start = event.node;
 	end = &TRACK[tcargs.target_node];
 
 	//Decide which is the last sensor  (returns dist from end)
@@ -250,7 +250,7 @@ void TestCalibration(void *args){
 	//Wait for the last possible sensor
 	while(true){
 		Send(rep_tid, &tr_req, sizeof(tr_req), &event, sizeof(event));
-		if(TRACK[event.node].num == target.node->num &&
+		if(event.node->num == target.node->num &&
 			event.num == tcargs.train){
 			break;
 		}	
