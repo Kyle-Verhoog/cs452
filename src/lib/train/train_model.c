@@ -92,7 +92,7 @@ int interpolatePartial(TrainModel *tm, int setting, int head, int tail){
 	int val = 0;
 	int i;
 
-#ifndef X86
+#ifdef X86
 	assert(head >= 0 && head < tail);
 	assert(tail > head && tail <= TRAIN_MODEL_SIZE);
 #endif

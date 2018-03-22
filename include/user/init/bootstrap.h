@@ -26,6 +26,7 @@
 #include <user/train/representer.h>
 #include <user/train/interpreter.h>
 #include <user/train/waiting_room.h>
+#include <user/train/reservation_manager.h>
 
 #include <stoppingcalibration_test.h>	//TODO: REMOVE THIS
 #include <stop_at_test.h>	//TODO: REMOVE THIS

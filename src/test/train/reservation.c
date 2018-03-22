@@ -385,6 +385,24 @@ void pather_free_test_2() {
   assert(!p.reserv[trhr(T, "EN1")].reserved);
 }
 
+void pather_intersect_test() {
+  pather p;
+  track_node *tn;
+  int stop_dist, r;
+  pather_init(&p, T);
+
+  tn = &T[trhr(T, "C11")];
+  stop_dist = 119;
+  r = pather_reserve_to_sensor(&p, 24, tn, stop_dist);
+  assert(r == 0);
+  r = pather_reserve_to_sensor(&p, 24, tn, stop_dist);
+  assert(r == 0);
+
+  tn = &T[trhr(T, "C11")];
+  r = pather_reserve_to_sensor(&p, 74, tn, stop_dist);
+  assert(r == -1);
+}
+
 
 void reservation_tests() {
   init_tracka(T);
@@ -395,4 +413,5 @@ void reservation_tests() {
   pather_free_test_1();
   pather_free_test_2();
   pather_reserve_to_sensor_test();
+  pather_intersect_test();
 }

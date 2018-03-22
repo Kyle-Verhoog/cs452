@@ -6,6 +6,10 @@
 
 #define TRAIN_MODEL_SIZE 15
 
+#ifdef X86
+#include <assert.h>
+#endif
+
 typedef struct TrainModel{
 	int x[TRAIN_MODEL_SIZE];
 	int y[TRAIN_MODEL_SIZE];

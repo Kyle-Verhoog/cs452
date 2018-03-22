@@ -5,14 +5,17 @@
 #include <user/terminal_manager.h>
 #include <lib/train/train_defines.h>
 #include <user/train/representer.h>
+#include <user/train/reservation_manager.h>
 
 
-static tid_t tm_tid, sw_tid;
+static tid_t tm_tid, sw_tid, rm_tid;
 
 typedef struct TDTrain {
   int num;
   int speed;
   track_node *pos;
+  track_node *last_pos;
+  track_node *last_last_pos;
   path p;
 } TDTrain;
 
@@ -79,12 +82,30 @@ void HandlePositionUpdate(TDTrain *train, track_node *new_pos) {
   r = path_follow_to(&train->p, new_pos);
 
   if (r < 0) {
-    TMLogStrf(tm_tid, "\rPATH LOST :*(\n");
+    TMLogStrf(tm_tid, "PATH LOST :*(\n");
+
+    // free all the trains nodes
+    // r = Free(rm_tid, train->num, train->pos);
+    // if (r) TMLogStrf(tm_tid, "FREE FAILED\n");
+
     tn = train->p.end;
     path_init(&train->p, TRACK);
     path_set_destination(&train->p, new_pos, tn);
     path_generate(&train->p);
     path_start(&train->p, train->p.start);
+  }
+
+
+  // TODO: get stopping distance
+  train->last_last_pos = train->last_pos;
+  train->last_pos = train->pos;
+  train->pos = new_pos;
+  r = Reserve(rm_tid, train->num, train->pos, 500);
+  if (r) TMLogStrf(tm_tid, "RESERVE ERR %d", r);
+
+  if (train->last_last_pos) {
+    r = Free(rm_tid, train->num, train->last_last_pos);
+    if (r) TMLogStrf(tm_tid, "FREE ERR %d", r);
   }
 
   path_switches_in_next_dist(&train->p, &sw_cfgs, LOOK_AHEAD);
@@ -108,6 +129,9 @@ void TrainDriver(TrainDriverArgs *args) {
   tm_tid = WhoIs(TERMINAL_MANAGER_ID);
   assert(tm_tid > 0);
 
+  rm_tid = WhoIs(RESERVATION_MANAGER_ID);
+  assert(rm_tid > 0);
+
   TMRegister(tm_tid, DRIVER1_OFF_X, DRIVER1_OFF_Y, DRIVER1_WIDTH, DRIVER1_HEIGHT);
 
   path_set_destination(&train.p, &TRACK[args->start], &TRACK[args->end]);
@@ -121,7 +145,7 @@ void TrainDriver(TrainDriverArgs *args) {
   sw_tid = WhoIs(SWITCH_PROVIDER_ID);
   assert(sw_tid > 0);
 
-  Create(11, &TrainPositionSubscriber);
+  Create(21, &TrainPositionSubscriber);
 
   while (true) {
     Receive(&sub_tid, &req, sizeof(req));

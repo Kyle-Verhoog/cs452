@@ -175,9 +175,9 @@ void TimeoutWR_VE(void *args){
   wrr.type = WR_TO;
   wrr.data.ve = *(VirtualEvent *) args;
 
-  TMLogStrf(tm_tid, "Timestart for location %s\n", wrr.data.ve.event.train_at.node->name);
+  // TMLogStrf(tm_tid, "Timestart for location %s\n", wrr.data.ve.event.train_at.node->name);
   Delay(cs_tid, my_tid, wrr.data.ve.timeout);
-  TMLogStrf(tm_tid, "Timeout for location %s\n", wrr.data.ve.event.train_at.node->name);
+  // TMLogStrf(tm_tid, "Timeout for location %s\n", wrr.data.ve.event.train_at.node->name);
 
   Send(wr_tid, &wrr, sizeof(wrr), &r, sizeof(r));
   Exit();
@@ -196,7 +196,7 @@ static void handle_ve_tr_at(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *s
     //Spawn a timeout handler  
     CreateArgs(27, &TimeoutWR_VE, (void *)&ve, sizeof(VirtualEvent)); //TODO: UPDATE PRIORITY    
   }else{
-    TMLogStrf(tm_tid, "Already handled location %s\n", ve.event.train_at.node->name);    
+    // TMLogStrf(tm_tid, "Already handled location %s\n", ve.event.train_at.node->name);    
   }
 }
 
@@ -212,7 +212,7 @@ static void handle_ve_reg(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *sen
 
   ve_key_cb_push(&sensorToVE[sensor], key);
   waiting[key] = ve;
-  TMLogStrf(tm_tid, "VRE on %s\n", ve.event.train_at.node->name);
+  // TMLogStrf(tm_tid, "VRE on %s\n", ve.event.train_at.node->name);
 }
 
 void HandleWR_VE(WRRequest *event, VirtualEvent *waiting, ve_key_cb *sensorToVE){
@@ -246,14 +246,14 @@ static void handle_re_se(RawEvent re, VirtualEvent *waiting, ve_key_cb *sensorTo
       eg.ve = waiting[key];
       eg_cb_push(dataBuf, eg);
       reset_waiting_room(&waiting[key]);
-      TMLogStrf(tm_tid, "VRE RE or VRE VE RE on %d\n", re.event.se_event.id);
+      // TMLogStrf(tm_tid, "VRE RE or VRE VE RE on %d\n", re.event.se_event.id);
     }
   }else{
     //Just an RE
     eg.type = RE;
     eg.re = re;
     eg_cb_push(dataBuf, eg);
-    TMLogStrf(tm_tid, "RE on %d\n", re.event.se_event.id);
+    // TMLogStrf(tm_tid, "RE on %d\n", re.event.se_event.id);
   }
 }
 
@@ -272,7 +272,7 @@ void HandleWR_RE(WRRequest *event, VirtualEvent *waiting, ve_key_cb *sensorToVE,
       eg.type = RE;
       eg.re = event->data.re;
       eg_cb_push(dataBuf, eg);
-      TMLogStrf(tm_tid, "RE NOT SENSOR\n");
+      // TMLogStrf(tm_tid, "RE NOT SENSOR\n");
       break;
     default:
       assert(0 && "Bad Raw Event");
@@ -308,7 +308,7 @@ static void handle_to_tr_at(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *s
     }
   }else{
     //Vitual Event Already Handled
-    TMLogStrf(tm_tid, "Timeout Ignored\n");
+    // TMLogStrf(tm_tid, "Timeout Ignored\n");
   } 
 }
 

@@ -20,6 +20,8 @@ void RailwayInit(){
     Create(27, &WaitingRoom);
     Create(26, &Representer);
 
+    Create(21, &ReservationManager);
+
     Exit();
 }
 

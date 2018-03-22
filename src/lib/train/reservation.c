@@ -381,7 +381,8 @@ int pather_free_nodes(pather *p, int trn, track_node *node) {
 // make the assumption reservations are contiguous and free backwards
 // (including) the given node
 int pather_free_before(pather *p, int trn, track_node *node) {
-  assert(p->reserv[node->id].reserved);
+  if (!p->reserv[node->id].reserved)
+    return -1;
 
   return pather_free_nodes(p, trn, node->reverse);
 }
