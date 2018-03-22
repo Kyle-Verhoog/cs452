@@ -14,9 +14,12 @@ static tid_t tm_tid, sw_tid, rm_tid, tr_tid;
 typedef struct TDTrain {
   int num;
   int speed;
+  int gear;
   track_node *pos;
   track_node *last_pos;
   track_node *last_last_pos;
+  track_node *stop_sensor ;
+  int delay_dist;
   path p;
 } TDTrain;
 
@@ -26,23 +29,94 @@ void TDTrainInit(TDTrain *train, int num) {
   train->pos = NULL;
   train->last_pos = NULL;
   train->last_last_pos = NULL;
+  train->gear = 10;
+  train->stop_sensor = NULL;
   path_init(&train->p, TRACK);
 }
 
 union TDDatum {
   TETRSpeed    speed;
+  TETRGear     gear;
   TETRPosition pos;
 };
 
 #define SPEED  1
 #define POS    2
-#define STATUS 3
+#define GEAR   3
+#define TIMEOUT  4
 
 struct TDData {
   int type;
   union TDDatum event;
 };
 
+static int StoppingDistance(TDTrain *train) {
+	int stp_dist[] = {0, 0, 0, 0, 0, 0, 3000, 12400, 59950, 149694, 381764, 567824, 759493, 971013, 1238057};
+  return stp_dist[train->gear];
+}
+
+
+static int GetLastAvailableSensor(track_node *start, track_node *end, Switch *sw, int min_dist, PossibleSensor *target){
+  PossibleSensor pos;
+  track_node *n;
+  int dist, r;
+
+  target->dist = 0;
+  pos.node = start;
+  dist = DistanceBetweenNodes(sw, start, end);
+  if(dist*1000 < min_dist){
+    return -1;
+  }
+
+  while(true){
+    n = pos.node;
+    r = GetNextSensorEXC(sw, n, &pos);
+    assert(r == 0);
+
+    if((dist - pos.dist)*1000 < min_dist){
+      break;
+    }
+
+    dist -= pos.dist;
+    target->dist += pos.dist;
+  }
+
+  target->node = n;
+  return dist;
+}
+
+static void StoreStopSensor(TDTrain *train) {
+  int min_dist, dist;
+  PossibleSensor ps;
+  sw_configs sw_cfgs;
+  sw_config cfg;
+  Switch swlist[SWITCH_SIZE];
+
+  sw_configs_init(&sw_cfgs);
+  path_switches_in_next_dist(&train->p, &sw_cfgs, 500000);
+
+  min_dist = StoppingDistance(train);
+
+  while (sw_cfgs.size > 0) {
+    sw_configs_pop(&sw_cfgs, &cfg);
+    swlist[cfg.sw->num].state = cfg.state_required == DIR_CURVED ? SW_CURVE : SW_STRAIGHT;
+  }
+
+  dist = GetLastAvailableSensor(train->p.start, train->p.end, swlist, min_dist, &ps);
+
+  if (dist > 0) {
+    train->delay_dist = (dist*1000) - min_dist;
+    train->stop_sensor = ps.node;
+  }
+  else {
+    train->delay_dist = (dist*1000) - min_dist;
+    train->stop_sensor = NULL;
+  }
+}
+
+static void HandleSpeedUpdate(TDTrain *train, int newspeed) {
+  train->speed = newspeed;
+}
 
 static void TrainPositionSubscriber() {
   int r;
@@ -66,6 +140,54 @@ static void TrainPositionSubscriber() {
   }
 }
 
+static void TrainSpeedSubscriber() {
+  int r;
+  tid_t rep_tid, par_tid;
+  TrackRequest tr_req;
+  struct TDData data;
+
+  data.type = SPEED;
+
+  par_tid = MyParentTid();
+  assert(par_tid > 0);
+  rep_tid = WhoIs(REPRESENTER_ID);
+  assert(rep_tid > 0);
+
+  tr_req.type = TRR_SUBSCRIBE;
+  tr_req.data.type = TE_TR_SPEED;
+
+  while (true) {
+    Send(rep_tid, &tr_req, sizeof(tr_req), &data.event, sizeof(data.event));
+    Send(par_tid, &data, sizeof(data), &r, sizeof(r));
+  }
+}
+
+
+
+static void TrainGearSubscriber() {
+  int r;
+  tid_t rep_tid, par_tid;
+  TrackRequest tr_req;
+  struct TDData data;
+
+  data.type = GEAR;
+
+  par_tid = MyParentTid();
+  assert(par_tid > 0);
+  rep_tid = WhoIs(REPRESENTER_ID);
+  assert(rep_tid > 0);
+
+  tr_req.type = TRR_SUBSCRIBE;
+  tr_req.data.type = TE_TR_MOVE;
+
+  while (true) {
+    Send(rep_tid, &tr_req, sizeof(tr_req), &data.event, sizeof(data.event));
+    Send(par_tid, &data, sizeof(data), &r, sizeof(r));
+  }
+}
+
+
+
 
 static void FlipSwitch(sw_config *cfg) {
   SWProtocol sw;
@@ -86,13 +208,36 @@ static void TrainCmd(int tr_num, int cmd) {
 }
 
 
+static void TimeoutTask(int *delay) {
+  tid_t my_tid, par_tid;
+  my_tid = MyTid();
+  par_tid = MyParentTid();
+  int msg, r;
+
+  msg = TIMEOUT;
+
+  DelayCS(my_tid, *delay);
+
+  Send(par_tid, &msg, sizeof(msg), &r, sizeof(r));
+  Exit();
+}
+
+
 #define LOOK_AHEAD 1000
 static void HandlePositionUpdate(TDTrain *train, track_node *new_pos) {
   track_node *tn;
+  int delay;
   sw_configs sw_cfgs;
   sw_config cfg;
 
+  TMLogStrf(tm_tid, "%d %d %d %d\n", train->speed, train->gear, train->stop_sensor, train->delay_dist);
+
   sw_configs_init(&sw_cfgs);
+
+  if (new_pos == train->stop_sensor && train->speed > 0) {
+    delay = train->delay_dist / train->speed;
+    CreateArgs(23, &TimeoutTask, &delay, sizeof(delay));
+  }
 
   int r;
   if (!train->pos) {
@@ -114,16 +259,26 @@ static void HandlePositionUpdate(TDTrain *train, track_node *new_pos) {
     path_init(&train->p, TRACK);
     path_set_destination(&train->p, new_pos, tn);
     path_generate(&train->p);
+    StoreStopSensor(train);
     // r = PathFind(rm_tid, train->num, &train->p);
-    if (r) TMLogStrf(tm_tid, "RECALCULATING FAILED :/\n");
     path_start(&train->p, train->p.start);
+  }
+
+
+  if (new_pos == train->p.end || train->p.ahead.size < 3) {
+    TMLogStrf(tm_tid, "ARRIVED pathing to %s", train->p.end->reverse->name);
+    path_set_destination(&train->p, new_pos, train->p.end->reverse);
+    path_generate(&train->p);
+    StoreStopSensor(train);
+    path_start(&train->p, train->p.start);
+    TrainCmd(train->num, 10);
   }
 
   train->last_last_pos = train->last_pos;
   train->last_pos = train->pos;
   train->pos = new_pos;
   // TODO: get stopping distance
-  r = Reserve(rm_tid, train->num, train->pos, 500);
+  r = Reserve(rm_tid, train->num, train->pos, StoppingDistance(train)/1000);
   if (r) {
     TMLogStrf(tm_tid, "RESERVATION CONFLICT\n");
     TrainCmd(train->num, 0);
@@ -140,6 +295,16 @@ static void HandlePositionUpdate(TDTrain *train, track_node *new_pos) {
     FlipSwitch(&cfg);
   }
 }
+
+static void HandleGearUpdate(TDTrain *train, int newgear) {
+  train->gear = newgear;
+}
+
+
+static void HandleTimeout(TDTrain *train) {
+  TrainCmd(train->num, 0);
+}
+
 
 void TrainDriver(TrainDriverArgs *args) {
   int r;
@@ -171,6 +336,8 @@ void TrainDriver(TrainDriverArgs *args) {
   path_set_destination(&train.p, &TRACK[args->start], &TRACK[args->end]);
 
   r = path_generate(&train.p);
+  StoreStopSensor(&train);
+
   if (r < 0) {
     TMLogStrf(tm_tid, "COULD NOT CALCULATE PATH\n");
     Exit();
@@ -180,6 +347,10 @@ void TrainDriver(TrainDriverArgs *args) {
   assert(sw_tid > 0);
 
   Create(21, &TrainPositionSubscriber);
+  Create(21, &TrainSpeedSubscriber);
+  Create(21, &TrainGearSubscriber);
+
+  TrainCmd(train.num, 10);
 
   while (true) {
     Receive(&sub_tid, &req, sizeof(req));
@@ -187,6 +358,15 @@ void TrainDriver(TrainDriverArgs *args) {
     switch (req.type) {
       case POS:
         HandlePositionUpdate(&train, req.event.pos.node);
+        break;
+      case GEAR:
+        HandleGearUpdate(&train, req.event.gear.newgear);
+        break;
+      case SPEED:
+        HandleSpeedUpdate(&train, req.event.speed.new);
+        break;
+      case TIMEOUT:
+        HandleTimeout(&train);
         break;
       default: assert(0);
     }
