@@ -9,7 +9,7 @@
 
 bool DRIVER1_DEF, DRIVER2_DEF;
 
-static tid_t tm_tid, sw_tid, rm_tid, tr_tid;
+static tid_t my_tid, tm_tid, sw_tid, rm_tid, tr_tid;
 
 typedef struct TDTrain {
   int num;
@@ -216,7 +216,7 @@ static void TimeoutTask(int *delay) {
 
   msg = TIMEOUT;
 
-  DelayCS(my_tid, *delay);
+  DelayCS(my_tid, *delay + 25); // 25 is *magic*
 
   Send(par_tid, &msg, sizeof(msg), &r, sizeof(r));
   Exit();
@@ -229,8 +229,6 @@ static void HandlePositionUpdate(TDTrain *train, track_node *new_pos) {
   int delay;
   sw_configs sw_cfgs;
   sw_config cfg;
-
-  TMLogStrf(tm_tid, "%d %d %d %d\n", train->speed, train->gear, train->stop_sensor, train->delay_dist);
 
   sw_configs_init(&sw_cfgs);
 
@@ -265,8 +263,9 @@ static void HandlePositionUpdate(TDTrain *train, track_node *new_pos) {
   }
 
 
-  if (new_pos == train->p.end || train->p.ahead.size < 3) {
-    TMLogStrf(tm_tid, "ARRIVED pathing to %s", train->p.end->reverse->name);
+  if (new_pos == train->p.end) {
+    TMLogStrf(tm_tid, "ARRIVED pathing to %s\n", train->p.end->reverse->name);
+    // DelayCS(my_tid, 2);
     path_set_destination(&train->p, new_pos, train->p.end->reverse);
     path_generate(&train->p);
     StoreStopSensor(train);
@@ -277,11 +276,16 @@ static void HandlePositionUpdate(TDTrain *train, track_node *new_pos) {
   train->last_last_pos = train->last_pos;
   train->last_pos = train->pos;
   train->pos = new_pos;
-  // TODO: get stopping distance
-  r = Reserve(rm_tid, train->num, train->pos, StoppingDistance(train)/1000);
+
+  r = Reserve(rm_tid, train->num, train->pos, StoppingDistance(train)/1000 + 100);
+
   if (r) {
     TMLogStrf(tm_tid, "RESERVATION CONFLICT\n");
     TrainCmd(train->num, 0);
+    DelayCS(my_tid, 10*3*train->gear);
+    TMLogStrf(tm_tid, "REVERSING TRAIN\n");
+    TrainCmd(train->num, 15);
+    TrainCmd(train->num, 10);
   }
 
   if (train->last_last_pos) {
@@ -302,6 +306,7 @@ static void HandleGearUpdate(TDTrain *train, int newgear) {
 
 
 static void HandleTimeout(TDTrain *train) {
+  TMLogStrf(tm_tid, "STOP TRAIN.. PLEASE\n");
   TrainCmd(train->num, 0);
 }
 
@@ -346,6 +351,8 @@ void TrainDriver(TrainDriverArgs *args) {
   sw_tid = WhoIs(SWITCH_PROVIDER_ID);
   assert(sw_tid > 0);
 
+  my_tid = MyTid();
+
   Create(21, &TrainPositionSubscriber);
   Create(21, &TrainSpeedSubscriber);
   Create(21, &TrainGearSubscriber);
@@ -357,13 +364,19 @@ void TrainDriver(TrainDriverArgs *args) {
 
     switch (req.type) {
       case POS:
-        HandlePositionUpdate(&train, req.event.pos.node);
+        if (train.num == req.event.pos.num) {
+          HandlePositionUpdate(&train, req.event.pos.node);
+        }
         break;
       case GEAR:
-        HandleGearUpdate(&train, req.event.gear.newgear);
+        if (train.num == req.event.gear.num) {
+          HandleGearUpdate(&train, req.event.gear.newgear);
+        }
         break;
       case SPEED:
-        HandleSpeedUpdate(&train, req.event.speed.new);
+        if (train.num == req.event.speed.num) {
+          HandleSpeedUpdate(&train, req.event.speed.new);
+        }
         break;
       case TIMEOUT:
         HandleTimeout(&train);

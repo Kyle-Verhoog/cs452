@@ -321,7 +321,7 @@ static void TrackGenerateUnknownSpeedTrainVEvents(Track *track, Train *train) {
     r = poss_node_list_pop(&pnl, &sensor);
     assert(r == 0);
     ve.timeout = -1;
-    ve.timestamp = 10000 + train->sen_ts;
+    ve.timestamp = 500 + train->sen_ts;
     ve.depend = sensor.node->num;
     ve.event.train_at.train_num = train->num;
     ve.event.train_at.node = sensor.node;
@@ -404,6 +404,10 @@ static void UpdateTrainCmd(Track *track, int tr_num, int cmd) {
   event.type = TE_TR_MOVE;
   event.event.tr_gear.num = tr_num;
   event.event.tr_gear.newgear = cmd;
+  if (cmd == 15) {
+    track->train[tr_num].pos = track->train[tr_num].pos->reverse;
+    TrackGenerateTrainPositionTEvent(track, &track->train[tr_num]);
+  }
   r = update_list_push(&track->updates, event);
   assert(r == 0);
 }
