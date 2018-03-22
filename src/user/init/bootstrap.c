@@ -1,6 +1,9 @@
 #include <user/init/bootstrap.h>
+#include <user/train/driver.h> // here for hack globals
 
 void RailwayInit(){
+  DRIVER1_DEF = false;
+  DRIVER2_DEF = false;
     tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
     assert(tx_tid >= 0);
     tid_t rx_tid = WhoIs(IOSERVER_UART1_RX_ID);

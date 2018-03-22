@@ -22,6 +22,17 @@ static RMReply HandleFree(pather *p, int tr_num, track_node *node) {
   return rep;
 }
 
+static RMReply HandleGenerate(pather *p, int tr_num, path *pth) {
+  RMReply rep;
+
+  rep.ret = pather_path(p, pth, tr_num);
+
+  // if (rep.ret) {
+  //   TMLogStrf(tm_tid, "FREE HAD A PROBLEM: %d\n", rep.ret);
+  // }
+  return rep;
+}
+
 static void PrintReservationData(pather *p) {
   int i, j, offset;
   bool exist;
@@ -74,6 +85,9 @@ void ReservationManager() {
       case RM_FREE:
         rep = HandleFree(&reserv, req.tr_num, req.node);
         break;
+      case RM_GEN:
+        rep = HandleGenerate(&reserv, req.tr_num, req.p);
+        break;
       default: assert(0);
     }
 
@@ -102,6 +116,17 @@ int Free(tid_t rm_tid, int tr_num, track_node *s) {
   req.type = RM_FREE;
   req.tr_num = tr_num;
   req.node = s;
+
+  Send(rm_tid, &req, sizeof(req), &rep, sizeof(rep));
+  return rep.ret;
+}
+
+int PathFind(tid_t rm_tid, int tr_num, path *p) {
+  RMReq req;
+  RMReply rep;
+  req.type = RM_GEN;
+  req.tr_num = tr_num;
+  req.p = p;
 
   Send(rm_tid, &req, sizeof(req), &rep, sizeof(rep));
   return rep.ret;

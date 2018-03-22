@@ -25,6 +25,7 @@ struct track_edge {
 };
 
 struct track_node {
+  int reserver;
   const char *name;
   node_type type;
   int id;

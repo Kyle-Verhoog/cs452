@@ -261,7 +261,6 @@ void dij_path_find(track_node *track, track_node *s, track_node *d, int *prev) {
     for (i = 0; i < nedges[track[u].type]; ++i) {
       // KASSERT(&track[u].edge[i]);
       e = &track[u].edge[i];
-      // KASSERT(e->src == &track[u]);
       // KASSERT(e->dist < 1000 && e->dist >= 0);
       v = e->dest->id;
 

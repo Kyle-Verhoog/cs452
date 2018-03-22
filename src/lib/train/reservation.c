@@ -1,11 +1,12 @@
 #include <lib/train/reservation.h>
 
+#define assert(...)
+
 CIRCULAR_BUFFER_DEF(tn_q, track_node *, PATHER_Q_SIZE);
 
 void reserv_init(reservation *r) {
   r->train_num = -1;
   r->reserved = false;
-  r->timestamp = -1;
 }
 
 void pather_init(pather *p, track_node *TRACK) {
@@ -13,6 +14,7 @@ void pather_init(pather *p, track_node *TRACK) {
 
   for (i = 0; i < TRACK_MAX; ++i) {
     p->track[i] = TRACK[i];
+    p->track[i].reserver = -1;
     reserv_init(&p->reserv[i]);
   }
 
@@ -147,32 +149,41 @@ int pather_reserve_node(pather *p, int trn, track_node *tn) {
   }
   else {
     if (tn->type == NODE_BRANCH) {
+      tn->reserver = trn;
       reservation_reserve(r, trn);
 
       // have to reserve both corresponding edges to merges
+      tn->edge[DIR_STRAIGHT].dest->reverse->reserver = trn;
       r = &p->reserv[tn->edge[DIR_STRAIGHT].dest->reverse->id];
       reservation_reserve(r, trn);
 
       // reserve the curved edge
+      tn->edge[DIR_CURVED].dest->reverse->reserver = trn;
       r = &p->reserv[tn->edge[DIR_CURVED].dest->reverse->id];
       reservation_reserve(r, trn);
     }
     else if (tn->type == NODE_EXIT) {
+      tn->reserver = trn;
       reservation_reserve(r, trn);
     }
     else if (tn->edge[DIR_AHEAD].dest->type == NODE_MERGE) {
       // reserve the branch
+      tn->edge[DIR_AHEAD].dest->reverse->reserver = trn;
       r = &p->reserv[tn->edge[DIR_AHEAD].dest->reverse->id];
       reservation_reserve(r, trn);
 
       // reserve the two merges
+      tn->edge[DIR_AHEAD].dest->reverse->edge[DIR_CURVED].dest->reverse->reserver = trn;
       r = &p->reserv[tn->edge[DIR_AHEAD].dest->reverse->edge[DIR_CURVED].dest->reverse->id];
       reservation_reserve(r, trn);
+      tn->edge[DIR_AHEAD].dest->reverse->edge[DIR_STRAIGHT].dest->reverse->reserver = trn;
       r = &p->reserv[tn->edge[DIR_AHEAD].dest->reverse->edge[DIR_STRAIGHT].dest->reverse->id];
       reservation_reserve(r, trn);
     }
     else {
+      tn->reserver = trn;
       reservation_reserve(r, trn);
+      tn->edge[DIR_AHEAD].dest->reverse->reserver = trn;
       r = &p->reserv[tn->edge[DIR_AHEAD].dest->reverse->id];
       reservation_reserve(r, trn);
     }
@@ -195,32 +206,41 @@ int pather_free_node(pather *p, int trn, track_node *tn) {
   }
   else {
     if (tn->type == NODE_BRANCH) {
+      tn->reserver = -1;
       reservation_free(r, trn);
 
       // have to reserve both corresponding edges to merges
+      tn->edge[DIR_STRAIGHT].dest->reverse->reserver = -1;
       r = &p->reserv[tn->edge[DIR_STRAIGHT].dest->reverse->id];
       reservation_free(r, trn);
 
       // reserve the curved edge
+      tn->edge[DIR_CURVED].dest->reverse->reserver = -1;
       r = &p->reserv[tn->edge[DIR_CURVED].dest->reverse->id];
       reservation_free(r, trn);
     }
     else if (tn->type == NODE_EXIT) {
+      tn->reserver = -1;
       reservation_free(r, trn);
     }
     else if (tn->edge[DIR_AHEAD].dest->type == NODE_MERGE) {
       // reserve the branch
+      tn->edge[DIR_AHEAD].dest->reverse->reserver = -1;
       r = &p->reserv[tn->edge[DIR_AHEAD].dest->reverse->id];
       reservation_free(r, trn);
 
       // reserve the two merges
+      tn->edge[DIR_AHEAD].dest->reverse->edge[DIR_CURVED].dest->reverse->reserver = -1;
       r = &p->reserv[tn->edge[DIR_AHEAD].dest->reverse->edge[DIR_CURVED].dest->reverse->id];
       reservation_free(r, trn);
+      tn->edge[DIR_AHEAD].dest->reverse->edge[DIR_STRAIGHT].dest->reverse->reserver = -1;
       r = &p->reserv[tn->edge[DIR_AHEAD].dest->reverse->edge[DIR_STRAIGHT].dest->reverse->id];
       reservation_free(r, trn);
     }
     else {
+      tn->reserver = -1;
       reservation_free(r, trn);
+      tn->edge[DIR_AHEAD].dest->reverse->reserver = -1;
       r = &p->reserv[tn->edge[DIR_AHEAD].dest->reverse->id];
       reservation_free(r, trn);
     }
@@ -385,4 +405,100 @@ int pather_free_before(pather *p, int trn, track_node *node) {
     return -1;
 
   return pather_free_nodes(p, trn, node->reverse);
+}
+
+
+static void path_find(track_node *track, track_node *s, track_node *d, int *prev, int trnum) {
+  int u, v, i;
+  int sid, did;
+  int dist[TRACK_MAX];
+  int vist[TRACK_MAX];
+  tp_queue q;
+
+
+  int nedges[6];
+  nedges[NODE_NONE]   = 0;
+  nedges[NODE_SENSOR] = 1;
+  nedges[NODE_BRANCH] = 2;
+  nedges[NODE_MERGE]  = 1;
+  nedges[NODE_ENTER]  = 1;
+  nedges[NODE_EXIT]   = 0;
+
+  sid = s->id;
+  did = d->id;
+  tpq_init(&q);
+
+
+  for (v = 0; v < TRACK_MAX; ++v) {
+    dist[v] = INT_MAX;
+    prev[v] = -1;
+    vist[v] = 0;
+  }
+
+  dist[sid] = 0;
+  tpq_add(&q, sid, dist[sid]);
+
+  while (q.size > 0) {
+    u = tpq_pop(&q);
+
+    if (u == did)
+      break;
+
+    vist[u] = 1;
+    int alt;
+    track_edge *e;
+
+    if (track[u].reserver != -1 && track[u].reserver != trnum)
+      assert(0);
+
+    for (i = 0; i < nedges[track[u].type]; ++i) {
+      e = &track[u].edge[i];
+
+      v = e->dest->id;
+
+      alt = dist[u] + e->dist;
+
+      if (!vist[v] && alt < dist[v]) {
+        dist[v] = alt;
+        prev[v] = u;
+        tpq_add(&q, v, alt);
+      }
+    }
+  }
+}
+
+static int pather_generate(path *p, int trn) {
+  int i, n, sid, eid;
+  int buf[TRACK_MAX];
+
+  sid = p->start->id;
+  eid = p->end->id;
+
+  path_find(p->track, p->start, p->end, p->pred, trn);
+
+  n = 0;
+  buf[n++] = eid;
+
+  i = p->pred[eid];
+  while (i != -1) {
+    buf[n++] = i;
+    i = p->pred[i];
+  }
+
+  for (n = n-1; n >= 0; --n) {
+    tr_path_push(&p->ahead, &p->track[buf[n]]);
+  }
+
+  if (p->ahead.size < 2) {
+    return -1;
+  }
+
+  p->ready = true;
+  return 0;
+}
+
+
+int pather_path(pather *pr, path *p, int trn) {
+  p->track = pr->track;
+  return pather_generate(p, trn);
 }

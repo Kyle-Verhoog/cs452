@@ -294,7 +294,7 @@ static void TrackAddVEvent(Track *track, Train *train, VirtualEvent *ve) {
   ve->key = track->key;
   r = ve_list_push(&track->vevents, *ve);
   r = ev_window_add_key(&train->window, ve->key);
-  assertf(r == 0, "%d, %d %d %d %d %d %d\r\n", r, ve->key, train->window.start, train->window.end, train->window.size, train->window.unexp_size);
+  // assertf(r == 0, "%d, %d %d %d %d %d %d\r\n", r, ve->key, train->window.start, train->window.end, train->window.size, train->window.unexp_size);
   assert(r == 0);
 }
 
@@ -399,10 +399,13 @@ static void UpdateSwitch(Track *track, int sw_num, int state) {
 }
 
 static void UpdateTrainCmd(Track *track, int tr_num, int cmd) {
-  // TODO:
-  // TETRGear event;
-  // event.num = cmd_event->arg1;
-  // event.newgear = cmd_event->arg2;
+  int r;
+  TrackEvent event;
+  event.type = TE_TR_MOVE;
+  event.event.tr_gear.num = tr_num;
+  event.event.tr_gear.newgear = cmd;
+  r = update_list_push(&track->updates, event);
+  assert(r == 0);
 }
 
 
@@ -457,7 +460,8 @@ static void TrackUpdateUnknownSpeedTrain(Track *track, Train *train, track_node 
   // if the speed is unknown and the previous position is not null then we can
   // figure out the speed
   assert(train->speed == -1);
-  dist = track_node_dist(train->pos, new_pos); // dist is in mm
+  // dist = track_node_dist(train->pos, new_pos); // dist is in mm
+  dist = FindDistToNode(train->pos, new_pos);
   assert(dist >= 0 && dist <= 10000);
   assert(ts - train->sen_ts != 0);
   train->speed = (dist*1000) / ((ts - train->sen_ts)); // speed in um/tick
@@ -718,7 +722,7 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
   //   1) we got a false positive from a sensor
   //   2) something really weird is happening
   exp = ev_window_is_unexpected(&train->window, ekey);
-  assertf(exp == 0 || exp == 1, "%d\n", exp);
+  // assertf(exp == 0 || exp == 1, "%d\n", exp);
   if (exp) {
     train->pos = train->prev_pos;
     TrackLoseTrain(track, train);
@@ -729,7 +733,7 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
   }
 
   r = ev_window_remove_key(&train->window, ekey);
-  assertf(r == 0, "%d %d\r\n", ekey, r);
+  // assertf(r == 0, "%d %d\r\n", ekey, r);
 
   new_pos = &track->graph[grp->re.event.se_event.id];
   if (train->status == TR_KNOWN) {
@@ -756,7 +760,7 @@ static void TrackHandleTrainAtTimeout(Track *track, EventGroup *grp) {
   train = &track->train[train_num];
 
   exp = ev_window_is_unexpected(&train->window, ekey);
-  assertf(exp == 0 || exp == 1, "%d\n", exp);
+  // assertf(exp == 0 || exp == 1, "%d\n", exp);
 
   if (exp) {
     // remove the key and ignore this event

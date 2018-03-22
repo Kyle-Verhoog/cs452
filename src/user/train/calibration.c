@@ -167,11 +167,12 @@ void MeasuringVelocity(void *args){
 	Exit();
 }
 
-int GetLastAvailableSensor(track_node *start, track_node *end, Switch *sw, int min_dist, PossibleSensor *target){
+static int GetLastAvailableSensor(track_node *start, track_node *end, Switch *sw, int min_dist, PossibleSensor *target){
 	PossibleSensor pos;
 	track_node *n;
 	int dist, r;
 
+  pos.dist = 0;
 	target->dist = 0;
 	pos.node = start;
 	dist = DistanceBetweenNodes(sw, start, end);

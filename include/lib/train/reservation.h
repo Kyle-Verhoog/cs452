@@ -14,7 +14,6 @@
 typedef struct reservation {
   int train_num;
   bool reserved;
-  int timestamp;
 } reservation;
 
 typedef struct pather {
@@ -34,8 +33,6 @@ void reserv_init(reservation *r);
 
 void pather_init(pather *p, track_node *TRACK);
 
-void pather_path(pather *p, track_node *s, track_node *e);
-
 void pather_recover(pather *p, int tn, track_node *new_pos, int stp_dist);
 
 int pather_reserve_to_sensor(pather *p, int trn, track_node *next_pos, int dist);
@@ -44,4 +41,5 @@ int pather_reserve(pather *p, int tn, track_node *next_pos, int stp_dist);
 
 int pather_free_before(pather *p, int trn, track_node *cur);
 
+int pather_path(pather *pr, path *p, int trn);
 #endif

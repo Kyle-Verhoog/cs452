@@ -5,9 +5,6 @@ void send_handler(TaskDescriptor *std) {
   int i, stid, r;
   asm("ldr %0, [%1, #4];":"=r"(stid):"r"(std->sp));
   stid = TID_ID(stid);
-  if (!IS_VALID_ID(stid)) {
-    PRINTF("%x\n", stid);
-  }
   KASSERT(IS_VALID_ID(stid));
 
   TaskDescriptor *rtd = &tasks[stid];
