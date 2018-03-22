@@ -39,8 +39,9 @@ void pather_path(pather *p, track_node *s, track_node *e);
 void pather_recover(pather *p, int tn, track_node *new_pos, int stp_dist);
 
 int pather_reserve_to_sensor(pather *p, int trn, track_node *next_pos, int dist);
+
 int pather_reserve(pather *p, int tn, track_node *next_pos, int stp_dist);
 
-int pather_free(pather *p, track_node *cur, track_node *node);
+int pather_free_before(pather *p, int trn, track_node *cur);
 
 #endif

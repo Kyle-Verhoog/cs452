@@ -243,11 +243,6 @@ void pather_reserve_to_sensor_test() {
 
   tn = &T[trhr(T, "C11")];
   stop_dist = 119;
-  assert(!p.reserv[trhr(T, "C11")].reserved);
-  assert(!p.reserv[trhr(T, "BR13")].reserved);
-  assert(!p.reserv[trhr(T, "MR13")].reserved);
-  assert(!p.reserv[trhr(T, "B6")].reserved);
-  assert(!p.reserv[trhr(T, "E15")].reserved);
   pather_reserve_to_sensor(&p, 24, tn, stop_dist);
   assert(p.nreservs[24] == 2);
   assert(p.reserv[trhr(T, "C11")].reserved);
@@ -259,6 +254,39 @@ void pather_reserve_to_sensor_test() {
   assert(!p.reserv[trhr(T, "B5")].reserved);
   assert(!p.reserv[trhr(T, "E16")].reserved);
 
+  tn = &T[trhr(T, "B5")];
+  stop_dist = 119;
+  pather_reserve_to_sensor(&p, 24, tn, stop_dist);
+  assert(p.nreservs[24] == 2+1);
+  assert(p.reserv[trhr(T, "C11")].reserved);
+  assert(p.reserv[trhr(T, "BR13")].reserved);
+  assert(p.reserv[trhr(T, "MR13")].reserved);
+  assert(p.reserv[trhr(T, "B6")].reserved);
+  assert(p.reserv[trhr(T, "E15")].reserved);
+  assert(!p.reserv[trhr(T, "C12")].reserved);
+  assert(!p.reserv[trhr(T, "E16")].reserved);
+  assert(p.reserv[trhr(T, "B5")].reserved);
+  assert(p.reserv[trhr(T, "D4")].reserved);
+
+
+  // test entering a merge
+  pather_init(&p, T);
+  tn = &T[trhr(T, "B6")];
+  stop_dist = 119;
+  pather_reserve_to_sensor(&p, 24, tn, stop_dist);
+  assert(p.nreservs[24] == 2);
+  assert(p.reserv[trhr(T, "C11")].reserved);
+  assert(p.reserv[trhr(T, "BR13")].reserved);
+  assert(p.reserv[trhr(T, "MR13")].reserved);
+  assert(p.reserv[trhr(T, "B6")].reserved);
+  assert(p.reserv[trhr(T, "E15")].reserved);
+  assert(!p.reserv[trhr(T, "C12")].reserved);
+  assert(!p.reserv[trhr(T, "B5")].reserved);
+  assert(!p.reserv[trhr(T, "E16")].reserved);
+  assert(!p.reserv[trhr(T, "D3")].reserved);
+
+  pather_reserve_to_sensor(&p, 24, tn, stop_dist);
+
   // pather_init(&p, T);
   // tn = &T[trhr(T, "C11")];
   // stop_dist = 120;
@@ -266,19 +294,95 @@ void pather_reserve_to_sensor_test() {
   // assert(p.nreservs[24] == 2);
 }
 
-void pather_free_test() {
+void pather_free_test_1() {
   pather p;
   track_node *tn;
   int stop_dist;
   pather_init(&p, T);
 
   tn = &T[trhr(T, "C11")];
-  stop_dist = 250;
-  pather_reserve(&p, 24, tn, stop_dist);
+  stop_dist = 119;
+  pather_reserve_to_sensor(&p, 24, tn, stop_dist);
+  assert(p.nreservs[24] == 2);
+
   tn = &T[trhr(T, "E16")];
-  pather_reserve(&p, 24, tn, stop_dist);
+  stop_dist = 119;
+  pather_reserve_to_sensor(&p, 24, tn, stop_dist);
+
   tn = &T[trhr(T, "E1")];
-  pather_reserve(&p, 24, tn, stop_dist);
+  stop_dist = 119;
+  pather_reserve_to_sensor(&p, 24, tn, stop_dist);
+
+  assert(p.reserv[trhr(T, "C11")].reserved);
+  assert(p.reserv[trhr(T, "BR13")].reserved);
+  assert(p.reserv[trhr(T, "MR13")].reserved);
+  assert(p.reserv[trhr(T, "B6")].reserved);
+  assert(p.reserv[trhr(T, "E15")].reserved);
+  assert(p.reserv[trhr(T, "E16")].reserved);
+  assert(p.reserv[trhr(T, "BR156")].reserved);
+  assert(p.reserv[trhr(T, "E1")].reserved);
+  assert(p.reserv[trhr(T, "E2")].reserved);
+
+  pather_free_before(&p, 24, &T[trhr(T, "E16")]);
+  assert(!p.reserv[trhr(T, "C11")].reserved);
+  assert(!p.reserv[trhr(T, "MR13")].reserved);
+  assert(!p.reserv[trhr(T, "BR13")].reserved);
+  assert(!p.reserv[trhr(T, "E15")].reserved);
+  assert(!p.reserv[trhr(T, "B6")].reserved);
+}
+
+void pather_free_test_2() {
+  pather p;
+  track_node *tn;
+  int stop_dist;
+  pather_init(&p, T);
+
+  tn = &T[trhr(T, "C11")];
+  stop_dist = 119;
+  pather_reserve_to_sensor(&p, 24, tn, stop_dist);
+  tn = &T[trhr(T, "E16")];
+  pather_reserve_to_sensor(&p, 24, tn, stop_dist);
+  tn = &T[trhr(T, "E1")];
+  pather_reserve_to_sensor(&p, 24, tn, stop_dist);
+  tn = &T[trhr(T, "C1")];
+  pather_reserve_to_sensor(&p, 24, tn, stop_dist);
+
+  assert(p.reserv[trhr(T, "C11")].reserved);
+  assert(p.reserv[trhr(T, "BR13")].reserved);
+  assert(p.reserv[trhr(T, "MR13")].reserved);
+  assert(p.reserv[trhr(T, "B6")].reserved);
+  assert(p.reserv[trhr(T, "E15")].reserved);
+  assert(p.reserv[trhr(T, "E16")].reserved);
+  assert(p.reserv[trhr(T, "BR156")].reserved);
+  assert(p.reserv[trhr(T, "E1")].reserved);
+  assert(p.reserv[trhr(T, "E2")].reserved);
+  assert(p.reserv[trhr(T, "MR156")].reserved);
+  assert(p.reserv[trhr(T, "BR156")].reserved);
+  assert(p.reserv[trhr(T, "BR154")].reserved);
+  assert(p.reserv[trhr(T, "MR154")].reserved);
+  assert(p.reserv[trhr(T, "BR153")].reserved);
+  assert(p.reserv[trhr(T, "B13")].reserved);
+  assert(p.reserv[trhr(T, "MR153")].reserved);
+  assert(p.reserv[trhr(T, "EN1")].reserved);
+
+  pather_free_before(&p, 24, &T[trhr(T, "C1")]);
+  assert(!p.reserv[trhr(T, "C11")].reserved);
+  assert(!p.reserv[trhr(T, "BR13")].reserved);
+  assert(!p.reserv[trhr(T, "MR13")].reserved);
+  assert(!p.reserv[trhr(T, "B6")].reserved);
+  assert(!p.reserv[trhr(T, "E15")].reserved);
+  assert(!p.reserv[trhr(T, "E16")].reserved);
+  assert(!p.reserv[trhr(T, "BR156")].reserved);
+  assert(!p.reserv[trhr(T, "E1")].reserved);
+  assert(!p.reserv[trhr(T, "E2")].reserved);
+  assert(!p.reserv[trhr(T, "MR156")].reserved);
+  assert(!p.reserv[trhr(T, "BR156")].reserved);
+  assert(!p.reserv[trhr(T, "BR154")].reserved);
+  assert(!p.reserv[trhr(T, "MR154")].reserved);
+  assert(!p.reserv[trhr(T, "BR153")].reserved);
+  assert(!p.reserv[trhr(T, "B13")].reserved);
+  assert(!p.reserv[trhr(T, "MR153")].reserved);
+  assert(!p.reserv[trhr(T, "EN1")].reserved);
 }
 
 
@@ -288,6 +392,7 @@ void reservation_tests() {
   pather_init_test();
   get_sens_in_dist();
   pather_reserve_test();
-  pather_free_test();
+  pather_free_test_1();
+  pather_free_test_2();
   pather_reserve_to_sensor_test();
 }
