@@ -7,8 +7,9 @@
 #include <user/train/representer.h>
 #include <user/train/reservation_manager.h>
 
+bool DRIVER1_DEF, DRIVER2_DEF;
 
-static tid_t tm_tid, sw_tid, rm_tid;
+static tid_t tm_tid, sw_tid, rm_tid, tr_tid;
 
 typedef struct TDTrain {
   int num;
@@ -66,14 +67,31 @@ static void TrainPositionSubscriber() {
 }
 
 
-#define LOOK_AHEAD 1000
-void HandlePositionUpdate(TDTrain *train, track_node *new_pos) {
-  track_node *tn;
+static void FlipSwitch(sw_config *cfg) {
   SWProtocol sw;
+  int r;
+  sw.swr = SW_FLIP;
+  sw.sw  = cfg->sw->num;
+  sw.dir = cfg->state_required == DIR_CURVED ? SW_CURVE : SW_STRAIGHT;
+  Send(sw_tid, &sw, sizeof(sw), &r, sizeof(r));
+}
+
+static void TrainCmd(int tr_num, int cmd) {
+  int r;
+  TrainProtocol tp;
+  tp.tc = T_MOVE;
+  tp.arg1 = (char)tr_num;
+  tp.arg2 = (char)cmd;
+  Send(tr_tid, &tp, sizeof(tp), &r, sizeof(r));
+}
+
+
+#define LOOK_AHEAD 1000
+static void HandlePositionUpdate(TDTrain *train, track_node *new_pos) {
+  track_node *tn;
   sw_configs sw_cfgs;
   sw_config cfg;
 
-  sw.swr = SW_FLIP;
   sw_configs_init(&sw_cfgs);
 
   int r;
@@ -84,11 +102,13 @@ void HandlePositionUpdate(TDTrain *train, track_node *new_pos) {
   r = path_follow_to(&train->p, new_pos);
 
   if (r < 0) {
-    TMLogStrf(tm_tid, "PATH LOST :*(\n");
+    TMLogStrf(tm_tid, "PATH LOST: recalculating\n");
 
     // free all the trains nodes
-    r = Free(rm_tid, train->num, train->pos);
-    if (r) TMLogStrf(tm_tid, "FREE ALL FAILED\n");
+    if (train->pos) {
+      r = Free(rm_tid, train->num, train->pos);
+      if (r) TMLogStrf(tm_tid, "FREE ALL FAILED\n");
+    }
 
     tn = train->p.end;
     path_init(&train->p, TRACK);
@@ -102,10 +122,13 @@ void HandlePositionUpdate(TDTrain *train, track_node *new_pos) {
   train->pos = new_pos;
   // TODO: get stopping distance
   r = Reserve(rm_tid, train->num, train->pos, 500);
-  if (r) TMLogStrf(tm_tid, "RESERVE ERR %d\n", r);
+  if (r) {
+    TMLogStrf(tm_tid, "RESERVATION CONFLICT\n");
+    TrainCmd(train->num, 0);
+  }
 
   if (train->last_last_pos) {
-    TMLogStrf(tm_tid, "ATTEMPTING TO FREE %s\n", train->last_last_pos->name);
+    TMLogStrf(tm_tid, "FREEING %s\n", train->last_last_pos->name);
     r = Free(rm_tid, train->num, train->last_last_pos);
     if (r) TMLogStrf(tm_tid, "FREE ERR %d\n", r);
   }
@@ -113,9 +136,7 @@ void HandlePositionUpdate(TDTrain *train, track_node *new_pos) {
   path_switches_in_next_dist(&train->p, &sw_cfgs, LOOK_AHEAD);
   while (sw_cfgs.size > 0) {
     sw_configs_pop(&sw_cfgs, &cfg);
-    sw.sw  = cfg.sw->num;
-    sw.dir = cfg.state_required == DIR_CURVED ? SW_CURVE : SW_STRAIGHT;
-    Send(sw_tid, &sw, sizeof(sw), &r, sizeof(r));
+    FlipSwitch(&cfg);
   }
 }
 
@@ -131,10 +152,20 @@ void TrainDriver(TrainDriverArgs *args) {
   tm_tid = WhoIs(TERMINAL_MANAGER_ID);
   assert(tm_tid > 0);
 
+  tr_tid = WhoIs(TRAIN_PROVIDER_ID);
+  assert(tr_tid > 0);
+
   rm_tid = WhoIs(RESERVATION_MANAGER_ID);
   assert(rm_tid > 0);
 
-  TMRegister(tm_tid, DRIVER1_OFF_X, DRIVER1_OFF_Y, DRIVER1_WIDTH, DRIVER1_HEIGHT);
+  if (!DRIVER1_DEF) {
+    DRIVER1_DEF = true;
+    TMRegister(tm_tid, DRIVER1_OFF_X, DRIVER1_OFF_Y, DRIVER1_WIDTH, DRIVER1_HEIGHT);
+  }
+  if (!DRIVER2_DEF) {
+    DRIVER2_DEF = true;
+    TMRegister(tm_tid, DRIVER2_OFF_X, DRIVER2_OFF_Y, DRIVER2_WIDTH, DRIVER2_HEIGHT);
+  }
 
   path_set_destination(&train.p, &TRACK[args->start], &TRACK[args->end]);
 

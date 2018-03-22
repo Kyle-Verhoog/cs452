@@ -41,6 +41,7 @@ typedef struct Train {
   int dir; //forward is 1
   event_window window;
   track_node *pos;
+  track_node *prev_pos;
   int speed;
   int ts;
   int sen_ts;     // timestamp of last sensor

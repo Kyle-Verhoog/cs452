@@ -27,6 +27,8 @@ void TrackInit(Track *track, track_node *tr) {
   for (i = 0; i < TRAIN_SIZE; ++i) {
     track->train[i].num = i;
     track->train[i].status = TR_UNINIT;
+    track->train[i].pos = NULL;
+    track->train[i].prev_pos = NULL;
   }
 
   track->key = 0;
@@ -319,7 +321,7 @@ static void TrackGenerateUnknownSpeedTrainVEvents(Track *track, Train *train) {
     r = poss_node_list_pop(&pnl, &sensor);
     assert(r == 0);
     ve.timeout = -1;
-    ve.timestamp = 200 + train->sen_ts;
+    ve.timestamp = 10000 + train->sen_ts;
     ve.depend = sensor.node->num;
     ve.event.train_at.train_num = train->num;
     ve.event.train_at.node = sensor.node;
@@ -424,10 +426,14 @@ static void TrackUpdateKnownTrain(Track *track, Train *train, track_node *new_po
     assert(0 <= train->sen_ts);
 
     assert(ts - train->sen_ts != 0);
-    new_speed = (dist*1000) / (ts - train->sen_ts); // speed in um/tick
+    if (ts-train->sen_ts == 0)
+      new_speed = train->speed;
+    else
+      new_speed = (dist*1000) / (ts - train->sen_ts); // speed in um/tick
 
     train->speed = (alpha*new_speed + (100-alpha)*old_speed) / 100;
     train->sen_ts = ts;
+    train->prev_pos = train->pos;
     train->pos = new_pos;
     TrackGenerateKnownTrainVEvents(track, train);
     TrackGenerateTrainSpeedTEvent(track, train, old_speed, new_speed);
@@ -435,6 +441,7 @@ static void TrackUpdateKnownTrain(Track *track, Train *train, track_node *new_po
   }
   else if (train->speed == 0) {
     train->sen_ts = ts;
+    train->prev_pos = train->pos;
     train->pos = new_pos;
   }
   else {
@@ -456,6 +463,7 @@ static void TrackUpdateUnknownSpeedTrain(Track *track, Train *train, track_node 
   train->speed = (dist*1000) / ((ts - train->sen_ts)); // speed in um/tick
   train->status = TR_KNOWN;
   train->sen_ts = ts;
+  train->prev_pos = train->pos;
   train->pos = new_pos;
   TrackGenerateKnownTrainVEvents(track, train);
   TrackGenerateTrainStatusTEvent(track, train, TR_UN_SPEED, TR_KNOWN);
@@ -472,6 +480,7 @@ static void TrackUpdateLostTrain(Track *track, Train *train, track_node *new_pos
   train->speed = -1;
 
   train->sen_ts = ts;
+  train->prev_pos = train->pos;
   train->pos = new_pos;
   TrackGenerateTrainStatusTEvent(track, train, TR_LOST, TR_UN_SPEED);
   TrackGenerateUnknownSpeedTrainVEvents(track, train);
@@ -546,14 +555,15 @@ static bool TrainNearby(track_node *node, track_node *dest, int d) {
 */
 
 static bool TrainNearby(track_node *node, track_node *dest) {
-  int r, d;
+  int r, d, b;
   bfs_q q;
   bfs_q_init(&q);
 
   r = bfs_q_push(&q, node);
   d = BFS_Q_SIZE;
+  b = 0;
 
-  while (q.size > 0 && d-- > 0) {
+  while (q.size > 0 && d-- > 0 && b < 3) {
     r = bfs_q_pop(&q, &node);
     assert(r == 0);
 
@@ -565,6 +575,7 @@ static bool TrainNearby(track_node *node, track_node *dest) {
       assert(r == 0);
       r = bfs_q_push(&q, node->edge[DIR_STRAIGHT].dest);
       assert(r == 0);
+      b++;
     }
     else if (node->type == NODE_EXIT) {
       continue;
@@ -709,9 +720,7 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
   exp = ev_window_is_unexpected(&train->window, ekey);
   assertf(exp == 0 || exp == 1, "%d\n", exp);
   if (exp) {
-    // TODO: move the train back a node
-    // train->pos = train->prev_pos;
-    // assertf(0, "%d %d\n", train->window.size, train->window.unexp_size);
+    train->pos = train->prev_pos;
     TrackLoseTrain(track, train);
     r = ev_window_remove_key(&train->window, ekey);
     assert(r == 0);

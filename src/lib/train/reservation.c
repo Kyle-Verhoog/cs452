@@ -118,16 +118,16 @@ void get_all_to_sen_in_dist(track_node *node, int min_dist, tn_q *nodes) {
 
 
 int reservation_reserve(reservation *r, int trn) {
-  assert(!r->reserved);
-  assert(r->train_num == -1);
+  // assert(!r->reserved);
+  // assert(r->train_num == -1);
   r->reserved = true;
   r->train_num = trn;
   return 0;
 }
 
 int reservation_free(reservation *r, int trn) {
-  assert(r->reserved);
-  assert(r->train_num == trn);
+  // assert(r->reserved);
+  // assert(r->train_num == trn);
   r->reserved = false;
   r->train_num = -1;
   return 0;

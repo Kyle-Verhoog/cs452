@@ -14,12 +14,12 @@ void NProcsInterface() {
 
   TMRegister(tm_tid, NPROCS_OFF_X, NPROCS_OFF_Y, NPROCS_WIDTH, NPROCS_HEIGHT);
 
-  char *init = "#tasks: ";
+  char *init = "#tsks: ";
   TMPutStr(tm_tid, init, strlen(init));
 
   while (true) {
     nprocs = NProcs();
-    len = buf_pack_f(buf, "%t/%d\b\b\b\b\b", nprocs, MAX_TASK);
+    len = buf_pack_f(buf, "%t/%d\b\b\b\b\b\b", nprocs, MAX_TASK);
     TMPutStr(tm_tid, buf, len);
     Delay(cs_tid, my_tid, 100);
   }
