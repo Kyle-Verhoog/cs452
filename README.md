@@ -2,6 +2,8 @@
 
 
 # NOTE TO TAs:
+**Our TC2 submission is in a branch: tc2**
+
 **Our TC1 submission is in a branch: milestone1**
 
 **Our kernel 3 submission is in a branch: kernel3**
