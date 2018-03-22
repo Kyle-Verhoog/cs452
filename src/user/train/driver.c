@@ -114,6 +114,8 @@ static void HandlePositionUpdate(TDTrain *train, track_node *new_pos) {
     path_init(&train->p, TRACK);
     path_set_destination(&train->p, new_pos, tn);
     path_generate(&train->p);
+    // r = PathFind(rm_tid, train->num, &train->p);
+    if (r) TMLogStrf(tm_tid, "RECALCULATING FAILED :/\n");
     path_start(&train->p, train->p.start);
   }
 
@@ -128,7 +130,6 @@ static void HandlePositionUpdate(TDTrain *train, track_node *new_pos) {
   }
 
   if (train->last_last_pos) {
-    TMLogStrf(tm_tid, "FREEING %s\n", train->last_last_pos->name);
     r = Free(rm_tid, train->num, train->last_last_pos);
     if (r) TMLogStrf(tm_tid, "FREE ERR %d\n", r);
   }
@@ -162,7 +163,7 @@ void TrainDriver(TrainDriverArgs *args) {
     DRIVER1_DEF = true;
     TMRegister(tm_tid, DRIVER1_OFF_X, DRIVER1_OFF_Y, DRIVER1_WIDTH, DRIVER1_HEIGHT);
   }
-  if (!DRIVER2_DEF) {
+  else if (!DRIVER2_DEF) {
     DRIVER2_DEF = true;
     TMRegister(tm_tid, DRIVER2_OFF_X, DRIVER2_OFF_Y, DRIVER2_WIDTH, DRIVER2_HEIGHT);
   }

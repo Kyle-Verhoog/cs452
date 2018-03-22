@@ -457,7 +457,8 @@ static void TrackUpdateUnknownSpeedTrain(Track *track, Train *train, track_node 
   // if the speed is unknown and the previous position is not null then we can
   // figure out the speed
   assert(train->speed == -1);
-  dist = track_node_dist(train->pos, new_pos); // dist is in mm
+  // dist = track_node_dist(train->pos, new_pos); // dist is in mm
+  dist = FindDistToNode(train->pos, new_pos);
   assert(dist >= 0 && dist <= 10000);
   assert(ts - train->sen_ts != 0);
   train->speed = (dist*1000) / ((ts - train->sen_ts)); // speed in um/tick

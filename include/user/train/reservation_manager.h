@@ -9,6 +9,7 @@
 typedef enum RMReqType {
   RM_RESERVE,
   RM_FREE,
+  RM_GEN,
 } RMReqType;
 
 typedef struct RMReq {
@@ -16,6 +17,7 @@ typedef struct RMReq {
   int tr_num;
   track_node *node;
   int dist;
+  path *p;
 } RMReq;
 
 
@@ -33,5 +35,7 @@ void ReservationManager();
 int Reserve(tid_t rm_tid, int tr_num, track_node *s, int dist);
 
 int Free(tid_t rm_tid, int tr_num, track_node *s);
+
+int PathFind(tid_t rm_tid, int tr_num, path *p);
 
 #endif
