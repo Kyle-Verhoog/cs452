@@ -23,6 +23,8 @@ void TDTrainInit(TDTrain *train, int num) {
   train->num = num;
   train->speed = -1;
   train->pos = NULL;
+  train->last_pos = NULL;
+  train->last_last_pos = NULL;
   path_init(&train->p, TRACK);
 }
 
@@ -85,8 +87,8 @@ void HandlePositionUpdate(TDTrain *train, track_node *new_pos) {
     TMLogStrf(tm_tid, "PATH LOST :*(\n");
 
     // free all the trains nodes
-    // r = Free(rm_tid, train->num, train->pos);
-    // if (r) TMLogStrf(tm_tid, "FREE FAILED\n");
+    r = Free(rm_tid, train->num, train->pos);
+    if (r) TMLogStrf(tm_tid, "FREE ALL FAILED\n");
 
     tn = train->p.end;
     path_init(&train->p, TRACK);
@@ -95,17 +97,17 @@ void HandlePositionUpdate(TDTrain *train, track_node *new_pos) {
     path_start(&train->p, train->p.start);
   }
 
-
-  // TODO: get stopping distance
   train->last_last_pos = train->last_pos;
   train->last_pos = train->pos;
   train->pos = new_pos;
+  // TODO: get stopping distance
   r = Reserve(rm_tid, train->num, train->pos, 500);
-  if (r) TMLogStrf(tm_tid, "RESERVE ERR %d", r);
+  if (r) TMLogStrf(tm_tid, "RESERVE ERR %d\n", r);
 
   if (train->last_last_pos) {
+    TMLogStrf(tm_tid, "ATTEMPTING TO FREE %s\n", train->last_last_pos->name);
     r = Free(rm_tid, train->num, train->last_last_pos);
-    if (r) TMLogStrf(tm_tid, "FREE ERR %d", r);
+    if (r) TMLogStrf(tm_tid, "FREE ERR %d\n", r);
   }
 
   path_switches_in_next_dist(&train->p, &sw_cfgs, LOOK_AHEAD);

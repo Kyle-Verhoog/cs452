@@ -13,6 +13,7 @@ static RMReply HandleReserve(pather *p, int tr_num, track_node *node, int dist) 
 
 static RMReply HandleFree(pather *p, int tr_num, track_node *node) {
   RMReply rep;
+
   rep.ret = pather_free_before(p, tr_num, node);
 
   // if (rep.ret) {
