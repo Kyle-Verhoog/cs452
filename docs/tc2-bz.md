@@ -33,7 +33,9 @@ The waiting room will return different event types depending on the situation of
 
 # Acceleration, Velocity and Distance
 
-In order to modularize at a higher precision based on train velocity.
+In order to modularize at a higher precision based on train velocity, a straight mapping between train setting and train velocity is not enough. An easy way to interpolate the velocity between a speed setting is to apply a ```(n-1)```-degree polynomial interpolation (in our case we used the lagrange method). Since integrating and deriving polynomials are systematic, we can easily attribute acceleration to velocity to distance to a confident degree of accuracy.
+
+Note that interpolation may fluctuate at higher valued results, and thus it may be worth while to apply partial interpolation instead.
 
 
 
