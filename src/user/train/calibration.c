@@ -270,6 +270,7 @@ void TestCalibration(void *args){
 	TETRPosition event;
 	track_node *start, *end;
 	PossibleSensor target;
+  target.node = NULL;
 	TrainProtocol tp;
 	Switch switches[SWITCH_SIZE];
 

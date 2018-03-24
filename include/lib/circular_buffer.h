@@ -23,6 +23,7 @@ int NAME##_push(NAME *cb, T val);                          \
 int NAME##_top(NAME *cb, T *ret);                          \
 int NAME##_pop(NAME *cb, T *ret);                          \
 int NAME##_get(NAME *cb, int i, T *ret);                   \
+int NAME##_pop_end(NAME *cb, T *ret);                      \
 
 #define CIRCULAR_BUFFER_DEF(NAME, T, SIZE)                 \
 void NAME##_init(NAME *cb) {                               \
@@ -51,7 +52,7 @@ int NAME##_get(NAME *cb, int i, T *ret) {                  \
     *ret = cb->buf[i];                                     \
     return CB_E_NONE;                                      \
   }                                                        \
-  return CB_E_DNE; \
+  return CB_E_DNE;                                         \
 }                                                          \
                                                            \
 int NAME##_top(NAME *cb, T *ret) {                         \
@@ -65,6 +66,15 @@ int NAME##_pop(NAME *cb, T *ret) {                         \
     return CB_E_EMPTY;                                     \
   *ret = cb->buf[cb->start];                               \
   cb->start = (cb->start + 1) % SIZE;                      \
+  cb->size--;                                              \
+  return CB_E_NONE;                                        \
+}                                                          \
+                                                           \
+int NAME##_pop_end(NAME *cb, T *ret) {                     \
+  if (cb->size <= 0)                                       \
+    return CB_E_EMPTY;                                     \
+  cb->end = (cb->end - 1 + SIZE) % SIZE;                   \
+  *ret = cb->buf[cb->end];                                 \
   cb->size--;                                              \
   return CB_E_NONE;                                        \
 }                                                          \

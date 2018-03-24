@@ -212,7 +212,7 @@ static void handle_ve_reg(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *sen
 
   ve_key_cb_push(&sensorToVE[sensor], key);
   waiting[key] = ve;
-  // TMLogStrf(tm_tid, "VRE on %s\n", ve.event.train_at.node->name);
+  TMLogStrf(tm_tid, "VRE %d on %s\n", ve.key, ve.event.train_at.node->name);
 }
 
 void HandleWR_VE(WRRequest *event, VirtualEvent *waiting, ve_key_cb *sensorToVE){
@@ -246,7 +246,7 @@ static void handle_re_se(RawEvent re, VirtualEvent *waiting, ve_key_cb *sensorTo
       eg.ve = waiting[key];
       eg_cb_push(dataBuf, eg);
       reset_waiting_room(&waiting[key]);
-      // TMLogStrf(tm_tid, "VRE RE or VRE VE RE on %d\n", re.event.se_event.id);
+      TMLogStrf(tm_tid, "VRE RE or VRE VE RE %d on %d\n", key, re.event.se_event.id);
     }
   }else{
     //Just an RE

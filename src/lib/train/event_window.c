@@ -1,119 +1,168 @@
 #include <lib/train/event_window.h>
+#include <assert.h>
 
-void ev_window_init(event_window *ew) {
+CIRCULAR_BUFFER_DEF(ev_w_q, event_window *, TRACK_MAX);
+
+void event_window_init(event_window *evw) {
   int i;
+  evw->key_offset = -1;
+  evw->node = NULL;
+  evw->nevents = 0;
+
+  for (i = 0; i < EVENT_MAX; ++i) {
+    evw->num_event[i] = 0;
+  }
+}
+
+void ev_wm_init(ev_wm *wm) {
+  int i;
+  ev_w_q_init(&wm->window_q);
+  ev_w_q_init(&wm->avail_windows);
+
+  for (i = 0; i < TRACK_MAX; ++i) {
+    event_window_init(&wm->window[i]);
+    ev_w_q_push(&wm->avail_windows, &wm->window[i]);
+  }
+
   for (i = 0; i < KEY_MAX; ++i) {
-    ew->keys[i] = 0;
-  }
-
-  ew->start = 0;
-  ew->end = 0;
-  ew->size = 0;
-  ew->unexp_size = 0;
-  ew->new_window = true;
-}
-
-int ev_window_is_expected(event_window *ew, int key) {
-  if (ew->size == 0 || key < 0 || key >= KEY_MAX) {
-    return false;
-  }
-
-  if (ew->start < ew->end && ew->start <= key && key < ew->end) {
-    return ew->keys[key];
-  }
-  else if (ew->start > ew->end && (key >= ew->start || key < ew->end)) {
-    return ew->keys[key];
-  }
-  else {
-    return false;
+    wm->window_map[i] = NULL;
   }
 }
 
 
-int ev_window_is_unexpected(event_window *ew, int key) {
-  if (key < 0 || key >= KEY_MAX) {
-    return EV_E_OOB;
+// adds to the current window
+int ev_wm_add_to_window(ev_wm *wm, int key, track_node *node) {
+  int i;
+  event_window *cur_window;
+
+  ev_w_q_get(&wm->avail_windows, 0, &cur_window);
+
+  // init the window if it hasn't been yet
+  if (cur_window->node == NULL) {
+    cur_window->key_offset = key;
+    cur_window->node = node;
+    cur_window->nevents = 0;
+    for (i = 0; i < EVENT_MAX; ++i)
+      cur_window->num_event[i] = 0;
   }
 
-  if (!ew->keys[key]) {
-    return EV_E_DNE;
-  }
+  cur_window->nevents++;
 
-  if (ew->start < ew->end && ew->start <= key && key < ew->end) {
-    return !ew->keys[key];
-  }
-  else if (ew->start > ew->end && (key >= ew->start || key < ew->end)) {
-    return !ew->keys[key];
-  }
-  else {
-    return ew->keys[key];
-  }
-}
+  assert(cur_window->nevents < EVENT_MAX);
 
-int ev_window_remove_key(event_window *ew, int key) {
-  if (key < 0 || key >= KEY_MAX)
-    return EV_E_OOB;
+  // add the mapping
+  wm->window_map[key] = cur_window;
 
-  if (!ew->keys[key]) {
-    return EV_E_REM_UNINIT;
-  }
-
-  if (ew->start < ew->end && ew->start <= key && key < ew->end) {
-    if (ew->size == 0)
-      return EV_E_EMPTY;
-    ew->keys[key] = 0;
-    ew->size--;
-  }
-  else if (ew->start > ew->end && (key >= ew->start || key < ew->end)) {
-    if (ew->size == 0)
-      return EV_E_EMPTY;
-    ew->keys[key] = 0;
-    ew->size--;
-  }
-  else {
-    ew->keys[key] = 0;
-    ew->unexp_size--;
-  }
-
-  return EV_E_NONE;
-}
-
-int ev_window_shift_all(event_window *ew) {
-  ew->unexp_size += ew->size;
-  ew->size = 0;
-  ew->start = ew->end;
-  ew->new_window = true;
   return 0;
 }
 
-int ev_window_add_key(event_window *ew, int key) {
-  if (key < 0 || key >= KEY_MAX)
-    return EV_E_OOB;
 
-  if (ew->keys[key])
-    return EV_E_EXIST;
-
-  if (ew->new_window) {
-    ew->keys[key] = 1;
-    ew->start = key;
-    ew->end = (key+1) % KEY_MAX;
-    ew->size++;
-    ew->new_window = false;
-    return EV_E_NONE;
-  }
-  else if (key != ew->end) {
-    return EV_E_CONTIG;
-  }
-  else {
-    ew->keys[key] = 1;
-    ew->end = (ew->end + 1) % KEY_MAX;
-    ew->size++;
-    return EV_E_NONE;
-  }
-  return EV_E_NONE;
+// starts a new window
+int ev_wm_next_window(ev_wm *wm) {
+  int r;
+  event_window *cur_window;
+  r = ev_w_q_pop(&wm->avail_windows, &cur_window);
+  if (r) return r;
+  r = ev_w_q_push(&wm->window_q, cur_window);
+  return r;
 }
 
-int ev_window_inc_key(int key) {
+int ev_wm_next_key(int key) {
   return (key+1) % KEY_MAX;
 }
 
+
+// add a result to the window
+// returns
+//  - -1 if the window does not exist
+//  -  0 if adding the result has no effect
+//  -  1 if all results in the window are VRE VE (the whole window timed out)
+//  -  2 if there are conflicting VRE VE/RE results
+//  -  3 if the window has been filled and needs to be cleared
+int ev_wm_res_to_window(ev_wm *wm, int key, int res) {
+  event_window *window;
+
+  window = wm->window_map[key];
+  if (!window) return -1;
+
+  window->num_event[res]++;
+
+  if (window->nevents == window->num_event[TIMEOUT]) {
+    return 1;
+  }
+  if (window->num_event[HIT] > 1) {
+    return 2;
+  }
+  if (window->nevents == window->num_event[TIMEOUT] + window->num_event[HIT]) {
+    return 3;
+  }
+
+  return 0;
+}
+
+int ev_wm_delete_if_complete(ev_wm *wm, int key) {
+  int i, k;
+  event_window *window, *other;
+  ev_w_q temp_q;
+
+  window = wm->window_map[key];
+  if (!window)
+    return -1;
+
+  if (!(window->nevents == window->num_event[TIMEOUT] + window->num_event[HIT]))
+    return -2;
+
+  ev_w_q_init(&temp_q);
+
+  // remove window from window_q
+  // TODO: could really use a linked-list queue implementation
+  while (wm->window_q.size > 0) {
+    ev_w_q_pop(&wm->window_q, &other);
+    if (other == window) {
+      continue;
+    }
+    ev_w_q_push(&temp_q, other);
+  }
+  while (wm->window_q.size > 0) {
+    ev_w_q_pop(&temp_q, &other);
+    ev_w_q_push(&wm->window_q, other);
+  }
+
+  // clear the map entries
+  for (i = 0; i < window->nevents; ++i) {
+    k = i + window->key_offset;
+    wm->window_map[k] = NULL;
+  }
+
+  event_window_init(window);
+
+  return 0;
+}
+
+track_node *ev_wm_get_window_tn(ev_wm *wm, int key) {
+  event_window *window;
+  window = wm->window_map[key];
+  return window->node;
+}
+
+
+int ev_wm_invalidate_after(ev_wm *wm, int key) {
+  int k;
+  event_window *end, *window;
+
+  window = NULL;
+  end = wm->window_map[key];
+
+  while (wm->window_q.size > 0 && window != end) {
+    ev_w_q_pop_end(&wm->window_q, &window);
+    for (k = window->key_offset; k < window->key_offset + window->nevents; ++k) {
+      wm->window_map[k] = NULL;
+    }
+    window->node = NULL;
+    window->key_offset = -1;
+    ev_w_q_push(&wm->avail_windows, window);
+  }
+
+  ev_w_q_push(&wm->window_q, end);
+  return 0;
+}

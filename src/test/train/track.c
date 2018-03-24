@@ -1,5 +1,4 @@
 #include <test/train/track.h>
-
 static track_node T[TRACK_MAX];
 
 static void track_init_test(track_node *tr) {
@@ -156,7 +155,7 @@ static void basic_test(track_node *g) {
   assert(ve.type == VE_TR_AT);
   assert(ve.key == 1);
   assert(ve.timeout == -1);
-  assert(ve.timestamp == 1000+200);
+  // assert(ve.timestamp == 1000+200);
   assert(track.train[24].num == 24);
   assert(track.train[24].sen_ts == 1000);
   assert(track.train[24].speed == -1);
@@ -448,13 +447,13 @@ static void two_trains_test() {
 
 void track_tests() {
   init_tracka(T);
-  // track_init_test(T);
-  // next_sensors_test2();
-  // next_sensors_test(T);
-  // basic_test(T);
-  // track_events_test();
-  // lost_train_test();
-  // two_trains_test();
-  // lost_train_false_positive_test();
-  GetDistBetweenNodesTest();
+  track_init_test(T);
+  next_sensors_test2();
+  next_sensors_test(T);
+  basic_test(T);
+  track_events_test();
+  lost_train_test();
+  two_trains_test();
+  lost_train_false_positive_test();
+  // GetDistBetweenNodesTest();
 }

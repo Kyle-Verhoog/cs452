@@ -61,6 +61,65 @@ static void int_cbuf_push_2() {
   assert(cb.size == 5);
 }
 
+static void int_cbuf_pop_end() {
+  int r;
+  int_cb cb;
+  int_cb_init(&cb);
+  r = int_cb_push(&cb, 5);
+  r = int_cb_push(&cb, 6);
+  r = int_cb_push(&cb, 7);
+  r = int_cb_push(&cb, 8);
+  r = int_cb_push(&cb, 9);
+
+  int i;
+  r = int_cb_pop_end(&cb, &i);
+  assert(i == 9);
+  r = int_cb_pop_end(&cb, &i);
+  assert(i == 8);
+  r = int_cb_pop_end(&cb, &i);
+  assert(i == 7);
+  r = int_cb_pop_end(&cb, &i);
+  assert(i == 6);
+  r = int_cb_pop_end(&cb, &i);
+  assert(i == 5);
+  r = int_cb_pop_end(&cb, &i);
+  assert(r == CB_E_EMPTY);
+
+  r = int_cb_push(&cb, 5);
+  r = int_cb_push(&cb, 6);
+  r = int_cb_push(&cb, 7);
+  r = int_cb_push(&cb, 8);
+  r = int_cb_push(&cb, 9);
+
+  r = int_cb_pop(&cb, &i);
+  assert(i == 5);
+  r = int_cb_pop_end(&cb, &i);
+  assert(i == 9);
+  r = int_cb_pop(&cb, &i);
+  assert(i == 6);
+  r = int_cb_pop_end(&cb, &i);
+  assert(i == 8);
+  r = int_cb_pop_end(&cb, &i);
+  assert(i == 7);
+
+  r = int_cb_push(&cb, 5);
+  r = int_cb_push(&cb, 6);
+  r = int_cb_push(&cb, 7);
+  r = int_cb_push(&cb, 8);
+  r = int_cb_push(&cb, 9);
+
+  r = int_cb_pop(&cb, &i);
+  assert(i == 5);
+  r = int_cb_pop_end(&cb, &i);
+  assert(i == 9);
+  r = int_cb_pop(&cb, &i);
+  assert(i == 6);
+  r = int_cb_pop_end(&cb, &i);
+  assert(i == 8);
+  r = int_cb_pop_end(&cb, &i);
+  assert(i == 7);
+}
+
 
 static void int_cbuf_pop_2() {
   int r, ret;
@@ -337,6 +396,7 @@ void cbuf_tests() {
   int_cbuf_pop_1();
   int_cbuf_push_2();
   int_cbuf_pop_2();
+  int_cbuf_pop_end();
   int_cbuf_get();
   int_cbuf_reuse();
   char_cbuf();

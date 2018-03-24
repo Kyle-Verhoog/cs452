@@ -41,10 +41,13 @@ typedef struct PossibleSensor {
 CIRCULAR_BUFFER_DEC(poss_node_list, PossibleSensor, POSSIBLE_NODE_LIST_SIZE);
 
 #define KEY_SIZE 256
+#define NUM_TRAINS 5
 
 typedef struct Track {
   track_node *graph;
-  Train train[TRAIN_SIZE];
+  Train train[NUM_TRAINS];
+  int tmap[TRAIN_SIZE];
+  int ntrains;
   train_list lost_trains;
   train_list active_trains;
   Sensor sensors[DECODER_SIZE*8];
@@ -52,7 +55,6 @@ typedef struct Track {
   update_list updates;
   ve_list vevents;
   int key;                   // key unique to each event
-  // TODO: model updates?
 } Track;
 
 void TrackInit(Track *, track_node *graph);

@@ -2,42 +2,59 @@
 #define EVENT_WINDOW_H
 
 #include <types.h>
+#include <defines.h>
+#include <lib/circular_buffer.h>
+#include <lib/train/track_node.h>
+#include <lib/train/train_defines.h>
+#include <lib/train/track_data.h>
 
 #define KEY_MAX 256
 
 #define EV_UNINIT_KEY  -1
-#define EV_E_NONE       0
-#define EV_E_OOB        1
-#define EV_E_REM_UNINIT 2
-#define EV_E_EXIST      3
-#define EV_E_CONTIG     4
-#define EV_E_EMPTY      5
-#define EV_E_DNE        6
+#define EV_WIND_TO      1
+#define EV_WIND_MULTI   2
+
+#define WINDOW_SIZE 2
+
+
+typedef enum event_res_t {
+  UNDEF,
+  HIT,
+  TIMEOUT,
+  EVENT_MAX,
+} event_res_t;
 
 typedef struct event_window {
-  int keys[KEY_MAX];
-  int unexp_size;
-  int size;
-  int start;
-  int end;
-  bool new_window;
+  int key_offset;
+  track_node *node;
+  int nevents;
+  int num_event[EVENT_MAX];
 } event_window;
 
-void ev_window_init(event_window *);
+CIRCULAR_BUFFER_DEC(ev_w_q, event_window *, TRACK_MAX);
 
-int ev_window_is_expected(event_window *, int key);
+typedef struct ev_window_manager {
+  event_window window[TRACK_MAX];
+  ev_w_q avail_windows;
+  ev_w_q window_q;
+  event_window *window_map[KEY_MAX];
+} ev_wm;
 
-int ev_window_is_unexpected(event_window *, int key);
 
-int ev_window_shift_all(event_window *);
+void ev_wm_init(ev_wm *);
 
-int ev_window_expected_size(event_window *ew);
+int ev_wm_add_to_window(ev_wm *wm, int key, track_node *node);
 
-int ev_window_add_key(event_window *ew, int key);
+int ev_wm_next_window(ev_wm *wm);
 
-int ev_window_remove_key(event_window *ew, int key);
+int ev_wm_res_to_window(ev_wm *wm, int key, int res);
 
-int ev_window_add_keys(event_window *, int *, int);
+track_node *ev_wm_get_window_tn(ev_wm *wm, int key);
 
-int ev_window_inc_key(int key);
+int ev_wm_invalidate_after(ev_wm *wm, int key);
+
+int ev_wm_delete_if_complete(ev_wm *wm, int key);
+
+int ev_wm_next_key(int key);
+
 #endif

@@ -1,7 +1,5 @@
 #include <lib/train/reservation.h>
 
-#define assert(...)
-
 CIRCULAR_BUFFER_DEF(tn_q, track_node *, PATHER_Q_SIZE);
 
 void reserv_init(reservation *r) {
