@@ -330,40 +330,6 @@ void init_waiting_room(ve_key_cb *map){
   }
 }
 
-void test_waiting_room(){
-  int r;
-  tid_t cs_tid, my_tid, wr_tid, tm_tid, vp_tid;
-  VERequest ver;
-  VirtualEvent ve;
-
-  my_tid = MyTid();
-  wr_tid = MyParentTid();
-  cs_tid = WhoIs(CLOCKSERVER_ID);
-  tm_tid = WhoIs(TERMINAL_MANAGER_ID);
-  vp_tid = WhoIs(VIRTUAL_PROVIDER_ID);
-
-  assert(my_tid > 0 && wr_tid > 0 && cs_tid > 0 && tm_tid > 0 && vp_tid > 0);
-
-  ve.type = VE_TR_AT;
-  ve.timestamp = Time(cs_tid, my_tid) + 500;
-  ve.timeout = 500;
-  ve.depend = 38;
-  ve.event.train_at.train_num = 24;
-  ve.event.train_at.node = &TRACK[4];
-
-  ver.type = VER_REGISTER;
-  ver.ve = ve;
-
-  while(true){
-    ver.ve.timestamp = Time(cs_tid, my_tid) + 500;
-    TMLogStrf(tm_tid, "Sending train %d at %s\n", ver.ve.event.train_at.train_num, ver.ve.event.train_at.node->name);
-    Send(vp_tid, &ver, sizeof(ver), &r, sizeof(r));
-    Delay(cs_tid, my_tid, 1200);  //Every 120 seconds
-  }
-
-  Exit();
-}
-
 void WaitingRoom(){
   int r;
   WRRequest event;
@@ -420,6 +386,41 @@ void WaitingRoom(){
       default:
         assert(0 && "bad request");
     }
+  }
+
+  Exit();
+}
+
+//-----------Tests----------//
+void test_waiting_room(){
+  int r;
+  tid_t cs_tid, my_tid, wr_tid, tm_tid, vp_tid;
+  VERequest ver;
+  VirtualEvent ve;
+
+  my_tid = MyTid();
+  wr_tid = MyParentTid();
+  cs_tid = WhoIs(CLOCKSERVER_ID);
+  tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+  vp_tid = WhoIs(VIRTUAL_PROVIDER_ID);
+
+  assert(my_tid > 0 && wr_tid > 0 && cs_tid > 0 && tm_tid > 0 && vp_tid > 0);
+
+  ve.type = VE_TR_AT;
+  ve.timestamp = Time(cs_tid, my_tid) + 500;
+  ve.timeout = 500;
+  ve.depend = 38;
+  ve.event.train_at.train_num = 24;
+  ve.event.train_at.node = &TRACK[4];
+
+  ver.type = VER_REGISTER;
+  ver.ve = ve;
+
+  while(true){
+    ver.ve.timestamp = Time(cs_tid, my_tid) + 500;
+    TMLogStrf(tm_tid, "Sending train %d at %s\n", ver.ve.event.train_at.train_num, ver.ve.event.train_at.node->name);
+    Send(vp_tid, &ver, sizeof(ver), &r, sizeof(r));
+    Delay(cs_tid, my_tid, 1200);  //Every 120 seconds
   }
 
   Exit();
