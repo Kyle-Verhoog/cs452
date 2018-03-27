@@ -14,14 +14,17 @@ void event_window_init(event_window *evw) {
   }
 }
 
+
 void ev_wm_init(ev_wm *wm) {
   int i;
+  event_window *window;
   ev_w_q_init(&wm->window_q);
   ev_w_q_init(&wm->avail_windows);
 
   for (i = 0; i < TRACK_MAX; ++i) {
-    event_window_init(&wm->window[i]);
-    ev_w_q_push(&wm->avail_windows, &wm->window[i]);
+    window = &wm->window[i];
+    event_window_init(window);
+    ev_w_q_push(&wm->avail_windows, window);
   }
 
   for (i = 0; i < KEY_MAX; ++i) {
@@ -31,14 +34,21 @@ void ev_wm_init(ev_wm *wm) {
 
 
 // adds to the current window
+// returns
+//    0 on success
+//   -1 if the key is associated with another window already
 int ev_wm_add_to_window(ev_wm *wm, int key, track_node *node) {
   int i;
   event_window *cur_window;
 
+  if (wm->window_map[key]) {
+    return -1;
+  }
+
   ev_w_q_get(&wm->avail_windows, 0, &cur_window);
 
   // init the window if it hasn't been yet
-  if (cur_window->node == NULL) {
+  if (!cur_window->node) {
     cur_window->key_offset = key;
     cur_window->node = node;
     cur_window->nevents = 0;
@@ -62,10 +72,13 @@ int ev_wm_next_window(ev_wm *wm) {
   int r;
   event_window *cur_window;
   r = ev_w_q_pop(&wm->avail_windows, &cur_window);
+  assert(r == 0);
   if (r) return r;
   r = ev_w_q_push(&wm->window_q, cur_window);
+  assert(r == 0);
   return r;
 }
+
 
 int ev_wm_next_key(int key) {
   return (key+1) % KEY_MAX;
@@ -100,33 +113,21 @@ int ev_wm_res_to_window(ev_wm *wm, int key, int res) {
   return 0;
 }
 
+
 int ev_wm_delete_if_complete(ev_wm *wm, int key) {
-  int i, k;
+  int i, k, r;
   event_window *window, *other;
-  ev_w_q temp_q;
 
   window = wm->window_map[key];
+
   if (!window)
     return -1;
 
   if (!(window->nevents == window->num_event[TIMEOUT] + window->num_event[HIT]))
     return -2;
 
-  ev_w_q_init(&temp_q);
-
-  // remove window from window_q
-  // TODO: could really use a linked-list queue implementation
-  while (wm->window_q.size > 0) {
-    ev_w_q_pop(&wm->window_q, &other);
-    if (other == window) {
-      continue;
-    }
-    ev_w_q_push(&temp_q, other);
-  }
-  while (wm->window_q.size > 0) {
-    ev_w_q_pop(&temp_q, &other);
-    ev_w_q_push(&wm->window_q, other);
-  }
+  // r = ev_w_q_rem(wm->window_q, window);
+  //  assert(r == 0);
 
   // clear the map entries
   for (i = 0; i < window->nevents; ++i) {
@@ -136,8 +137,11 @@ int ev_wm_delete_if_complete(ev_wm *wm, int key) {
 
   event_window_init(window);
 
+  ev_w_q_push(&wm->avail_windows, window);
+
   return 0;
 }
+
 
 track_node *ev_wm_get_window_tn(ev_wm *wm, int key) {
   event_window *window;

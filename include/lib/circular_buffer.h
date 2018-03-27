@@ -24,6 +24,7 @@ int NAME##_top(NAME *cb, T *ret);                          \
 int NAME##_pop(NAME *cb, T *ret);                          \
 int NAME##_get(NAME *cb, int i, T *ret);                   \
 int NAME##_pop_end(NAME *cb, T *ret);                      \
+// int NAME##_rem(NAME *cb, T val);                           \
 
 #define CIRCULAR_BUFFER_DEF(NAME, T, SIZE)                 \
 void NAME##_init(NAME *cb) {                               \
@@ -42,13 +43,21 @@ int NAME##_push(NAME *cb, T val) {                         \
 }                                                          \
                                                            \
 int NAME##_get(NAME *cb, int i, T *ret) {                  \
-  if (i > SIZE-1 || i < 0)                                 \
-    return CB_E_OOB;                                       \
-  i = (i + cb->start) % SIZE;                              \
-  if ((cb->start > cb->end &&                              \
-        i <= (cb->end-1+SIZE)%SIZE) ||                     \
-      (cb->start == cb->end && cb->size == SIZE) ||        \
-      (i < cb->end)) {                                     \
+  int r, u, v, start, size;                                \
+  start = cb->start;                                       \
+  size = cb->size;                                         \
+  if (cb->size <= 0)                                       \
+    return CB_E_DNE;                                       \
+  u = start + size >= SIZE ? SIZE - start : size;          \
+  v = start + size >= SIZE ? cb->end : 0;                  \
+  r = start + u;                                           \
+  i = i + start;                                           \
+  if (i < r) {                                             \
+    *ret = cb->buf[i];                                     \
+    return CB_E_NONE;                                      \
+  }                                                        \
+  i = i - r;                                               \
+  if (i < v) {                                             \
     *ret = cb->buf[i];                                     \
     return CB_E_NONE;                                      \
   }                                                        \
@@ -75,6 +84,38 @@ int NAME##_pop_end(NAME *cb, T *ret) {                     \
     return CB_E_EMPTY;                                     \
   cb->end = (cb->end - 1 + SIZE) % SIZE;                   \
   *ret = cb->buf[cb->end];                                 \
+  cb->size--;                                              \
+  return CB_E_NONE;                                        \
+}                                                          \
+                                                           \
+int NAME##_rem(NAME *cb, T val) {                          \
+  int i, u, v, j, start, size;                             \
+  start = cb->start;                                       \
+  size = cb->size;                                         \
+  if (cb->size <= 0)                                       \
+    return CB_E_EMPTY;                                     \
+  u = start + (start + size >= SIZE ? SIZE - start : size);\
+  v = start + size >= SIZE ? cb->end : 0;                  \
+  i = start;                                               \
+  j = 0;                                                   \
+  for (; i < u; ++i) {                                     \
+    if (cb->buf[i] == val)                                 \
+      goto SHIFT;                                          \
+  }                                                        \
+  for (; j < v; ++j) {                                     \
+    if (cb->buf[j] == val)                                 \
+      goto SHIFT;                                          \
+  }                                                        \
+  return CB_E_DNE;                                         \
+                                                           \
+SHIFT:                                                     \
+  for (; i < u-1; ++i)                                     \
+    cb->buf[i] = cb->buf[i+1];                             \
+  if (i == u-1 && j < v-1)                                 \
+    cb->buf[u-1] = cb->buf[0];                             \
+  for (; j < v-1; ++j)                                     \
+    cb->buf[j] = cb->buf[j+1];                             \
+  cb->end = (cb->end - 1 + SIZE) % SIZE;                   \
   cb->size--;                                              \
   return CB_E_NONE;                                        \
 }                                                          \
