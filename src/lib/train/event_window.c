@@ -1,5 +1,4 @@
 #include <lib/train/event_window.h>
-#include <assert.h>
 
 EXT_CIRCULAR_BUFFER_DEF(ev_w_q, event_window *, TRACK_MAX);
 
@@ -58,7 +57,7 @@ int ev_wm_add_to_window(ev_wm *wm, int key, track_node *node) {
 
   cur_window->nevents++;
 
-  assert(cur_window->nevents < EVENT_MAX);
+  // assert(cur_window->nevents < EVENT_MAX);
 
   // add the mapping
   wm->window_map[key] = cur_window;
@@ -72,10 +71,8 @@ int ev_wm_next_window(ev_wm *wm) {
   int r;
   event_window *cur_window;
   r = ev_w_q_pop(&wm->avail_windows, &cur_window);
-  assert(r == 0);
   if (r) return r;
   r = ev_w_q_push(&wm->window_q, cur_window);
-  assert(r == 0);
   return r;
 }
 
@@ -116,7 +113,7 @@ int ev_wm_res_to_window(ev_wm *wm, int key, int res) {
 
 int ev_wm_delete_if_complete(ev_wm *wm, int key) {
   int i, k, r;
-  event_window *window, *other;
+  event_window *window;
 
   window = wm->window_map[key];
 
