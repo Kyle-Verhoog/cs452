@@ -5,7 +5,7 @@
 #include <user/train/representer.h>
 
 void TrainGearEventSubscriber();
-void TrainPositionEventSubscriber()
+void TrainPositionEventSubscriber();
 void TrainSpeedEventSubscriber();
 void TrainStatusEventSubscriber();
 void SwitchEventSubscriber();
