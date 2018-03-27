@@ -133,7 +133,7 @@ static void basic_test(track_node *g) {
   VirtualEvent ve;
   TrackInit(&track, g);
 
-  // emulate finding train 24
+  // simulate finding train 24
   train.num = 24;
   TrackAddTrain(&track, &train);
   assert(track.train[track.tmap[24]].num == 24);
@@ -491,7 +491,6 @@ static void two_trains_recovery() {
   ve_list_init(&track.vevents);
   update_list_init(&track.updates);
 
-
   ve_list_init(&track.vevents);
   update_list_init(&track.updates);
 
@@ -511,6 +510,7 @@ static void two_trains_recovery() {
   assert(track.train[track.tmap[24]].status == TR_KNOWN);
   assert(track.train[track.tmap[74]].status == TR_UN_SPEED);
 }
+
 
 void track_tests() {
   init_tracka(T);

@@ -283,7 +283,7 @@ static void TrackAddVEvent(Track *track, Train *train, track_node *tn, VirtualEv
 
 static void TrackGenerateUnknownSpeedTrainVEvents(Track *track, Train *train) {
   assert(train->status == TR_UN_SPEED);
-  int r;
+  int r, s;
   poss_node_list pnl;
   PossibleSensor sensor;
   assert(train->status != TR_UNINIT);
@@ -295,11 +295,7 @@ static void TrackGenerateUnknownSpeedTrainVEvents(Track *track, Train *train) {
   VirtualEvent ve;
   ve.type = VE_TR_AT;
 
-  if (pnl.size > 0) {
-    // we're sending a new event window
-    ev_wm_next_window(&train->wm);
-  }
-
+  s = pnl.size;
   while (pnl.size > 0) {
     r = poss_node_list_pop(&pnl, &sensor);
     assert(r == 0);
@@ -311,11 +307,16 @@ static void TrackGenerateUnknownSpeedTrainVEvents(Track *track, Train *train) {
 
     TrackAddVEvent(track, train, sensor.node, &ve);
   }
+
+  // if we added events, then advance the window
+  if (s > 0) {
+    ev_wm_next_window(&train->wm);
+  }
 }
 
 static void TrackGenerateKnownTrainVEvents(Track *track, Train *train) {
   assert(train->status == TR_KNOWN);
-  int r, dist, next_dist;
+  int s, r, dist, next_dist;
   poss_node_list pnl;
   PossibleSensor sensor;
   assert(train->status != TR_UNINIT);
@@ -327,11 +328,7 @@ static void TrackGenerateKnownTrainVEvents(Track *track, Train *train) {
   VirtualEvent ve;
   ve.type = VE_TR_AT;
 
-  if (pnl.size > 0) {
-    // we're sending a new event window
-    ev_wm_next_window(&train->wm);
-  }
-
+  s = pnl.size;
   while (pnl.size > 0) {
     r = poss_node_list_pop(&pnl, &sensor);
     assert(r == 0);
@@ -345,6 +342,9 @@ static void TrackGenerateKnownTrainVEvents(Track *track, Train *train) {
     ve.event.train_at.node = sensor.node;
 
     TrackAddVEvent(track, train, sensor.node, &ve);
+  }
+  if (s > 0) {
+    ev_wm_next_window(&train->wm);
   }
 }
 
@@ -662,7 +662,8 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
     return;
   }
 
-  ev_wm_delete_if_complete(&train->wm, ekey);
+  r = ev_wm_delete_if_complete(&train->wm, ekey);
+  assert(!r);
 
   new_pos = &track->graph[grp->re.event.se_event.id];
 
@@ -696,11 +697,16 @@ static void TrackHandleTrainAtTimeout(Track *track, EventGroup *grp) {
     return;
   }
   else if (r == 1) {
-    // all events timed out, reset back to the prev node and lose the train
+    // all events timed out, reset back to the prev node, invalidate events
+    // after the node and lose the train
     train->pos = ev_wm_get_window_tn(&train->wm, ekey);
+    ev_wm_invalidate_after(&train->wm, ekey);
     TrackLoseTrain(track, train);
+    return;
   }
+
   ev_wm_delete_if_complete(&train->wm, ekey);
+  assert(!r);
 }
 
 

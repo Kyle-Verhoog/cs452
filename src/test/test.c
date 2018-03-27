@@ -60,7 +60,7 @@ int main(void) {
   PTEST_END();
 
   PTEST_START("train/event_window");
-  // event_window_tests();
+  event_window_tests();
   PTEST_END();
 
   PTEST_START("train/priority_queue");
@@ -76,7 +76,7 @@ int main(void) {
   PTEST_END();
 
   PTEST_START("train/track");
-  // track_tests();
+  track_tests();
   PTEST_END();
 
   PTEST_START("train/train_model");

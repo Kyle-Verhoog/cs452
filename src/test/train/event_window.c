@@ -101,54 +101,48 @@ static void sim_normal_events() {
   track_node *tn;
   ev_wm_init(&wm);
 
+
+  // train 1 starts and events are generated for A1
   tn = &track[trhr(track, "A1")];
   ev_wm_add_to_window(&wm, 0, tn);
   ev_wm_next_window(&wm);
 
+  // train 1 hits A1
   r = ev_wm_res_to_window(&wm, 0, HIT);
   assert(r == 3);
-
   r = ev_wm_delete_if_complete(&wm, 0);
   assert(r == 0);
 
 
+  // train 1 is expected to hit C13
   tn = &track[trhr(track, "C13")];
   r = ev_wm_add_to_window(&wm, 1, tn);
   assert(r == 0);
   r = ev_wm_next_window(&wm);
   assert(r == 0);
 
+  // train 1 hits C13
   r = ev_wm_res_to_window(&wm, 1, HIT);
   assert(r == 3);
-
   r = ev_wm_delete_if_complete(&wm, 1);
   assert(r == 0);
 
 
+  // train 1 is expected to hit E7
   tn = &track[trhr(track, "E7")];
   r = ev_wm_add_to_window(&wm, 2, tn);
   assert(r == 0);
   r = ev_wm_next_window(&wm);
   assert(r == 0);
 
-  printf("%d\n", wm.window_map[2]->nevents);
-
-  printf("%d %d\n", wm.window_map[3], wm.window_map[2]);
-  tn = &track[trhr(track, "D7")];
-  r = ev_wm_add_to_window(&wm, 3, tn);
-  assert(r == 0);
-  printf("%d %d\n", wm.window_map[3], wm.window_map[2]);
-  r = ev_wm_next_window(&wm);
-  assert(r == 0);
-
-  printf("%d %d\n", wm.window_map[3], wm.window_map[2]);
+  // train 1 didn't reach E7 in time
   r = ev_wm_res_to_window(&wm, 2, TIMEOUT);
-  printf("%d\n", wm.window_map[2]->nevents);
-  printf("%d %d\n", wm.window_map[3], wm.window_map[2]);
   assert(r == 1);
 
-  r = ev_wm_delete_if_complete(&wm, 2);
-  assert(r == -1);
+  r = ev_wm_invalidate_after(&wm, 2);
+  assert(r == 0);
+  // printf("%d\n", wm.window_map[2]->nevents);
+  // printf("%d %d\n", wm.window_map[3], wm.window_map[2]);
 
 
   /*

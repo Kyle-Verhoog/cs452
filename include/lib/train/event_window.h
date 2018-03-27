@@ -31,7 +31,7 @@ typedef struct event_window {
   int num_event[EVENT_MAX];
 } event_window;
 
-CIRCULAR_BUFFER_DEC(ev_w_q, event_window *, TRACK_MAX);
+EXT_CIRCULAR_BUFFER_DEC(ev_w_q, event_window *, TRACK_MAX);
 
 typedef struct ev_window_manager {
   event_window window[TRACK_MAX];

@@ -1,7 +1,7 @@
 #include <lib/train/event_window.h>
 #include <assert.h>
 
-CIRCULAR_BUFFER_DEF(ev_w_q, event_window *, TRACK_MAX);
+EXT_CIRCULAR_BUFFER_DEF(ev_w_q, event_window *, TRACK_MAX);
 
 void event_window_init(event_window *evw) {
   int i;
@@ -126,8 +126,9 @@ int ev_wm_delete_if_complete(ev_wm *wm, int key) {
   if (!(window->nevents == window->num_event[TIMEOUT] + window->num_event[HIT]))
     return -2;
 
-  // r = ev_w_q_rem(wm->window_q, window);
-  //  assert(r == 0);
+  r = ev_w_q_rem(&wm->window_q, window);
+  if (r)
+    return -3;
 
   // clear the map entries
   for (i = 0; i < window->nevents; ++i) {
