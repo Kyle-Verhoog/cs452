@@ -8,6 +8,10 @@
 #include <lib/train/train_defines.h>
 #include <lib/train/track_data.h>
 
+#ifndef X86
+#include <syscalls.h>
+#endif
+
 #define KEY_MAX 256
 
 #define EV_UNINIT_KEY  -1

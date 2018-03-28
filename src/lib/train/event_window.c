@@ -150,7 +150,7 @@ int ev_wm_delete_if_complete(ev_wm *wm, int key) {
 
 track_node *ev_wm_get_window_tn(ev_wm *wm, int key) {
   event_window *window;
-  assert(k >= 0 && k < KEY_MAX);
+  assert(key >= 0 && key < KEY_MAX);
   window = wm->window_map[key];
   return window->node;
 }
