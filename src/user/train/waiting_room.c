@@ -250,6 +250,7 @@ static void handle_re_se(RawEvent re, VirtualEvent *waiting, ve_key_cb *sensorTo
       eg.ve.event.train_at.train_num = liveMap[eg.ve.event.train_at.train_num];
       r = eg_cb_push(dataBuf, eg);
       assert(r != CB_E_FULL);
+      assert(key >= 0 && key < MAX_LIVE_TRAINS * MAX_OUTSTANDING_EVENT);
       reset_waiting_room(&waiting[key]);
       TMLogStrf(tm_tid, "VRE RE or VRE VE RE %d on %d\n", key, re.event.se_event.id);
     }
@@ -309,6 +310,7 @@ static void handle_to_tr_at(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *s
         eg.ve.event.train_at.train_num = liveMap[eg.ve.event.train_at.train_num];        
         r = eg_cb_push(dataBuf, eg);
         assert(r != CB_E_FULL);
+        assert(key >= 0 && key < MAX_LIVE_TRAINS * MAX_OUTSTANDING_EVENT);
         reset_waiting_room(&waiting[key]);
         TMLogStrf(tm_tid, "VRE VE on %s\n", ve.event.train_at.node->name);
         break;

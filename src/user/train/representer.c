@@ -4,13 +4,15 @@
 CIRCULAR_BUFFER_DEF(trm_subscribers, tid_t, MAX_EVENT_SUBSCRIBERS);
 
 static void NotifySubscribers(trm_subscribers *subs, TrackEventType type, union TrackEvents *event) {
+  int r;
   assert(type >= 0 && type < MAX_TRACK_EVENT);
   tid_t tid;
   trm_subscribers *event_subs;
 
   event_subs = &subs[type];
   while (event_subs->size > 0) {
-    trm_subscribers_pop(event_subs, &tid);
+    r = trm_subscribers_pop(event_subs, &tid);
+    assert(r == 0);
     Reply(tid, event, sizeof(union TrackEvents));
   }
 }
