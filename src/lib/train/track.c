@@ -47,6 +47,7 @@ int FindDistToNode(track_node *node, track_node *dest) {
 
   dist[node->id] = 0;
   r = bfs_q_push(&q, node);
+  assert(r == 0);
   d = BFS_Q_SIZE;
 
   while (q.size > 0 && d-- > 0) {
@@ -59,12 +60,12 @@ int FindDistToNode(track_node *node, track_node *dest) {
     if (node->type == NODE_BRANCH) {
       next = node->edge[DIR_CURVED].dest;
       r = bfs_q_push(&q, next);
-      dist[next->id] = node->edge[DIR_CURVED].dist + dist[node->id];
       assert(r == 0);
+      dist[next->id] = node->edge[DIR_CURVED].dist + dist[node->id];
       next = node->edge[DIR_STRAIGHT].dest;
       r = bfs_q_push(&q, node->edge[DIR_STRAIGHT].dest);
-      dist[next->id] = node->edge[DIR_STRAIGHT].dist + dist[node->id];
       assert(r == 0);
+      dist[next->id] = node->edge[DIR_STRAIGHT].dist + dist[node->id];
     }
     else if (node->type == NODE_EXIT) {
       continue;
@@ -72,8 +73,8 @@ int FindDistToNode(track_node *node, track_node *dest) {
     else {
       next = node->edge[DIR_AHEAD].dest;
       r = bfs_q_push(&q, node->edge[DIR_AHEAD].dest);
-      dist[next->id] = node->edge[DIR_AHEAD].dist + dist[node->id];
       assert(r == 0);
+      dist[next->id] = node->edge[DIR_AHEAD].dist + dist[node->id];
     }
   }
 
@@ -242,6 +243,7 @@ static void TrackAddVEvent(Track *track, Train *train, track_node *tn, VirtualEv
   track->key = ev_wm_next_key(track->key);
   ve->key = track->key;
   r = ve_list_push(&track->vevents, *ve);
+  assert(r == 0);
 
   r = ev_wm_add_to_window(&train->wm, ve->key, train->pos);
   // assertf(r == 0, "%d, %d %d %d %d %d %d\r\n", r, ve->key, train->window.start, train->window.end, train->window.size, train->window.unexp_size);
@@ -277,7 +279,8 @@ static void TrackGenerateUnknownSpeedTrainVEvents(Track *track, Train *train) {
 
   // if we added events, then advance the window
   if (s > 0) {
-    ev_wm_next_window(&train->wm);
+    r = ev_wm_next_window(&train->wm);
+    assert(r == 0);
   }
 }
 
@@ -311,7 +314,8 @@ static void TrackGenerateKnownTrainVEvents(Track *track, Train *train) {
     TrackAddVEvent(track, train, sensor.node, &ve);
   }
   if (s > 0) {
-    ev_wm_next_window(&train->wm);
+    r = ev_wm_next_window(&train->wm);
+    assert(r == 0);
   }
 }
 
@@ -504,6 +508,7 @@ static bool TrainNearby(track_node *node, track_node *dest) {
 
   nse[node->id] = 0;
   r = bfs_q_push(&q, node);
+  assert(r == 0);
 
   while (q.size > 0) {
     r = bfs_q_pop(&q, &node);
