@@ -229,7 +229,7 @@ void HandleWR_VE(WRRequest *event, VirtualEvent *waiting, ve_key_cb *sensorToVE)
   }
 }
 
-static void handle_re_se(RawEvent re, VirtualEvent *waiting, ve_key_cb *sensorToVE, eg_cb *dataBuf){
+static void handle_re_se(RawEvent re, VirtualEvent *waiting, ve_key_cb *sensorToVE, eg_cb *dataBuf, int *liveMap /*TODO:REMOVE*/){
   EventGroup eg;
   int sensor, key;
 
@@ -245,6 +245,7 @@ static void handle_re_se(RawEvent re, VirtualEvent *waiting, ve_key_cb *sensorTo
       eg.type = waiting[key].type == VE_REG ? VRE_RE : VRE_VE_RE; 
       eg.re = re;
       eg.ve = waiting[key];
+      eg.ve.event.train_at.train_num = liveMap[eg.ve.event.train_at.train_num];
       eg_cb_push(dataBuf, eg);
       reset_waiting_room(&waiting[key]);
       // TMLogStrf(tm_tid, "VRE RE or VRE VE RE on %d\n", re.event.se_event.id);
@@ -258,7 +259,7 @@ static void handle_re_se(RawEvent re, VirtualEvent *waiting, ve_key_cb *sensorTo
   }
 }
 
-void HandleWR_RE(WRRequest *event, VirtualEvent *waiting, ve_key_cb *sensorToVE, eg_cb *dataBuf){
+void HandleWR_RE(WRRequest *event, VirtualEvent *waiting, ve_key_cb *sensorToVE, eg_cb *dataBuf, int *liveMap /*TODO: REMOVE*/){
   EventGroup eg;
 
   tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
@@ -266,7 +267,7 @@ void HandleWR_RE(WRRequest *event, VirtualEvent *waiting, ve_key_cb *sensorToVE,
 
   switch(event->data.re.type){
     case RE_SE:
-      handle_re_se(event->data.re, waiting, sensorToVE, dataBuf);
+      handle_re_se(event->data.re, waiting, sensorToVE, dataBuf, liveMap /*TODO: REMOVE*/);
       break;
     case RE_SW:
     case RE_TR_CMD:
@@ -350,11 +351,13 @@ void WaitingRoom(){
   ve_key_cb sensorToVE[SENSOR_SIZE];
   int live = 0; //TODO: TEMPORARY
   int trainMap[TRAIN_MAX]; //TODO: TEMPORARY - REMOVE THIS
+  int liveMap[TRAIN_MAX]; //TODO: TEMPORARY - REMOVE THIS
 
   eg_cb dataBuf;
   eg_cb_init(&dataBuf);
   init_waiting_room(sensorToVE);
   init_train_map(trainMap); //TODO: TEMPORARY
+  init_train_map(liveMap); //TODO: TEMPORARY
 
   r = RegisterAs(WAITING_ROOM_ID);
   assert(r == 0);
@@ -385,15 +388,19 @@ void WaitingRoom(){
         Reply(req_tid, &r, sizeof(r));
         //TODO: TEMPORARY
         if(trainMap[event.data.ve.event.train_at.train_num] == -1){
-          trainMap[event.data.ve.event.train_at.train_num] == live;
+          trainMap[event.data.ve.event.train_at.train_num] = live;
+          liveMap[live] = event.data.ve.event.train_at.train_num;
+          event.data.ve.event.train_at.train_num = live;
           live++;
         }
-        event.data.ve.event.train_at.train_num = trainMap[event.data.ve.event.train_at.train_num];
+        else{
+          event.data.ve.event.train_at.train_num = trainMap[event.data.ve.event.train_at.train_num];
+        }     
         HandleWR_VE(&event, waiting, sensorToVE);
         break;
       case WR_RE:
         Reply(req_tid, &r, sizeof(r));
-        HandleWR_RE(&event, waiting, sensorToVE, &dataBuf);
+        HandleWR_RE(&event, waiting, sensorToVE, &dataBuf, liveMap);
         break;
       case WR_TO:
         Reply(req_tid, &r, sizeof(r)); 
