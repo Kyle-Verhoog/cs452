@@ -40,7 +40,7 @@ typedef struct PossibleSensor {
 #define POSSIBLE_NODE_LIST_SIZE 5
 CIRCULAR_BUFFER_DEC(poss_node_list, PossibleSensor, POSSIBLE_NODE_LIST_SIZE);
 
-#define KEY_SIZE 256
+#define KEY_SIZE 64 
 #define NUM_TRAINS 5
 
 typedef struct Track {
