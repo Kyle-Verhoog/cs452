@@ -24,7 +24,9 @@ void ev_wm_init(ev_wm *wm) {
     window = &wm->window[i];
     event_window_init(window);
     r = ev_w_q_push(&wm->avail_windows, window);
+#ifndef X86    
     assert(r != CB_E_FULL);
+#endif
   }
 
   for (i = 0; i < KEY_MAX; ++i) {
@@ -40,8 +42,9 @@ void ev_wm_init(ev_wm *wm) {
 int ev_wm_add_to_window(ev_wm *wm, int key, track_node *node) {
   int i;
   event_window *cur_window;
-
+#ifndef X86
   assert(key >= 0 && key < KEY_MAX);
+#endif
   if (wm->window_map[key]) {
     return -1;
   }
@@ -93,8 +96,10 @@ int ev_wm_next_key(int key) {
 //  -  3 if the window has been filled and needs to be cleared
 int ev_wm_res_to_window(ev_wm *wm, int key, int res) {
   event_window *window;
+#ifndef X86  
   assert(key >= 0 && key < KEY_MAX);
   assert(res >= 0 && res < EVENT_MAX);
+#endif
 
   window = wm->window_map[key];
   if (!window) return -1;
@@ -118,7 +123,9 @@ int ev_wm_res_to_window(ev_wm *wm, int key, int res) {
 int ev_wm_delete_if_complete(ev_wm *wm, int key) {
   int i, k, r;
   event_window *window;
+#ifndef X86
   assert(key >= 0 && key < KEY_MAX);
+#endif
 
   window = wm->window_map[key];
 
@@ -135,7 +142,9 @@ int ev_wm_delete_if_complete(ev_wm *wm, int key) {
   // clear the map entries
   for (i = 0; i < window->nevents; ++i) {
     k = i + window->key_offset;
+#ifndef X86
     assert(k >= 0 && k < KEY_MAX);
+#endif
     wm->window_map[k] = NULL;
   }
 
@@ -150,7 +159,9 @@ int ev_wm_delete_if_complete(ev_wm *wm, int key) {
 
 track_node *ev_wm_get_window_tn(ev_wm *wm, int key) {
   event_window *window;
+#ifndef X86
   assert(key >= 0 && key < KEY_MAX);
+#endif
   window = wm->window_map[key];
   return window->node;
 }
@@ -159,7 +170,9 @@ track_node *ev_wm_get_window_tn(ev_wm *wm, int key) {
 int ev_wm_invalidate_after(ev_wm *wm, int key) {
   int k, r;
   event_window *end, *window;
+#ifndef X86
   assert(key >= 0 && key < KEY_MAX);
+#endif
 
   window = NULL;
   end = wm->window_map[key];
@@ -167,16 +180,22 @@ int ev_wm_invalidate_after(ev_wm *wm, int key) {
   while (wm->window_q.size > 0 && window != end) {
     ev_w_q_pop_end(&wm->window_q, &window);
     for (k = window->key_offset; k < window->key_offset + window->nevents; ++k) {
+#ifndef X86
       assert(k >= 0 && k < KEY_MAX);
+#endif      
       wm->window_map[k] = NULL;
     }
     window->node = NULL;
     window->key_offset = -1;
     r = ev_w_q_push(&wm->avail_windows, window);
+#ifndef X86
     assert(r != CB_E_FULL);
+#endif
   }
 
   r = ev_w_q_push(&wm->window_q, end);
+#ifndef X86
   assert(r != CB_E_FULL);
+#endif
   return 0;
 }

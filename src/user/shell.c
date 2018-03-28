@@ -414,6 +414,7 @@ void Shell(void *args) {
     { "ms", &TrainMS, 28, true },
     { "cal", &TrainCAL, 28, true },
     { "tst", &TrainTST, 28, true },
+    { "tk", &TrainTK, 28, true },
   };
 
   vars = (int *)args;

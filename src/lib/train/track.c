@@ -86,7 +86,7 @@ int GetNextPossibleSensors(track_node *node, int dist, poss_node_list *pnl) {
   int r;
   PossibleSensor sensor;
   assert(node != NULL);
-  assert(dist > 0 && dist < 10000);
+  assert(dist >= 0 && dist < 10000);
 
   while (node->type != NODE_SENSOR) {
     if (node->type == NODE_BRANCH) {
@@ -197,7 +197,7 @@ int DistanceBetweenNodes(Switch *sw, track_node *start, track_node *end){
      n = n->edge[DIR_AHEAD].dest;
     }
 
-    assert(dist > 0 && dist < 50000); //Probably inf loop
+    assert(dist >= 0 && dist < 50000); //Probably inf loop
   }
 
   return dist;
@@ -358,7 +358,7 @@ static void UpdateTrainCmd(Track *track, int tr_num, int cmd) {
   event.type = TE_TR_MOVE;
   event.event.tr_gear.num = tr_num;
   event.event.tr_gear.newgear = cmd;
-  if (cmd == 15) {
+  if (cmd == 15) {  //Reverse
     track->train[track->tmap[tr_num]].pos = track->train[track->tmap[tr_num]].pos->reverse;
     TrackGenerateTrainPositionTEvent(track, &track->train[track->tmap[tr_num]]);
   }
@@ -366,6 +366,30 @@ static void UpdateTrainCmd(Track *track, int tr_num, int cmd) {
   assert(r == 0);
 }
 
+static void InitTrainCmd(Track *track, int tr_num, int node){
+  int r;
+  Train *train;
+
+  assert(tr_num >= 0 && tr_num <= TRAIN_SIZE);
+  track->tmap[tr_num] = track->ntrains++;
+
+  train = &track->train[track->tmap[tr_num]];
+  assert(train->status == TR_UNINIT);
+
+  ev_wm_init(&train->wm);
+
+  train->num    = tr_num;
+  train->speed  = 0;
+  train->gear   = 0;
+  train->pos    = &track->graph[node];
+  train->sen_ts = 0;
+  train->status = TR_LOST;
+
+  r = train_list_push(&track->lost_trains, train);
+  assert(r == 0);
+
+  TrackGenerateTrainStatusTEvent(track, train, TR_UNINIT, TR_LOST);
+}
 
 #define alpha 90
 // recalculate a rough estimate of velocity
@@ -380,7 +404,6 @@ static void TrackUpdateKnownTrain(Track *track, Train *train, track_node *new_po
     // dist = track_node_dist(train->pos, new_pos); // dist is in mm
     // TODO: replace this with something better?
     dist = FindDistToNode(train->pos, new_pos);
-    assert(dist > 0);
     assert(dist >= 0 && dist <= 10000);
 
     assert(0 <= old_speed && old_speed <= 10000);
@@ -621,6 +644,9 @@ static void TrackHandleRawEvent(Track *track, RawEvent *re, bool check_trains) {
       tr_cmd_event = &re->event.tr_cmd_event;
       TrackHandleTrainCmd(track, tr_cmd_event->arg1, tr_cmd_event->arg2);
       UpdateTrainCmd(track, tr_cmd_event->arg1, tr_cmd_event->arg2);
+      break;
+    case RE_TR_INIT:
+      InitTrainCmd(track, tr_cmd_event->arg1, tr_cmd_event->arg2);
       break;
     default:
       assert(0);

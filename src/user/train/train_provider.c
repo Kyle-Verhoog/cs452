@@ -52,6 +52,13 @@ void TWriteTask(void *args){
 			buf[0] = cmd.arg2;
 			buf[1] = cmd.arg1;
 			PutStr(tx_tid, buf, 2);
+			ts.re.type = RE_TR_CMD;
+			break;
+		case T_INIT:
+			buf[0] = cmd.arg1;
+			buf[1] = cmd.arg2;
+			PutStr(tx_tid, buf, 2);
+			ts.re.type = RE_TR_INIT;
 			break;
     default:
       assert(0);
@@ -60,7 +67,6 @@ void TWriteTask(void *args){
 
 	//Send the Updated Command to the publisher
 	ts.tc = T_NOTIFY;
-	ts.re.type = RE_TR_CMD;
 	ts.re.timestamp = Time(cs_tid, my_tid);
 	ts.re.event.tr_cmd_event = cmd;
 	Send(pub_tid, &ts, sizeof(ts), &reply, sizeof(reply));
@@ -111,6 +117,9 @@ void TrainProvider(){
 				Reply(tid_req, &reply, sizeof(reply));
 				CreateArgs(27, &TWriteTask, &tp, sizeof(tp));
 				break;
+			case T_INIT:
+				Reply(tid_req, &reply, sizeof(reply));
+				CreateArgs(27, &TWriteTask, &tp, sizeof(tp));
 			default:
 				assert(0 && "Bad Train Command");
 				break;

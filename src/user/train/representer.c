@@ -27,6 +27,7 @@ static void AddSubscriber(trm_subscribers *subs, tid_t tid, TrackEventType type)
   assert(r == 0);
 }
 
+
 static void ApplySensorChange(Track *track, TESEChange *event) {
   track->sensors[event->num].state = event->state;
 }
@@ -37,6 +38,10 @@ static void ApplySwitchChange(Track *track, TESWChange *event){
 
 static void ApplyTrainSpeedChange(Track *track, TETRSpeed *event) {
   track->train[event->num].speed = event->new;
+}
+
+static void ApplyTrainGearChange(Track *track, TETRGear *event){
+  track->train[event->num].gear = event->newgear;
 }
 
 static void ApplyTrainStatusChange(Track *track, TETRStatus *event) {
@@ -73,7 +78,7 @@ static void ApplyUpdates(Track *track, update_list *updates, trm_subscribers *su
         ApplySensorChange(track, &event.event.se_change);
         break;
       case TE_TR_MOVE:
-        //assert(0 && "TODO");
+        ApplyTrainGearChange(track, &event.event.tr_gear);
         break;
       case TE_SW_CHANGE:
         ApplySwitchChange(track, &event.event.sw_change);

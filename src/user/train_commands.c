@@ -152,7 +152,45 @@ void SwitchSW(char *args){
 }
 
 void TrainTK(char *args){
-  
+  int r, tn, p;
+  char pos[10];
+  tid_t tr_tid, tm_tid, tid;
+  TrainProtocol tp;
+
+  tp.tc = T_INIT;
+
+  tr_tid = WhoIs(TRAIN_PROVIDER_ID);
+  assert(tr_tid > 0);
+  tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+  assert(tm_tid > 0);
+
+  Receive(&tid, &r, sizeof(r));
+  r = parse_args(args, "%d %s", &tn, pos, sizeof(pos));
+
+  if (r) {
+    TMLogStrf(tm_tid, "tk: error parsing arg %d\n", r);
+    r = -1;
+    Reply(tid, &r, sizeof(r));
+    Exit();
+  }
+
+  p = trhr(TRACK, pos);
+
+  if(p < 0 || p > TRACK_MAX-1){
+    TMLogStrf(tm_tid, "tk: invalid track node %d\n", p);
+    r = -1;
+    Reply(tid, &r, sizeof(r));
+    Exit();
+  }
+
+  tp.arg1 = (char)tn;
+  tp.arg2 = (char)p;
+  TMLogStrf(tm_tid, "tk %d %d\n", tp.arg1, tp.arg2);
+
+  Send(tr_tid, &tp, sizeof(tp), &r, sizeof(r));
+  r = 0;
+  Reply(tid, &r, sizeof(r));
+  Exit(); 
 }
 
 void TrainCAL(char *args) {

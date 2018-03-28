@@ -209,8 +209,8 @@ static void handle_ve_reg(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *sen
   tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
   assert(tm_tid > 0);
 
-  assert(sensor >= 0);
-  assert(key >= 0);
+  assert(sensor >= 0 && sensor < SENSOR_SIZE);
+  assert(key >= 0 && key < MAX_LIVE_TRAINS * MAX_OUTSTANDING_EVENT);
 
   r = ve_key_cb_push(&sensorToVE[sensor], key);
   assert(r != CB_E_FULL);
@@ -277,6 +277,7 @@ void HandleWR_RE(WRRequest *event, VirtualEvent *waiting, ve_key_cb *sensorToVE,
       break;
     case RE_SW:
     case RE_TR_CMD:
+    case RE_TR_INIT:
       eg.type = RE;
       eg.re = event->data.re;
       r = eg_cb_push(dataBuf, eg);
