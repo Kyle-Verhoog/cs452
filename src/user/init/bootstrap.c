@@ -1,31 +1,31 @@
 #include <user/init/bootstrap.h>
 #include <user/train/driver.h> // here for hack globals
 
-void RailwayInit(){
+void RailwayInit() {
   DRIVER1_DEF = false;
   DRIVER2_DEF = false;
-    tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
-    assert(tx_tid >= 0);
-    tid_t rx_tid = WhoIs(IOSERVER_UART1_RX_ID);
-    assert(rx_tid >= 0);
+  tid_t tx_tid = WhoIs(IOSERVER_UART1_TX_ID);
+  assert(tx_tid >= 0);
+  tid_t rx_tid = WhoIs(IOSERVER_UART1_RX_ID);
+  assert(rx_tid >= 0);
 
-    //Send Reset Commands to Terminal
-    BLPutC(tx_tid, 'X');
-    BLPutC(tx_tid, 192);
+  //Send Reset Commands to Terminal
+  BLPutC(tx_tid, 'X');
+  BLPutC(tx_tid, 192);
 
-    //Flush the IO
-    FlushIO(tx_tid);
-    FlushIO(rx_tid);
+  //Flush the IO
+  FlushIO(tx_tid);
+  FlushIO(rx_tid);
 
-    //Send Go
-    PutC(tx_tid, 96);
+  //Send Go
+  PutC(tx_tid, 96);
 
-    Create(27, &WaitingRoom);
-    Create(26, &Representer);
+  Create(27, &WaitingRoom);
+  Create(26, &Representer);
 
-    Create(21, &ReservationManager);
+  Create(21, &ReservationManager);
 
-    Exit();
+  Exit();
 }
 
 void Bootstrap() {
@@ -54,7 +54,7 @@ void Bootstrap() {
 
   Create(0, &Logger);
 
-  Create(19, &init_switch);
+  // Create(19, &init_switch);
 
   Exit();
 }

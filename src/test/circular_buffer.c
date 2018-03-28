@@ -1,7 +1,7 @@
 #include <test/circular_buffer.h>
 
-CIRCULAR_BUFFER_DEC(int_cb, int, 5);
-CIRCULAR_BUFFER_DEF(int_cb, int, 5);
+EXT_CIRCULAR_BUFFER_DEC(int_cb, int, 5);
+EXT_CIRCULAR_BUFFER_DEF(int_cb, int, 5);
 
 #define SIZE 5
 int int_cb_get2(int_cb *cb, int i, int *ret) {

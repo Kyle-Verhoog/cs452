@@ -1,7 +1,7 @@
 #include <lib/train/track.h>
 
 CIRCULAR_BUFFER_DEF(train_cb, Train, TRAIN_LIST_SIZE);
-CIRCULAR_BUFFER_DEF(train_list, Train *, TRAIN_LIST_SIZE);
+EXT_CIRCULAR_BUFFER_DEF(train_list, Train *, TRAIN_LIST_SIZE);
 CIRCULAR_BUFFER_DEF(poss_node_list, PossibleSensor, POSSIBLE_NODE_LIST_SIZE);
 CIRCULAR_BUFFER_DEF(update_list, TrackEvent, UPDATE_LIST_SIZE);
 CIRCULAR_BUFFER_DEF(ve_list, VirtualEvent, VEVENT_LIST_SIZE);
@@ -31,45 +31,12 @@ void TrackInit(Track *track, track_node *tr) {
     ev_wm_init(&track->train[i].wm);
   }
 
+  for (i = 0; i < TRAIN_MAX; ++i) {
+    track->tmap[i] = NULL;
+  }
+
   track->key = 0;
 }
-
-// TODO: replace with proper list datastructure
-Train *TrackGetActiveTrain(Track *track, int train_num) {
-  int i, r;
-  Train *train;
-
-  for (i = 0; i < track->active_trains.size; ++i) {
-    r = train_list_get(&track->active_trains, i, &train);
-    assert(r == 0);
-
-    if (train->num == train_num)
-      return train;
-  }
-
-  return 0;
-}
-
-// TODO: replace with proper list datastructure
-Train *TrackRemoveActiveTrain(Track *track, int train_num) {
-  int i, r, size;
-  Train *train;
-
-  size = track->active_trains.size;
-  for (i = 0; i < size; ++i) {
-    r = train_list_pop(&track->active_trains, &train);
-    assert(r == 0);
-
-    if (train->num == train_num)
-      return train;
-
-    r = train_list_push(&track->active_trains, train);
-    assert(r == 0);
-  }
-
-  return 0;
-}
-
 
 int FindDistToNode(track_node *node, track_node *dest) {
   int r, d;
@@ -276,7 +243,7 @@ static void TrackAddVEvent(Track *track, Train *train, track_node *tn, VirtualEv
   ve->key = track->key;
   r = ve_list_push(&track->vevents, *ve);
 
-  r = ev_wm_add_to_window(&train->wm, ve->key, tn);
+  r = ev_wm_add_to_window(&train->wm, ve->key, train->pos);
   // assertf(r == 0, "%d, %d %d %d %d %d %d\r\n", r, ve->key, train->window.start, train->window.end, train->window.size, train->window.unexp_size);
   assert(r == 0);
 }
@@ -488,6 +455,7 @@ void TrackAddTrain(Track *track, Train *tr) {
 
   train->num    = tr->num;
   train->speed  = -1;
+  train->gear   = tr->gear;
   train->pos    = NULL;
   train->sen_ts = -1;
   train->status = TR_LOST;
@@ -507,7 +475,8 @@ static void TrackLoseTrain(Track *track, Train *train) {
   old_status = train->status;
   train->status = TR_LOST;
 
-  TrackRemoveActiveTrain(track, train->num);
+  // r = train_list_rem(&track->active_trains, train);
+  // assert(r == 0);
 
   r = train_list_push(&track->lost_trains, train);
   assert(r == 0);
@@ -519,21 +488,24 @@ static void TrackLocateLostTrain(Track *track, Train *train, track_node *sen, in
 
   TrackUpdateLostTrain(track, train, sen, ts);
 
-  r = train_list_push(&track->active_trains, train);
-  assert(r == 0);
+  // r = train_list_push(&track->active_trains, train);
+  // assert(r == 0);
 }
 
 
+// does a BFS to a depth of 2 sensors (since we can assume at most 1 sensor failure)
+#define NEARBY_SENSOR_DEPTH 2
 static bool TrainNearby(track_node *node, track_node *dest) {
-  int r, d, b;
+  int r;
+  int nse[TRACK_MAX];
   bfs_q q;
+  track_node *next;
   bfs_q_init(&q);
 
+  nse[node->id] = 0;
   r = bfs_q_push(&q, node);
-  d = BFS_Q_SIZE;
-  b = 0;
 
-  while (q.size > 0 && d-- > 0 && b < 3) {
+  while (q.size > 0) {
     r = bfs_q_pop(&q, &node);
     assert(r == 0);
 
@@ -541,17 +513,31 @@ static bool TrainNearby(track_node *node, track_node *dest) {
       return true;
 
     if (node->type == NODE_BRANCH) {
-      r = bfs_q_push(&q, node->edge[DIR_CURVED].dest);
+      next = node->edge[DIR_CURVED].dest;
+      nse[next->id] = nse[node->id];
+      r = bfs_q_push(&q, next);
       assert(r == 0);
-      r = bfs_q_push(&q, node->edge[DIR_STRAIGHT].dest);
+
+      next = node->edge[DIR_STRAIGHT].dest;
+      nse[next->id] = nse[node->id];
+      r = bfs_q_push(&q, next);
       assert(r == 0);
-      b++;
     }
     else if (node->type == NODE_EXIT) {
       continue;
     }
+    else if (node->type == NODE_SENSOR) {
+      next = node->edge[DIR_AHEAD].dest;
+      if (nse[node->id] + 1 > NEARBY_SENSOR_DEPTH)
+        continue;
+      nse[next->id] = nse[node->id] + 1;
+      r = bfs_q_push(&q, next);
+      assert(r == 0);
+    }
     else {
-      r = bfs_q_push(&q, node->edge[DIR_AHEAD].dest);
+      next = node->edge[DIR_AHEAD].dest;
+      nse[next->id] = nse[node->id];
+      r = bfs_q_push(&q, next);
       assert(r == 0);
     }
   }
@@ -573,7 +559,7 @@ static Train *TrackAttemptToLocateTrain(Track *track, int sen_num, int ts) {
     r = train_list_pop(&track->lost_trains, &train);
     assert(r == 0);
 
-    if (!train->pos || TrainNearby(train->pos, node)) {
+    if (/*train->gear > 0 && */(!train->pos || TrainNearby(train->pos, node))) {
       TrackLocateLostTrain(track, train, node, ts);
       return train;
     }
@@ -600,14 +586,14 @@ static void TrackHandleTrainAtSensorRaw(Track *track, RawSensorEvent *se, int ts
 
 static void TrackHandleTrainCmd(Track *track, int train_num, int cmd) {
   Train t;
-  if (track->train[track->tmap[train_num]].status == TR_UNINIT) {
+  if (!track->tmap[train_num]) {
     t.num = train_num;
     TrackAddTrain(track, &t);
   }
 }
 
 // If we just have an RE, then we just pass the RE through
-static void TrackHandleRawEvent(Track *track, RawEvent *re) {
+static void TrackHandleRawEvent(Track *track, RawEvent *re, bool check_trains) {
   RawSensorEvent *se_event;
   RawSwitchEvent *sw_event;
   RawTrainCmdEvent *tr_cmd_event;
@@ -615,7 +601,11 @@ static void TrackHandleRawEvent(Track *track, RawEvent *re) {
   switch (re->type) {
     case RE_SE:
       se_event = &re->event.se_event;
-      TrackHandleTrainAtSensorRaw(track, se_event, re->timestamp);
+
+      // only check trains that have a high state
+      if (check_trains && se_event->state) {
+        TrackHandleTrainAtSensorRaw(track, se_event, re->timestamp);
+      }
       UpdateSensor(track, se_event->id, se_event->state);
       break;
     case RE_SW:
@@ -649,9 +639,9 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
 
   r = ev_wm_res_to_window(&train->wm, ekey, HIT);
   if (r == -1) {
-    assert(0 && "window does not exist");
-    return;
+    // assert(0 && "window does not exist");
     // TMLogStrf(tm_tid, "window does not exist\n");
+    return;
   }
   else if (r == 2) {
     // we got more than 1 sensor hit for a window lose the train
@@ -659,11 +649,24 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
     train->pos = ev_wm_get_window_tn(&train->wm, ekey);
     ev_wm_invalidate_after(&train->wm, ekey);
     TrackLoseTrain(track, train);
+    assert(train->status == TR_LOST);
     return;
   }
 
   r = ev_wm_delete_if_complete(&train->wm, ekey);
-  assert(!r);
+  if (r == -1) {
+    // TMLogStrf(tm_tid, "EVDEL: window does not exist\n");
+  }
+  else if (r == -2) {
+  }
+  else if (r == -3) {
+    assert(0);
+    // TMLogStrf(tm_tid, "EVDEL: REMOVE ERROR\n");
+  }
+  else if (r == -4) {
+    assert(0);
+    // TMLogStrf(tm_tid, "EVDEL: avail_windows FULL\n");
+  }
 
   new_pos = &track->graph[grp->re.event.se_event.id];
 
@@ -693,7 +696,8 @@ static void TrackHandleTrainAtTimeout(Track *track, EventGroup *grp) {
   r = ev_wm_res_to_window(&train->wm, ekey, TIMEOUT);
 
   if (r == -1) {
-    assert(0 && "window does not exist");
+    // window does not exist
+    // assert(0 && "window does not exist");
     return;
   }
   else if (r == 1) {
@@ -706,7 +710,19 @@ static void TrackHandleTrainAtTimeout(Track *track, EventGroup *grp) {
   }
 
   ev_wm_delete_if_complete(&train->wm, ekey);
-  assert(!r);
+  if (r == -1) {
+    // TMLogStrf(tm_tid, "EVDEL: window does not exist\n");
+  }
+  else if (r == -2) {
+  }
+  else if (r == -3) {
+    assert(0);
+    // TMLogStrf(tm_tid, "EVDEL: REMOVE ERROR\n");
+  }
+  else if (r == -4) {
+    assert(0);
+    // TMLogStrf(tm_tid, "EVDEL: avail_windows FULL\n");
+  }
 }
 
 
@@ -715,13 +731,14 @@ int TrackInterpretEventGroup(Track *track, EventGroup *grp) {
     case VRE_VE_RE:
     case VRE_RE:
       TrackHandleTrainAtSensor(track, grp);
-      TrackHandleRawEvent(track, &grp->re);
+      // pass on the raw event, but don't update trains
+      TrackHandleRawEvent(track, &grp->re, false);
       break;
     case VRE_VE:
       TrackHandleTrainAtTimeout(track, grp);
       break;
     case RE:
-      TrackHandleRawEvent(track, &grp->re);
+      TrackHandleRawEvent(track, &grp->re, true);
       break;
     default:
       assert(0);

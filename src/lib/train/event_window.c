@@ -135,7 +135,8 @@ int ev_wm_delete_if_complete(ev_wm *wm, int key) {
 
   event_window_init(window);
 
-  ev_w_q_push(&wm->avail_windows, window);
+  r = ev_w_q_push(&wm->avail_windows, window);
+  if (r) return -4;
 
   return 0;
 }

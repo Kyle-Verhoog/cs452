@@ -67,6 +67,28 @@ static void TrainPositionSubscriber() {
   }
 }
 
+static void TrainStatusSubscriber() {
+  int r;
+  tid_t rep_tid, par_tid;
+  TrackRequest tr_req;
+  struct InterfaceData data;
+
+  data.type = STATUS;
+
+  par_tid = MyParentTid();
+  assert(par_tid > 0);
+  rep_tid = WhoIs(REPRESENTER_ID);
+  assert(rep_tid > 0);
+
+  tr_req.type = TRR_SUBSCRIBE;
+  tr_req.data.type = TE_TR_STATUS;
+
+  while (true) {
+    Send(rep_tid, &tr_req, sizeof(tr_req), &data.event, sizeof(data.event));
+    Send(par_tid, &data, sizeof(data), &r, sizeof(r));
+  }
+}
+
 void TrainInterface() {
   tid_t sub_tid, tm_tid;
   int i, offset;
@@ -75,10 +97,18 @@ void TrainInterface() {
   struct InterfaceData req;
   struct InterfaceTrain t;
 
+  const char *status[] = {
+    "UNINIT",
+    "LOST",
+    "? SPEED",
+    "KNOWN"
+  };
+
   for (i = 0; i < TRAIN_SIZE; ++i) {
     trains[i].num = i;
     trains[i].exists = false;
     trains[i].speed = -1;
+    trains[i].status = 0;
     trains[i].pos = NULL;
   }
 
@@ -88,6 +118,7 @@ void TrainInterface() {
   TMRegister(tm_tid, TRAIN_OFF_X, TRAIN_OFF_Y, TRAIN_WIDTH, TRAIN_HEIGHT);
 
   Create(11, &TrainSpeedSubscriber);
+  Create(11, &TrainStatusSubscriber);
   Create(11, &TrainPositionSubscriber);
 
   while (true) {
@@ -111,12 +142,12 @@ void TrainInterface() {
 
     offset = 0;
     offset += buf_pack_c(buf+offset, TERM_RETURN);
-    offset += buf_pack_f(buf+offset, "   tr node  speed   \n");
-    offset += buf_pack_f(buf+offset, "  ┉┉┉┉┉┉┉┉┉┉┉┉┉┉┉┉  \n");
+    offset += buf_pack_f(buf+offset, "   tr node  speed status   \n");
+    offset += buf_pack_f(buf+offset, "  ┉┉┉┉┉┉┉┉┉┉┉┉┉┉┉┉┉┉┉┉┉┉  \n");
     for (i = 0; i < TRAIN_SIZE; ++i) {
       t = trains[i];
       if (t.exists) {
-        offset += buf_pack_f(buf+offset, "   %d  %s  %d\n", t.num, t.pos ? t.pos->name : "???", t.speed);
+        offset += buf_pack_f(buf+offset, "   %d  %s  %d %s\n", t.num, t.pos ? t.pos->name : "???", t.speed, status[t.status]);
       }
     }
     TMPutStr(tm_tid, buf, offset);
