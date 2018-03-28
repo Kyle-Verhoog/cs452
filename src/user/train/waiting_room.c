@@ -281,7 +281,7 @@ void HandleWR_RE(WRRequest *event, VirtualEvent *waiting, ve_key_cb *sensorToVE,
   }
 }
 
-static void handle_to_tr_at(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *sensorToVE, eg_cb *dataBuf){
+static void handle_to_tr_at(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *sensorToVE, eg_cb *dataBuf, int *liveMap /*TODO: REMOVE THIS*/){
   EventGroup eg;
   int sensor, key, size, i;
 
@@ -299,6 +299,7 @@ static void handle_to_tr_at(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *s
       if(key == ve.event.train_at.train_num * MAX_OUTSTANDING_EVENT + ve.key){
         eg.type = VRE_VE;
         eg.ve = ve;
+        eg.ve.event.train_at.train_num = liveMap[eg.ve.event.train_at.train_num];        
         eg_cb_push(dataBuf, eg);
         reset_waiting_room(&waiting[key]);
         TMLogStrf(tm_tid, "VRE VE on %s\n", ve.event.train_at.node->name);
@@ -314,11 +315,11 @@ static void handle_to_tr_at(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *s
   } 
 }
 
-void HandleWR_TO(WRRequest *event, VirtualEvent *waiting, ve_key_cb *sensorToVE, eg_cb *dataBuf){
+void HandleWR_TO(WRRequest *event, VirtualEvent *waiting, ve_key_cb *sensorToVE, eg_cb *dataBuf, int*liveMap /*TODO: REMOVE THIS*/){
 
   switch(event->data.ve.type){
     case VE_TR_AT:
-      handle_to_tr_at(event->data.ve, waiting, sensorToVE, dataBuf);
+      handle_to_tr_at(event->data.ve, waiting, sensorToVE, dataBuf,liveMap /*TODO: REMOVE THIS*/);
       break;
     default:
       assert(0 && "Timeout from bad data");
@@ -404,7 +405,7 @@ void WaitingRoom(){
         break;
       case WR_TO:
         Reply(req_tid, &r, sizeof(r)); 
-        HandleWR_TO(&event, waiting, sensorToVE, &dataBuf);
+        HandleWR_TO(&event, waiting, sensorToVE, &dataBuf, liveMap);
 	break;
       case WR_CE:
         courier = req_tid;
