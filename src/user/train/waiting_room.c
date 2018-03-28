@@ -400,6 +400,8 @@ void WaitingRoom(){
       case WR_VE:
         Reply(req_tid, &r, sizeof(r));
         //TODO: TEMPORARY
+        assert(event.data.ve.event.train_at.train_num >= 1 && event.data.ve.event.train_at.train_num <= TRAIN_MAX);
+        assert(event.data.ve.key >= 0 && event.data.ve.key < KEY_SIZE);
         if(trainMap[event.data.ve.event.train_at.train_num] == -1){
           trainMap[event.data.ve.event.train_at.train_num] = live;
           liveMap[live] = event.data.ve.event.train_at.train_num;

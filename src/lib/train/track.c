@@ -645,7 +645,6 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
   r = ev_wm_res_to_window(&train->wm, ekey, HIT);
   if (r == -1) {
     // assert(0 && "window does not exist");
-    // TMLogStrf(tm_tid, "window does not exist\n");
     return;
   }
   else if (r == 2) {
@@ -653,6 +652,9 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
     // and invalidate newer windows
     train->pos = ev_wm_get_window_tn(&train->wm, ekey);
     ev_wm_invalidate_after(&train->wm, ekey);
+    if(train->status == TR_LOST){
+      assert(0 && "RE-LOSING TRAIN??");
+    }
     TrackLoseTrain(track, train);
     assert(train->status == TR_LOST);
     return;
