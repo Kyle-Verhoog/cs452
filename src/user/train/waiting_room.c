@@ -331,6 +331,14 @@ void init_waiting_room(ve_key_cb *map){
   }
 }
 
+//TODO: TEMP
+void init_train_map(int *map){
+  int i;
+  for(i = 0; i < TRAIN_MAX; i++){
+    map[i] = -1;
+  }
+}
+
 void WaitingRoom(){
   int r;
   WRRequest event;
@@ -340,9 +348,13 @@ void WaitingRoom(){
 
   VirtualEvent waiting[KEY_SIZE*MAX_LIVE_TRAINS];
   ve_key_cb sensorToVE[SENSOR_SIZE];
+  int live = 0; //TODO: TEMPORARY
+  int trainMap[TRAIN_MAX]; //TODO: TEMPORARY - REMOVE THIS
+
   eg_cb dataBuf;
   eg_cb_init(&dataBuf);
   init_waiting_room(sensorToVE);
+  init_train_map(trainMap); //TODO: TEMPORARY
 
   r = RegisterAs(WAITING_ROOM_ID);
   assert(r == 0);
@@ -371,6 +383,12 @@ void WaitingRoom(){
     switch(event.type){
       case WR_VE:
         Reply(req_tid, &r, sizeof(r));
+        //TODO: TEMPORARY
+        if(trainMap[event.data.ve.event.train_at.train_num] == -1){
+          trainMap[event.data.ve.event.train_at.train_num] == live;
+          live++;
+        }
+        event.data.ve.event.train_at.train_num = trainMap[event.data.ve.event.train_at.train_num];
         HandleWR_VE(&event, waiting, sensorToVE);
         break;
       case WR_RE:
