@@ -151,6 +151,10 @@ void SwitchSW(char *args){
   Exit();
 }
 
+void TrainTK(char *args){
+  
+}
+
 void TrainCAL(char *args) {
   CalibrationArgs cargs;
   int r;
