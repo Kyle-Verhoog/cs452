@@ -202,6 +202,7 @@ static void handle_ve_tr_at(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *s
 }
 
 static void handle_ve_reg(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *sensorToVE){
+  int r;
   int sensor = ve.event.train_at.node->num;
   int key = ve.event.train_at.train_num * MAX_OUTSTANDING_EVENT + ve.key;
 
@@ -211,7 +212,8 @@ static void handle_ve_reg(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *sen
   assert(sensor >= 0);
   assert(key >= 0);
 
-  ve_key_cb_push(&sensorToVE[sensor], key);
+  r = ve_key_cb_push(&sensorToVE[sensor], key);
+  assert(r != CB_E_FULL);
   waiting[key] = ve;
   // TMLogStrf(tm_tid, "VRE on %s\n", ve.event.train_at.node->name);
 }
@@ -231,7 +233,7 @@ void HandleWR_VE(WRRequest *event, VirtualEvent *waiting, ve_key_cb *sensorToVE)
 
 static void handle_re_se(RawEvent re, VirtualEvent *waiting, ve_key_cb *sensorToVE, eg_cb *dataBuf, int *liveMap /*TODO:REMOVE*/){
   EventGroup eg;
-  int sensor, key;
+  int sensor, key, r;
 
   tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
   assert(tm_tid > 0);
@@ -246,7 +248,8 @@ static void handle_re_se(RawEvent re, VirtualEvent *waiting, ve_key_cb *sensorTo
       eg.re = re;
       eg.ve = waiting[key];
       eg.ve.event.train_at.train_num = liveMap[eg.ve.event.train_at.train_num];
-      eg_cb_push(dataBuf, eg);
+      r = eg_cb_push(dataBuf, eg);
+      assert(r != CB_E_FULL);
       reset_waiting_room(&waiting[key]);
       // TMLogStrf(tm_tid, "VRE RE or VRE VE RE on %d\n", re.event.se_event.id);
     }
@@ -254,12 +257,14 @@ static void handle_re_se(RawEvent re, VirtualEvent *waiting, ve_key_cb *sensorTo
     //Just an RE
     eg.type = RE;
     eg.re = re;
-    eg_cb_push(dataBuf, eg);
+    r = eg_cb_push(dataBuf, eg);
+    assert(r != CB_E_FULL);
     // TMLogStrf(tm_tid, "RE on %d\n", re.event.se_event.id);
   }
 }
 
 void HandleWR_RE(WRRequest *event, VirtualEvent *waiting, ve_key_cb *sensorToVE, eg_cb *dataBuf, int *liveMap /*TODO: REMOVE*/){
+  int r;
   EventGroup eg;
 
   tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
@@ -273,7 +278,8 @@ void HandleWR_RE(WRRequest *event, VirtualEvent *waiting, ve_key_cb *sensorToVE,
     case RE_TR_CMD:
       eg.type = RE;
       eg.re = event->data.re;
-      eg_cb_push(dataBuf, eg);
+      r = eg_cb_push(dataBuf, eg);
+      assert(r != CB_E_FULL);
       // TMLogStrf(tm_tid, "RE NOT SENSOR\n");
       break;
     default:
@@ -283,7 +289,7 @@ void HandleWR_RE(WRRequest *event, VirtualEvent *waiting, ve_key_cb *sensorToVE,
 
 static void handle_to_tr_at(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *sensorToVE, eg_cb *dataBuf, int *liveMap /*TODO: REMOVE THIS*/){
   EventGroup eg;
-  int sensor, key, size, i;
+  int sensor, key, size, i, r;
 
   tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
   assert(tm_tid > 0);
@@ -295,18 +301,21 @@ static void handle_to_tr_at(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *s
     size = sensorToVE[sensor].size;
     //Remove Virtual Event Due to Timeout
     for(i = 0; i < size; i++){
-      ve_key_cb_pop(&sensorToVE[sensor], &key);
+      r = ve_key_cb_pop(&sensorToVE[sensor], &key);
+      assert(r != CB_E_EMPTY);
       if(key == ve.event.train_at.train_num * MAX_OUTSTANDING_EVENT + ve.key){
         eg.type = VRE_VE;
         eg.ve = ve;
         eg.ve.event.train_at.train_num = liveMap[eg.ve.event.train_at.train_num];        
-        eg_cb_push(dataBuf, eg);
+        r = eg_cb_push(dataBuf, eg);
+        assert(r != CB_E_FULL);
         reset_waiting_room(&waiting[key]);
         TMLogStrf(tm_tid, "VRE VE on %s\n", ve.event.train_at.node->name);
         break;
       }
       else{
-        ve_key_cb_push(&sensorToVE[sensor], key);
+        r = ve_key_cb_push(&sensorToVE[sensor], key);
+        assert(r != CB_E_FULL);
       }
     }
   }else{
@@ -377,7 +386,8 @@ void WaitingRoom(){
   while(true){
 
     if(dataBuf.size > 0 && courier > 0){
-      eg_cb_pop(&dataBuf, &data);
+      r = eg_cb_pop(&dataBuf, &data);
+      assert(r != CB_E_EMPTY);
       Reply(courier, &data, sizeof(data));
       courier = -1;
     }

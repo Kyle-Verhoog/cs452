@@ -9,6 +9,7 @@
 #include <user/train/train_provider.h>
 #include <user/train/calibration.h>
 #include <user/train/driver.h>
+#include <lib/train/events.h>
 
 void TrainDR(char *args);
 
@@ -23,8 +24,5 @@ void TrainMS(char *args);
 void TrainCAL(char *args);
 
 void TrainTST(char *args);
-
-
-
 
 #endif
