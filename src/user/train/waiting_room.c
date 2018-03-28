@@ -186,7 +186,8 @@ void TimeoutWR_VE(void *args){
 static void handle_ve_tr_at(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *sensorToVE){
   int key;
 
-  key = ve.key;
+  //key = ve.key;
+  key = ve.event.train_at.train_num * MAX_OUTSTANDING_EVENT + ve.key;
   assert(key >= 0);
 
   tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
@@ -202,7 +203,7 @@ static void handle_ve_tr_at(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *s
 
 static void handle_ve_reg(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *sensorToVE){
   int sensor = ve.event.train_at.node->num;
-  int key = ve.key;
+  int key = ve.event.train_at.train_num * MAX_OUTSTANDING_EVENT + ve.key;
 
   tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
   assert(tm_tid > 0);
@@ -294,7 +295,7 @@ static void handle_to_tr_at(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *s
     //Remove Virtual Event Due to Timeout
     for(i = 0; i < size; i++){
       ve_key_cb_pop(&sensorToVE[sensor], &key);
-      if(key == ve.key){
+      if(key == ve.event.train_at.train_num * MAX_OUTSTANDING_EVENT + ve.key){
         eg.type = VRE_VE;
         eg.ve = ve;
         eg_cb_push(dataBuf, eg);
@@ -337,7 +338,7 @@ void WaitingRoom(){
   tid_t req_tid;
   tid_t courier = -1;
 
-  VirtualEvent waiting[KEY_SIZE];
+  VirtualEvent waiting[KEY_SIZE*MAX_LIVE_TRAINS];
   ve_key_cb sensorToVE[SENSOR_SIZE];
   eg_cb dataBuf;
   eg_cb_init(&dataBuf);
