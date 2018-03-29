@@ -646,6 +646,7 @@ static void TrackHandleRawEvent(Track *track, RawEvent *re, bool check_trains) {
       UpdateTrainCmd(track, tr_cmd_event->arg1, tr_cmd_event->arg2);
       break;
     case RE_TR_INIT:
+      tr_cmd_event = &re->event.tr_cmd_event;
       InitTrainCmd(track, tr_cmd_event->arg1, tr_cmd_event->arg2);
       break;
     default:

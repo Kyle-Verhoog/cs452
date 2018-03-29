@@ -45,6 +45,8 @@ void TWriteTask(void *args){
   	assert(pub_tid >= 0);
   	tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
 	assert(cs_tid >= 0);
+	tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+	assert(tm_tid >= 0);
 
 	//Handle Command
 	switch(cmd.tc){
@@ -55,9 +57,6 @@ void TWriteTask(void *args){
 			ts.re.type = RE_TR_CMD;
 			break;
 		case T_INIT:
-			buf[0] = cmd.arg1;
-			buf[1] = cmd.arg2;
-			PutStr(tx_tid, buf, 2);
 			ts.re.type = RE_TR_INIT;
 			break;
     default:
@@ -120,6 +119,7 @@ void TrainProvider(){
 			case T_INIT:
 				Reply(tid_req, &reply, sizeof(reply));
 				CreateArgs(27, &TWriteTask, &tp, sizeof(tp));
+				break;
 			default:
 				assert(0 && "Bad Train Command");
 				break;
