@@ -12,13 +12,13 @@
 #include <syscalls.h>
 #endif
 
-#define KEY_MAX 256
+#define KEY_MAX 16 
 
 #define EV_UNINIT_KEY  -1
 #define EV_WIND_TO      1
 #define EV_WIND_MULTI   2
 
-#define WINDOW_SIZE 2
+#define WINDOW_SIZE 10 
 
 
 typedef enum event_res_t {

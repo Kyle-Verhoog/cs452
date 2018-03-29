@@ -141,7 +141,7 @@ int ev_wm_delete_if_complete(ev_wm *wm, int key) {
 
   // clear the map entries
   for (i = 0; i < window->nevents; ++i) {
-    k = i + window->key_offset;
+    k = (i + window->key_offset)%KEY_MAX;
 #ifndef X86
     assert(k >= 0 && k < KEY_MAX);
 #endif

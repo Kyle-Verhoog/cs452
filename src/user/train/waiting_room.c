@@ -247,15 +247,20 @@ static void handle_re_se(RawEvent re, VirtualEvent *waiting, ve_key_cb *sensorTo
   if(sensorToVE[sensor].size > 0){
     //Possible conflict, but we'll assume they all ran over it
     while(ve_key_cb_pop(&sensorToVE[sensor], &key) != CB_E_EMPTY){
+      if(waiting[key].type == VE_NONE){
+        assert(0 && "Didn't clear sensors");
+      }
       eg.type = waiting[key].type == VE_REG ? VRE_RE : VRE_VE_RE; 
       eg.re = re;
       eg.ve = waiting[key];
+      assert(eg.ve.event.train_at.train_num == 0);
       eg.ve.event.train_at.train_num = liveMap[eg.ve.event.train_at.train_num];
+      assert(eg.ve.event.train_at.train_num == 24);
       r = eg_cb_push(dataBuf, eg);
       assert(r != CB_E_FULL);
       assert(key >= 0 && key < MAX_LIVE_TRAINS * MAX_OUTSTANDING_EVENT);
       reset_waiting_room(&waiting[key]);
-      TMLogStrf(tm_tid, "MAX VALUE IS: %d, %d\n\r" MAX_LIVE_TRAINS, MAX_OUTSTANDING_EVENT);
+      TMLogStrf(tm_tid, "MAX VALUE IS: %d, %d\n", MAX_LIVE_TRAINS, MAX_OUTSTANDING_EVENT);
       TMLogStrf(tm_tid, "VRE RE or VRE VE RE %d on %d\n", key, re.event.se_event.id);
     }
   }else{
