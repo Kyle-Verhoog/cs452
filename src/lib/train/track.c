@@ -389,6 +389,7 @@ static void InitTrainCmd(Track *track, int tr_num, int node){
   assert(r == 0);
 
   TrackGenerateTrainStatusTEvent(track, train, TR_UNINIT, TR_LOST);
+  TrackGenerateTrainPositionTEvent(track, train);
 }
 
 #define alpha 90
