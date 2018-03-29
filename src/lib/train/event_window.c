@@ -180,7 +180,7 @@ int ev_wm_invalidate_after(ev_wm *wm, int key) {
   while (wm->window_q.size > 0 && window != end) {
     r = ev_w_q_pop_end(&wm->window_q, &window);
     assert(r == 0);
-    for (k = window->key_offset; k < window->key_offset + window->nevents; ++k) {
+    for (k = window->key_offset%KEY_MAX; k < window->key_offset + window->nevents; k = (k+1)%KEY_MAX) {
 #ifndef X86
       assert(k >= 0 && k < KEY_MAX);
 #endif      

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DFLAGS="-O2 -DCACHE -DDEBUG -DTASK_METRICS"
+DFLAGS="-O2 -DCACHE -DDEBUG"
 KERN_A="kern_a"
 KERN_B="kern_b"
 
