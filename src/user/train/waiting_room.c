@@ -214,6 +214,9 @@ static void handle_ve_reg(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *sen
 
   r = ve_key_cb_push(&sensorToVE[sensor], key);
   assert(r != CB_E_FULL);
+  if(waiting[key].type != VE_NONE){
+    assert(0 && "overwritten");
+  }
   waiting[key] = ve;
   TMLogStrf(tm_tid, "VRE %d on %s\n", ve.key, ve.event.train_at.node->name);
 }
@@ -339,8 +342,11 @@ void HandleWR_TO(WRRequest *event, VirtualEvent *waiting, ve_key_cb *sensorToVE,
   }
 }
 
-void init_waiting_room(ve_key_cb *map){
+void init_waiting_room(VirtualEvent* waiting, ve_key_cb *map){
   int i;
+  for(i = 0; i < MAX_LIVE_TRAINS * MAX_OUTSTANDING_EVENT; i++){
+    waiting[i].type = VE_NONE;
+  }
   for(i = 0; i < SENSOR_SIZE; i++){
     ve_key_cb_init(&map[i]);
   }
@@ -369,7 +375,7 @@ void WaitingRoom(){
 
   eg_cb dataBuf;
   eg_cb_init(&dataBuf);
-  init_waiting_room(sensorToVE);
+  init_waiting_room(waiting, sensorToVE);
   init_train_map(trainMap); //TODO: TEMPORARY
   init_train_map(liveMap); //TODO: TEMPORARY
 
