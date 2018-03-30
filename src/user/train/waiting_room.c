@@ -159,8 +159,12 @@ static void VirtualEventSubscriber(){
 // ------------- WAITING ROOM SERVER ---------------- //
 
 
-static void add_train_unique_registration(ve_key_cb *cb, int train_num, int key){
-  int base, i, reged, r;
+static void add_train_unique_registration(ve_key_cb *cb, VirtualEvent *waiting, VirtualEvent ve, eg_cb *dataBuf, int*liveMap){
+  int base, i, reged, r, train_num, key;
+  EventGroup eg;
+
+  train_num = ve.event.train_at.train_num;
+  key = train_num * KEY_SIZE + ve.key;
   base = train_num * KEY_SIZE;
 
   for(i = 0; i < cb->size; ++i){
@@ -171,9 +175,16 @@ static void add_train_unique_registration(ve_key_cb *cb, int train_num, int key)
       assert(r != CB_E_FULL);
     }
     else{
-      //Removed the older version
+      //Removed the older version (manually time it out)
       tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
       TMLogStrf(tm_tid, "REMOVED PREVIOUS REG\n");
+      eg.type = VRE_VE;
+      eg.ve = ve;
+      eg.ve.event.train_at.train_num = liveMap[train_num];
+      r = eg_cb_push(dataBuf, eg);
+      assert(r != CB_E_FULL);
+      reset_waiting_room(&waiting[key]);
+      TMLogStrf(tm_tid, "VRE VE on %s\n", ve.event.train_at.node->name);
     }
   }
 
@@ -224,7 +235,7 @@ static void handle_ve_tr_at(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *s
   }
 }
 
-static void handle_ve_reg(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *sensorToVE){
+static void handle_ve_reg(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *sensorToVE, eg_cb *dataBuf, int* liveMap /*TODO: REMOVE*/){
   int r;
   int sensor = ve.event.train_at.node->num;
   int key = ve.event.train_at.train_num * MAX_OUTSTANDING_EVENT + ve.key;
@@ -236,8 +247,8 @@ static void handle_ve_reg(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *sen
   assert(key >= 0 && key < MAX_LIVE_TRAINS * MAX_OUTSTANDING_EVENT);
 
   //r = ve_key_cb_push(&sensorToVE[sensor], key);
-  add_train_unique_registration(&sensorToVE[sensor], ve.event.train_at.train_num, key);
-  assert(r != CB_E_FULL);
+  //assert(r != CB_E_FULL);
+  add_train_unique_registration(&sensorToVE[sensor], waiting, ve, dataBuf, liveMap);
   if(waiting[key].type != VE_NONE){
     assert(0 && "overwritten");
   }
@@ -245,13 +256,13 @@ static void handle_ve_reg(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *sen
   TMLogStrf(tm_tid, "VRE %d on %s\n", ve.key, ve.event.train_at.node->name);
 }
 
-void HandleWR_VE(WRRequest *event, VirtualEvent *waiting, ve_key_cb *sensorToVE){
+void HandleWR_VE(WRRequest *event, VirtualEvent *waiting, ve_key_cb *sensorToVE, eg_cb *dataBuf, int* liveMap/*TODO: REMOVE*/){
   switch(event->data.ve.type){
     case VE_TR_AT:
       handle_ve_tr_at(event->data.ve, waiting, sensorToVE);
       break;
     case VE_REG:
-      handle_ve_reg(event->data.ve, waiting, sensorToVE);
+      handle_ve_reg(event->data.ve, waiting, sensorToVE, dataBuf, liveMap);
       break;
     default:
       assert(0 && "Bad Virtual Event");
@@ -446,7 +457,7 @@ void WaitingRoom(){
         else{
           event.data.ve.event.train_at.train_num = trainMap[event.data.ve.event.train_at.train_num];
         }     
-        HandleWR_VE(&event, waiting, sensorToVE);
+        HandleWR_VE(&event, waiting, sensorToVE, &dataBuf, liveMap);
         break;
       case WR_RE:
         Reply(req_tid, &r, sizeof(r));
