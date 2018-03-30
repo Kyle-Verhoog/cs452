@@ -37,7 +37,7 @@ typedef struct PossibleSensor {
   track_node *node;
 } PossibleSensor;
 
-#define POSSIBLE_NODE_LIST_SIZE 5
+#define POSSIBLE_NODE_LIST_SIZE 10 
 CIRCULAR_BUFFER_DEC(poss_node_list, PossibleSensor, POSSIBLE_NODE_LIST_SIZE);
 
 #define KEY_SIZE KEY_MAX 

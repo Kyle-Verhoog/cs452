@@ -103,7 +103,7 @@ void VirtualProvider(){
 
 		switch(ver.type){
 			case VER_REGISTER:
-				CreateArgs(27, &AdHocVirtualEvent, (void *)&ver, sizeof(ver)); //TODO: FIX PRIORITY
+				CreateArgs(29, &AdHocVirtualEvent, (void *)&ver, sizeof(ver)); //TODO: FIX PRIORITY
 				Reply(req_tid, &r, sizeof(r));
 				break;
 			default:

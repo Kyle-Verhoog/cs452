@@ -21,7 +21,7 @@ void RailwayInit() {
   PutC(tx_tid, 96);
 
   Create(27, &WaitingRoom);
-  Create(26, &Representer);
+  Create(27, &Representer);
 
   Create(21, &ReservationManager);
 
