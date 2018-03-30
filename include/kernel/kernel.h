@@ -34,6 +34,7 @@ void send_handler(TaskDescriptor *std);
 void receive_handler(TaskDescriptor *rtd);
 
 TaskDescriptor tasks[MAX_TASK];
+TaskDescriptor *running_task;
 TidTracker tid_tracker;
 priority_queue pq_tasks;
 interrupt_matrix im_tasks;

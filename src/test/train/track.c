@@ -7,7 +7,7 @@ static void track_init_test(track_node *tr) {
   TrackInit(&track, tr);
 }
 
-static EventGroup MockSensor(int type, int rts, char *sname, VirtualEvent *ve) {
+static EventGroup MockSensor(int type, int rts, const char *sname, VirtualEvent *ve) {
   EventGroup event;
   event.type = type;
   event.re.timestamp = rts;
@@ -608,6 +608,84 @@ static void two_trains_recovery() {
   assert(track.train[track.tmap[74]].status == TR_UN_SPEED);
 }
 
+static void stress_one_train_test() {
+  Track track;
+  Train train;
+  int i, ts;
+  track_node *node;
+  EventGroup event;
+  VirtualEvent ve;
+  TrackInit(&track, T);
+
+  ts = 0;
+  train.num = 74;
+  train.gear = 1;
+  TrackAddTrain(&track, &train);
+  event = MockSensor(RE, ts+=500, "A1", NULL);
+  TrackInterpretEventGroup(&track, &event);
+  assert(track.vevents.size == 1);
+  ve_list_pop(&track.vevents, &ve);
+  ve_list_init(&track.vevents);
+  update_list_init(&track.updates);
+
+  event = MockSensor(VRE_RE, ts+=500, "C13", &ve);
+  TrackInterpretEventGroup(&track, &event);
+  assert(track.train[track.tmap[74]].status == TR_KNOWN);
+
+  // event = MockSensor(VRE_RE, ts+=500, "E7", &ve);
+  // TrackInterpretEventGroup(&track, &event);
+  // ve_list_pop(&track.vevents, &ve);
+  // ve_list_init(&track.vevents);
+  // update_list_init(&track.updates);
+  // assert(track.train[track.tmap[74]].status == TR_KNOWN);
+
+  // assert(0);
+  node = &T[trhr(T, "C13")];
+
+  for (i = 0; i < TRACK_MAX*100; ++i) {
+    if (node->type == NODE_EXIT) {
+      printf("break\n");
+      break;
+    }
+
+    node = node->edge[DIR_AHEAD].dest;
+
+    if (node->type != NODE_SENSOR)
+      continue;
+
+
+    VirtualEvent actual;
+    while (track.vevents.size > 0) {
+      ve_list_pop(&track.vevents, &ve);
+      assert(ve.type == VE_TR_AT);
+
+      if (ve.event.train_at.node == node) {
+        actual = ve;
+      }
+      else {
+        event = MockSensor(VRE_VE, ts, node->name, &ve);
+        // printf("TO: key: %d, node: %s\n", ve.key, ve.event.train_at.node->name);
+        TrackInterpretEventGroup(&track, &event);
+        update_list_init(&track.updates);
+      }
+    }
+
+    // printf("%d\n", track.vevents.size);
+    // printf("ACT: key: %d, node: %s\n", actual.key, actual.event.train_at.node->name);
+    // assert(actual.key <= 20);
+    event = MockSensor(VRE_RE, ts+=500, node->name, &actual);
+    TrackInterpretEventGroup(&track, &event);
+    update_list_init(&track.updates);
+
+    int j, n;
+    n = 0;
+
+    // printf("%d\n", track.train[track.tmap[74]].status);
+    // printf("key: %d\n", track.key);
+    // assert(track.train[track.tmap[74]].speed > 0 && track.train[track.tmap[74]].speed <= 9000);
+    assert(track.train[track.tmap[74]].status == TR_KNOWN);
+  }
+}
 
 void track_tests() {
   init_tracka(T);
@@ -621,5 +699,6 @@ void track_tests() {
   double_sensor_reading_test();
   lost_train_false_positive_test();
   two_trains_recovery();
+  stress_one_train_test();
   GetDistBetweenNodesTest();
 }

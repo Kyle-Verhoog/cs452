@@ -10,7 +10,10 @@
 #define true  1
 
 //Kernel Defines
+#define UND_ENTRY 0x24
 #define SWI_ENTRY 0x28
+#define PRE_ENTRY 0x2c
+#define DAT_ENTRY 0x30
 #define IRQ_ENTRY 0x38
 
 #define IRQ_STACK_BASE 0x100000

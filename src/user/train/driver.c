@@ -187,8 +187,6 @@ static void TrainGearSubscriber() {
 }
 
 
-
-
 static void FlipSwitch(sw_config *cfg) {
   SWProtocol sw;
   int r;
@@ -262,10 +260,9 @@ static void HandlePositionUpdate(TDTrain *train, track_node *new_pos) {
     path_start(&train->p, train->p.start);
   }
 
-
   if (new_pos == train->p.end) {
     TMLogStrf(tm_tid, "ARRIVED pathing to %s\n", train->p.end->reverse->name);
-    // DelayCS(my_tid, 2);
+    DelayCS(my_tid, 500);
     path_set_destination(&train->p, new_pos, train->p.end->reverse);
     path_generate(&train->p);
     StoreStopSensor(train);

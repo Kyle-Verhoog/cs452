@@ -175,7 +175,7 @@ int path_generate(path *p) {
   int i, n, sid, eid;
   int buf[TRACK_MAX];
 
-  KASSERT(!p->active);
+  // KASSERT(!p->active);
   KASSERT(p->start != NULL);
   KASSERT(p->end != NULL);
   KASSERT(p->start != p->end);

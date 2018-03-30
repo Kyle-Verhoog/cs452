@@ -240,6 +240,7 @@ static void TrackGenerateTrainPositionTEvent(Track *track, Train *train) {
 static void TrackAddVEvent(Track *track, Train *train, track_node *tn, VirtualEvent *ve) {
   int r;
   track->key = ev_wm_next_key(track->key);
+  // printf("%d\n", track->key);
   ve->key = track->key;
   r = ve_list_push(&track->vevents, *ve);
 
@@ -250,7 +251,7 @@ static void TrackAddVEvent(Track *track, Train *train, track_node *tn, VirtualEv
 
 static void TrackGenerateUnknownSpeedTrainVEvents(Track *track, Train *train) {
   assert(train->status == TR_UN_SPEED);
-  int r, s;
+  int r, s, next_dist;
   poss_node_list pnl;
   PossibleSensor sensor;
   assert(train->status != TR_UNINIT);
@@ -266,8 +267,16 @@ static void TrackGenerateUnknownSpeedTrainVEvents(Track *track, Train *train) {
   while (pnl.size > 0) {
     r = poss_node_list_pop(&pnl, &sensor);
     assert(r == 0);
-    ve.timeout = -1;
-    ve.timestamp = 500 + train->sen_ts;
+    // use the last known speed to try to guess a timestamp
+    if (train->speed > 0 && train->gear > 0) {
+      next_dist = NEXT_DIST(sensor.node);
+      ve.timestamp = ((sensor.dist*1000) / train->speed) + train->sen_ts;
+      ve.timeout = ((next_dist*1000) / train->speed);
+    }
+    else {
+      ve.timeout = -1;
+      ve.timestamp = 500 + train->sen_ts;
+    }
     ve.depend = sensor.node->num;
     ve.event.train_at.train_num = train->num;
     ve.event.train_at.node = sensor.node;
@@ -494,7 +503,7 @@ static void TrackLocateLostTrain(Track *track, Train *train, track_node *sen, in
 
 
 // does a BFS to a depth of 2 sensors (since we can assume at most 1 sensor failure)
-#define NEARBY_SENSOR_DEPTH 2
+#define NEARBY_SENSOR_DEPTH 3
 static bool TrainNearby(track_node *node, track_node *dest) {
   int r;
   int nse[TRACK_MAX];
@@ -559,7 +568,7 @@ static Train *TrackAttemptToLocateTrain(Track *track, int sen_num, int ts) {
     r = train_list_pop(&track->lost_trains, &train);
     assert(r == 0);
 
-    if (/*train->gear > 0 && */(!train->pos || TrainNearby(train->pos, node))) {
+    if (train->gear > 0 && (!train->pos || TrainNearby(train->pos, node))) {
       TrackLocateLostTrain(track, train, node, ts);
       return train;
     }
@@ -588,6 +597,7 @@ static void TrackHandleTrainCmd(Track *track, int train_num, int cmd) {
   Train t;
   if (!track->tmap[train_num]) {
     t.num = train_num;
+    t.gear = cmd;
     TrackAddTrain(track, &t);
   }
 }
@@ -643,14 +653,16 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
     // TMLogStrf(tm_tid, "window does not exist\n");
     return;
   }
-  else if (r == 2) {
+  // check that the train status is not lost for the edge case where:
+  // D12 is broken and train runs over E11
+  // the train is lost and then gets a window double hit
+  else if (r == 2 && train->status != TR_LOST) {
     // we got more than 1 sensor hit for a window lose the train
     // and invalidate newer windows
     train->pos = ev_wm_get_window_tn(&train->wm, ekey);
     ev_wm_invalidate_after(&train->wm, ekey);
     TrackLoseTrain(track, train);
     assert(train->status == TR_LOST);
-    return;
   }
 
   r = ev_wm_delete_if_complete(&train->wm, ekey);
@@ -660,7 +672,7 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
   else if (r == -2) {
   }
   else if (r == -3) {
-    assert(0);
+    // assert(0);
     // TMLogStrf(tm_tid, "EVDEL: REMOVE ERROR\n");
   }
   else if (r == -4) {
@@ -668,13 +680,15 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
     // TMLogStrf(tm_tid, "EVDEL: avail_windows FULL\n");
   }
 
-  new_pos = &track->graph[grp->re.event.se_event.id];
-
   if (train->status == TR_KNOWN) {
+    new_pos = &track->graph[grp->re.event.se_event.id];
     TrackUpdateKnownTrain(track, train, new_pos, rts);
   }
   else if (train->status == TR_UN_SPEED) {
+    new_pos = &track->graph[grp->re.event.se_event.id];
     TrackUpdateUnknownSpeedTrain(track, train, new_pos, rts);
+  }
+  else if (train->status == TR_LOST) {
   }
   else {
     assert(0);
@@ -703,10 +717,10 @@ static void TrackHandleTrainAtTimeout(Track *track, EventGroup *grp) {
   else if (r == 1) {
     // all events timed out, reset back to the prev node, invalidate events
     // after the node and lose the train
+    assert(train->status != TR_LOST);
     train->pos = ev_wm_get_window_tn(&train->wm, ekey);
     ev_wm_invalidate_after(&train->wm, ekey);
     TrackLoseTrain(track, train);
-    return;
   }
 
   ev_wm_delete_if_complete(&train->wm, ekey);

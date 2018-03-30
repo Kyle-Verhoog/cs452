@@ -56,5 +56,9 @@ void Bootstrap() {
 
   // Create(19, &init_switch);
 
+  // asm(".word 0xe7ffffff");
+  // DelayCS(2000);
+  // __builtin_trap();
+
   Exit();
 }
