@@ -363,7 +363,7 @@ static void handle_to_tr_at(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *s
   if(waiting[key].type != VE_NONE){
     eg.type = VRE_VE;
     eg.ve = ve;
-    eg.ve.event.train_at.train_num = liveMap[train_num];
+    eg.ve.event.train_at.train_num = liveMap[eg.ve.event.train_at.train_num];
     r = eg_cb_push(dataBuf, eg);
     assert(r != CB_E_FULL);
     reset_waiting_room(&waiting[key]);

@@ -32,7 +32,7 @@ void TrackInit(Track *track, track_node *tr) {
   }
 
   for (i = 0; i < TRAIN_MAX; ++i) {
-    track->tmap[i] = NULL;
+    track->tmap[i] = -1;
   }
 
   track->key = 0;
