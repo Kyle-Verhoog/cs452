@@ -40,7 +40,7 @@ void ev_wm_init(ev_wm *wm) {
 //    0 on success
 //   -1 if the key is associated with another window already
 int ev_wm_add_to_window(ev_wm *wm, int key, track_node *node) {
-  int i;
+  int i, r;
   event_window *cur_window;
 #ifndef X86
   assert(key >= 0 && key < KEY_MAX);
@@ -49,7 +49,10 @@ int ev_wm_add_to_window(ev_wm *wm, int key, track_node *node) {
     return -1;
   }
 
-  ev_w_q_get(&wm->avail_windows, 0, &cur_window);
+  r = ev_w_q_get(&wm->avail_windows, 0, &cur_window);
+#ifndef X86
+  assert(r == 0);
+#endif
 
   // init the window if it hasn't been yet
   if (!cur_window->node) {

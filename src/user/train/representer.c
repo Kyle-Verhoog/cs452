@@ -56,9 +56,9 @@ static void ApplyUpdates(Track *track, update_list *updates, trm_subscribers *su
   int i;
   TrackEvent event;
 
-  if (!(0 <= updates->size && updates->size < UPDATE_LIST_SIZE)) {
-    PRINTF("%d\n", updates->size);
-  }
+  //if (!(0 <= updates->size && updates->size < UPDATE_LIST_SIZE)) {
+  //  PRINTF("%d\n", updates->size);
+  //}
   assert(0 <= updates->size && updates->size < UPDATE_LIST_SIZE);
 
   for (i = 0; i < updates->size; ++i) {
@@ -143,6 +143,7 @@ void Representer() {
         //Reply(req_tid, &track, sizeof(track));
         break;
       case TRR_UPDATE:
+        //Reply(req_tid, &r, sizeof(r));
         ApplyUpdates(&track, &req.data.update, subscribers);
         Reply(req_tid, &r, sizeof(r));
         break;
