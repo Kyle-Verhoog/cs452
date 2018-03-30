@@ -158,40 +158,6 @@ static void VirtualEventSubscriber(){
 
 // ------------- WAITING ROOM SERVER ---------------- //
 
-
-static void add_train_unique_registration(ve_key_cb *cb, VirtualEvent *waiting, VirtualEvent ve, eg_cb *dataBuf, int*liveMap){
-  int base, i, reged, r, train_num, key;
-  EventGroup eg;
-
-  train_num = ve.event.train_at.train_num;
-  key = train_num * KEY_SIZE + ve.key;
-  base = train_num * KEY_SIZE;
-
-  for(i = 0; i < cb->size; ++i){
-    r = ve_key_cb_pop(cb, &reged);
-    assert(r != CB_E_EMPTY);
-    if(!((reged - base) >= 0 && (reged - base) < KEY_SIZE)){
-      r = ve_key_cb_push(cb, reged);
-      assert(r != CB_E_FULL);
-    }
-    else{
-      //Removed the older version (manually time it out)
-      tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
-      TMLogStrf(tm_tid, "REMOVED PREVIOUS REG\n");
-      eg.type = VRE_VE;
-      eg.ve = ve;
-      eg.ve.event.train_at.train_num = liveMap[train_num];
-      r = eg_cb_push(dataBuf, eg);
-      assert(r != CB_E_FULL);
-      reset_waiting_room(&waiting[key]);
-      TMLogStrf(tm_tid, "VRE VE on %s\n", ve.event.train_at.node->name);
-    }
-  }
-
-  r = ve_key_cb_push(cb, key); //Push the new key
-  assert(r != CB_E_FULL);
-}
-
 static void reset_waiting_room(VirtualEvent *ve){
   ve->type = VE_NONE;
 }
@@ -233,6 +199,39 @@ static void handle_ve_tr_at(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *s
   }else{
     // TMLogStrf(tm_tid, "Already handled location %s\n", ve.event.train_at.node->name);    
   }
+}
+
+static void add_train_unique_registration(ve_key_cb *cb, VirtualEvent *waiting, VirtualEvent ve, eg_cb *dataBuf, int*liveMap){
+  int base, i, reged, r, train_num, key;
+  EventGroup eg;
+
+  train_num = ve.event.train_at.train_num;
+  key = train_num * KEY_SIZE + ve.key;
+  base = train_num * KEY_SIZE;
+
+  for(i = 0; i < cb->size; ++i){
+    r = ve_key_cb_pop(cb, &reged);
+    assert(r != CB_E_EMPTY);
+    if(!((reged - base) >= 0 && (reged - base) < KEY_SIZE)){
+      r = ve_key_cb_push(cb, reged);
+      assert(r != CB_E_FULL);
+    }
+    else{
+      //Removed the older version (manually time it out)
+      tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+      TMLogStrf(tm_tid, "REMOVED PREVIOUS REG\n");
+      eg.type = VRE_VE;
+      eg.ve = ve;
+      eg.ve.event.train_at.train_num = liveMap[train_num];
+      r = eg_cb_push(dataBuf, eg);
+      assert(r != CB_E_FULL);
+      reset_waiting_room(&waiting[key]);
+      TMLogStrf(tm_tid, "VRE VE on %s\n", ve.event.train_at.node->name);
+    }
+  }
+
+  r = ve_key_cb_push(cb, key); //Push the new key
+  assert(r != CB_E_FULL);
 }
 
 static void handle_ve_reg(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *sensorToVE, eg_cb *dataBuf, int* liveMap /*TODO: REMOVE*/){
