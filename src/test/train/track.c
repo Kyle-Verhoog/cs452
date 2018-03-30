@@ -26,11 +26,10 @@ static void GetDistBetweenNodesTest() {
   init_trackb(T);
   // d = GetDistanceBetweenNodes(&T[trhr(T, "A12")], &T[trhr(T, "A16")], 0, 4);
   // assert(d == 814);
-  d = FindDistToNode(&T[trhr(T, "A12")], &T[trhr(T, "A16")]);
+  d = dist_to_node(&T[trhr(T, "A12")], &T[trhr(T, "A16")]);
   assert(d == 814);
-  // printf("%s\n", T[trhr(T, "C8")].name);
-  // d = GetDistanceBetweenNodes(&T[trhr(T, "C8")], &T[trhr(T, "A12")], 0, 4);
-  d = FindDistToNode(&T[trhr(T, "C8")], &T[trhr(T, "A12")]);
+
+  d = dist_to_node(&T[trhr(T, "C8")], &T[trhr(T, "A12")]);
   assert(d == 128+185+188+282);
   // assert(d == -1);
 }
@@ -53,7 +52,7 @@ static void next_sensors_test(track_node *tr) {
   assert(start->type == NODE_SENSOR);
   dist = start->edge[DIR_AHEAD].dist;
   start = start->edge[DIR_AHEAD].dest;
-  GetNextPossibleSensors(start, dist, &pnl);
+  next_poss_sensors(start, dist, &pnl);
   assert(pnl.size == 1);
 
   PossibleSensor sensor;
@@ -63,7 +62,7 @@ static void next_sensors_test(track_node *tr) {
 
   start = sensor.node->edge[DIR_AHEAD].dest;
   dist = sensor.node->edge[DIR_AHEAD].dist;
-  GetNextPossibleSensors(start, dist, &pnl);
+  next_poss_sensors(start, dist, &pnl);
   assert(pnl.size == 1);
   poss_node_list_pop(&pnl, &sensor);
   assert(sensor.node->num == 70);
@@ -71,7 +70,7 @@ static void next_sensors_test(track_node *tr) {
 
   start = sensor.node->edge[DIR_AHEAD].dest;
   dist = sensor.node->edge[DIR_AHEAD].dist;
-  GetNextPossibleSensors(start, dist, &pnl);
+  next_poss_sensors(start, dist, &pnl);
   assert(pnl.size == 1);
   poss_node_list_pop(&pnl, &sensor);
   assert(sensor.node->num == 54);
@@ -79,7 +78,7 @@ static void next_sensors_test(track_node *tr) {
 
   start = sensor.node->edge[DIR_AHEAD].dest;
   dist = sensor.node->edge[DIR_AHEAD].dist;
-  GetNextPossibleSensors(start, dist, &pnl);
+  next_poss_sensors(start, dist, &pnl);
   assert(pnl.size == 2);
   poss_node_list_pop(&pnl, &sensor);
   assert(sensor.node->num == 56);
@@ -89,7 +88,7 @@ static void next_sensors_test(track_node *tr) {
   assert(sensor.dist == 309+155+239);
 
   start = tr[1].edge[DIR_AHEAD].dest;
-  GetNextPossibleSensors(start, dist, &pnl);
+  next_poss_sensors(start, dist, &pnl);
   poss_node_list_pop(&pnl, &sensor);
   assert(pnl.size == 0);
 
@@ -111,16 +110,17 @@ static void next_sensors_test2() {
   assert(start->type == NODE_SENSOR);
   dist = start->edge[DIR_AHEAD].dist;
   start = start->edge[DIR_AHEAD].dest;
-  GetNextPossibleSensors(start, dist, &pnl);
+  next_poss_sensors(start, dist, &pnl);
   assert(pnl.size == 2);
 
   PossibleSensor sensor;
   poss_node_list_pop(&pnl, &sensor);
-  assert(sensor.node == &T[trhr(T, "C13")]);
-  assert(sensor.dist == 43+495+50);
-  poss_node_list_pop(&pnl, &sensor);
   assert(sensor.node == &T[trhr(T, "C11")]);
   assert(sensor.dist == 43+333);
+
+  poss_node_list_pop(&pnl, &sensor);
+  assert(sensor.node == &T[trhr(T, "C13")]);
+  assert(sensor.dist == 43+495+50);
 
   // int dist = track_node_dist(T[trhr()])
 }

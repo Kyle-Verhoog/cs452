@@ -71,7 +71,7 @@ static int GetLastAvailableSensor(track_node *start, track_node *end, Switch *sw
   while(true){
     n = pos.node;
     r = GetNextSensorEXC(sw, n, &pos);
-    assert(r == 0);
+    //assert(r == 0);
 
     if((dist - pos.dist)*1000 < min_dist){
       break;
