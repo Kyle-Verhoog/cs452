@@ -158,6 +158,29 @@ static void VirtualEventSubscriber(){
 
 // ------------- WAITING ROOM SERVER ---------------- //
 
+
+static void add_train_unique_registration(ve_key_cb *cb, int train_num, int key){
+  int base, i, reged, r;
+  base = train_num * KEY_SIZE;
+
+  for(i = 0; i < cb->size; ++i){
+    r = ve_key_cb_pop(cb, &reged);
+    assert(r != CB_E_EMPTY);
+    if(!((reged - base) >= 0 && (reged - base) < KEY_SIZE)){
+      r = ve_key_cb_push(cb, reged);
+      assert(r != CB_E_FULL);
+    }
+    else{
+      //Removed the older version
+      tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+      TMLogStrf(tm_tid, "REMOVED PREVIOUS REG\n");
+    }
+  }
+
+  r = ve_key_cb_push(cb, key); //Push the new key
+  assert(r != CB_E_FULL);
+}
+
 static void reset_waiting_room(VirtualEvent *ve){
   ve->type = VE_NONE;
 }
@@ -212,7 +235,8 @@ static void handle_ve_reg(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *sen
   assert(sensor >= 0 && sensor < SENSOR_SIZE);
   assert(key >= 0 && key < MAX_LIVE_TRAINS * MAX_OUTSTANDING_EVENT);
 
-  r = ve_key_cb_push(&sensorToVE[sensor], key);
+  //r = ve_key_cb_push(&sensorToVE[sensor], key);
+  add_train_unique_registration(&sensorToVE[sensor], ve.event.train_at.train_num, key);
   assert(r != CB_E_FULL);
   if(waiting[key].type != VE_NONE){
     assert(0 && "overwritten");
