@@ -21,7 +21,7 @@ void RailwayInit() {
   PutC(tx_tid, 96);
 
   Create(27, &WaitingRoom);
-  Create(26, &Representer);
+  Create(27, &Representer);
 
   Create(21, &ReservationManager);
 
@@ -43,14 +43,14 @@ void Bootstrap() {
   Create(30, &RailwayInit);
 
   // interfaces
-  Create(10, &TrainTrackInterface);
-  Create(10, &SensorInterface);
-  Create(10, &SwitchInterface);
-  Create(10, &TrainInterface);
-  Create(5, &TimerInterface);
-  Create(5, &NProcsInterface);
-  Create(5, &MemUsageInterface);
-  Create(5, &TaskManagerInterface);
+   Create(10, &TrainTrackInterface);
+   Create(10, &SensorInterface);
+   Create(10, &SwitchInterface);
+   Create(10, &TrainInterface);
+   Create(5, &TimerInterface);
+   Create(5, &NProcsInterface);
+   Create(5, &MemUsageInterface);
+   Create(30, &TaskManagerInterface);
 
   Create(0, &Logger);
 

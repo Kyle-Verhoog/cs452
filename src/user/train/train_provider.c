@@ -45,6 +45,8 @@ void TWriteTask(void *args){
   	assert(pub_tid >= 0);
   	tid_t cs_tid = WhoIs(CLOCKSERVER_ID);
 	assert(cs_tid >= 0);
+	tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+	assert(tm_tid >= 0);
 
 	//Handle Command
 	switch(cmd.tc){
@@ -52,6 +54,10 @@ void TWriteTask(void *args){
 			buf[0] = cmd.arg2;
 			buf[1] = cmd.arg1;
 			PutStr(tx_tid, buf, 2);
+			ts.re.type = RE_TR_CMD;
+			break;
+		case T_INIT:
+			ts.re.type = RE_TR_INIT;
 			break;
     default:
       assert(0);
@@ -60,7 +66,6 @@ void TWriteTask(void *args){
 
 	//Send the Updated Command to the publisher
 	ts.tc = T_NOTIFY;
-	ts.re.type = RE_TR_CMD;
 	ts.re.timestamp = Time(cs_tid, my_tid);
 	ts.re.event.tr_cmd_event = cmd;
 	Send(pub_tid, &ts, sizeof(ts), &reply, sizeof(reply));
@@ -108,6 +113,10 @@ void TrainProvider(){
 
 		switch(tp.tc){
 			case T_MOVE:
+				Reply(tid_req, &reply, sizeof(reply));
+				CreateArgs(27, &TWriteTask, &tp, sizeof(tp));
+				break;
+			case T_INIT:
 				Reply(tid_req, &reply, sizeof(reply));
 				CreateArgs(27, &TWriteTask, &tp, sizeof(tp));
 				break;

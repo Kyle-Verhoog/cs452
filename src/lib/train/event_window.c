@@ -16,7 +16,7 @@ void event_window_init(event_window *evw) {
 
 
 void ev_wm_init(ev_wm *wm) {
-  int i;
+  int i, r;
   event_window *window;
   ev_w_q_init(&wm->window_q);
   ev_w_q_init(&wm->avail_windows);
@@ -24,7 +24,8 @@ void ev_wm_init(ev_wm *wm) {
   for (i = 0; i < TRACK_MAX; ++i) {
     window = &wm->window[i];
     event_window_init(window);
-    ev_w_q_push(&wm->avail_windows, window);
+    r = ev_w_q_push(&wm->avail_windows, window);
+    assert(r != CB_E_FULL);
   }
 
   for (i = 0; i < KEY_MAX; ++i) {
@@ -38,15 +39,16 @@ void ev_wm_init(ev_wm *wm) {
 //    0 on success
 //   -1 if the key is associated with another window already
 int ev_wm_add_to_window(ev_wm *wm, int key, track_node *node) {
-  int i;
+  int i, r;
   event_window *cur_window;
 
-  // assert(key >= 0 && key < KEY_MAX);
+  assert(key >= 0 && key < KEY_MAX);
   if (wm->window_map[key]) {
     return -1;
   }
 
-  ev_w_q_get(&wm->avail_windows, 0, &cur_window);
+  r = ev_w_q_get(&wm->avail_windows, 0, &cur_window);
+  assert(r == 0);
 
   // init the window if it hasn't been yet
   if (!cur_window->node) {
@@ -94,8 +96,9 @@ int ev_wm_next_key(int key) {
 //  -  3 if the window has been filled and needs to be cleared
 int ev_wm_res_to_window(ev_wm *wm, int key, int res) {
   event_window *window;
+  assert(key >= 0 && key < KEY_MAX);
+  assert(res >= 0 && res < EVENT_MAX);
 
-  // assert(key >= 0 && key < KEY_MAX);
   window = wm->window_map[key];
   if (!window) return -1;
 
@@ -118,6 +121,7 @@ int ev_wm_res_to_window(ev_wm *wm, int key, int res) {
 int ev_wm_delete_if_complete(ev_wm *wm, int key) {
   int i, k, r;
   event_window *window;
+  assert(key >= 0 && key < KEY_MAX);
 
   // assert(key >= 0 && key < KEY_MAX);
   window = wm->window_map[key];
@@ -134,9 +138,7 @@ int ev_wm_delete_if_complete(ev_wm *wm, int key) {
 
   // clear the map entries
   for (i = 0; i < window->nevents; ++i) {
-    // k = i + window->key_offset;
     k = (i + window->key_offset) % KEY_MAX;
-    // assert(k >= 0 && k <= KEY_MAX);
     wm->window_map[k] = NULL;
   }
 
@@ -151,7 +153,7 @@ int ev_wm_delete_if_complete(ev_wm *wm, int key) {
 
 track_node *ev_wm_get_window_tn(ev_wm *wm, int key) {
   event_window *window;
-  // assert(key >= 0 && key < KEY_MAX);
+  assert(key >= 0 && key < KEY_MAX);
   window = wm->window_map[key];
   return window->node;
 }
@@ -178,16 +180,16 @@ int ev_wm_delete_all(ev_wm *wm) {
 int ev_wm_invalidate_after(ev_wm *wm, int key) {
   int k, r;
   event_window *end, *window;
+  assert(key >= 0 && key < KEY_MAX);
 
   window = NULL;
-  // assert(key >= 0 && key < KEY_MAX);
+  assert(key >= 0 && key < KEY_MAX);
   end = wm->window_map[key];
 
   while (wm->window_q.size > 0 && window != end) {
     r = ev_w_q_pop_end(&wm->window_q, &window);
     if (r) return -1;
     for (k = window->key_offset; k < window->key_offset + window->nevents; ++k) {
-      // assert(key >= 0 && key < KEY_MAX);
       wm->window_map[k%KEY_MAX] = NULL;
     }
     window->node = NULL;
@@ -198,5 +200,6 @@ int ev_wm_invalidate_after(ev_wm *wm, int key) {
 
   r = ev_w_q_push(&wm->window_q, end);
   if (r) return -1;
+
   return 0;
 }

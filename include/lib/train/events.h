@@ -13,6 +13,7 @@ typedef enum RawEventType {
   RE_SE   = 1,
   RE_SW   = 2,
   RE_TR_CMD = 3,
+  RE_TR_INIT = 4
 } RawEventType;
 
 typedef Sensor RawSensorEvent;

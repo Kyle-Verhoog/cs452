@@ -48,6 +48,7 @@ typedef struct Train {
 
 typedef enum Train_Command{
   T_MOVE = 0,
+  T_INIT = 1,
   //USER COMMANDS
   T_NOTIFY = 10,
   T_SUBSCRIBE = 11

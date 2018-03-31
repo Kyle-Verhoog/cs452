@@ -4,13 +4,15 @@
 CIRCULAR_BUFFER_DEF(trm_subscribers, tid_t, MAX_EVENT_SUBSCRIBERS);
 
 static void NotifySubscribers(trm_subscribers *subs, TrackEventType type, union TrackEvents *event) {
+  int r;
   assert(type >= 0 && type < MAX_TRACK_EVENT);
   tid_t tid;
   trm_subscribers *event_subs;
 
   event_subs = &subs[type];
   while (event_subs->size > 0) {
-    trm_subscribers_pop(event_subs, &tid);
+    r = trm_subscribers_pop(event_subs, &tid);
+    assert(r == 0);
     Reply(tid, event, sizeof(union TrackEvents));
   }
 }
@@ -25,6 +27,7 @@ static void AddSubscriber(trm_subscribers *subs, tid_t tid, TrackEventType type)
   assert(r == 0);
 }
 
+
 static void ApplySensorChange(Track *track, TESEChange *event) {
   track->sensors[event->num].state = event->state;
 }
@@ -35,6 +38,10 @@ static void ApplySwitchChange(Track *track, TESWChange *event){
 
 static void ApplyTrainSpeedChange(Track *track, TETRSpeed *event) {
   track->train[event->num].speed = event->new;
+}
+
+static void ApplyTrainGearChange(Track *track, TETRGear *event){
+  track->train[event->num].gear = event->newgear;
 }
 
 static void ApplyTrainStatusChange(Track *track, TETRStatus *event) {
@@ -49,9 +56,9 @@ static void ApplyUpdates(Track *track, update_list *updates, trm_subscribers *su
   int i;
   TrackEvent event;
 
-  if (!(0 <= updates->size && updates->size < UPDATE_LIST_SIZE)) {
-    PRINTF("%d\n", updates->size);
-  }
+  //if (!(0 <= updates->size && updates->size < UPDATE_LIST_SIZE)) {
+  //  PRINTF("%d\n", updates->size);
+  //}
   assert(0 <= updates->size && updates->size < UPDATE_LIST_SIZE);
 
   for (i = 0; i < updates->size; ++i) {
@@ -71,7 +78,7 @@ static void ApplyUpdates(Track *track, update_list *updates, trm_subscribers *su
         ApplySensorChange(track, &event.event.se_change);
         break;
       case TE_TR_MOVE:
-        //assert(0 && "TODO");
+        ApplyTrainGearChange(track, &event.event.tr_gear);
         break;
       case TE_SW_CHANGE:
         ApplySwitchChange(track, &event.event.sw_change);
@@ -136,6 +143,7 @@ void Representer() {
         //Reply(req_tid, &track, sizeof(track));
         break;
       case TRR_UPDATE:
+        //Reply(req_tid, &r, sizeof(r));
         ApplyUpdates(&track, &req.data.update, subscribers);
         Reply(req_tid, &r, sizeof(r));
         break;

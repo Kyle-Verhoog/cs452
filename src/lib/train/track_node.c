@@ -23,12 +23,12 @@ int dist_to_node(track_node *node, track_node *dest) {
 
     if (node->type == NODE_BRANCH) {
       next = node->edge[DIR_CURVED].dest;
-      r = bfs_q_push(&q, next);
       dist[next->id] = node->edge[DIR_CURVED].dist + dist[node->id];
+      r = bfs_q_push(&q, next);
       if (r) return -1;
       next = node->edge[DIR_STRAIGHT].dest;
-      r = bfs_q_push(&q, next);
       dist[next->id] = node->edge[DIR_STRAIGHT].dist + dist[node->id];
+      r = bfs_q_push(&q, next);
       if (r) return -1;
     }
     else if (node->type == NODE_EXIT) {
@@ -36,8 +36,8 @@ int dist_to_node(track_node *node, track_node *dest) {
     }
     else {
       next = node->edge[DIR_AHEAD].dest;
-      r = bfs_q_push(&q, next);
       dist[next->id] = node->edge[DIR_AHEAD].dist + dist[node->id];
+      r = bfs_q_push(&q, next);
       if (r) return -1;
     }
   }

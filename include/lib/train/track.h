@@ -30,7 +30,7 @@ CIRCULAR_BUFFER_DEC(update_list, TrackEvent, UPDATE_LIST_SIZE);
 CIRCULAR_BUFFER_DEC(ve_list, VirtualEvent, VEVENT_LIST_SIZE);
 
 
-#define KEY_SIZE 256
+#define KEY_SIZE KEY_MAX 
 #define NUM_TRAINS 5
 
 typedef struct Track {
