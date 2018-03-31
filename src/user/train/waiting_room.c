@@ -285,7 +285,6 @@ static void handle_re_se(RawEvent re, VirtualEvent *waiting, ve_key_cb *sensorTo
       assert(r != CB_E_FULL);
       assert(key >= 0 && key < MAX_LIVE_TRAINS * MAX_OUTSTANDING_EVENT);
       reset_waiting_room(&waiting[key]);
-      TMLogStrf(tm_tid, "MAX VALUE IS: %d, %d\n", MAX_LIVE_TRAINS, MAX_OUTSTANDING_EVENT);
       TMLogStrf(tm_tid, "VRE RE or VRE VE RE %d on %d\n", key, re.event.se_event.id);
     }
   }else{

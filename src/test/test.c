@@ -75,13 +75,18 @@ int main(void) {
   reservation_tests();
   PTEST_END();
 
+  PTEST_START("train/stpdist_model");
+  train_model_stpdist_tests();
+  PTEST_END();
+
+  PTEST_START("train/velo_model");
+  train_model_velo_tests();
+  PTEST_END();
+
   PTEST_START("train/track");
   track_tests();
   PTEST_END();
 
-  PTEST_START("train/train_model");
-  train_model_tests();
-  PTEST_END();
 
   PRINTF("+----------------------+---+\n");
   PRINTF("|  ALL TESTS PASSED ☻  |   |\n");

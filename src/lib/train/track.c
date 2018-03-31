@@ -371,7 +371,6 @@ static void InitTrainCmd(Track *track, int tr_num, int node){
   Train *train;
 
   assert(tr_num >= 0 && tr_num <= TRAIN_SIZE);
-  assert(tr_num == 24 || tr_num == 58);
   track->tmap[tr_num] = track->ntrains++;
 
   train = &track->train[track->tmap[tr_num]];
@@ -682,7 +681,7 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
     train->pos = ev_wm_get_window_tn(&train->wm, ekey);
     ev_wm_invalidate_after(&train->wm, ekey);
     if(train->status == TR_LOST){
-      assert(0 && "RE-LOSING TRAIN??");
+      assert(0 && "RE-LOSING TRAIN");
     }
     TrackLoseTrain(track, train);
     assert(train->status == TR_LOST);

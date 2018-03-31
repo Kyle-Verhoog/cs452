@@ -66,15 +66,10 @@ void Interpreter() {
   tid_t req_tid;
   while (true) {
     Receive(&req_tid, &group, sizeof(group));
-TMLogStrf(tm_tid, "RC1\n");
     TrackInterpretEventGroup(&track, &group);
-TMLogStrf(tm_tid, "RC2\n");
     DispatchVirtualEvents(vep_tid, &track.vevents);
-TMLogStrf(tm_tid, "RC3\n");
     DispatchTrackUpdates(rep_tid, &track.updates);
-TMLogStrf(tm_tid, "RC4\n");
     Reply(req_tid, &r, sizeof(r));
-TMLogStrf(tm_tid, "Reply\n");
   }
 
   Exit();
