@@ -206,6 +206,7 @@ int task_info(TaskDescriptor *td) {
     TEXT_RED"RCVBL"TEXT_BLACK,
     TEXT_RED"SNDBL"TEXT_BLACK,
     TEXT_RED"RPLBL"TEXT_BLACK,
+    TEXT_YELLOW"RUNNG"TEXT_BLACK,
   };
   asm("ldr %0, [%1, #4];":"=r"(buf):"r"(td->sp));
   offset = 0;
@@ -215,7 +216,7 @@ int task_info(TaskDescriptor *td) {
   for (i = 0; i < MAX_TASK; ++i) {
     status = tasks[i].status;
     if (status != TS_ZOMBIE && status != TS_UNINIT)
-      offset += buf_pack_f(buf+offset, "%d\t%s\n", i, stat[status]);
+      offset += buf_pack_f(buf+offset, "%d %d\t%s\n", i, tasks[i].priority, stat[status]);
   }
   return offset;
 }
@@ -340,6 +341,7 @@ __attribute__((naked)) int main(void) {
 
     //get a task from scheduler
     TaskDescriptor* td = schedule();
+    td->status = TS_RUNNING;
 
     if (!td && no_tasks()) break;
     if (!td) continue;
@@ -348,6 +350,7 @@ __attribute__((naked)) int main(void) {
 
     //activate task
     TaskRequest req = activate(td);
+//    td->status = TS_READY;
 
     et = *(int *)TM_CLOCK_VAL;
     tm_delta(st, et, td);

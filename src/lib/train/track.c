@@ -306,7 +306,7 @@ static void TrackGenerateKnownTrainVEvents(Track *track, Train *train) {
     next_dist = NEXT_DIST(sensor.node);
 
     ve.timestamp = ((dist*1000) / train->speed) + train->sen_ts;
-    ve.timeout = ((next_dist*1000) / train->speed);
+    ve.timeout = ((next_dist*1000) / train->speed)/2;
     ve.depend = sensor.node->num;
     ve.event.train_at.train_num = train->num;
     ve.event.train_at.node = sensor.node;
@@ -371,6 +371,7 @@ static void InitTrainCmd(Track *track, int tr_num, int node){
   Train *train;
 
   assert(tr_num >= 0 && tr_num <= TRAIN_SIZE);
+  assert(tr_num == 24 || tr_num == 58);
   track->tmap[tr_num] = track->ntrains++;
 
   train = &track->train[track->tmap[tr_num]];
@@ -615,7 +616,7 @@ static void TrackHandleTrainAtSensorRaw(Track *track, RawSensorEvent *se, int ts
 
 static void TrackHandleTrainCmd(Track *track, int train_num, int cmd) {
   Train t;
-  if (!track->tmap[train_num]) {
+  if (track->tmap[train_num] == -1) {
     t.num = train_num;
     TrackAddTrain(track, &t);
   }
@@ -703,6 +704,7 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
     // TMLogStrf(tm_tid, "EVDEL: avail_windows FULL\n");
   }
 
+  assert(grp->re.event.se_event.id >= 0 && grp->re.event.se_event.id < 140);
   new_pos = &track->graph[grp->re.event.se_event.id];
 
   if (train->status == TR_KNOWN) {

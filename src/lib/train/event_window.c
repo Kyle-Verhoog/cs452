@@ -185,11 +185,14 @@ int ev_wm_invalidate_after(ev_wm *wm, int key) {
 #ifndef X86
     assert(r == 0);
 #endif
-    for (k = window->key_offset%KEY_MAX; k < window->key_offset + window->nevents; k = (k+1)%KEY_MAX) {
+    //for (k = window->key_offset%KEY_MAX; k < window->key_offset + window->nevents; k = (k+1)%KEY_MAX) {
+    k = window->key_offset;
+    while(k != (window->key_offset + window->nevents)%KEY_MAX){
 #ifndef X86
       assert(k >= 0 && k < KEY_MAX);
 #endif      
       wm->window_map[k] = NULL;
+      k = (k + 1)%KEY_MAX;
     }
     window->node = NULL;
     window->key_offset = -1;

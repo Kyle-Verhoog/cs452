@@ -50,7 +50,7 @@ void Bootstrap() {
    Create(5, &TimerInterface);
    Create(5, &NProcsInterface);
    Create(5, &MemUsageInterface);
-   Create(5, &TaskManagerInterface);
+   Create(30, &TaskManagerInterface);
 
   Create(0, &Logger);
 

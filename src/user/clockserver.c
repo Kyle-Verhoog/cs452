@@ -146,9 +146,9 @@ void ClockServer() {
 
     switch (req.type) {
       case CSREQ_DELAY:
-        assert(req.ticks > 0);
+        assert(req.ticks >= 0);
         assert(IS_VALID_TID(req.tid));
-        if (req.ticks <= 0) {
+        if (req.ticks < 0) {
           assert(0);
           reply = CS_E_DELAY;
           Reply(req_tid, &reply, sizeof(int));
