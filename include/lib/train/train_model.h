@@ -7,7 +7,10 @@
 #define TRAIN_MODEL_SIZE 15
 
 #ifdef X86
-#include <assert.h>
+	#include <assert.h>
+#endif
+#ifndef X86
+	#include <syscalls.h>
 #endif
 
 typedef struct TrainModel{

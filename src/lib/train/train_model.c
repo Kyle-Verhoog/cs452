@@ -131,3 +131,4 @@ void getVelocityModel(TrainModel *tm, int train_num){
 #endif
 	}
 }
+

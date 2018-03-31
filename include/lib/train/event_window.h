@@ -12,7 +12,7 @@
 #include <syscalls.h>
 #endif
 
-#define KEY_MAX 16 
+#define KEY_MAX 64 
 
 #define EV_UNINIT_KEY  -1
 #define EV_WIND_TO      1

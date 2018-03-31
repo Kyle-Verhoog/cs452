@@ -203,7 +203,6 @@ static void handle_ve_tr_at(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *s
 
 static void add_train_unique_registration(ve_key_cb *cb, VirtualEvent *waiting, VirtualEvent ve, eg_cb *dataBuf, int*liveMap){
   int base, i, reged, r, train_num, key;
-  EventGroup eg;
 
   train_num = ve.event.train_at.train_num;
   key = train_num * KEY_SIZE + ve.key;
@@ -228,7 +227,6 @@ static void add_train_unique_registration(ve_key_cb *cb, VirtualEvent *waiting, 
 }
 
 static void handle_ve_reg(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *sensorToVE, eg_cb *dataBuf, int* liveMap /*TODO: REMOVE*/){
-  int r;
   int sensor = ve.event.train_at.node->num;
   int key = ve.event.train_at.train_num * MAX_OUTSTANDING_EVENT + ve.key;
 
@@ -420,7 +418,6 @@ void WaitingRoom(){
 
   r = RegisterAs(WAITING_ROOM_ID);
   assert(r == 0);
-  tid_t my_tid = MyTid();
 
   Create(27, &TrainProvider);
   Create(27, &SwitchProvider);
