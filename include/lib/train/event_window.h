@@ -57,4 +57,6 @@ int ev_wm_delete_if_complete(ev_wm *wm, int key);
 
 int ev_wm_next_key(int key);
 
+int ev_wm_delete_all(ev_wm *wm);
+
 #endif

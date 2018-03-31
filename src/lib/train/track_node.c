@@ -46,8 +46,10 @@ int dist_to_node(track_node *node, track_node *dest) {
   return -1;
 }
 
-// does a BFS to a depth of 2 sensors (since we can assume at most 1 sensor failure)
-bool sensor_nearby(track_node *node, track_node *dest, int sensor_depth) {
+
+// does a BFS to a depth of `sensor_depth` sensors (since we can assume at most
+// 1 sensor failure)
+bool node_nearby_sd(track_node *node, track_node *dest, int sensor_depth) {
   int r;
   int nse[TRACK_MAX];
   bfs_q q;
@@ -130,7 +132,7 @@ int next_poss_sensors(track_node *node, int start_dist, poss_node_list *pnl) {
       sensor.node = node;
       sensor.dist = dist[node->id];
       r = poss_node_list_push(pnl, sensor);
-      assert(r == 0);
+      if (r) return -1;
     }
     else if (node->type == NODE_EXIT) {
       continue;
@@ -233,7 +235,8 @@ int dist_between_nodes(Switch *sw, track_node *start, track_node *end){
      n = n->edge[DIR_AHEAD].dest;
     }
 
-    assert(dist > 0 && dist < 50000); //Probably inf loop
+    if (dist < 0 || dist > 50000)
+      return -1;
   }
 
   return dist;

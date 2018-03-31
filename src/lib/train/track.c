@@ -326,32 +326,24 @@ static void TrackLoseTrain(Track *track, Train *train) {
   TrackGenerateTrainStatusTEvent(track, train, old_status, TR_LOST);
 }
 
-static void TrackLocateLostTrain(Track *track, Train *train, track_node *sen, int ts) {
-  int r;
-
-  TrackUpdateLostTrain(track, train, sen, ts);
-
-  // r = train_list_push(&track->active_trains, train);
-  // assert(r == 0);
-}
+// static void TrackHandleFastTrain(Track *track, Train *train, track_node *sensor, int ts) {
+// }
 
 
 #define NEARBY_SENSOR_DEPTH 2
-static Train *TrackAttemptToLocateTrain(Track *track, int sen_num, int ts) {
+static Train *TrackAttemptToLocateTrain(Track *track, track_node *node, int ts) {
   int r, i, n;
   Train *train;
-  track_node *node;
 
   n = track->lost_trains.size;
-  node = &track->graph[sen_num];
 
   // loop over the lost trains checking to see which is nearby the sensor
   for (i = 0; i < n; ++i) {
     r = train_list_pop(&track->lost_trains, &train);
     assert(r == 0);
 
-    if (train->gear > 0 && (!train->pos || sensor_nearby(train->pos, node, NEARBY_SENSOR_DEPTH))) {
-      TrackLocateLostTrain(track, train, node, ts);
+    if (train->gear > 0 && (!train->pos || node_nearby_sd(train->pos, node, NEARBY_SENSOR_DEPTH))) {
+      TrackUpdateLostTrain(track, train, node, ts);
       return train;
     }
 
@@ -362,16 +354,80 @@ static Train *TrackAttemptToLocateTrain(Track *track, int sen_num, int ts) {
   return NULL;
 }
 
+// checks backwards from a sensor looking for a train
+static Train *TrackCheckSensorForFastTrain(Track *track, track_node *sensor) {
+  int i;
+  Train *train;
+  assert(sensor->type == NODE_SENSOR);
+
+  // flip the sensor to look in the reverse direction
+  sensor = sensor->reverse;
+
+  // TODO(1): this is pretty inefficient, we're searching again and again for each
+  // train position rather than searching once and checking for a match with a
+  // train position
+
+  // this can be improved by writing a BFS and checking each node to see if it
+  // matches a train's position
+
+  // TODO(2): we also probably want to check some other data about the train to
+  // ensure that this is not a false positive sensor reading occuring in front
+  // of a train else we are going to advance the train to a position in which it
+  // is not actually
+  for (i = 0; i < track->ntrains; ++i) {
+    train = &track->train[i];
+    if (node_nearby_sd(sensor, train->pos->reverse, 2))
+      return train;
+  }
+
+  return NULL;
+}
+
+// * -> TR_KNOWN
+// used to advance a train when it is ahead of schedule and our window timeout is
+// off
+static void TrackUpdateFastTrain(Track *track, Train *train, track_node *sensor, int ts) {
+  int dist;
+  assert(train->status == TR_KNOWN || train->status == TR_UN_SPEED);
+
+  dist = dist_to_node(train->pos, sensor);
+  assert(dist >= 0 && dist <= 10000);
+  assert(ts - train->sen_ts != 0);
+  train->speed = (dist*1000) / ((ts - train->sen_ts)); // speed in um/tick
+  train->status = TR_KNOWN;
+  train->sen_ts = ts;
+  train->pos = sensor;
+  TrackGenerateKnownTrainVEvents(track, train);
+  TrackGenerateTrainStatusTEvent(track, train, TR_UN_SPEED, TR_KNOWN);
+  TrackGenerateTrainSpeedTEvent(track, train, -1, train->speed);
+  TrackGenerateTrainPositionTEvent(track, train);
+}
+
 
 //-------------------------EVENT INTERPRETERS----------------------------------
 
 
-static void TrackHandleTrainAtSensorRaw(Track *track, RawSensorEvent *se, int ts) {
+static void TrackHandlePotentialTrainAtSensorRaw(Track *track, RawSensorEvent *se, int ts) {
   Train *train;
+  track_node *sensor;
+  int r;
   train = NULL;
 
+  sensor = &track->graph[se->id];
   if (track->lost_trains.size > 0) {
-    train = TrackAttemptToLocateTrain(track, se->id, ts);
+    train = TrackAttemptToLocateTrain(track, sensor, ts);
+  }
+
+  // if we haven't located a lost train, then try detecting a fast train
+  if (!train) {
+    // Handle trains that trigger events that have not been generated yet
+    // (happens when our estimate for the window timeout is too long eg. train acc)
+    train = TrackCheckSensorForFastTrain(track, sensor);
+    if (train) {
+      r = ev_wm_delete_all(&train->wm);
+      assert(r == 0);
+      TrackUpdateFastTrain(track, train, sensor, ts);
+    }
   }
 }
 
@@ -396,7 +452,7 @@ static void TrackHandleRawEvent(Track *track, RawEvent *re, bool check_trains) {
 
       // only check trains that have a high state
       if (check_trains && se_event->state) {
-        TrackHandleTrainAtSensorRaw(track, se_event, re->timestamp);
+        TrackHandlePotentialTrainAtSensorRaw(track, se_event, re->timestamp);
       }
       UpdateSensor(track, se_event->id, se_event->state);
       break;
@@ -436,7 +492,7 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
     return;
   }
   // check that the train status is not lost for the edge case where:
-  // D12 is broken and train runs over E11
+  // eg. D12 is broken and train runs over E11
   // the train is lost and then gets a window double hit
   else if (r == 2 && train->status != TR_LOST) {
     // we got more than 1 sensor hit for a window lose the train

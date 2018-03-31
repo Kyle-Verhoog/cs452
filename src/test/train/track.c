@@ -121,8 +121,6 @@ static void next_sensors_test2() {
   poss_node_list_pop(&pnl, &sensor);
   assert(sensor.node == &T[trhr(T, "C13")]);
   assert(sensor.dist == 43+495+50);
-
-  // int dist = track_node_dist(T[trhr()])
 }
 
 
@@ -687,11 +685,61 @@ static void stress_one_train_test() {
   }
 }
 
+static void fast_train_test() {
+  Track track;
+  Train train;
+  track_node *node;
+  EventGroup event;
+  VirtualEvent ve;
+  TrackInit(&track, T);
+
+  train.num = 74;
+  train.gear = 1;
+  TrackAddTrain(&track, &train);
+  event = MockSensor(RE, 0, "A1", NULL);
+  TrackInterpretEventGroup(&track, &event);
+  assert(track.vevents.size == 1);
+  ve_list_pop(&track.vevents, &ve);
+  TrackClearEvents(&track);
+
+
+  event = MockSensor(VRE_RE, 200, "C13", &ve);
+  TrackInterpretEventGroup(&track, &event);
+  ve_list_pop(&track.vevents, &ve);
+  TrackClearEvents(&track);
+  assert(track.train[track.tmap[74]].status == TR_KNOWN);
+
+
+  // treat E7 as faulty and our window timeout is too long so the train
+  // passes over E7 without timing out in time for D7
+  // this should trigger the Fast Train logic and place the train at E7
+
+  // train passes over C13 at t=200
+
+  event = MockSensor(RE, 500, "D7", NULL);
+  TrackInterpretEventGroup(&track, &event);
+  ve_list_pop(&track.vevents, &ve);
+  TrackClearEvents(&track);
+  assert(ve.event.train_at.node == &T[trhr(T, "D9")]);
+  assert(track.train[track.tmap[74]].status == TR_KNOWN);
+  assert(track.train[track.tmap[74]].pos == &T[trhr(T, "D7")]);
+
+
+  // now just ensure that we're still tracking properly
+  event = MockSensor(RE, 700, "D9", &ve);
+  TrackInterpretEventGroup(&track, &event);
+  TrackClearEvents(&track);
+  assert(ve.event.train_at.node == &T[trhr(T, "D9")]);
+  assert(track.train[track.tmap[74]].status == TR_KNOWN);
+  assert(track.train[track.tmap[74]].pos == &T[trhr(T, "D9")]);
+}
+
 void track_tests() {
   init_tracka(T);
+  GetDistBetweenNodesTest();
   track_init_test(T);
-  next_sensors_test2();
   next_sensors_test(T);
+  next_sensors_test2();
   basic_test(T);
   track_events_test();
   lost_train_test();
@@ -700,5 +748,5 @@ void track_tests() {
   lost_train_false_positive_test();
   two_trains_recovery();
   stress_one_train_test();
-  GetDistBetweenNodesTest();
+  fast_train_test();
 }

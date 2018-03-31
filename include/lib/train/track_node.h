@@ -58,7 +58,7 @@ CIRCULAR_BUFFER_DEC(poss_node_list, PossibleSensor, POSSIBLE_NODE_LIST_SIZE);
 
 int dist_to_node(track_node *node, track_node *dest);
 
-bool sensor_nearby(track_node *node, track_node *dest, int sensor_depth);
+bool node_nearby_sd(track_node *node, track_node *dest, int sensor_depth);
 
 int next_poss_sensors(track_node *node, int dist, poss_node_list *pnl);
 
