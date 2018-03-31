@@ -161,13 +161,15 @@ int ev_wm_delete_all(ev_wm *wm) {
   event_window *window;
 
   while (wm->window_q.size > 0) {
-    ev_w_q_pop_end(&wm->window_q, &window);
+    r = ev_w_q_pop_end(&wm->window_q, &window);
+    if (r) return -1;
     for (k = window->key_offset; k < window->key_offset + window->nevents; ++k) {
       wm->window_map[k%KEY_MAX] = NULL;
     }
     window->node = NULL;
     window->key_offset = -1;
-    ev_w_q_push(&wm->avail_windows, window);
+    r = ev_w_q_push(&wm->avail_windows, window);
+    if (r) return -1;
   }
 
   return 0;

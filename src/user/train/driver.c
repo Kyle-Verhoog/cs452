@@ -3,7 +3,7 @@
 #include <user/syscalls.h>
 #include <user/nameserver.h>
 #include <user/terminal_manager.h>
-#include <lib/train/train_defines.h>
+#include <lib/train/track_node.h>
 #include <user/train/representer.h>
 #include <user/train/reservation_manager.h>
 
@@ -63,7 +63,7 @@ static int GetLastAvailableSensor(track_node *start, track_node *end, Switch *sw
 
   target->dist = 0;
   pos.node = start;
-  dist = DistanceBetweenNodes(sw, start, end);
+  dist = dist_between_nodes(sw, start, end);
   if(dist*1000 < min_dist){
     return -1;
   }
