@@ -75,6 +75,8 @@ TaskDescriptor* schedule() {
   ret = pq_pop(&pq_tasks, &td);
   KASSERT(ret == 0 && td != NULL);
 
+  running_task = td;
+
   return td;
 }
 
@@ -312,6 +314,22 @@ int no_tasks() {
   return tid_tracker.cb.size == MAX_TASK;
 }
 
+// quite a hack
+void data_abort_handler() {
+  asm("DATA_ENTRY:");
+  KASSERTF(0, "TASK %x (0x%x) DATA ABORT", running_task->tid, running_task->task);
+}
+
+void pre_entry_handler() {
+  asm("PRE_ENTRY:");
+  KASSERTF(0, "TASK %x (0x%x) PREFETCH ABORT", running_task->tid, running_task->task);
+}
+
+void undef_abort_handler() {
+  asm("UNDEF_ENTRY:");
+  KASSERTF(0, "TASK %x (0x%x) UNDEFINED ABORT", running_task->tid, running_task->task);
+}
+
 
 // TODO: fix this
 // NOTE: sl register not loaded
@@ -330,6 +348,26 @@ __attribute__((naked)) int main(void) {
   asm(
     "ldr r3, =IRQ_ENTRY;"
     "mov r4, #"STR(IRQ_ENTRY)";"
+    "str r3, [r4];"
+  );
+  asm(
+    "ldr r3, =IRQ_ENTRY;"
+    "mov r4, #"STR(IRQ_ENTRY)";"
+    "str r3, [r4];"
+  );
+  asm(
+    "ldr r3, =UNDEF_ENTRY;"
+    "mov r4, #"STR(UND_ENTRY)";"
+    "str r3, [r4];"
+  );
+  asm(
+    "ldr r3, =PRE_ENTRY;"
+    "mov r4, #"STR(PRE_ENTRY)";"
+    "str r3, [r4];"
+  );
+  asm(
+    "ldr r3, =DATA_ENTRY;"
+    "mov r4, #"STR(DAT_ENTRY)";"
     "str r3, [r4];"
   );
 

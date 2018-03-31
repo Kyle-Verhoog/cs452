@@ -3,7 +3,7 @@
 #include <user/syscalls.h>
 #include <user/nameserver.h>
 #include <user/terminal_manager.h>
-#include <lib/train/train_defines.h>
+#include <lib/train/track_node.h>
 #include <user/train/representer.h>
 #include <user/train/reservation_manager.h>
 
@@ -63,7 +63,7 @@ static int GetLastAvailableSensor(track_node *start, track_node *end, Switch *sw
 
   target->dist = 0;
   pos.node = start;
-  dist = DistanceBetweenNodes(sw, start, end);
+  dist = dist_between_nodes(sw, start, end);
   if(dist*1000 < min_dist){
     return -1;
   }
@@ -71,7 +71,7 @@ static int GetLastAvailableSensor(track_node *start, track_node *end, Switch *sw
   while(true){
     n = pos.node;
     r = GetNextSensorEXC(sw, n, &pos);
-    assert(r == 0);
+    //assert(r == 0);
 
     if((dist - pos.dist)*1000 < min_dist){
       break;
@@ -187,8 +187,6 @@ static void TrainGearSubscriber() {
 }
 
 
-
-
 static void FlipSwitch(sw_config *cfg) {
   SWProtocol sw;
   int r;
@@ -262,10 +260,9 @@ static void HandlePositionUpdate(TDTrain *train, track_node *new_pos) {
     path_start(&train->p, train->p.start);
   }
 
-
   if (new_pos == train->p.end) {
     TMLogStrf(tm_tid, "ARRIVED pathing to %s\n", train->p.end->reverse->name);
-    // DelayCS(my_tid, 2);
+    DelayCS(my_tid, 500);
     path_set_destination(&train->p, new_pos, train->p.end->reverse);
     path_generate(&train->p);
     StoreStopSensor(train);

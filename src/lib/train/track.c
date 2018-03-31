@@ -2,10 +2,8 @@
 
 CIRCULAR_BUFFER_DEF(train_cb, Train, TRAIN_LIST_SIZE);
 EXT_CIRCULAR_BUFFER_DEF(train_list, Train *, TRAIN_LIST_SIZE);
-CIRCULAR_BUFFER_DEF(poss_node_list, PossibleSensor, POSSIBLE_NODE_LIST_SIZE);
 CIRCULAR_BUFFER_DEF(update_list, TrackEvent, UPDATE_LIST_SIZE);
 CIRCULAR_BUFFER_DEF(ve_list, VirtualEvent, VEVENT_LIST_SIZE);
-CIRCULAR_BUFFER_DEF(bfs_q, track_node *, BFS_Q_SIZE);
 
 #define NEXT_NODE(x) x->edge[DIR_AHEAD].dest
 #define NEXT_DIST(x) x->edge[DIR_AHEAD].dist
@@ -32,174 +30,10 @@ void TrackInit(Track *track, track_node *tr) {
   }
 
   for (i = 0; i < TRAIN_MAX; ++i) {
-    track->tmap[i] = NULL;
+    track->tmap[i] = -1;
   }
 
   track->key = 0;
-}
-
-int FindDistToNode(track_node *node, track_node *dest) {
-  int r, d;
-  int dist[TRACK_MAX];
-  bfs_q q;
-  track_node *next;
-  bfs_q_init(&q);
-
-  dist[node->id] = 0;
-  r = bfs_q_push(&q, node);
-  d = BFS_Q_SIZE;
-
-  while (q.size > 0 && d-- > 0) {
-    r = bfs_q_pop(&q, &node);
-    assert(r == 0);
-
-    if (node == dest)
-      return dist[node->id];
-
-    if (node->type == NODE_BRANCH) {
-      next = node->edge[DIR_CURVED].dest;
-      r = bfs_q_push(&q, next);
-      dist[next->id] = node->edge[DIR_CURVED].dist + dist[node->id];
-      assert(r == 0);
-      next = node->edge[DIR_STRAIGHT].dest;
-      r = bfs_q_push(&q, node->edge[DIR_STRAIGHT].dest);
-      dist[next->id] = node->edge[DIR_STRAIGHT].dist + dist[node->id];
-      assert(r == 0);
-    }
-    else if (node->type == NODE_EXIT) {
-      continue;
-    }
-    else {
-      next = node->edge[DIR_AHEAD].dest;
-      r = bfs_q_push(&q, node->edge[DIR_AHEAD].dest);
-      dist[next->id] = node->edge[DIR_AHEAD].dist + dist[node->id];
-      assert(r == 0);
-    }
-  }
-
-  return -1;
-}
-
-
-int GetNextPossibleSensors(track_node *node, int dist, poss_node_list *pnl) {
-  int r;
-  PossibleSensor sensor;
-  assert(node != NULL);
-  assert(dist > 0 && dist < 10000);
-
-  while (node->type != NODE_SENSOR) {
-    if (node->type == NODE_BRANCH) {
-      // TODO: replace with stack data structure once we have one
-      GetNextPossibleSensors(node->edge[DIR_STRAIGHT].dest, dist + node->edge[DIR_STRAIGHT].dist, pnl);
-      GetNextPossibleSensors(node->edge[DIR_CURVED].dest, dist + node->edge[DIR_CURVED].dist, pnl);
-      return 0;
-    }
-    else if (node->type == NODE_EXIT) {
-      return 0;
-    }
-
-    dist += node->edge[DIR_AHEAD].dist;
-    node = node->edge[DIR_AHEAD].dest;
-  }
-
-  sensor.node = node;
-  sensor.dist = dist;
-  r = poss_node_list_push(pnl, sensor);
-  assert(r == 0);
-  return 0;
-}
-
-int GetNextSensorINC(Switch *sw, track_node *n, PossibleSensor *pos){
-  pos->dist = 0;
-  track_node *node = n;
-
-  while(node->type != NODE_SENSOR){
-    if(node->type == NODE_EXIT){
-      return -1;
-    }
-    else if(node->type == NODE_BRANCH){
-      if(sw[node->num].state == SW_STRAIGHT){
-        pos->dist += node->edge[DIR_STRAIGHT].dist;
-        node = node->edge[DIR_STRAIGHT].dest;
-      }
-      else{
-        pos->dist += node->edge[DIR_CURVED].dist;
-        node = node->edge[DIR_CURVED].dest;
-      }
-    }
-    else{
-      pos->dist += node->edge[DIR_AHEAD].dist;
-      node = node->edge[DIR_AHEAD].dest;
-    }
-  }
-
-  pos->node = node;
-  return 0;
-}
-
-int GetNextSensorEXC(Switch *sw, track_node *n, PossibleSensor *pos){
-  pos->dist = 0;
-  track_node *node = n;
-
-  do{
-    if(node->type == NODE_EXIT){
-      return -1;
-    }
-    else if(node->type == NODE_BRANCH){
-      if(sw[node->num].state == SW_STRAIGHT){
-        pos->dist += node->edge[DIR_STRAIGHT].dist;
-        node = node->edge[DIR_STRAIGHT].dest;
-      }
-      else{
-        pos->dist += node->edge[DIR_CURVED].dist;
-        node = node->edge[DIR_CURVED].dest;
-      }
-    }
-    else{
-      pos->dist += node->edge[DIR_AHEAD].dist;
-      node = node->edge[DIR_AHEAD].dest;
-    }
-  }while(node->type != NODE_SENSOR);
-
-  pos->node = node;
-  return 0;
-}
-
-int GetPrevSensorINC(Switch *sw, track_node *n, PossibleSensor *pos){
-  return GetNextSensorINC(sw, n->reverse, pos);
-}
-
-int GetPrevSensorEXC(Switch *sw, track_node *n, PossibleSensor *pos){
-  return GetNextSensorEXC(sw, n->reverse, pos);
-}
-
-int DistanceBetweenNodes(Switch *sw, track_node *start, track_node *end){
-  int dist = 0;
-  track_node *n = start;
-
-  while(n != end){
-    if(n->type == NODE_EXIT){
-     return -1;
-    }
-    else if(n->type == NODE_BRANCH){
-     if(sw[n->num].state == SW_STRAIGHT){
-       dist += n->edge[DIR_STRAIGHT].dist;
-       n = n->edge[DIR_STRAIGHT].dest;
-     }
-     else{
-       dist += n->edge[DIR_CURVED].dist;
-       n = n->edge[DIR_CURVED].dest;
-     }
-    }
-    else{
-     dist += n->edge[DIR_AHEAD].dist;
-     n = n->edge[DIR_AHEAD].dest;
-    }
-
-    assert(dist > 0 && dist < 50000); //Probably inf loop
-  }
-
-  return dist;
 }
 
 
@@ -240,6 +74,7 @@ static void TrackGenerateTrainPositionTEvent(Track *track, Train *train) {
 static void TrackAddVEvent(Track *track, Train *train, track_node *tn, VirtualEvent *ve) {
   int r;
   track->key = ev_wm_next_key(track->key);
+  // printf("%d\n", track->key);
   ve->key = track->key;
   r = ve_list_push(&track->vevents, *ve);
 
@@ -250,14 +85,14 @@ static void TrackAddVEvent(Track *track, Train *train, track_node *tn, VirtualEv
 
 static void TrackGenerateUnknownSpeedTrainVEvents(Track *track, Train *train) {
   assert(train->status == TR_UN_SPEED);
-  int r, s;
+  int r, s, next_dist;
   poss_node_list pnl;
   PossibleSensor sensor;
   assert(train->status != TR_UNINIT);
 
   poss_node_list_init(&pnl);
 
-  r = GetNextPossibleSensors(NEXT_NODE(train->pos), NEXT_DIST(train->pos), &pnl);
+  r = next_poss_sensors(NEXT_NODE(train->pos), NEXT_DIST(train->pos), &pnl);
 
   VirtualEvent ve;
   ve.type = VE_TR_AT;
@@ -266,8 +101,16 @@ static void TrackGenerateUnknownSpeedTrainVEvents(Track *track, Train *train) {
   while (pnl.size > 0) {
     r = poss_node_list_pop(&pnl, &sensor);
     assert(r == 0);
-    ve.timeout = -1;
-    ve.timestamp = 500 + train->sen_ts;
+    // use the last known speed if it exists to try to guess a timestamp
+    if (train->speed > 0 && train->gear > 0) {
+      next_dist = NEXT_DIST(sensor.node);
+      ve.timestamp = ((sensor.dist*1000) / train->speed) + train->sen_ts;
+      ve.timeout = (((next_dist/3)*1000) / train->speed);
+    }
+    else {
+      ve.timeout = -1;
+      ve.timestamp = 500 + train->sen_ts;
+    }
     ve.depend = sensor.node->num;
     ve.event.train_at.train_num = train->num;
     ve.event.train_at.node = sensor.node;
@@ -290,7 +133,7 @@ static void TrackGenerateKnownTrainVEvents(Track *track, Train *train) {
 
   poss_node_list_init(&pnl);
 
-  r = GetNextPossibleSensors(NEXT_NODE(train->pos), NEXT_DIST(train->pos), &pnl);
+  r = next_poss_sensors(NEXT_NODE(train->pos), NEXT_DIST(train->pos), &pnl);
 
   VirtualEvent ve;
   ve.type = VE_TR_AT;
@@ -303,7 +146,7 @@ static void TrackGenerateKnownTrainVEvents(Track *track, Train *train) {
     next_dist = NEXT_DIST(sensor.node);
 
     ve.timestamp = ((dist*1000) / train->speed) + train->sen_ts;
-    ve.timeout = ((next_dist*1000) / train->speed);
+    ve.timeout = (((next_dist/3)*1000) / train->speed);
     ve.depend = sensor.node->num;
     ve.event.train_at.train_num = train->num;
     ve.event.train_at.node = sensor.node;
@@ -375,7 +218,7 @@ static void TrackUpdateKnownTrain(Track *track, Train *train, track_node *new_po
     // TODO: the below will not work across branches?
     // dist = track_node_dist(train->pos, new_pos); // dist is in mm
     // TODO: replace this with something better?
-    dist = FindDistToNode(train->pos, new_pos);
+    dist = dist_to_node(train->pos, new_pos);
     assert(dist > 0);
     assert(dist >= 0 && dist <= 10000);
 
@@ -412,7 +255,7 @@ static void TrackUpdateUnknownSpeedTrain(Track *track, Train *train, track_node 
   // if the speed is unknown and the previous position is not null then we can
   // figure out the speed
   assert(train->speed == -1);
-  dist = FindDistToNode(train->pos, new_pos);
+  dist = dist_to_node(train->pos, new_pos);
   assert(dist >= 0 && dist <= 10000);
   assert(ts - train->sen_ts != 0);
   train->speed = (dist*1000) / ((ts - train->sen_ts)); // speed in um/tick
@@ -483,84 +326,24 @@ static void TrackLoseTrain(Track *track, Train *train) {
   TrackGenerateTrainStatusTEvent(track, train, old_status, TR_LOST);
 }
 
-static void TrackLocateLostTrain(Track *track, Train *train, track_node *sen, int ts) {
-  int r;
-
-  TrackUpdateLostTrain(track, train, sen, ts);
-
-  // r = train_list_push(&track->active_trains, train);
-  // assert(r == 0);
-}
+// static void TrackHandleFastTrain(Track *track, Train *train, track_node *sensor, int ts) {
+// }
 
 
-// does a BFS to a depth of 2 sensors (since we can assume at most 1 sensor failure)
 #define NEARBY_SENSOR_DEPTH 2
-static bool TrainNearby(track_node *node, track_node *dest) {
-  int r;
-  int nse[TRACK_MAX];
-  bfs_q q;
-  track_node *next;
-  bfs_q_init(&q);
-
-  nse[node->id] = 0;
-  r = bfs_q_push(&q, node);
-
-  while (q.size > 0) {
-    r = bfs_q_pop(&q, &node);
-    assert(r == 0);
-
-    if (node == dest)
-      return true;
-
-    if (node->type == NODE_BRANCH) {
-      next = node->edge[DIR_CURVED].dest;
-      nse[next->id] = nse[node->id];
-      r = bfs_q_push(&q, next);
-      assert(r == 0);
-
-      next = node->edge[DIR_STRAIGHT].dest;
-      nse[next->id] = nse[node->id];
-      r = bfs_q_push(&q, next);
-      assert(r == 0);
-    }
-    else if (node->type == NODE_EXIT) {
-      continue;
-    }
-    else if (node->type == NODE_SENSOR) {
-      next = node->edge[DIR_AHEAD].dest;
-      if (nse[node->id] + 1 > NEARBY_SENSOR_DEPTH)
-        continue;
-      nse[next->id] = nse[node->id] + 1;
-      r = bfs_q_push(&q, next);
-      assert(r == 0);
-    }
-    else {
-      next = node->edge[DIR_AHEAD].dest;
-      nse[next->id] = nse[node->id];
-      r = bfs_q_push(&q, next);
-      assert(r == 0);
-    }
-  }
-
-  return false;
-}
-
-
-static Train *TrackAttemptToLocateTrain(Track *track, int sen_num, int ts) {
+static Train *TrackAttemptToLocateTrain(Track *track, track_node *node, int ts) {
   int r, i, n;
   Train *train;
-  track_node *node;
 
   n = track->lost_trains.size;
-  node = &track->graph[sen_num];
 
   // loop over the lost trains checking to see which is nearby the sensor
   for (i = 0; i < n; ++i) {
     r = train_list_pop(&track->lost_trains, &train);
     assert(r == 0);
 
-    if (/*train->gear > 0 && */(!train->pos || TrainNearby(train->pos, node))) {
-      TrackLocateLostTrain(track, train, node, ts);
+    if (train->gear > 0 && (!train->pos || node_nearby_sd(train->pos, node, NEARBY_SENSOR_DEPTH))) {
+      TrackUpdateLostTrain(track, train, node, ts);
       return train;
     }
 
@@ -571,23 +354,88 @@ static Train *TrackAttemptToLocateTrain(Track *track, int sen_num, int ts) {
   return NULL;
 }
 
+// checks backwards from a sensor looking for a train
+static Train *TrackCheckSensorForFastTrain(Track *track, track_node *sensor) {
+  int i;
+  Train *train;
+  assert(sensor->type == NODE_SENSOR);
+
+  // flip the sensor to look in the reverse direction
+  sensor = sensor->reverse;
+
+  // TODO(1): this is pretty inefficient, we're searching again and again for each
+  // train position rather than searching once and checking for a match with a
+  // train position
+
+  // this can be improved by writing a BFS and checking each node to see if it
+  // matches a train's position
+
+  // TODO(2): we also probably want to check some other data about the train to
+  // ensure that this is not a false positive sensor reading occuring in front
+  // of a train else we are going to advance the train to a position in which it
+  // is not actually
+  for (i = 0; i < track->ntrains; ++i) {
+    train = &track->train[i];
+    if (node_nearby_sd(sensor, train->pos->reverse, 2))
+      return train;
+  }
+
+  return NULL;
+}
+
+// * -> TR_KNOWN
+// used to advance a train when it is ahead of schedule and our window timeout is
+// off
+static void TrackUpdateFastTrain(Track *track, Train *train, track_node *sensor, int ts) {
+  int dist;
+  assert(train->status == TR_KNOWN || train->status == TR_UN_SPEED);
+
+  dist = dist_to_node(train->pos, sensor);
+  assert(dist >= 0 && dist <= 10000);
+  assert(ts - train->sen_ts != 0);
+  train->speed = (dist*1000) / ((ts - train->sen_ts)); // speed in um/tick
+  train->status = TR_KNOWN;
+  train->sen_ts = ts;
+  train->pos = sensor;
+  TrackGenerateKnownTrainVEvents(track, train);
+  TrackGenerateTrainStatusTEvent(track, train, TR_UN_SPEED, TR_KNOWN);
+  TrackGenerateTrainSpeedTEvent(track, train, -1, train->speed);
+  TrackGenerateTrainPositionTEvent(track, train);
+}
+
 
 //-------------------------EVENT INTERPRETERS----------------------------------
 
 
-static void TrackHandleTrainAtSensorRaw(Track *track, RawSensorEvent *se, int ts) {
+static void TrackHandlePotentialTrainAtSensorRaw(Track *track, RawSensorEvent *se, int ts) {
   Train *train;
+  track_node *sensor;
+  int r;
   train = NULL;
 
+  sensor = &track->graph[se->id];
   if (track->lost_trains.size > 0) {
-    train = TrackAttemptToLocateTrain(track, se->id, ts);
+    train = TrackAttemptToLocateTrain(track, sensor, ts);
+  }
+
+  // if we haven't located a lost train, then try detecting a fast train
+  if (!train) {
+    // Handle trains that trigger events that have not been generated yet
+    // (happens when our estimate for the window timeout is too long eg. train acc)
+    train = TrackCheckSensorForFastTrain(track, sensor);
+    if (train) {
+      r = ev_wm_delete_all(&train->wm);
+      assert(r == 0);
+      TrackUpdateFastTrain(track, train, sensor, ts);
+    }
   }
 }
 
 static void TrackHandleTrainCmd(Track *track, int train_num, int cmd) {
   Train t;
-  if (!track->tmap[train_num]) {
+  if (track->tmap[train_num] == -1) {
     t.num = train_num;
+    t.gear = cmd;
     TrackAddTrain(track, &t);
   }
 }
@@ -604,7 +452,7 @@ static void TrackHandleRawEvent(Track *track, RawEvent *re, bool check_trains) {
 
       // only check trains that have a high state
       if (check_trains && se_event->state) {
-        TrackHandleTrainAtSensorRaw(track, se_event, re->timestamp);
+        TrackHandlePotentialTrainAtSensorRaw(track, se_event, re->timestamp);
       }
       UpdateSensor(track, se_event->id, se_event->state);
       break;
@@ -643,14 +491,16 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
     // TMLogStrf(tm_tid, "window does not exist\n");
     return;
   }
-  else if (r == 2) {
+  // check that the train status is not lost for the edge case where:
+  // eg. D12 is broken and train runs over E11
+  // the train is lost and then gets a window double hit
+  else if (r == 2 && train->status != TR_LOST) {
     // we got more than 1 sensor hit for a window lose the train
     // and invalidate newer windows
     train->pos = ev_wm_get_window_tn(&train->wm, ekey);
     ev_wm_invalidate_after(&train->wm, ekey);
     TrackLoseTrain(track, train);
     assert(train->status == TR_LOST);
-    return;
   }
 
   r = ev_wm_delete_if_complete(&train->wm, ekey);
@@ -660,7 +510,7 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
   else if (r == -2) {
   }
   else if (r == -3) {
-    assert(0);
+    // assert(0);
     // TMLogStrf(tm_tid, "EVDEL: REMOVE ERROR\n");
   }
   else if (r == -4) {
@@ -668,13 +518,15 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
     // TMLogStrf(tm_tid, "EVDEL: avail_windows FULL\n");
   }
 
-  new_pos = &track->graph[grp->re.event.se_event.id];
-
   if (train->status == TR_KNOWN) {
+    new_pos = &track->graph[grp->re.event.se_event.id];
     TrackUpdateKnownTrain(track, train, new_pos, rts);
   }
   else if (train->status == TR_UN_SPEED) {
+    new_pos = &track->graph[grp->re.event.se_event.id];
     TrackUpdateUnknownSpeedTrain(track, train, new_pos, rts);
+  }
+  else if (train->status == TR_LOST) {
   }
   else {
     assert(0);
@@ -703,10 +555,10 @@ static void TrackHandleTrainAtTimeout(Track *track, EventGroup *grp) {
   else if (r == 1) {
     // all events timed out, reset back to the prev node, invalidate events
     // after the node and lose the train
+    assert(train->status != TR_LOST);
     train->pos = ev_wm_get_window_tn(&train->wm, ekey);
     ev_wm_invalidate_after(&train->wm, ekey);
     TrackLoseTrain(track, train);
-    return;
   }
 
   ev_wm_delete_if_complete(&train->wm, ekey);

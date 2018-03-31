@@ -24,21 +24,11 @@
 #define TRAIN_LIST_SIZE 2
 EXT_CIRCULAR_BUFFER_DEC(train_cb, Train, TRAIN_LIST_SIZE);
 CIRCULAR_BUFFER_DEC(train_list, Train *, TRAIN_LIST_SIZE);
-#define UPDATE_LIST_SIZE 8
+#define UPDATE_LIST_SIZE 16
 CIRCULAR_BUFFER_DEC(update_list, TrackEvent, UPDATE_LIST_SIZE);
-#define VEVENT_LIST_SIZE 8
+#define VEVENT_LIST_SIZE 16
 CIRCULAR_BUFFER_DEC(ve_list, VirtualEvent, VEVENT_LIST_SIZE);
 
-#define BFS_Q_SIZE 16
-CIRCULAR_BUFFER_DEC(bfs_q, track_node*, BFS_Q_SIZE);
-
-typedef struct PossibleSensor {
-  int dist;
-  track_node *node;
-} PossibleSensor;
-
-#define POSSIBLE_NODE_LIST_SIZE 5
-CIRCULAR_BUFFER_DEC(poss_node_list, PossibleSensor, POSSIBLE_NODE_LIST_SIZE);
 
 #define KEY_SIZE 256
 #define NUM_TRAINS 5

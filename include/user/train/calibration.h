@@ -7,6 +7,7 @@
 #include <user/train/representer.h>
 #include <user/train/train_provider.h>
 #include <lib/train/updates.h>
+#include <lib/train/track_switch.h>
 
 #define MEASURING_GEAR 4
 

@@ -88,7 +88,7 @@ void Calibration(void *args){
 	//NEED THE SWITCH STATE AT THIS POINT
 	start = &TRACK[cargs.target_node];
 	end = event.node;
-	dist = DistanceBetweenNodes(switches, start, end)*1000 - (etime - stime)*measuring_velocity;
+	dist = dist_between_nodes(switches, start, end)*1000 - (etime - stime)*measuring_velocity;
 
 	//Log
 	TMLogStrf(tm_tid, "Tr: %d, Gear: %d, Dist: %d\n", cargs.train, cargs.init_gear, dist);
@@ -159,7 +159,7 @@ void MeasuringVelocity(void *args){
 	Send(rep_tid, &tr_req, sizeof(tr_req), &switches, sizeof(switches));
 
 	//COMPUTE THE VELOCITY
-	dist = DistanceBetweenNodes(switches, start, end)*1000;
+	dist = dist_between_nodes(switches, start, end)*1000;
 	measuring_velocity = dist/(etime - stime);
 
 	//Log
@@ -175,7 +175,7 @@ static int GetLastAvailableSensor(track_node *start, track_node *end, Switch *sw
   pos.dist = 0;
 	target->dist = 0;
 	pos.node = start;
-	dist = DistanceBetweenNodes(sw, start, end);
+	dist = dist_between_nodes(sw, start, end);
 	if(dist*1000 < min_dist){
 		return -1;
 	}

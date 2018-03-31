@@ -215,7 +215,7 @@ static void handle_ve_reg(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *sen
   r = ve_key_cb_push(&sensorToVE[sensor], key);
   assert(r != CB_E_FULL);
   waiting[key] = ve;
-  TMLogStrf(tm_tid, "VRE %d on %s\n", ve.key, ve.event.train_at.node->name);
+  TMLogStrf(tm_tid, "REG %d on %s\n", ve.key, ve.event.train_at.node->name);
 }
 
 void HandleWR_VE(WRRequest *event, VirtualEvent *waiting, ve_key_cb *sensorToVE){
@@ -251,7 +251,7 @@ static void handle_re_se(RawEvent re, VirtualEvent *waiting, ve_key_cb *sensorTo
       r = eg_cb_push(dataBuf, eg);
       assert(r != CB_E_FULL);
       reset_waiting_room(&waiting[key]);
-      TMLogStrf(tm_tid, "VRE RE or VRE VE RE %d on %d\n", key, re.event.se_event.id);
+      TMLogStrf(tm_tid, "HIT %d on %s\n", key, TRACK[re.event.se_event.id].name);
     }
   }else{
     //Just an RE
@@ -310,7 +310,7 @@ static void handle_to_tr_at(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *s
         r = eg_cb_push(dataBuf, eg);
         assert(r != CB_E_FULL);
         reset_waiting_room(&waiting[key]);
-        TMLogStrf(tm_tid, "VRE VE on %s\n", ve.event.train_at.node->name);
+        TMLogStrf(tm_tid, "TO %d on %s\n", key, ve.event.train_at.node->name);
         break;
       }
       else{
