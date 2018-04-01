@@ -259,9 +259,52 @@ void HandleWR_VE(WRRequest *event, VirtualEvent *waiting, ve_key_cb *sensorToVE,
   }
 }
 
+static int pop_earliest_ts(ve_key_cb *sensor, VirtualEvent *waiting, int *key){
+  int i, max_ts, max_key;
+  max_ts = -1;
+  max_key = -1;
+
+  if(sensorToVE->size == 0) return -1;
+
+  //Find the next virtual event
+  for(i = 0; i < sensor->size; i++){
+    r = ve_key_cb_pop(sensor, key);
+    //Error checking
+    if(r) return r;
+    if(*key < 0 || *key >= MAX_LIVE_TRAINS * MAX_OUTSTANDING_EVENT) return -2;
+    if(waiting[*key].type == VE_NONE) return -3;
+
+    //Update the closest virtual event
+    if(waiting[*key].timestamp < max_ts || max_ts == -1){
+      max_key = *key;
+    }
+
+    //Push back
+    r = ve_key_cb_push(sensor, *key);
+    if(r) return r;
+  }
+
+  //Pop the expected virtual event
+  for(i = 0; i < sensor->size; i++){
+    r = ve_key_cb_pop(sensor, key);
+    if(r) return r;
+
+    if(*key == max_key){
+      break;
+    }
+
+    r = ve_key_cb_push(sensor, *key);
+    if(r) return r;    
+  }
+
+  //Set key as max
+  *key = max_key;
+  return 0;
+}
+
 static void handle_re_se(RawEvent re, VirtualEvent *waiting, ve_key_cb *sensorToVE, eg_cb *dataBuf, int *liveMap /*TODO:REMOVE*/){
   EventGroup eg;
-  int sensor, key, r;
+  int sensor, key, r, i, max_ts;
 
   tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
   assert(tm_tid > 0);
@@ -271,20 +314,31 @@ static void handle_re_se(RawEvent re, VirtualEvent *waiting, ve_key_cb *sensorTo
 
   if(sensorToVE[sensor].size > 0){
     //Possible conflict, but we'll assume they all ran over it
-    while(ve_key_cb_pop(&sensorToVE[sensor], &key) != CB_E_EMPTY){
-      if(waiting[key].type == VE_NONE){
-        assert(0 && "Didn't clear sensors");
-      }
-      eg.type = waiting[key].type == VE_REG ? VRE_RE : VRE_VE_RE; 
-      eg.re = re;
-      eg.ve = waiting[key];
-      eg.ve.event.train_at.train_num = liveMap[eg.ve.event.train_at.train_num];
-      r = eg_cb_push(dataBuf, eg);
-      assert(r != CB_E_FULL);
-      assert(key >= 0 && key < MAX_LIVE_TRAINS * MAX_OUTSTANDING_EVENT);
-      reset_waiting_room(&waiting[key]);
-      TMLogStrf(tm_tid, "HIT %d on %s\n", key, TRACK[re.event.se_event.id].name);
-    }
+    // while(ve_key_cb_pop(&sensorToVE[sensor], &key) != CB_E_EMPTY){
+    //   if(waiting[key].type == VE_NONE){
+    //     assert(0 && "Didn't clear sensors");
+    //   }
+    //   eg.type = waiting[key].type == VE_REG ? VRE_RE : VRE_VE_RE; 
+    //   eg.re = re;
+    //   eg.ve = waiting[key];
+    //   eg.ve.event.train_at.train_num = liveMap[eg.ve.event.train_at.train_num];
+    //   r = eg_cb_push(dataBuf, eg);
+    //   assert(r != CB_E_FULL);
+    //   assert(key >= 0 && key < MAX_LIVE_TRAINS * MAX_OUTSTANDING_EVENT);
+    //   reset_waiting_room(&waiting[key]);
+    //   TMLogStrf(tm_tid, "HIT %d on %s\n", key, TRACK[re.event.se_event.id].name);
+    // }
+    //No more conflict, assume earliest timestamp
+    r = pop_earliest_ts(&sensorToVE[sensor], waiting, &key);
+    assert(r == 0);
+    eg.type = waiting[key].type == VE_REG ? VRE_RE : VRE_VE_RE; 
+    eg.re = re;
+    eg.ve = waiting[key];
+    eg.ve.event.train_at.train_num = liveMap[eg.ve.event.train_at.train_num];
+    r = eg_cb_push(dataBuf, eg);
+    assert(r != CB_E_FULL);
+    reset_waiting_room(&waiting[key]);
+    TMLogStrf(tm_tid, "HIT %d on %s\n", key, TRACK[re.event.se_event.id].name);
   }else{
     //Just an RE
     eg.type = RE;
