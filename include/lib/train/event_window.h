@@ -12,7 +12,7 @@
 #include <syscalls.h>
 #endif
 
-#define KEY_MAX 64 
+#define KEY_MAX 64
 
 #define EV_UNINIT_KEY  -1
 #define EV_WIND_TO      1
@@ -42,6 +42,7 @@ typedef struct ev_window_manager {
   ev_w_q avail_windows;
   ev_w_q window_q;
   event_window *window_map[KEY_MAX];
+  int key;
 } ev_wm;
 
 
@@ -59,7 +60,7 @@ int ev_wm_invalidate_after(ev_wm *wm, int key);
 
 int ev_wm_delete_if_complete(ev_wm *wm, int key);
 
-int ev_wm_next_key(int key);
+void ev_wm_next_key(ev_wm *wm);
 
 int ev_wm_delete_all(ev_wm *wm);
 

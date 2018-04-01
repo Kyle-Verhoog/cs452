@@ -21,6 +21,8 @@ void ev_wm_init(ev_wm *wm) {
   ev_w_q_init(&wm->window_q);
   ev_w_q_init(&wm->avail_windows);
 
+  wm->key = 0;
+
   for (i = 0; i < TRACK_MAX; ++i) {
     window = &wm->window[i];
     event_window_init(window);
@@ -82,8 +84,8 @@ int ev_wm_next_window(ev_wm *wm) {
 }
 
 
-int ev_wm_next_key(int key) {
-  return (key+1) % KEY_MAX;
+void ev_wm_next_key(ev_wm *wm) {
+  wm->key = (wm->key+1) % KEY_MAX;
 }
 
 
@@ -163,7 +165,8 @@ int ev_wm_delete_all(ev_wm *wm) {
   event_window *window;
 
   while (wm->window_q.size > 0) {
-    r = ev_w_q_pop_end(&wm->window_q, &window);
+    r = ev_w_q_pop(&wm->window_q, &window);
+    assert(r == 0);
     if (r) return -1;
     for (k = window->key_offset; k < window->key_offset + window->nevents; ++k) {
       wm->window_map[k%KEY_MAX] = NULL;
@@ -171,6 +174,7 @@ int ev_wm_delete_all(ev_wm *wm) {
     window->node = NULL;
     window->key_offset = -1;
     r = ev_w_q_push(&wm->avail_windows, window);
+    assert(r == 0);
     if (r) return -1;
   }
 
@@ -198,8 +202,8 @@ int ev_wm_invalidate_after(ev_wm *wm, int key) {
     if (r) return -1;
   }
 
-  r = ev_w_q_push(&wm->window_q, end);
-  if (r) return -1;
+  // r = ev_w_q_push(&wm->window_q, end);
+  // if (r) return -1;
 
   return 0;
 }

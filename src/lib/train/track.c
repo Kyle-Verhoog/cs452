@@ -32,8 +32,6 @@ void TrackInit(Track *track, track_node *tr) {
   for (i = 0; i < TRAIN_MAX; ++i) {
     track->tmap[i] = -1;
   }
-
-  track->key = 0;
 }
 
 
@@ -73,9 +71,9 @@ static void TrackGenerateTrainPositionTEvent(Track *track, Train *train) {
 
 static void TrackAddVEvent(Track *track, Train *train, track_node *tn, VirtualEvent *ve) {
   int r;
-  track->key = ev_wm_next_key(track->key);
+  ev_wm_next_key(&train->wm);
   // printf("%d\n", track->key);
-  ve->key = track->key;
+  ve->key = train->wm.key;
   r = ve_list_push(&track->vevents, *ve);
   assert(r == 0);
 
@@ -212,7 +210,7 @@ static void InitTrainCmd(Track *track, int tr_num, int node){
   int r;
   Train *train;
 
-  assert(tr_num >= 0 && tr_num <= TRAIN_SIZE);
+  assert(tr_num >= 0 && tr_num < TRAIN_SIZE);
   track->tmap[tr_num] = track->ntrains++;
 
   train = &track->train[track->tmap[tr_num]];
@@ -353,9 +351,6 @@ static void TrackLoseTrain(Track *track, Train *train) {
   TrackGenerateTrainStatusTEvent(track, train, old_status, TR_LOST);
 }
 
-// static void TrackHandleFastTrain(Track *track, Train *train, track_node *sensor, int ts) {
-// }
-
 
 #define NEARBY_SENSOR_DEPTH 2
 static Train *TrackAttemptToLocateTrain(Track *track, track_node *node, int ts) {
@@ -403,6 +398,12 @@ static Train *TrackCheckSensorForFastTrain(Track *track, track_node *sensor) {
   // is not actually
   for (i = 0; i < track->ntrains; ++i) {
     train = &track->train[i];
+
+    // break since it is already at the sensor
+    if (train->pos == sensor->reverse) {
+      break;
+    }
+
     if (node_nearby_sd(sensor, train->pos->reverse, 2))
       return train;
   }
@@ -415,7 +416,7 @@ static Train *TrackCheckSensorForFastTrain(Track *track, track_node *sensor) {
 // off
 static void TrackUpdateFastTrain(Track *track, Train *train, track_node *sensor, int ts) {
   int dist;
-  assert(train->status == TR_KNOWN || train->status == TR_UN_SPEED);
+  // assert(train->status == TR_KNOWN || train->status == TR_UN_SPEED);
 
   dist = dist_to_node(train->pos, sensor);
   assert(dist >= 0 && dist <= 10000);
@@ -441,6 +442,9 @@ static void TrackHandlePotentialTrainAtSensorRaw(Track *track, RawSensorEvent *s
   train = NULL;
 
   sensor = &track->graph[se->id];
+
+  // shortcut if the train is already on this sensor
+
   if (track->lost_trains.size > 0) {
     train = TrackAttemptToLocateTrain(track, sensor, ts);
   }

@@ -1,5 +1,6 @@
 #include <user/train/waiting_room.h>
 #include <terminal_manager.h>
+#include <lib/train/event_window.h>
 #include <track_data.h> //TODO: REMOVE THIS
 
 CIRCULAR_BUFFER_DEF(eg_cb, EventGroup, EVENT_GROUP_BUFFER_SIZE);
@@ -205,13 +206,13 @@ static void add_train_unique_registration(ve_key_cb *cb, VirtualEvent *waiting, 
   int base, i, reged, r, train_num, key;
 
   train_num = ve.event.train_at.train_num;
-  key = train_num * KEY_SIZE + ve.key;
-  base = train_num * KEY_SIZE;
+  key = train_num * KEY_MAX + ve.key;
+  base = train_num * KEY_MAX;
 
   for(i = 0; i < cb->size; ++i){
     r = ve_key_cb_pop(cb, &reged);
     assert(r != CB_E_EMPTY);
-    if(!((reged - base) >= 0 && (reged - base) < KEY_SIZE)){
+    if(!((reged - base) >= 0 && (reged - base) < KEY_MAX)){
       r = ve_key_cb_push(cb, reged);
       assert(r != CB_E_FULL);
     }
@@ -404,7 +405,7 @@ void WaitingRoom(){
   tid_t req_tid;
   tid_t courier = -1;
 
-  VirtualEvent waiting[KEY_SIZE*MAX_LIVE_TRAINS];
+  VirtualEvent waiting[KEY_MAX*MAX_LIVE_TRAINS];
   ve_key_cb sensorToVE[SENSOR_SIZE];
   int live = 0; //TODO: TEMPORARY
   int trainMap[TRAIN_MAX]; //TODO: TEMPORARY - REMOVE THIS
@@ -445,7 +446,7 @@ void WaitingRoom(){
         Reply(req_tid, &r, sizeof(r));
         //TODO: TEMPORARY
         assert(event.data.ve.event.train_at.train_num >= 1 && event.data.ve.event.train_at.train_num <= TRAIN_MAX);
-        assert(event.data.ve.key >= 0 && event.data.ve.key < KEY_SIZE);
+        assert(event.data.ve.key >= 0 && event.data.ve.key < KEY_MAX);
         if(trainMap[event.data.ve.event.train_at.train_num] == -1){
           trainMap[event.data.ve.event.train_at.train_num] = live;
           liveMap[live] = event.data.ve.event.train_at.train_num;

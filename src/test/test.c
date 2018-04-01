@@ -7,9 +7,10 @@
 #include <test/buffer_pack.h>
 #include <test/ioserver_buffer.h>
 #include <test/terminal.h>
-#include <test/train/event_window.h>
 #include <test/train/priority_queue.h>
 #include <test/train/path_finding.h>
+#include <test/train/estimator.h>
+#include <test/train/event_window.h>
 #include <test/train/train_model.h>
 #include <test/train/reservation.h>
 #include <test/train/track.h>
@@ -59,6 +60,10 @@ int main(void) {
   priority_queue_tests();
   PTEST_END();
 
+  PTEST_START("train/estimator");
+  estimator_tests();
+  PTEST_END();
+
   PTEST_START("train/event_window");
   event_window_tests();
   PTEST_END();
@@ -86,7 +91,6 @@ int main(void) {
   PTEST_START("train/track");
   track_tests();
   PTEST_END();
-
 
   PRINTF("+----------------------+---+\n");
   PRINTF("|  ALL TESTS PASSED ☻  |   |\n");

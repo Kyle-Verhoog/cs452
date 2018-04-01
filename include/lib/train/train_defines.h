@@ -3,6 +3,7 @@
 
 #define TRAIN_SIZE 81
 #define TRAIN_MAX 81
+#define NUM_TRAINS 5
 #define SWITCH_SIZE 157
   #define NORM_SW_LOW 1
   #define NORM_SW_HIGH 18

@@ -21,7 +21,7 @@
 #include <lib/train/path_finding.h>
 
 
-#define TRAIN_LIST_SIZE 2
+#define TRAIN_LIST_SIZE NUM_TRAINS
 EXT_CIRCULAR_BUFFER_DEC(train_cb, Train, TRAIN_LIST_SIZE);
 CIRCULAR_BUFFER_DEC(train_list, Train *, TRAIN_LIST_SIZE);
 #define UPDATE_LIST_SIZE 16
@@ -29,9 +29,6 @@ CIRCULAR_BUFFER_DEC(update_list, TrackEvent, UPDATE_LIST_SIZE);
 #define VEVENT_LIST_SIZE 16
 CIRCULAR_BUFFER_DEC(ve_list, VirtualEvent, VEVENT_LIST_SIZE);
 
-
-#define KEY_SIZE KEY_MAX 
-#define NUM_TRAINS 5
 
 typedef struct Track {
   track_node *graph;
@@ -41,10 +38,8 @@ typedef struct Track {
   train_list lost_trains;
   train_list active_trains;
   Sensor sensors[DECODER_SIZE*8];
-  Switch switches[SWITCH_SIZE];
   update_list updates;
   ve_list vevents;
-  int key;                   // key unique to each event
 } Track;
 
 void TrackInit(Track *, track_node *graph);
