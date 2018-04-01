@@ -260,11 +260,11 @@ void HandleWR_VE(WRRequest *event, VirtualEvent *waiting, ve_key_cb *sensorToVE,
 }
 
 static int pop_earliest_ts(ve_key_cb *sensor, VirtualEvent *waiting, int *key){
-  int i, max_ts, max_key;
+  int i,r, max_ts, max_key;
   max_ts = -1;
   max_key = -1;
 
-  if(sensorToVE->size == 0) return -1;
+  if(sensor->size == 0) return -1;
 
   //Find the next virtual event
   for(i = 0; i < sensor->size; i++){
