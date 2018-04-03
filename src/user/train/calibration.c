@@ -279,7 +279,7 @@ void SetMS(void *args){
 	assert(tm_tid > 0);
 
 	measuring_velocity = *(int *)args;
-	TMLogStrf("Train MS set to %d\n", measuring_velocity);
+	TMLogStrf(tm_tid, "Train MS set to %d\n", measuring_velocity);
 	Exit();
 }
 
