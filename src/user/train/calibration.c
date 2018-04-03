@@ -38,6 +38,35 @@ void TrainSpeedUpdate(void *args){
 	Exit();
 }
 
+void TrainSpeedSubscriber(void * args){
+	int train, r;
+	tid_t rep_tid, up_tid;
+	TrackRequest tr_req;
+	TETRSpeed event;
+
+	train = *(int *)args;
+
+	rep_tid = WhoIs(REPRESENTER_ID);
+	up_tid = MyParentTid();
+	assert(rep_tid > 0 && up_tid > 0);
+
+	//Init Request
+	tr_req.type = TRR_SUBSCRIBE;
+	tr_req.data.type = TE_TR_SPEED;
+
+	while(true){
+		Send(rep_tid, &tr_req, sizeof(tr_req), &event, sizeof(event));
+		if(event.num == train){
+			Send(up_tid, &event.new, sizeof(event.new), &r, sizeof(r));
+			if(r == -1){
+				break;
+			}
+		}		
+	}
+
+	Exit();
+}
+
 void Calibration(void *args){
 	int r, stime, etime, dist;
 	CalibrationArgs cargs;
@@ -335,35 +364,6 @@ static int GetLastAvailableSensor(track_node *start, track_node *end, Switch *sw
 
 	target->node = n;
 	return dist;
-}
-
-void TrainSpeedSubscriber(void * args){
-	int train, r;
-	tid_t rep_tid, up_tid;
-	TrackRequest tr_req;
-	TETRSpeed event;
-
-	train = *(int *)args;
-
-	rep_tid = WhoIs(REPRESENTER_ID);
-	up_tid = MyParentTid();
-	assert(rep_tid > 0 && up_tid > 0);
-
-	//Init Request
-	tr_req.type = TRR_SUBSCRIBE;
-	tr_req.data.type = TE_TR_SPEED;
-
-	while(true){
-		Send(rep_tid, &tr_req, sizeof(tr_req), &event, sizeof(event));
-		if(event.num == train){
-			Send(up_tid, &event.new, sizeof(event.new), &r, sizeof(r));
-			if(r == -1){
-				break;
-			}
-		}		
-	}
-
-	Exit();
 }
 
 void TestCalibration(void *args){
