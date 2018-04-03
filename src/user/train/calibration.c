@@ -2,6 +2,35 @@
 
 int measuring_velocity; //Hack-y
 
+void TrainSpeedSubscriber(void * args){
+	int train, r;
+	tid_t rep_tid, up_tid;
+	TrackRequest tr_req;
+	TETRSpeed event;
+
+	train = *(int *)args;
+
+	rep_tid = WhoIs(REPRESENTER_ID);
+	up_tid = MyParentTid();
+	assert(rep_tid > 0 && up_tid > 0);
+
+	//Init Request
+	tr_req.type = TRR_SUBSCRIBE;
+	tr_req.data.type = TE_TR_SPEED;
+
+	while(true){
+		Send(rep_tid, &tr_req, sizeof(tr_req), &event, sizeof(event));
+		if(event.num == train){
+			Send(up_tid, &event.new, sizeof(event.new), &r, sizeof(r));
+			if(r == -1){
+				break;
+			}
+		}		
+	}
+
+	Exit();
+}
+
 void TrainSpeedUpdate(void *args){
 	int train, r, speed, command;
 	tid_t tc_tid, req_tid;
@@ -33,35 +62,6 @@ void TrainSpeedUpdate(void *args){
 				}
 		}
 
-	}
-
-	Exit();
-}
-
-void TrainSpeedSubscriber(void * args){
-	int train, r;
-	tid_t rep_tid, up_tid;
-	TrackRequest tr_req;
-	TETRSpeed event;
-
-	train = *(int *)args;
-
-	rep_tid = WhoIs(REPRESENTER_ID);
-	up_tid = MyParentTid();
-	assert(rep_tid > 0 && up_tid > 0);
-
-	//Init Request
-	tr_req.type = TRR_SUBSCRIBE;
-	tr_req.data.type = TE_TR_SPEED;
-
-	while(true){
-		Send(rep_tid, &tr_req, sizeof(tr_req), &event, sizeof(event));
-		if(event.num == train){
-			Send(up_tid, &event.new, sizeof(event.new), &r, sizeof(r));
-			if(r == -1){
-				break;
-			}
-		}		
 	}
 
 	Exit();
