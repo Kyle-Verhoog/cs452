@@ -1,5 +1,12 @@
 #include <lib/train/train_model.h>
 
+int abs(int x){
+	if(x < 0){
+		x = x * -1;
+	}
+	return x;
+}
+
 unsigned int usqrt(int x)
 {
 	unsigned int a = 0L;
@@ -132,3 +139,28 @@ void getVelocityModel(TrainModel *tm, int train_num){
 	}
 }
 
+void getAccelerationDistanceModel(TrainModel *tm, int train_num){
+	if(train_num == 24){
+		int gear[] = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90 ,100, 110, 120, 130, 140};
+		memcpy(tm->x, gear, sizeof(gear));
+	}
+	else{
+#ifndef X86
+		assert(0 && "Attempting to use uncalibrated train!");
+#endif
+	}
+}
+
+int alphaUpdate(TrainModel *tm, int setting, int velocity){
+	int uVelocity;
+	int mVelocity = tm->y[setting];
+	
+	uVelocity = (velocity * ALPHA + mVelocity * (100 - ALPHA)) / 100;
+
+	if(abs(uVelocity - mVelocity) > uVelocity / 4){	//TODO: Crude way to check within 25%
+		return REJECTED;		
+	}
+	
+	tm->y[setting] = uVelocity;
+	return ACCEPTED;
+}

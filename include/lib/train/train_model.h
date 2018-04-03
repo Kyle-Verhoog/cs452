@@ -30,4 +30,14 @@ int standard_deviation(int *list, int size);
 int interpolate(TrainModel *tm, int setting);
 int interpolatePartial(TrainModel *tm, int setting, int head, int tail);
 
+void getStoppingDistanceModel(TrainModel *tm, int train_num);
+void getVelocityModel(TrainModel *tm, int train_num);
+void getAccelerationDistanceModel(TrainModel *tm, int train_num);
+
+//Update Values
+#define ACCEPTED 0
+#define REJECTED 1
+#define ALPHA 50
+int alphaUpdate(TrainModel *tm, int setting, int velocity);
+
 #endif //TRAIN_MODEL_H

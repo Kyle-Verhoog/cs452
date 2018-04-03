@@ -204,7 +204,7 @@ void TrainCAL(char *args) {
   Receive(&tid, &r, sizeof(r));
   r = parse_args(args, "%d %d %d", &cargs.train, &cargs.init_gear, &cargs.target_node);
   if (r) {
-    TMLogStrf(tm_tid, "ms: error parsing arg %d\n", r);
+    TMLogStrf(tm_tid, "cal: error parsing arg %d\n", r);
     r = -1;
     Reply(tid, &r, sizeof(r));
     Exit();
@@ -214,6 +214,29 @@ void TrainCAL(char *args) {
 
   Reply(tid, &r, sizeof(r));
   Exit();
+}
+
+void TrainACAL(char *args){
+  CalibrationArgs cargs;
+  int r;
+  tid_t tm_tid, tid;
+
+  tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+  assert(tm_tid > 0);
+
+  Receive(&tid, &r, sizeof(r));
+  r = parse_args(args, "%d %d %d", &cargs.train, &cargs.init_gear, &cargs.target_node);
+  if (r) {
+    TMLogStrf(tm_tid, "acal: error parsing arg %d\n", r);
+    r = -1;
+    Reply(tid, &r, sizeof(r));
+    Exit();
+  }
+  
+  CreateArgs(19, &AccelCalibration, (void *)&cargs, sizeof(cargs));
+
+  Reply(tid, &r, sizeof(r));
+  Exit(); 
 }
 
 void TrainMS(char *args) {

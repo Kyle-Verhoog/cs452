@@ -24,7 +24,16 @@ typedef struct TestCalibArgs{
 	int target_node;
 }TestCalibArgs;
 
+typedef struct ATestCalibArgs{
+	int train;
+	int gear;
+	int delay;
+	int dist;
+	int start_node;
+}ATestCalibArgs;
+
 void Calibration(void *args);
+void AccelCalibration(void *args);
 void MeasuringVelocity(void *args);
 void TestCalibration(void *args);
 
