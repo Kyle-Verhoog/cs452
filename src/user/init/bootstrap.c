@@ -54,7 +54,7 @@ void Bootstrap() {
 
   Create(0, &Logger);
 
-  // Create(19, &init_switch);
+   Create(19, &init_switch);
 
   // asm(".word 0xe7ffffff");
   // DelayCS(2000);

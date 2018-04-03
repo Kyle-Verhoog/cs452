@@ -180,6 +180,11 @@ void AccelCalibration(void *args){
 	tr_tid = WhoIs(TRAIN_PROVIDER_ID);
 	assert(tm_tid > 0 && cs_tid > 0 && rep_tid > 0 && tr_tid > 0);
 
+	//Get Switch Configuration
+	tr_req.type = TRR_FETCH;
+	tr_req.data.dtype = TD_SW;
+	Send(rep_tid, &tr_req, sizeof(tr_req), &switches, sizeof(switches));
+
 	//Set target node
 	target_node = &TRACK[cargs.target_node];
 
@@ -202,7 +207,7 @@ void AccelCalibration(void *args){
 	//	}
 	//}
 
-TMLogStrf(tm_tid, "Got Here\n");
+	TMLogStrf(tm_tid, "Got Here %s\n",target_node->name);
 
 	//Calculating travel distance needed
 	dist = 0;
@@ -268,7 +273,13 @@ TMLogStrf(tm_tid, "Got Here\n");
 }
 
 void SetMS(void *args){
+	tid_t tm_tid;
+
+	tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+	assert(tm_tid > 0);
+
 	measuring_velocity = *(int *)args;
+	TMLogStrf("Train MS set to %d\n", measuring_velocity);
 	Exit();
 }
 

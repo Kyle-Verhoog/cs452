@@ -21,6 +21,8 @@ void SwitchSW(char *args);
 
 void TrainTK(char *args);
 
+void TrainSMS(char *args);
+
 void TrainMS(char *args);
 
 void TrainCAL(char *args);
