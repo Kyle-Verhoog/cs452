@@ -48,7 +48,7 @@ Train *GetActiveTrain(Track *track, int train_num);
 
 Train *RemoveActiveTrain(Track *track, int train_num);
 
-void TrackAddTrain(Track *track, Train *t);
+void TrackAddTrain(Track *track, Train *t, int ts);
 
 int GetNextPossibleSensors(track_node *node, int dist, poss_node_list *pnl);
 

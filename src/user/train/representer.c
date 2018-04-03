@@ -1,5 +1,5 @@
 #include <user/train/representer.h>
-#include <user/train/interpreter.h>
+#include <lib/train/estimator.h>
 
 CIRCULAR_BUFFER_DEF(trm_subscribers, tid_t, MAX_EVENT_SUBSCRIBERS);
 
@@ -28,33 +28,10 @@ static void AddSubscriber(trm_subscribers *subs, tid_t tid, TrackEventType type)
 }
 
 
-static void ApplySensorChange(Track *track, TESEChange *event) {
-  track->sensors[event->num].state = event->state;
-}
-
-static void ApplySwitchChange(Track *track, TESWChange *event){
-  track->switches[event->num].state = event->newdir;
-}
-
-static void ApplyTrainSpeedChange(Track *track, TETRSpeed *event) {
-  track->train[event->num].speed = event->new;
-}
-
-static void ApplyTrainGearChange(Track *track, TETRGear *event){
-  track->train[event->num].gear = event->newgear;
-}
-
-static void ApplyTrainStatusChange(Track *track, TETRStatus *event) {
-  track->train[event->num].status = event->new;
-}
-
-static void ApplyTrainPositionChange(Track *track, TETRPosition *event){
-  track->train[event->num].pos = event->node;
-}
-
-static void ApplyUpdates(Track *track, update_list *updates, trm_subscribers *subs) {
+static void ApplyUpdates(estimator *estimator, update_list *updates, trm_subscribers *subs) {
   int i;
   TrackEvent event;
+  pos_event pe;
 
   //if (!(0 <= updates->size && updates->size < UPDATE_LIST_SIZE)) {
   //  PRINTF("%d\n", updates->size);
@@ -65,23 +42,23 @@ static void ApplyUpdates(Track *track, update_list *updates, trm_subscribers *su
     update_list_get(updates, i, &event);
 
     switch (event.type) {
-      case TE_TR_SPEED:
-        ApplyTrainSpeedChange(track, &event.event.tr_speed);
-        break;
       case TE_TR_STATUS:
-        ApplyTrainStatusChange(track, &event.event.tr_status);
+        // TODO: relay to estimator
+        // est_update_tr_status(estimator, &pe);
         break;
       case TE_TR_POSITION:
-        ApplyTrainPositionChange(track, &event.event.tr_pos);
+        pe.pos = event.event.tr_pos.node;
+        pe.ts  = event.timestamp;
+        est_update_tr_at(estimator, &pe);
         break;
       case TE_SE_CHANGE:
-        ApplySensorChange(track, &event.event.se_change);
+        est_update_sw(estimator, event.event.sw_event.sw, event.event.sw_event.dir);
         break;
       case TE_TR_MOVE:
-        ApplyTrainGearChange(track, &event.event.tr_gear);
+        est_update_tr_gear(estimator, event.event.tr_gear.num, event.event.tr_gear.newgear);
         break;
       case TE_SW_CHANGE:
-        ApplySwitchChange(track, &event.event.sw_change);
+        est_update_se(estimator, event.event.se_event.id, event.event.se_event.state);
         break;
       default:
         assert(0);
@@ -91,28 +68,24 @@ static void ApplyUpdates(Track *track, update_list *updates, trm_subscribers *su
   }
 }
 
-static void ReplyByDataType(tid_t req_tid, union uTrackRequest data, Track *track){
-  switch(data.dtype){
-    case TD_ALL:
-      Reply(req_tid, track, sizeof(Track));
-      break;
-    case TD_TR:
-      Reply(req_tid, track->train, sizeof(track->train));
-      break;
-    case TD_TR_A:
-      Reply(req_tid, &track->active_trains, sizeof(track->active_trains));
-      break;
-    case TD_TR_L:
-      Reply(req_tid, &track->lost_trains, sizeof(track->lost_trains));
-      break;
-    case TD_SW:
-      Reply(req_tid, &track->switches, sizeof(track->switches));
-      break;
-    case TD_SE:
-      Reply(req_tid, &track->sensors, sizeof(track->sensors));
-      break;
-    default:
-      assert(0 && "Bad Data Request");
+
+#define POKE_TIME 50
+static void Poker() {
+  int r;
+  tid_t par_tid, cs_tid, my_tid;
+  TrackRequest req;
+
+  my_tid = MyTid();
+  par_tid = ParentTid();
+  cs_tid = WhoIs(CLOCKSERVER_ID);
+  assert(my_tid > 0 && par_tid > 0 && cs_tid > 0);
+
+  req.type = TRR_POKE;
+
+  while (true) {
+    req.data.time = Time(cs_tid, my_tid);
+    Send(par_tid, &req, sizeof(req), &r, sizeof(r));
+    Delay(cs_tid, my_tid, POKE_TIME);
   }
 }
 
@@ -120,12 +93,13 @@ void Representer() {
   int i, r;
   tid_t req_tid;
   TrackRequest req;
-  Track track;
+  estimator estimator;
+
+  est_init(&estimator);
 
   r = RegisterAs(REPRESENTER_ID);
   assert(r == 0);
 
-  TrackInit(&track, TRACK);
 
   Create(27, &Interpreter);
 
@@ -138,13 +112,13 @@ void Representer() {
     Receive(&req_tid, &req, sizeof(req));
 
     switch (req.type) {
-      case TRR_FETCH:
-        ReplyByDataType(req_tid, req.data, &track);
-        //Reply(req_tid, &track, sizeof(track));
+      case TRR_POKE:
+        assert(req.data.time > 0);
+        est_update(&estimator, req.data.time);
         break;
       case TRR_UPDATE:
         //Reply(req_tid, &r, sizeof(r));
-        ApplyUpdates(&track, &req.data.update, subscribers);
+        ApplyUpdates(&estimator, &req.data.update, subscribers);
         Reply(req_tid, &r, sizeof(r));
         break;
       case TRR_SUBSCRIBE:

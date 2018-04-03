@@ -4,6 +4,7 @@
 #include <types.h>
 #include <user/syscalls.h>
 #include <user/nameserver.h>
+#include <user/clockserver.h>
 
 #include <lib/train/track.h>
 
@@ -16,12 +17,14 @@ typedef enum TrackRequestType {
   TRR_SUBSCRIBE = 0,  // subscribe on an event
   TRR_FETCH     = 1,  // get all the track data
   TRR_UPDATE    = 2,  // update the track model given a list of updates
+  TRR_POKE      = 3,  // trigger an estimator update
 } TrackRequestType;
 
 union uTrackRequest {
   update_list update;  // interpreter
   TrackEventType type; // subscribers
   TrackDataType dtype; // subscribers
+  int time;
 };
 
 typedef struct TrackRequest {

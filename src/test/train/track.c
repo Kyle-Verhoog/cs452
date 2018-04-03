@@ -135,7 +135,7 @@ static void basic_test(track_node *g) {
   // simulate finding train 24
   train.num = 24;
   train.gear = 1;
-  TrackAddTrain(&track, &train);
+  TrackAddTrain(&track, &train, 0);
   assert(track.train[track.tmap[24]].num == 24);
   assert(track.train[track.tmap[24]].status == TR_LOST);
 
@@ -255,7 +255,7 @@ static void track_events_test() {
 
   train.num = 24;
   train.gear = 1;
-  TrackAddTrain(&track, &train);
+  TrackAddTrain(&track, &train, 0);
   assert(track.train[track.tmap[24]].num == 24);
   assert(track.train[track.tmap[24]].status == TR_LOST);
   assert(track.updates.size == 1);
@@ -323,7 +323,7 @@ static void lost_train_test() {
 
   train.num = 24;
   train.gear = 1;
-  TrackAddTrain(&track, &train);
+  TrackAddTrain(&track, &train, 0);
 
   event = MockSensor(RE, 1000, "A1", NULL);
   TrackInterpretEventGroup(&track, &event);
@@ -369,7 +369,7 @@ static void lost_train_false_positive_test() {
 
   train.num = 24;
   train.gear = 1;
-  TrackAddTrain(&track, &train);
+  TrackAddTrain(&track, &train, 0);
 
   event = MockSensor(RE, 1000, "A1", NULL);
   TrackInterpretEventGroup(&track, &event);
@@ -408,7 +408,7 @@ static void double_sensor_reading_test() {
 
   train.num = 24;
   train.gear = 1;
-  TrackAddTrain(&track, &train);
+  TrackAddTrain(&track, &train, 0);
 
   event = MockSensor(RE, 0, "A4", NULL);
   TrackInterpretEventGroup(&track, &event);
@@ -495,7 +495,7 @@ static void two_trains_test() {
   // emulate finding train 24
   train.num = 24;
   train.gear = 1;
-  TrackAddTrain(&track, &train);
+  TrackAddTrain(&track, &train, 0);
 
   event = MockSensor(RE, 1000, "A1", NULL);
   TrackInterpretEventGroup(&track, &event);
@@ -521,7 +521,7 @@ static void two_trains_test() {
   // emulate finding train 74
   train.num = 74;
   train.gear = 1;
-  TrackAddTrain(&track, &train);
+  TrackAddTrain(&track, &train, 0);
 
   event = MockSensor(RE, 1000, "A1", NULL);
   TrackInterpretEventGroup(&track, &event);
@@ -548,7 +548,7 @@ static void two_trains_recovery() {
   // emulate finding train 24
   train.num = 24;
   train.gear = 1;
-  TrackAddTrain(&track, &train);
+  TrackAddTrain(&track, &train, 0);
 
   event = MockSensor(RE, 1000, "A1", NULL);
   TrackInterpretEventGroup(&track, &event);
@@ -573,7 +573,7 @@ static void two_trains_recovery() {
   // emulate finding train 74
   train.num = 74;
   train.gear = 1;
-  TrackAddTrain(&track, &train);
+  TrackAddTrain(&track, &train, 0);
   event = MockSensor(RE, 2000, "A1", NULL);
   TrackInterpretEventGroup(&track, &event);
   ve_list_pop(&track.vevents, &ve74);
@@ -618,7 +618,7 @@ static void stress_one_train_test() {
   ts = 0;
   train.num = 74;
   train.gear = 1;
-  TrackAddTrain(&track, &train);
+  TrackAddTrain(&track, &train, 0);
   event = MockSensor(RE, ts+=500, "A1", NULL);
   TrackInterpretEventGroup(&track, &event);
   assert(track.vevents.size == 1);
@@ -695,7 +695,7 @@ static void fast_train_test() {
 
   train.num = 74;
   train.gear = 1;
-  TrackAddTrain(&track, &train);
+  TrackAddTrain(&track, &train, 0);
   event = MockSensor(RE, 0, "A1", NULL);
   TrackInterpretEventGroup(&track, &event);
   assert(track.vevents.size == 1);

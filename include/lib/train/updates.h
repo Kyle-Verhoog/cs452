@@ -68,6 +68,7 @@ union TrackEvents {
 
 typedef struct TrackEvent {
   TrackEventType type;
+  int ts;
   union TrackEvents event;
 } TrackEvent;
 

@@ -8,7 +8,7 @@ static track_node T[TRACK_MAX];
 static void estimator_init() {
   estimator est;
   est_init(&est);
-  assert(sizeof(est) < 256000);
+  assert(sizeof(est) < 128000);
   assert(est_last_ts(&est) == 0);
 }
 
@@ -30,6 +30,21 @@ static void estimator_add_train() {
   p = est_tr_curr_pos(&est, 24);
   assert(p != NULL);
   assert(p->pos == POS("A1"));
+}
+
+static void estimator_progress_train() {
+  int r;
+  estimator est;
+  pos_event pe, *p;
+  est_init(&est);
+
+  pe.ts = 100;
+  pe.pos = POS("A1");
+  pe.off = 0;
+  r = est_add_tr(&est, 24, &pe);
+  assert(r == 0);
+
+
 }
 
 // test that an added, stopped train has no next prediction
@@ -57,5 +72,6 @@ void estimator_tests() {
   init_tracka(T);
   estimator_init();
   estimator_add_train();
+  estimator_progress_train();
   stopped_train_test();
 }
