@@ -33,6 +33,7 @@ typedef struct ATestCalibArgs{
 
 void Calibration(void *args);
 void AccelCalibration(void *args);
+void SetMS(void *args);
 void MeasuringVelocity(void *args);
 void TestCalibration(void *args);
 void ATestCalibration(void *args);

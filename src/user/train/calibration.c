@@ -267,6 +267,11 @@ TMLogStrf(tm_tid, "Got Here\n");
 	Exit();
 }
 
+void SetMS(void *args){
+	measuring_velocity = *(int *)args;
+	Exit();
+}
+
 void MeasuringVelocity(void *args){
 	int r, stime, etime, dist, train;
 	TrackRequest tr_req;
@@ -552,4 +557,5 @@ void ATestCalibration(void *args){
 	dist = dist_between_nodes(switches, start, end)*1000 - (etime - stime)*measuring_velocity - tcargs.dist;	
 
 	TMLogStrf(tm_tid, "Accel Dist: %d\n", dist);
+	Exit();
 }

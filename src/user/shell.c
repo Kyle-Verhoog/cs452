@@ -412,6 +412,7 @@ void Shell(void *args) {
     { "dummy", &DummyTask, 1, true },
     { "dr", &TrainDR, 28, true },
     { "ms", &TrainMS, 28, true },
+    { "sms", &SetTrainMS, 28, true },
     { "cal", &TrainCAL, 28, true },
     { "acal", &TrainACAL, 28, true },
     { "tst", &TrainTST, 28, true },

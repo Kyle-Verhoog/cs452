@@ -197,14 +197,23 @@ void TrainCAL(char *args) {
   CalibrationArgs cargs;
   int r;
   tid_t tm_tid, tid;
+  char node[10];
 
   tm_tid = WhoIs(TERMINAL_MANAGER_ID);
   assert(tm_tid > 0);
 
   Receive(&tid, &r, sizeof(r));
-  r = parse_args(args, "%d %d %d", &cargs.train, &cargs.init_gear, &cargs.target_node);
+  r = parse_args(args, "%d %d %s", &cargs.train, &cargs.init_gear, node, sizeof(node));
   if (r) {
     TMLogStrf(tm_tid, "cal: error parsing arg %d\n", r);
+    r = -1;
+    Reply(tid, &r, sizeof(r));
+    Exit();
+  }
+
+  cargs.target_node = trhr(TRACK, node);
+  if(cargs.target_node < 0 || cargs.target_node > TRACK_MAX-1){
+    TMLogStrf(tm_tid, "cal: invalid track node %d\n", cargs.target_node);
     r = -1;
     Reply(tid, &r, sizeof(r));
     Exit();
@@ -220,14 +229,23 @@ void TrainACAL(char *args){
   CalibrationArgs cargs;
   int r;
   tid_t tm_tid, tid;
+  char node[10];
 
   tm_tid = WhoIs(TERMINAL_MANAGER_ID);
   assert(tm_tid > 0);
 
   Receive(&tid, &r, sizeof(r));
-  r = parse_args(args, "%d %d %d", &cargs.train, &cargs.init_gear, &cargs.target_node);
+  r = parse_args(args, "%d %d %s", &cargs.train, &cargs.init_gear, node, sizeof(node));
   if (r) {
     TMLogStrf(tm_tid, "acal: error parsing arg %d\n", r);
+    r = -1;
+    Reply(tid, &r, sizeof(r));
+    Exit();
+  }
+
+  cargs.target_node = trhr(TRACK, node);
+  if(cargs.target_node < 0 || cargs.target_node > TRACK_MAX-1){
+    TMLogStrf(tm_tid, "acal: invalid track node %d\n", cargs.target_node);
     r = -1;
     Reply(tid, &r, sizeof(r));
     Exit();
@@ -261,23 +279,56 @@ void TrainMS(char *args) {
   Exit();
 }
 
-void TrainTST(char *args){
-  int r;
-  TestCalibArgs tcargs;
+void SetTrainMS(char *args) {
+  int ms, r;
   tid_t tm_tid, tid;
 
   tm_tid = WhoIs(TERMINAL_MANAGER_ID);
   assert(tm_tid > 0);
 
   Receive(&tid, &r, sizeof(r));
-  r = parse_args(args, "%d %d %d %d", &tcargs.train, &tcargs.gear, &tcargs.dist, &tcargs.target_node);
+  r = parse_args(args, "%d", &ms);
+  if (r) {
+    TMLogStrf(tm_tid, "sms: error parsing arg %d\n", r);
+    r = -1;
+    Reply(tid, &r, sizeof(r));
+    Exit();
+  }
+  
+  CreateArgs(19, &SetMS, (void *)&ms, sizeof(ms));
+
+  Reply(tid, &r, sizeof(r));
+  Exit();
+}
+
+
+void TrainTST(char *args){
+  int r;
+  TestCalibArgs tcargs;
+  tid_t tm_tid, tid;
+  char node[10];
+
+  tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+  assert(tm_tid > 0);
+
+  Receive(&tid, &r, sizeof(r));
+  r = parse_args(args, "%d %d %d %s", &tcargs.train, &tcargs.gear, &tcargs.dist, node, sizeof(node));
   if (r) {
     TMLogStrf(tm_tid, "ms: error parsing arg %d\n", r);
     r = -1;
     Reply(tid, &r, sizeof(r));
     Exit();
   }
+
+  tcargs.target_node = trhr(TRACK, node);
   
+  if(tcargs.target_node < 0 || tcargs.target_node > TRACK_MAX-1){
+    TMLogStrf(tm_tid, "tst: invalid track node %d\n", tcargs.target_node);
+    r = -1;
+    Reply(tid, &r, sizeof(r));
+    Exit();
+  }
+
   CreateArgs(19, &TestCalibration, (void *)&tcargs, sizeof(tcargs));
 
   Reply(tid, &r, sizeof(r));
@@ -293,7 +344,7 @@ void TrainATST(char *args){
   assert(tm_tid > 0);
 
   Receive(&tid, &r, sizeof(r));
-  r = parse_args(args, "%d %d %d %d", &tcargs.train, &tcargs.gear, &tcargs.delay, &tcargs.dist);
+  r = parse_args(args, "%d %d %d %s", &tcargs.train, &tcargs.gear, &tcargs.delay, &tcargs.dist);
   if (r) {
     TMLogStrf(tm_tid, "ms: error parsing arg %d\n", r);
     r = -1;

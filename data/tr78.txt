@@ -1,5 +1,8 @@
 Train 78 Data
 -------------
 
+Acceleration:
+Time:393, Dist:1970109
+
 Stopping Dist:
 Gear 14:
