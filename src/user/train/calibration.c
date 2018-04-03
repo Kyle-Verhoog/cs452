@@ -188,19 +188,21 @@ void AccelCalibration(void *args){
 	tr_req.data.type = TE_TR_POSITION;
 
 	//Move train until starting location
-	tcargs.train = cargs.train;
-	tcargs.gear = MEASURING_GEAR;
-	tcargs.dist = 0;
-	tcargs.target_node = cargs.target_node;
+	//tcargs.train = cargs.train;
+	//tcargs.gear = MEASURING_GEAR;
+	//tcargs.dist = 0;
+	//tcargs.target_node = cargs.target_node;
 
-	CreateArgs(19, &TestCalibration, (void*)&tcargs, sizeof(tcargs));
-	while(true){
-		Send(rep_tid, &tr_req, sizeof(tr_req), &event, sizeof(event));
-		if(event.node == target_node &&
-			event.num == cargs.train){
-			break;
-		}
-	}
+	//CreateArgs(19, &TestCalibration, (void*)&tcargs, sizeof(tcargs));
+	//while(true){
+	//	Send(rep_tid, &tr_req, sizeof(tr_req), &event, sizeof(event));
+	//	if(event.node == target_node &&
+	//		event.num == cargs.train){
+	//		break;
+	//	}
+	//}
+
+TMLogStrf(tm_tid, "Got Here\n");
 
 	//Calculating travel distance needed
 	dist = 0;
@@ -547,7 +549,7 @@ void ATestCalibration(void *args){
 	tp.arg2 = 0;
 	Send(tr_tid, &tp, sizeof(tp), &r, sizeof(r));
 
-	dist = dist_between_nodes(switches, start, end)*1000 - (etime - stime)*measuring_velocity - dist;	
+	dist = dist_between_nodes(switches, start, end)*1000 - (etime - stime)*measuring_velocity - tcargs.dist;	
 
 	TMLogStrf(tm_tid, "Accel Dist: %d\n", dist);
 }
