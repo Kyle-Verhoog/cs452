@@ -2,6 +2,42 @@
 
 int measuring_velocity; //Hack-y
 
+void TrainSpeedUpdate(void *args){
+	int train, r, speed, command;
+	tid_t tc_tid, req_tid;
+	bool canExit = false;
+
+	train = *(int *)args;
+
+	tc_tid = MyParentTid();
+	CreateArgs(19, &TrainSpeedSubscriber, (void*)&train, sizeof(train));
+	r = 0;
+	speed = 0;
+
+	while(!canExit){
+		Receive(&req_tid, &command, sizeof(command));
+		
+		switch(command){
+			case 0:
+				r = -1;
+				Reply(req_tid, &speed, sizeof(speed));
+				break;
+			case 1:
+				Reply(req_tid, &speed, sizeof(speed));		
+				break;
+			default:
+				speed = command;
+				Reply(req_tid, &r, sizeof(r));
+				if(r == -1){
+					canExit = true;
+				}
+		}
+
+	}
+
+	Exit();
+}
+
 void Calibration(void *args){
 	int r, stime, etime, dist;
 	CalibrationArgs cargs;
@@ -97,12 +133,12 @@ void Calibration(void *args){
 void AccelCalibration(void *args){
 	int r, stime, etime, dist, accelRun, veloRun, velocity, accelDist;
 	CalibrationArgs cargs;
-	TestCalibArgs tcargs
+	TestCalibArgs tcargs;
 	TrackRequest tr_req;
 	tid_t cs_tid, tm_tid, rep_tid, tr_tid, my_tid, spd_tid;
 	TETRPosition event;
 	TrainProtocol tp;
-	track_node *target;
+	track_node *target_node;
 	Switch switches[SWITCH_SIZE];
 	PossibleSensor pos;
 
@@ -116,7 +152,7 @@ void AccelCalibration(void *args){
 	assert(tm_tid > 0 && cs_tid > 0 && rep_tid > 0 && tr_tid > 0);
 
 	//Set target node
-	target = &TRACK[cargs.track_node];
+	target_node = &TRACK[cargs.target_node];
 
 	//Initialize subscription
 	tr_req.type = TRR_SUBSCRIBE;
@@ -128,7 +164,7 @@ void AccelCalibration(void *args){
 	tcargs.dist = 0;
 	tcargs.target_node = cargs.target_node;
 
-	CreateArgs(19, &TestCalibration, (void *)tcargs);
+	CreateArgs(19, &TestCalibration, (void*)&tcargs, sizeof(tcargs));
 	while(true){
 		Send(rep_tid, &tr_req, sizeof(tr_req), &event, sizeof(event));
 		if(event.node == target_node &&
@@ -148,7 +184,7 @@ void AccelCalibration(void *args){
 	//Set train up to speed
 	tp.tc = T_MOVE;
 	tp.arg1 = cargs.train;
-	tp.arg2 = cargs.gear;
+	tp.arg2 = cargs.init_gear;
 	Send(tr_tid, &tp, sizeof(tp), &r, sizeof(r));
 
 	//Start time
@@ -325,42 +361,6 @@ void TrainSpeedSubscriber(void * args){
 				break;
 			}
 		}		
-	}
-
-	Exit();
-}
-
-void TrainSpeedUpdate(void *args){
-	int train, r, speed, command;
-	tid_t tc_tid, req_tid;
-	bool canExit = false;
-
-	train = *(int *)args;
-
-	tc_tid = MyParentTid();
-	CreateArgs(19, &TrainSpeedSubscriber, (void*)&train, sizeof(train));
-	r = 0;
-	speed = 0;
-
-	while(!canExit){
-		Receive(&req_tid, &command, sizeof(command));
-		
-		switch(command){
-			case 0:
-				r = -1;
-				Reply(req_tid, &speed, sizeof(speed));
-				break;
-			case 1:
-				Reply(req_tid, &speed, sizeof(speed));		
-				break;
-			default:
-				speed = command;
-				Reply(req_tid, &r, sizeof(r));
-				if(r == -1){
-					canExit = true;
-				}
-		}
-
 	}
 
 	Exit();

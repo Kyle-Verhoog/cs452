@@ -35,5 +35,6 @@ void Calibration(void *args);
 void AccelCalibration(void *args);
 void MeasuringVelocity(void *args);
 void TestCalibration(void *args);
+void ATestCalibration(void *args);
 
 #endif //CALIBRATION_H
