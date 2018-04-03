@@ -97,11 +97,12 @@ void Calibration(void *args){
 void AccelCalibration(void *args){
 	int r, stime, etime, dist, accelRun, veloRun, velocity, accelDist;
 	CalibrationArgs cargs;
+	TestCalibArgs tcargs
 	TrackRequest tr_req;
-	tid_t cs_tid, tm_tid, rep_tid, tr_tid, my_tid;
+	tid_t cs_tid, tm_tid, rep_tid, tr_tid, my_tid, spd_tid;
 	TETRPosition event;
 	TrainProtocol tp;
-	track_node *start, *end;
+	track_node *target;
 	Switch switches[SWITCH_SIZE];
 	PossibleSensor pos;
 
@@ -114,25 +115,40 @@ void AccelCalibration(void *args){
 	tr_tid = WhoIs(TRAIN_PROVIDER_ID);
 	assert(tm_tid > 0 && cs_tid > 0 && rep_tid > 0 && tr_tid > 0);
 
+	//Set target node
+	target = &TRACK[cargs.track_node];
+
 	//Initialize subscription
 	tr_req.type = TRR_SUBSCRIBE;
 	tr_req.data.type = TE_TR_POSITION;
 
 	//Move train until starting location
-	TestCalibration(cargs);
+	tcargs.train = cargs.train;
+	tcargs.gear = MEASURING_GEAR;
+	tcargs.dist = 0;
+	tcargs.target_node = cargs.target_node;
+
+	CreateArgs(19, &TestCalibration, (void *)tcargs);
+	while(true){
+		Send(rep_tid, &tr_req, sizeof(tr_req), &event, sizeof(event));
+		if(event.node == target_node &&
+			event.num == cargs.train){
+			break;
+		}
+	}
 
 	//Calculating travel distance needed
 	dist = 0;
-	pos.node = cargs.target_node;
+	pos.node = target_node;
 	do{
 		dist += pos.dist;
 		GetNextSensorEXC(switches, pos.node, &pos);
-	}while(pos.node != cargs.target_node);
+	}while(pos.node != target_node);
 
 	//Set train up to speed
 	tp.tc = T_MOVE;
 	tp.arg1 = cargs.train;
-	tp.arg2 = cargs.speed;
+	tp.arg2 = cargs.gear;
 	Send(tr_tid, &tp, sizeof(tp), &r, sizeof(r));
 
 	//Start time
@@ -437,7 +453,7 @@ void ATestCalibration(void *args){
 	int r, dist, stime, etime;
 	ATestCalibArgs tcargs;
 	TrackRequest tr_req;
-	tid_t cs_tid, tm_tid, rep_tid, tr_tid, my_tid, spd_tid;
+	tid_t cs_tid, tm_tid, rep_tid, tr_tid, my_tid;
 	TETRPosition event;
 	track_node *start, *end;
 	PossibleSensor target;
@@ -461,6 +477,27 @@ void ATestCalibration(void *args){
 	//Initialize subscription
 	tr_req.type = TRR_SUBSCRIBE;
 	tr_req.data.type = TE_TR_POSITION;
+
+	//Move Train
+	tp.tc = T_MOVE;
+	tp.arg1 = tcargs.train;
+	tp.arg2 = MEASURING_GEAR;
+	Send(tr_tid, &tp, sizeof(tp), &r, sizeof(r));
+
+	//Wait for an up coming sensor
+	while(true){
+		Send(rep_tid, &tr_req, sizeof(tr_req), &event, sizeof(event));
+		if(event.node->type == NODE_SENSOR &&
+			event.num == tcargs.train){
+			break;
+		}	
+	}
+
+	//Set the starting node
+	start = event.node;
+
+	//To ensure train fully stopped
+	Delay(cs_tid, my_tid, 10*3*MEASURING_GEAR);
 
 	//Move Train
 	tp.tc = T_MOVE;
@@ -502,7 +539,6 @@ void ATestCalibration(void *args){
 	etime = Time(cs_tid, my_tid);
 
 	//Save data
-	start = &TRACK[start_node];
 	end = event.node;
 
 	//Move Train

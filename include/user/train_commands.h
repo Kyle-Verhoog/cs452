@@ -25,6 +25,10 @@ void TrainMS(char *args);
 
 void TrainCAL(char *args);
 
+void TrainACAL(char *args);
+
 void TrainTST(char *args);
+
+void TrainATST(char *args);
 
 #endif

@@ -29,7 +29,6 @@ typedef struct ATestCalibArgs{
 	int gear;
 	int delay;
 	int dist;
-	int start_node;
 }ATestCalibArgs;
 
 void Calibration(void *args);
