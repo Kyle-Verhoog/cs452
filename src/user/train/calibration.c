@@ -98,8 +98,8 @@ void Calibration(void *args){
 
 	tp.tc = T_MOVE;
 	tp.arg1 = cargs.train;
-	tp.arg2 = 0;
-
+	tp.arg2 = 16;
+        
 	//Wait until starting point
 	while(true){
 		Send(rep_tid, &tr_req, sizeof(tr_req), &event, sizeof(event));
@@ -111,6 +111,8 @@ void Calibration(void *args){
 
 	//Send stop
 	Send(tr_tid, &tp, sizeof(tp), &r, sizeof(r));
+	TMLogStrf(tm_tid, "Stopping!\n");
+
 
 	//Wait for train to stop
 	Delay(cs_tid, my_tid, 10*3*cargs.init_gear);	//Some arbitrary delay to ensure
