@@ -403,7 +403,7 @@ static Train *TrackCheckSensorForFastTrain(Track *track, track_node *sensor) {
   // is not actually
   for (i = 0; i < track->ntrains; ++i) {
     train = &track->train[i];
-    if (node_nearby_sd(sensor, train->pos->reverse, 2))
+    if ((train->status == TR_UN_SPEED || train->status == TR_KNOWN) && node_nearby_sd(sensor, train->pos->reverse, 2))
       return train;
   }
 
