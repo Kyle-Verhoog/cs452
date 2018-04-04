@@ -1,17 +1,18 @@
 #include <user/train_commands.h>
 
 void SwitchISW(){
-  tid_t tm_tid, cs_tid, my_tid;
+  int r;
+  tid_t tm_tid, cs_tid, my_tid, tid;
 
   my_tid = MyTid();
   cs_tid = WhoIs(CLOCKSERVER_ID);
   tm_tid = WhoIs(TERMINAL_MANAGER_ID);
-  assert(tm_tid > 0, cs_tid, my_tid);
+  assert(tm_tid > 0 && cs_tid > 0 && my_tid > 0);
 
   Receive(&tid, &r, sizeof(r));  
 
-  CreateArgs(19, &init_switch);
-  Delay(cs_tid, my_tid, 12*100);
+  Create(19, &init_switch);
+  Delay(cs_tid, my_tid, 20*50);
 
   Reply(tid, &r, sizeof(r));
   Exit();
