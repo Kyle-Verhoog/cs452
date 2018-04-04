@@ -7,6 +7,7 @@
 #include <user/syscalls.h>
 #include <user/terminal_manager.h>
 #include <user/train/train_provider.h>
+#include <user/train/switch_provider.h>
 #include <user/train/calibration.h>
 #include <user/train/driver.h>
 #include <lib/train/events.h>
@@ -16,6 +17,8 @@ void TrainDR(char *args);
 void TrainTR(char *args);
 
 void TrainRV(char *args);
+
+void SwitchISW();
 
 void SwitchSW(char *args);
 

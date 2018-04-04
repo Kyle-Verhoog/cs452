@@ -1,5 +1,22 @@
 #include <user/train_commands.h>
 
+void SwitchISW(){
+  tid_t tm_tid, cs_tid, my_tid;
+
+  my_tid = MyTid();
+  cs_tid = WhoIs(CLOCKSERVER_ID);
+  tm_tid = WhoIs(TERMINAL_MANAGER_ID);
+  assert(tm_tid > 0, cs_tid, my_tid);
+
+  Receive(&tid, &r, sizeof(r));  
+
+  CreateArgs(19, &init_switch);
+  Delay(cs_tid, my_tid, 15*150);
+
+  Reply(tid, &r, sizeof(r));
+  Exit();
+}
+
 void TrainDR(char *args) {
   int tn, s1, s2, r;
   char stn1[10], stn2[10];
