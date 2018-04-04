@@ -40,6 +40,30 @@ static void estimator_add_train() {
   assert(p->pos == POS("A1"));
 }
 
+// stress test an idle state where these is a train sitting stopped on the track
+static void estimator_a_ton_of_nothing() {
+  const int TICK = 50;
+  int i, t, r;
+  estimator estimator, *est;
+  est = &estimator;
+  pos_event pe, *p;
+  est_init(est);
+
+  t = 0;
+
+  pe.ts = t+=TICK;
+  pe.pos = POS("A1");
+  pe.off = 0;
+  r = est_add_tr(est, 1, &pe);
+  assert(r == 0);
+  assert(cur_pos_is(est, 1, POS("A1"), 0));
+
+  for (i = 0; i < 10000; ++i) {
+    r = est_update(est, t+=TICK);
+    assert(cur_pos_is(est, 1, POS("A1"), 0));
+  }
+}
+
 
 static void tr_at_list_insert_test() {
   int r;
@@ -175,6 +199,106 @@ static void estimator_move_train_basic() {
   assert(cur_pos_is(est, 1, POS("E10"), 166));
 }
 
+// stress test a train moving around the track according to just the model
+// (no sensor updates or anything else)
+static void estimator_a_ton_of_something() {
+  const int TICK = 50;
+  int i, t, r;
+  estimator estimator, *est;
+  est = &estimator;
+  pos_event pe, *p;
+  est_init(est);
+
+  t = 0;
+
+  pe.ts = t+=TICK;
+  pe.pos = POS("A1");
+  pe.off = 0;
+  r = est_add_tr(est, 1, &pe);
+  assert(r == 0);
+  assert(cur_pos_is(est, 1, POS("A1"), 0));
+
+  // get the train moving at speed 5
+  r = est_update_tr_gear(est, 1, 5);
+  assert(r == 0);
+
+  for (i = 0; i < 10000; ++i) {
+    r = est_update(est, t+=TICK);
+    assert(!cur_pos_is(est, 1, POS("A1"), 0));
+  }
+}
+
+
+static void estimator_move_train_basic_sensors() {
+  const int SPEED = 1400;
+  const int TICK = 50;
+  const int DIST = (SPEED*TICK)/1000;
+  int t, r;
+  estimator estimator, *est;
+  est = &estimator;
+  pos_event pe, *p;
+  est_init(est);
+
+  t = 0;
+
+  pe.ts = t+=TICK;
+  pe.pos = POS("E7");
+  pe.off = 0;
+  r = est_add_tr(est, 1, &pe);
+  assert(r == 0);
+  assert(cur_pos_is(est, 1, POS("E7"), 0));
+
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("E7"), 0));
+
+  // get the train moving at speed 5
+  r = est_update_tr_gear(est, 1, 5);
+  assert(r == 0);
+
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("E7"), DIST));
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("E7"), 2*DIST));
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("E7"), 3*DIST));
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("E7"), 4*DIST));
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("E7"), 5*DIST));
+  // r = est_update(est, t+=TICK);
+  // r = est_update(est, t+=TICK);
+  // assert(cur_pos_is(est, 1, POS("E7"), 6*DIST));
+
+  printf("%d\n", 5*DIST);
+  // we should get a sensor event somewhere here if our model was running fast
+  // (sensor is 384mm-350mm away)
+  pe.ts = t+10;
+  pe.pos = POS("D7");
+  pe.off = 0;
+  r = est_update_tr_at(est, &pe);
+  assert(cur_pos_is(est, 1, POS("D7"), 0));
+
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("E10"), 53));
+
+  // train overran E7 before a sensor event, now send sensor event
+  pe.ts = t+10;
+  pe.pos = POS("E10");
+  pe.off = 0;
+  r = est_update_tr_at(est, &pe);
+  assert(cur_pos_is(est, 1, POS("E10"), 0));
+}
+
 static void estimator_move_two_train_basic() {
   const int TICK = 50;
   int t, r;
@@ -242,8 +366,11 @@ void estimator_tests() {
   init_tracka(T);
   tr_at_list_insert_test();
   estimator_init();
+  estimator_a_ton_of_nothing();
   estimator_add_train();
   estimator_move_train_basic();
-  estimator_move_two_train_basic();
+  // estimator_a_ton_of_something();
+  estimator_move_train_basic_sensors();
+  // estimator_move_two_train_basic();
   // stopped_train_test();
 }

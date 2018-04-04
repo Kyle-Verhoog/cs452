@@ -43,7 +43,7 @@ typedef struct train {
   pos_event next_pos;
   pos_event curr_pos;
   pp_list   prev_pos;     // previous positions train has visited
-  track_node *next_sen;
+  track_node *next_sen;   // the next sensor this train is expected to hit
   TrainModel  s_model;
 } train;
 

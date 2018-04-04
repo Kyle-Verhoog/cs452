@@ -30,4 +30,5 @@ int standard_deviation(int *list, int size);
 int interpolate(TrainModel *tm, int setting);
 int interpolatePartial(TrainModel *tm, int setting, int head, int tail);
 
+void getVelocityModel(TrainModel *tm, int train_num);
 #endif //TRAIN_MODEL_H

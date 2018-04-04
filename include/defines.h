@@ -65,7 +65,7 @@
 #define STOP_AT_SERVER_ID 61
 
 #define INT_MAX 2147483647
-#define INT_MIN -2147483648
+#define INT_MIN (-2147483647-1)
 
 //Commands
 #define COMMAND_SIZE 256
