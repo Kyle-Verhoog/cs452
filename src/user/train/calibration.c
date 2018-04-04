@@ -212,6 +212,7 @@ void AccelCalibration(void *args){
 	//Calculating travel distance needed
 	dist = 0;
 	pos.node = target_node;
+	pos.dist = target_node->edge[DIR_AHEAD].dist;
 	do{
 		dist += pos.dist;
 		GetNextSensorEXC(switches, pos.node, &pos);

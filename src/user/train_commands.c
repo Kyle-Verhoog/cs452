@@ -344,7 +344,7 @@ void TrainATST(char *args){
   assert(tm_tid > 0);
 
   Receive(&tid, &r, sizeof(r));
-  r = parse_args(args, "%d %d %d %s", &tcargs.train, &tcargs.gear, &tcargs.delay, &tcargs.dist);
+  r = parse_args(args, "%d %d %d %d", &tcargs.train, &tcargs.gear, &tcargs.delay, &tcargs.dist);
   if (r) {
     TMLogStrf(tm_tid, "ms: error parsing arg %d\n", r);
     r = -1;
