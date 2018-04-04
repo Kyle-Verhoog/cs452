@@ -1,5 +1,11 @@
 Train 24 Data
 -------------
+ms: 681
+
+Acceleration:
+Gear 14: 
+400, 1243451
+
 
 Stopping Dist:
 Gear 14:

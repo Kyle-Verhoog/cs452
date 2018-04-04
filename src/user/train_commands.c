@@ -11,7 +11,7 @@ void SwitchISW(){
   Receive(&tid, &r, sizeof(r));  
 
   CreateArgs(19, &init_switch);
-  Delay(cs_tid, my_tid, 15*150);
+  Delay(cs_tid, my_tid, 12*100);
 
   Reply(tid, &r, sizeof(r));
   Exit();
