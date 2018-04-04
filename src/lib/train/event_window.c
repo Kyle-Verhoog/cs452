@@ -189,8 +189,14 @@ int ev_wm_invalidate_after(ev_wm *wm, int key) {
   while (wm->window_q.size > 0 && window != end) {
     r = ev_w_q_pop_end(&wm->window_q, &window);
     if (r) return -1;
-    for (k = window->key_offset; k < window->key_offset + window->nevents; ++k) {
-      wm->window_map[k%KEY_MAX] = NULL;
+    assert(window->nevents < 0);
+    // for (k = window->key_offset; k < window->key_offset + window->nevents; ++k) {
+    //   wm->window_map[k%KEY_MAX] = NULL;
+    // }
+    k = window->key_offset;
+    while(k != window->key_offset + window->nevents){
+      wm->window_map[k] = NULL;
+      k = (k + 1) % KEY_MAX;
     }
     window->node = NULL;
     window->key_offset = -1;
