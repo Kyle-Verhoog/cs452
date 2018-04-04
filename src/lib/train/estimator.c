@@ -6,14 +6,44 @@ CIRCULAR_BUFFER_DEF(inc_tr_list, train *, INC_TR_LIST_SIZE);
 
 EXT_CIRCULAR_BUFFER_DEF(tr_at_list, train *, TR_AT_LIST_SIZE);
 
+CIRCULAR_BUFFER_DEF(tn_list, track_node *, TN_LIST_SIZE);
+
+int tr_at_list_insert(tr_at_list *tr_at, train *tr) {
+  int i, r, size;
+  train *other;
+
+  size = tr_at->size;
+  for (i = 0; i < size; ++i) {
+    tr_at_list_pop(tr_at, &other);
+
+    // printf("%d %d\n", tr, other);
+    assert(other != tr);
+
+    if (tr && (tr->curr_pos.off > other->curr_pos.off)) {
+      tr_at_list_push(tr_at, tr);
+      tr = NULL;
+    }
+
+    r = tr_at_list_push(tr_at, other);
+    assert(r == 0);
+  }
+
+  if (tr) {
+    tr_at_list_push(tr_at, tr);
+  }
+
+  return 0;
+}
+
+
 static void train_uninit(train *t) {
   t->num = -1;
   t->curr_pos.pos = NULL;
-  t->curr_pos.ts = INT_MIN;
+  t->curr_pos.ts  = INT_MIN;
   t->next_pos.pos = NULL;
-  t->next_pos.ts = INT_MIN;
+  t->next_pos.ts  = INT_MIN;
+  t->next_sen     = NULL;
   pp_list_init(&t->prev_pos);
-  // init speed model
 }
 
 static void train_init(train *t, int tnum) {
@@ -23,6 +53,10 @@ static void train_init(train *t, int tnum) {
 
 int est_last_ts(estimator *est) {
   return est->last_ts;
+}
+
+train *est_get_train(estimator *est, int tr_num) {
+  return &est->train[est->tmap[tr_num]];
 }
 
 void est_init(estimator *est) {
@@ -49,12 +83,14 @@ void est_init(estimator *est) {
 
   for (i = 0; i < SWITCH_SIZE; ++i) {
     est->sw[i].state = '?';
+    est->sw[i].conf = 0;
   }
 }
 
 // adds a train to the estimator
 int est_add_tr(estimator *est, int tr_num, pos_event *pe) {
   train *train;
+  tr_at_list *tr_at;
 
   if (tr_num < 1 || tr_num > TRAIN_MAX)
     return -1;
@@ -65,6 +101,11 @@ int est_add_tr(estimator *est, int tr_num, pos_event *pe) {
   train->gear = 0;
   train->curr_pos = *pe;
   train->len = 200;        // TODO: hard code train length to be 20cm
+  getVelocityModel(&train->s_model, train->num);
+
+
+  tr_at = &est->tr_at[pe->pos->id];
+  tr_at_list_insert(tr_at, train);
 
   assert(train->curr_pos.ts >= 0);
   return 0;
@@ -120,10 +161,19 @@ int est_update_tr_at(estimator *est, pos_event *pe) {
 
   // figure out which train this event relates to
   train = assoc_tr(est, pe);
+
+  return 0;
 }
 
 
 int est_update_tr_gear(estimator *est, int tr_num, int gear) {
+  train *train;
+
+  train = &est->train[est->tmap[tr_num]];
+  assert(train->num == tr_num);
+
+  // TODO: initiate some acceleration or deceleration here
+  train->gear = gear;
 
   return 0;
 }
@@ -132,6 +182,31 @@ int est_update_tr_gear(estimator *est, int tr_num, int gear) {
 int est_update_sw(estimator *est, int sw_num, int state) {
   est->sw[sw_num].state = state;
   return est_update(est, est->last_ts);
+}
+
+int est_failed_sw(estimator *est, int sw_num, int actual) {
+  est->sw[sw_num].conf = 0;
+  est->sw[sw_num].last_known_state = actual;
+  return 0;
+}
+
+int est_estimate_sw_dir(estimator *est, int sw_num) {
+  int dir;
+  swi *sw;
+
+  sw = &est->sw[sw_num];
+
+  if (sw->conf == 100) {
+    dir = sw->state;
+  }
+  else if (sw->conf == 0) {
+    dir = sw->last_known_state;
+  }
+  else {
+    assert(0);
+  }
+
+  return dir;
 }
 
 // returns the next node in the direction the train is facing into `next`
@@ -175,30 +250,6 @@ static int est_next_node(estimator *est, train *train, track_node **next) {
 int est_update_train(estimator *est, train *train, int ts);
 
 
-static int tr_at_list_insert(tr_at_list *tr_at, train *tr) {
-  int i, r, size;
-  train *other;
-  tr_at_list temp;
-
-  tr_at_list_init(&temp);
-
-  size = tr_at->size;
-  for (i = 0; i < size; ++i) {
-    tr_at_list_pop(tr_at, &other);
-    if (other == tr) return -1;
-
-    if (tr && (tr->curr_pos.off > other->curr_pos.off || i == size-1)) {
-      tr_at_list_push(tr_at, &tr);
-      tr = NULL;
-    }
-    r = tr_at_list_push(tr_at, &other);
-    if (r) return r;
-  }
-
-  return 0;
-}
-
-
 // ------------------------------ TRACK ALGEBRA -------------------------------
 
 // attempts to move a train forward on the track
@@ -208,7 +259,7 @@ static int tr_at_list_insert(tr_at_list *tr_at, train *tr) {
 //  0 if the move was successful (updating the train position and tr_at lists)
 //  1 if the path was blocked by another train (train position not updated)
 //  2 if the train cannot move because there is a dead end
-int est_move_train_forward(estimator *est, train *tr, int dist_to_move, int force) {
+int est_move_train_forward(estimator *est, train *tr, int dist_to_move, int force, tn_list *past) {
   int i, r, dist_moved, dist_to_next, off_orig;
   track_node *cur_orig, *next;
   train *other;
@@ -223,6 +274,8 @@ int est_move_train_forward(estimator *est, train *tr, int dist_to_move, int forc
       // iterate through the tr_at list descending (closest trains first)
       // there are other trains on this track node, determine if we can move
       for (i = tr_at->size-1; i >= 0; --i) {
+        if (other == tr)
+          continue;
         tr_at_list_get(tr_at, i, &other);
 
         assert(other->curr_pos.pos == tr->curr_pos.pos);
@@ -231,11 +284,20 @@ int est_move_train_forward(estimator *est, train *tr, int dist_to_move, int forc
         if (tr->curr_pos.off + dist_to_move > other->curr_pos.off) {
           // move train to right behind the blocking train
           if (force) {
+            r = tr_at_list_rem(tr_at, tr);
+            assert(r == 0);
+            tr->curr_pos.pos = cur_orig;
+            tr->curr_pos.off = off_orig;
+
+            tr_at = &est->tr_at[tr->curr_pos.pos->id];
+            r = tr_at_list_insert(tr_at, tr);
+            assert(r == 0);
           }
           else {
             // restore the old state
             tr->curr_pos.pos = cur_orig;
             tr->curr_pos.off = off_orig;
+            // have to remove train from tr_at lists we added to
             return 1;
           }
         }
@@ -244,81 +306,143 @@ int est_move_train_forward(estimator *est, train *tr, int dist_to_move, int forc
 
     dist_to_next = est_next_node(est, tr, &next);
     if (dist_to_next < 0) {
+      assert(0);
       // restore the old state
       tr->curr_pos.pos = cur_orig;
       tr->curr_pos.off = off_orig;
       return 2;
     }
-    if (tr->curr_pos.off + dist_to_move >= dist_to_next) {
-      // update tr_at of cur and next maintaining ordering
-      r = tr_at_list_rem(tr_at, tr);
-      assert(r == 0);
+    assert(next != NULL);
 
+    // printf("togo %d %s %d\n", dist_to_move, tr->curr_pos.pos->name, tr->curr_pos.off);
 
-      dist_to_move -= dist_to_next - tr->curr_pos.off;
+    // update tr_at of cur and next maintaining ordering
+    r = tr_at_list_rem(tr_at, tr);
+    assert(r == 0);
 
+    // move to next node
+    // printf("COND %d + %d  >= %d\n", tr->curr_pos.off, dist_to_move, dist_to_next);
+    if (dist_to_move >= dist_to_next) {
+      dist_to_move -= dist_to_next;
       tr->curr_pos.pos = next;
       tr->curr_pos.off = 0;
       tr_at = &est->tr_at[tr->curr_pos.pos->id];
-      r = tr_at_list_insert(tr_at, tr);
+      r = tn_list_push(past, next);
       assert(r == 0);
     }
     else {
       tr->curr_pos.off = tr->curr_pos.off + dist_to_move;
       dist_to_move = 0;
     }
-  }
 
+    r = tr_at_list_insert(tr_at, tr);
+    assert(r == 0);
+  }
 
   return 0;
 }
 
 int est_move_train_backward(estimator *est, train *train, int dist) {
 
+  return 0;
 }
-
 
 
 // advances the train taking into consideration the known switch config
 // if while progressing this train we run into a train in front, then
 // call `est_update_train` on that train to try to get it out of the way
 int est_progress_train(estimator *est, train *tr, int dist_to_move, int ts) {
-  int i, dist_moved, dist_to_next, ntrains, r;
+  int i, ntrains, r;
   train *other;
-  track_node *next;
+  track_node *node;
   tr_at_list *tr_at;
+  tn_list nodes;
   swi *sw;
+
+  tn_list_init(&nodes);
 
   sw = est->sw;
 
-  r = est_move_train_forward(est, tr, dist_to_move, true);
+  r = est_move_train_forward(est, tr, dist_to_move, true, &nodes);
 
+  // train was moved up successfully
+  if (r == 0) {
+
+    for (i = 0; i < nodes.size; ++i) {
+      tn_list_get(&nodes, i, &node);
+      if (node->type == NODE_SENSOR) {
+        r = inc_tr_list_push(&est->inc_tr[node->num], tr);
+        assert(r == 0);
+      }
+    }
+  }
   // collision with another train, attempt to resolve by updating all trains
   // at the track node and then trying to move again
-  if (r == 1) {
+  else if (r == 1) {
 
   }
   // dead end
   else if (r == 2) {
   }
+
+}
+
+track_node *get_next_est_sensor_exc(estimator *est, track_node *node) {
+  int dir;
+
+  do {
+    switch (node->type) {
+      case NODE_BRANCH:
+        dir = est_estimate_sw_dir(est, node->num);
+        break;
+      case NODE_EXIT:
+        return NULL;
+      default:
+        dir = DIR_AHEAD;
+        break;
+    }
+
+    node = node->edge[dir].dest;
+  } while (node->type != NODE_SENSOR);
+
+  return node;
+}
+
+int est_reg_upcoming_sensor(estimator *est, train *tr) {
+  track_node *sen;
+  inc_tr_list *inc_tr;
+
+  sen = NULL;
+  sen = get_next_est_sensor_exc(est->sw, tr->curr_pos.pos);
+  if (sen == NULL) {
+    assert(0 && "TODO: deadends");
+  }
+
+  return 0;
 }
 
 int est_update_train(estimator *est, train *train, int ts) {
   int r, delta, dist;
-  track_node *sensor;
-  inc_tr_list *inc_tr;
 
   delta = ts - train->curr_pos.ts;
   assert(delta > 0);
 
   // move train along the track the corresponding distance for time delta
-  dist = 0; // speed model generated dist traveled in time delta
+  // dist = 0; // speed model generated dist traveled in time delta
+  dist = (delta * interpolate(&train->s_model, train->gear*10))/1000;
+  // printf("%d %s %d\n", dist, train->curr_pos.pos->name, train->curr_pos.off);
   r = est_progress_train(est, train, dist, ts);
+  if (r) {
+  }
 
   // update the upcoming (estimated) sensor's incoming list
-  sensor = NULL; // get_next_sensor_exc();
+  r = est_reg_upcoming_sensor(est, train);
+  if (r) {
+  }
   // inc_tr = est->inc_tr[sensor->id];
   train->curr_pos.ts = ts;
+
+  return 0;
 }
 
 // given a timestamp, update the estimate
@@ -335,7 +459,7 @@ int est_update(estimator *est, int ts) {
     train = &est->train[i];
 
     // trains should not have a timestamp equal to the new timestamp
-    assert(train->curr_pos.ts != ts);
+    assert(train->curr_pos.ts <= ts);
 
     // update only trains that have not yet been updated
     if (ts > train->curr_pos.ts) {

@@ -105,6 +105,12 @@ int interpolatePartial(TrainModel *tm, int setting, int head, int tail){
 
 // TRAIN MEASURES //////////////////////////////////////////
 void getStoppingDistanceModel(TrainModel *tm, int train_num){
+  if (train_num == 1) {
+		int gear[] = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90 ,100, 110, 120, 130, 140};
+		int stp_dist[] = {0, 0, 0, 0, 0, 13564, 34176, 94045, 168608, 277890, 402523, 570764, 730057, 954537, 1215350};
+		memcpy(tm->x, gear, sizeof(gear));
+		memcpy(tm->y, stp_dist, sizeof(stp_dist));
+  }
 	if(train_num == 24){
 		int gear[] = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90 ,100, 110, 120, 130, 140};
 		int stp_dist[] = {0, 0, 0, 0, 0, 13564, 34176, 94045, 168608, 277890, 402523, 570764, 730057, 954537, 1215350};
@@ -119,6 +125,12 @@ void getStoppingDistanceModel(TrainModel *tm, int train_num){
 }
 
 void getVelocityModel(TrainModel *tm, int train_num){
+  if (train_num == 1) {
+    int gear[] = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90 ,100, 110, 120, 130, 140};
+    int velo[] = {0, 100, 400, 900, 1300, 1400, 1700, 2200, 2700, 3400, 4000, 4800, 5300, 6000, 6700};
+    memcpy(tm->x, gear, sizeof(gear));
+    memcpy(tm->y, velo, sizeof(velo));
+  }
 	if(train_num == 24){
 		int gear[] = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90 ,100, 110, 120, 130, 140};
 		int velo[] = {0, 100, 410, 870, 1340, 1360, 1670, 2220, 2712, 3381, 4063, 4785, 5337, 5936, 6728};

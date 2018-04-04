@@ -14,6 +14,7 @@
 #include <lib/train/train_defines.h>
 #include <lib/train/track_data.h>
 #include <lib/train/switch.h>
+#include <lib/train/train_model.h>
 
 
 typedef struct pos_event {
@@ -27,6 +28,7 @@ CIRCULAR_BUFFER_DEC(pp_list, pos_event, PREV_POS_LIST_SIZE);
 
 typedef struct swi {
   int state;
+  int last_known_state;
   int conf;
 } swi;
 
@@ -35,20 +37,29 @@ typedef struct sensor {
 } sensor;
 
 typedef struct train {
-  // speed model
   int num;               // train num
   int gear;              // train gear setting
   int len;               // the length of the train
   pos_event next_pos;
   pos_event curr_pos;
   pp_list   prev_pos;     // previous positions train has visited
+  track_node *next_sen;
+  TrainModel  s_model;
 } train;
 
 #define INC_TR_LIST_SIZE NUM_TRAINS
 CIRCULAR_BUFFER_DEC(inc_tr_list, train *, INC_TR_LIST_SIZE);
 
+#define TN_LIST_SIZE 16
+CIRCULAR_BUFFER_DEC(tn_list, track_node *, TN_LIST_SIZE);
+
 #define TR_AT_LIST_SIZE NUM_TRAINS
 EXT_CIRCULAR_BUFFER_DEC(tr_at_list, train *, TR_AT_LIST_SIZE);
+
+// typedef struct train_register {
+//   train *train;
+//   int    conf;  // confidence we have in event actually happening
+// } train_reg;
 
 typedef struct estimator {
   train train[NUM_TRAINS];
@@ -82,4 +93,5 @@ pos_event *est_tr_next_pos(estimator *est, int tr_num);
 
 int est_update(estimator *est, int ts);
 
+train *est_get_train(estimator *est, int tr_num);
 #endif

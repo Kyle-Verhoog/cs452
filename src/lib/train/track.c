@@ -546,7 +546,6 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
       assert(0 && "RE-LOSING TRAIN");
     }
     TrackLoseTrain(track, train, rts);
-    assert(train->status == TR_LOST);
   }
 
   r = ev_wm_delete_if_complete(&train->wm, ekey);
