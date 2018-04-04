@@ -235,6 +235,7 @@ static void add_train_unique_registration(ve_key_cb *cb, VirtualEvent *waiting, 
 }
 
 static void handle_ve_reg(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *sensorToVE, eg_cb *dataBuf, int* liveMap /*TODO: REMOVE*/){
+  int r;
   int sensor = ve.event.train_at.node->num;
   int key = ve.event.train_at.train_num * MAX_OUTSTANDING_EVENT + ve.key;
 
@@ -349,7 +350,6 @@ static void handle_re_se(RawEvent re, VirtualEvent *waiting, ve_key_cb *sensorTo
     //TMLogStrf(tm_tid, "HIT %d on %s\n", key, TRACK[re.event.se_event.id].name);
   }else{
     //Just an RE
-    TMLogStrf(tm_tid, "Just an RE\n");
     eg.type = RE;
     eg.re = re;
     r = eg_cb_push(dataBuf, eg);

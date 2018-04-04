@@ -151,6 +151,8 @@ void Calibration(void *args){
 	//NEED THE SWITCH STATE AT THIS POINT
 	start = &TRACK[cargs.target_node];
 	end = event.node;
+        r = dist_between_nodes(switches, start, end) * 1000;
+        assert(r > 0);
 	dist = dist_between_nodes(switches, start, end)*1000 - (etime - stime)*measuring_velocity;
 
 	//Log
