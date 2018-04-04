@@ -8,7 +8,8 @@ static track_node T[TRACK_MAX];
 static int cur_pos_is(estimator *est, int tr_num, track_node *n, int off) {
   train *tr;
   tr = est_get_train(est, tr_num);
-  // printf("off %d %d\n", tr->curr_pos.off, off);
+  // printf("test: %s %d\n", n->name, off);
+  // printf("actual: %s %d\n", tr->curr_pos.pos->name, tr->curr_pos.off);
   return tr->curr_pos.pos == n && tr->curr_pos.off == off;
 }
 
@@ -133,8 +134,89 @@ static void estimator_move_train_basic() {
 
   r = est_update(est, t+=TICK);
   assert(cur_pos_is(est, 1, POS("MR12"), 70-21));
+
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("MR12"), 49+70));
+
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("MR11"), 1));
+
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("E10"), 166));
 }
 
+static void estimator_move_two_train_basic() {
+  const int TICK = 50;
+  int t, r;
+  estimator estimator, *est;
+  est = &estimator;
+  pos_event pe, *p;
+  est_init(est);
+
+  t = 0;
+
+  pe.ts = t+=TICK;
+  pe.pos = POS("A1");
+  pe.off = 0;
+  r = est_add_tr(est, 1, &pe);
+  assert(r == 0);
+  assert(cur_pos_is(est, 1, POS("A1"), 0));
+
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("A1"), 0));
+
+  r = est_update_tr_gear(est, 1, 5);
+  assert(r == 0);
+
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("A1"), (1400*TICK)/1000));
+
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("A1"), 2*(1400*TICK)/1000));
+
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("A1"), 3*(1400*TICK)/1000));
+
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("MR12"), 70-21));
+
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("MR12"), 49+70));
+
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("MR11"), 1));
+
+}
 // test that an added, stopped train has no next prediction
 static void stopped_train_test() {
   int r;
@@ -162,5 +244,6 @@ void estimator_tests() {
   estimator_init();
   estimator_add_train();
   estimator_move_train_basic();
+  estimator_move_two_train_basic();
   // stopped_train_test();
 }

@@ -125,7 +125,8 @@ void getStoppingDistanceModel(TrainModel *tm, int train_num){
 }
 
 void getVelocityModel(TrainModel *tm, int train_num){
-  if (train_num == 1) {
+  // trains for testing
+  if (train_num == 1 || train_num == 2 || train_num == 3) {
     int gear[] = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90 ,100, 110, 120, 130, 140};
     int velo[] = {0, 100, 400, 900, 1300, 1400, 1700, 2200, 2700, 3400, 4000, 4800, 5300, 6000, 6700};
     memcpy(tm->x, gear, sizeof(gear));
