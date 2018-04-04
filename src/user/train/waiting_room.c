@@ -203,6 +203,7 @@ static void handle_ve_tr_at(VirtualEvent ve, VirtualEvent *waiting, ve_key_cb *s
 
 static void add_train_unique_registration(ve_key_cb *cb, VirtualEvent *waiting, VirtualEvent ve, eg_cb *dataBuf, int*liveMap){
   int base, i, reged, r, train_num, key;
+  EventGroup eg;
 
   train_num = ve.event.train_at.train_num;
   key = train_num * KEY_SIZE + ve.key;
@@ -219,6 +220,13 @@ static void add_train_unique_registration(ve_key_cb *cb, VirtualEvent *waiting, 
       //Removed the older version (manually time it out)
       tid_t tm_tid = WhoIs(TERMINAL_MANAGER_ID);
       TMLogStrf(tm_tid, "REMOVED PREVIOUS REG\n");
+      eg.type = VRE_VE;
+      eg.ve = waiting[reged];
+      eg.ve.event.train_at.train_num = liveMap[eg.ve.event.train_at.train_num];
+      r = eg_cb_push(dataBuf, eg);
+      assert(r != CB_E_FULL);
+      assert(reged >= 0 && reged < MAX_LIVE_TRAINS * MAX_OUTSTANDING_EVENT);
+      reset_waiting_room(&waiting[reged]);
     }
   }
 
@@ -341,6 +349,7 @@ static void handle_re_se(RawEvent re, VirtualEvent *waiting, ve_key_cb *sensorTo
     //TMLogStrf(tm_tid, "HIT %d on %s\n", key, TRACK[re.event.se_event.id].name);
   }else{
     //Just an RE
+    TMLogStrf(tm_tid, "Just an RE\n");
     eg.type = RE;
     eg.re = re;
     r = eg_cb_push(dataBuf, eg);
