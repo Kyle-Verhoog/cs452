@@ -517,7 +517,7 @@ void ATestCalibration(void *args){
 	//Stop Train
 	tp.tc = T_MOVE;
 	tp.arg1 = tcargs.train;
-	tp.arg2 = MEASURING_GEAR;
+	tp.arg2 = 0;
 	Send(tr_tid, &tp, sizeof(tp), &r, sizeof(r));
 
 	//Set the starting node
