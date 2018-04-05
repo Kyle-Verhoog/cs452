@@ -87,6 +87,10 @@ int main(void) {
   train_model_velo_tests();
   PTEST_END();
 
+  PTEST_START("train/ttoa");
+  train_model_ttoa_tests();
+  PTEST_END();  
+
   PTEST_START("train/track");
   track_tests();
   PTEST_END();

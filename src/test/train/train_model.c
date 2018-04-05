@@ -300,31 +300,46 @@ void train_model_acceldist_tests(){
 }
 
 
-void train_model_ttoa_test(){
+void train_model_ttoa_tests(){
 	TrainModel tm;
-	int train_num, gear;
+	int train_num, gear, gear2;
 
-	train_num = 77;
+	train_num = 79;
 	getAccelerationDistanceModel(&tm, train_num);
 
+	gear = estimateGear(tm.x, tm.t, 500);
+	assert(estimateGear(tm.x, tm.t, 500) >= estimateGear(tm.x, tm.t, 450));
+	//PRINTF("%d\n", gear);
+	gear = estimateGear(tm.x, tm.t, 450);
+	assert(estimateGear(tm.x, tm.t, 450) >= estimateGear(tm.x, tm.t, 440));
+	//PRINTF("%d\n", gear);
 	gear = estimateGear(tm.x, tm.t, 440);
-	PRINTF("%d\n", gear);
+	assert(estimateGear(tm.x, tm.t, 440) >= estimateGear(tm.x, tm.t, 430));
+	//PRINTF("%d\n", gear);
 	gear = estimateGear(tm.x, tm.t, 430);
-	PRINTF("%d\n", gear);
+	assert(estimateGear(tm.x, tm.t, 430) >= estimateGear(tm.x, tm.t, 420));
+	//PRINTF("%d\n", gear);
 	gear = estimateGear(tm.x, tm.t, 420);
-	PRINTF("%d\n", gear);
+	assert(estimateGear(tm.x, tm.t, 420) >= estimateGear(tm.x, tm.t, 410));
+	//PRINTF("%d\n", gear);
 	gear = estimateGear(tm.x, tm.t, 410);
-	PRINTF("%d\n", gear);
+	assert(estimateGear(tm.x, tm.t, 410) >= estimateGear(tm.x, tm.t, 400));
+	//PRINTF("%d\n", gear);
 	gear = estimateGear(tm.x, tm.t, 292);
-	PRINTF("%d\n", gear);
+	assert(estimateGear(tm.x, tm.t, 292) >= estimateGear(tm.x, tm.t, 291));
+	//PRINTF("%d\n", gear);
 	gear = estimateGear(tm.x, tm.t, 259);
-	PRINTF("%d\n", gear);
+	assert(estimateGear(tm.x, tm.t, 259) >= estimateGear(tm.x, tm.t, 254));
+	//PRINTF("%d\n", gear);
 	gear = estimateGear(tm.x, tm.t, 115);
-	PRINTF("%d\n", gear);
+	assert(estimateGear(tm.x, tm.t, 115) >= estimateGear(tm.x, tm.t, 100));
+	//PRINTF("%d\n", gear);
 	gear = estimateGear(tm.x, tm.t, 100);
-	PRINTF("%d\n", gear);
+	assert(estimateGear(tm.x, tm.t, 100) >= estimateGear(tm.x, tm.t, 99));
+	//PRINTF("%d\n", gear);
 	gear = estimateGear(tm.x, tm.t, 50);
-	PRINTF("%d\n", gear);
-	gear = estimateGear(tm.x, tm.t, 0);
-	PRINTF("%d\n", gear);
+	assert(estimateGear(tm.x, tm.t, 50) >= estimateGear(tm.x, tm.t, 0));
+	//PRINTF("%d\n", gear);
+	//gear = estimateGear(tm.x, tm.t, 0);
+	//PRINTF("%d\n", gear);
 }

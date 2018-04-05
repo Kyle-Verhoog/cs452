@@ -14,6 +14,13 @@ int zero_limit(int x){
 	return x;
 }
 
+int cap(int x, int cap){
+	if(x > cap){
+		x = cap;
+	}
+	return x;
+}
+
 unsigned int usqrt(int x)
 {
 	unsigned int a = 0L;
@@ -155,10 +162,20 @@ int easyInterpolation(TrainModel *tm, int setting){
 
 //Estimate Gear: ONLY USE ON LINEAR-ish PROGRESSIONS (non-linear)
 int estimateGear(int *gear, int *model, int point){
-	int slope, num_data, offset, res, i;
+	int slope, num_data, offset, res, i, lower, upper;
 
 	num_data = 0;
 	slope = 0;
+
+	//Determine if its upper half or lower half of graph
+	if(point > model[TRAIN_MODEL_SIZE/2]){
+		lower = TRAIN_MODEL_SIZE/2 + 1;
+		upper = TRAIN_MODEL_SIZE;
+	}
+	else{
+		lower = 0;
+		upper = TRAIN_MODEL_SIZE/2;	
+	}
 
 	//Calculate Slope
 	for(i = 0; i < TRAIN_MODEL_SIZE - 1; i++){
@@ -170,6 +187,9 @@ int estimateGear(int *gear, int *model, int point){
 		if(local > 0){
 			num_data++;
 			slope += local;
+		}
+		else{
+			i++; //Ignore both model values
 		}
 	}
 
@@ -185,15 +205,17 @@ int estimateGear(int *gear, int *model, int point){
 		if(y > 0){
 			offset += y - (slope * gear[i]);
 			num_data++;
+		}else{
+			i++; //Ignore both model values
 		}
 	}
 
 	offset = offset/num_data; //caluclate averaged offset
 
-	res = (point - offset)/slope;
+	res = cap((point - offset)/slope, gear[TRAIN_MODEL_SIZE - 1]);
 #ifndef X86
 	assert(res >= 0);
-#endif	
+#endif
 
 	return res;
 }
@@ -203,6 +225,12 @@ int estimateGear(int *gear, int *model, int point){
 void getStoppingDistanceModel(TrainModel *tm, int train_num){
 	if(train_num == 77){
 		memcpy(tm, &TR_77_STP_DIST, sizeof(TR_77_STP_DIST));
+	}
+	else if(train_num == 78){
+		memcpy(tm, &TR_78_STP_DIST, sizeof(TR_78_STP_DIST));	
+	}
+	else if(train_num == 79){
+		memcpy(tm, &TR_79_STP_DIST, sizeof(TR_79_STP_DIST));	
 	}
 	else{
 #ifndef X86
@@ -215,6 +243,12 @@ void getVelocityModel(TrainModel *tm, int train_num){
 	if(train_num == 77){
 		memcpy(tm, &TR_77_VELO, sizeof(TR_77_VELO));
 	}
+	else if(train_num == 78){
+		memcpy(tm, &TR_78_VELO, sizeof(TR_78_VELO));
+	}
+	else if(train_num == 79){
+		memcpy(tm, &TR_79_VELO, sizeof(TR_79_VELO));	
+	}
 	else{
 #ifndef X86
 		assert(0 && "Attempting to use uncalibrated train!");
@@ -225,6 +259,12 @@ void getVelocityModel(TrainModel *tm, int train_num){
 void getAccelerationDistanceModel(TrainModel *tm, int train_num){
 	if(train_num == 77){
 		memcpy(tm, &TR_77_ACCEL_DIST, sizeof(TR_77_ACCEL_DIST));
+	}
+	else if(train_num == 78){
+		memcpy(tm, &TR_78_ACCEL_DIST, sizeof(TR_78_ACCEL_DIST));
+	}
+	else if(train_num == 79){
+		memcpy(tm, &TR_79_ACCEL_DIST, sizeof(TR_79_ACCEL_DIST));
 	}
 	else{
 #ifndef X86
