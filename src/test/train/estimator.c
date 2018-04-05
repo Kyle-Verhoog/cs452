@@ -9,7 +9,7 @@ static int cur_pos_is(estimator *est, int tr_num, track_node *n, int off) {
   train *tr;
   tr = est_get_train(est, tr_num);
   // printf("test: %s %d\n", n->name, off);
-  printf("actual: %s %d\n", tr->curr_pos.pos->name, tr->curr_pos.off);
+  // printf("actual: %s %d\n", tr->curr_pos.pos->name, tr->curr_pos.off);
   return tr->curr_pos.pos == n && tr->curr_pos.off == off;
 }
 
@@ -508,18 +508,87 @@ static void estimator_wrong_path() {
   assert(cur_pos_is(est, 1, POS("E12"), 37));
 }
 
+static void estimator_wrong_path_multi() {
+  const int SPEED = 1400;
+  const int TICK = 50;
+  const int DIST = (SPEED*TICK)/1000;
+  int t, r;
+  estimator est1, *est;
+  est = &est1;
+  pos_event pe, *p;
+
+  est_init(est);
+  t = 0;
+
+  pe.ts = t+10;
+  pe.pos = POS("D7");
+  pe.off = 0;
+  r = est_add_tr(est, 1, &pe);
+  assert(cur_pos_is(est, 1, POS("D7"), 0));
+
+  pe.ts = t+10;
+  pe.pos = POS("D7");
+  pe.off = 50;
+  r = est_add_tr(est, 2, &pe);
+  assert(cur_pos_is(est, 2, POS("D7"), 50));
+
+  r = est_update_tr_gear(est, 1, 5, t+10);
+  r = est_update_tr_gear(est, 2, 5, t+10);
+  assert(cur_pos_is(est, 1, POS("D7"), 0));
+  assert(cur_pos_is(est, 2, POS("D7"), 50));
+
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("E10"), 333));
+
+  pe.ts = t+10;
+  pe.pos = POS("D9");
+  pe.off = 0;
+  r = est_update_tr_at(est, &pe);
+  assert(cur_pos_is(est, 2, POS("D9"), 0));
+
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+
+  pe.ts = t+10;
+  pe.pos = POS("D9");
+  pe.off = 0;
+  r = est_update_tr_at(est, &pe);
+  assert(cur_pos_is(est, 1, POS("D9"), 0));
+
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 2, POS("E12"), 37));
+}
+
 
 void estimator_tests() {
   init_tracka(T);
   tr_at_list_insert_test();
-  // estimator_init();
-  // estimator_a_ton_of_nothing();
-  // estimator_add_train();
-  // estimator_move_train_basic();
+  estimator_init();
+  estimator_a_ton_of_nothing();
+  estimator_add_train();
+  estimator_move_train_basic();
   // estimator_a_ton_of_something();
-  // estimator_move_train_basic_sensors();
-  // estimator_two_train_collision_1_stopped();
-  // estimator_two_train_collision_2_moving();
-  // stopped_train_test();
+  estimator_move_train_basic_sensors();
+  estimator_two_train_collision_1_stopped();
+  estimator_two_train_collision_2_moving();
+  stopped_train_test();
   estimator_wrong_path();
+  estimator_wrong_path_multi();
 }

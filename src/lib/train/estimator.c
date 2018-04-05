@@ -164,6 +164,7 @@ static train *est_recover_from_crumbs(estimator *est, track_node *node) {
 
     crumbs = &est->crumb[node->reverse->id];
 
+    // if there are crumbs, take the crumb with the oldest (smallest) timestamp
     train *min_tr;
     int min_ts;
     if (crumbs->num > 0) {
@@ -722,19 +723,20 @@ int est_update_tr_at(estimator *est, pos_event *pe) {
       // printf("AFTER %d\n", rel);
     }
 
-    r = est_cleanup_crumbs(est, train, pe->pos);
+    r = est_cleanup_crumbs(est, train, train->curr_pos.pos);
     assert(r == 0);
 
     // 3. move train to sensor
     r = est_move_train_to_node_unsafe(est, train, pe->pos);
     r = est_update_train(est, train, ts);
 
+    return 0;
   }
   else {
     assert(0 && "failed to assoc a train");
   }
 
-  return 0;
+  return -1;
 }
 
 
