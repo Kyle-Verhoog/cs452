@@ -117,7 +117,6 @@ static void TrackGenerateUnknownSpeedTrainVEvents(Track *track, Train *train) {
     ve.depend = sensor.node->num;
     ve.event.train_at.train_num = train->num;
     ve.event.train_at.node = sensor.node;
-    assert(ve.event.train_at.node != 1);
 
     TrackAddVEvent(track, train, sensor.node, &ve);
   }

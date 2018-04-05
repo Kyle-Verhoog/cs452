@@ -100,15 +100,18 @@ void est_init_trains(estimator *est, int ts, track_node *T, int track) {
   pe.ts  = ts;
 
   if (track == 1) {
-    pe.pos = &T[trhr(T, "B8")];
-    pe.off = 10;
-    est_add_tr(est, 77, &pe);
-    pe.pos = &T[trhr(T, "B12")];
-    pe.off = 10;
-    est_add_tr(est, 78, &pe);
-    pe.pos = &T[trhr(T, "B10")];
-    pe.off = 10;
-    est_add_tr(est, 79, &pe);
+    pe.pos = &T[trhr(T, "A1")];
+    pe.off = 0;
+    est_add_tr(est, 1, &pe);
+    // pe.pos = &T[trhr(T, "B8")];
+    // pe.off = 10;
+    // est_add_tr(est, 77, &pe);
+    // pe.pos = &T[trhr(T, "B12")];
+    // pe.off = 10;
+    // est_add_tr(est, 78, &pe);
+    // pe.pos = &T[trhr(T, "B10")];
+    // pe.off = 10;
+    // est_add_tr(est, 79, &pe);
   }
   else {
     pe.pos = &T[trhr(T, "A1")];
@@ -252,16 +255,12 @@ static train *est_assoc_tr(estimator *est, pos_event *pe) {
   train = NULL;
   sen_regs = &est->sen_reg[pe->pos->id];
 
-  // assert(0);
-
   // sen_regs holds the trains that have passed the sensor in the model, in the order
   // they passed the sensor
   if (sen_regs->size > 0) {
     sen_reg_list_pop(sen_regs, &train);
     return train;
   }
-
-  assert(0);
 
   // get the tr_at of the track_node before the sensor
 

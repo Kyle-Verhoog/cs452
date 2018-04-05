@@ -51,19 +51,19 @@ static void ApplyUpdates(estimator *estimator, update_list *updates, trm_subscri
       case TE_TR_POSITION:
         pe.pos = event.event.tr_pos.node;
         assert(event.event.tr_pos.num >= 1 && event.event.tr_pos.num <= 80);
-        assert(pe.pos == 1);
-        assert(event.event.tr_pos.node == 1);
+        // assert(pe.pos == 1);
+        // assert(event.event.tr_pos.node == 1);
         TMPutStrf(tm_tid, "%d\n", pe.pos);
         // TMPutStrf(tm_tid, "%s\n", pe.pos->name);
         pe.ts  = event.ts;
         pe.off = 0;
-        // r = est_update_tr_at(estimator, &pe);
+        r = est_update_tr_at(estimator, &pe);
         break;
       case TE_SE_CHANGE:
         // est_update_se(estimator, event.event.se_event.id, event.event.se_event.state);
         break;
       case TE_TR_MOVE:
-        // r = est_update_tr_gear(estimator, event.event.tr_gear.num, event.event.tr_gear.newgear, event.ts);
+        r = est_update_tr_gear(estimator, event.event.tr_gear.num, event.event.tr_gear.newgear, event.ts);
         break;
       case TE_SW_CHANGE:
         r = est_update_sw(estimator, event.event.sw_change.num, event.event.sw_change.newdir, event.ts);
@@ -72,7 +72,7 @@ static void ApplyUpdates(estimator *estimator, update_list *updates, trm_subscri
         assert(0);
     }
 
-    // NotifySubscribers(subs, event.type, &event.event);
+    NotifySubscribers(subs, event.type, &event.event);
   }
 }
 
@@ -126,14 +126,14 @@ void Representer() {
   TMRegister(tm_tid, REP_OFF_X, REP_OFF_Y, REP_WIDTH, REP_HEIGHT);
 
   Create(27, &Interpreter);
-  // Create(26, &Poke);
+  Create(26, &Poke);
 
   trm_subscribers subscribers[MAX_TRACK_EVENT];
   for (i = 0; i < MAX_TRACK_EVENT; ++i) {
     trm_subscribers_init(&subscribers[i]);
   }
 
-  // TMLogStrf(tm_tid, "test\n");
+  TMPutStrf(tm_tid, "test\n");
 
   while (true) {
     Receive(&req_tid, &req, sizeof(req));
@@ -144,7 +144,7 @@ void Representer() {
         est_update(&estimator, req.data.time);
         tr = est_get_train(&estimator, 1);
         if (tr) {
-          // TMPutStrf(tm_tid, "\v%d %s %d", tr->num, tr->curr_pos.pos->name, tr->curr_pos.off);
+          TMPutStrf(tm_tid, "\r%d %d %s %d", req.data.time, tr->num, tr->curr_pos.pos->name, tr->curr_pos.off);
         }
         Reply(req_tid, &r, sizeof(r));
         break;

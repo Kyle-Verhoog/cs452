@@ -37,13 +37,13 @@ typedef struct sensor {
 } sensor;
 
 typedef struct speed_info {
-  int speed;
-  int gear;
+  // int speed;
+  // int gear;
   int start_gear;
   int stop_gear;
   int duration;
   int elapsed;
-  int dist;
+  // int dist;
 } acc_info;
 
 typedef struct train {
