@@ -8,8 +8,7 @@
 #include <user/train/train_provider.h>
 #include <lib/train/updates.h>
 #include <lib/train/track_switch.h>
-
-#define MEASURING_GEAR 4
+#include <lib/train/train_model.h>
 
 typedef struct CalibrationArgs{
 	int train;
