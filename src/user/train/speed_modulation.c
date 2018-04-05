@@ -64,22 +64,22 @@ void SpeedModulationService(){
 
 		switch(mod.mr){
 			case MR_MOD_REQ:
-				sm_tid = CreateArgs(19, &SpeedModulator, (void *)mod, sizeof(mod));
-				Reply(req_tid, r, sizeof(r));
+				sm_tid = CreateArgs(19, &SpeedModulator, (void *)&mod, sizeof(mod));
+				Reply(req_tid, &r, sizeof(r));
 				break;
 
 			case MR_SUSPEND_REQ:
 				state = SUSPEND;
-				Reply(req_tid, state, sizeof(state));
+				Reply(req_tid, &state, sizeof(state));
 				break;
 
 			case MR_QUIT_REQ:
 				state = EXIT;
-				Reply(req_tid, state, sizeof(state));
+				Reply(req_tid, &state, sizeof(state));
 				break;				
 
 			case MR_REPORT_RES:
-				Reply(req_tid, state, sizeof(state));
+				Reply(req_tid, &state, sizeof(state));
 				Exit();
 				break;
 			default:
