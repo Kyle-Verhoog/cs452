@@ -27,6 +27,6 @@ typedef struct Modulator{
 }Modulator;
 
 void SpeedModulator(void *args);
-void SpeedModulationService(void *args);
+void SpeedModulationService();
 
 #endif //SPEED_MODULATION_H

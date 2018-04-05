@@ -21,13 +21,13 @@ void SpeedModulator(void *args){
 	mod.mr = MR_REPORT_RES;
 
 	parent_tid = MyParentTid();
-	cs_tid = WhoIs(CLOCKSERVER_TID);
-	tr_tid = WhoIs(TRAIN_PROVIDER_TID);
+	cs_tid = WhoIs(CLOCKSERVER_ID);
+	tr_tid = WhoIs(TRAIN_PROVIDER_ID);
 	tm_tid = WhoIs(TERMINAL_MANAGER_ID);
 	assert(parent_tid > 0 && cs_tid > 0 && tr_tid > 0 && tm_tid > 0);
 
 	//Get Models
-	getVelocityModel(s_model, mod.train_num);
+	getVelocityModel(&s_model, mod.train_num);
 
 	target = estimateGear(s_model.x, s_model.y, mod.velocity);
 	lower = (target / 10) * 10;
