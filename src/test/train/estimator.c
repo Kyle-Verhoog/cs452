@@ -468,5 +468,5 @@ void estimator_tests() {
   estimator_move_train_basic_sensors();
   estimator_two_train_collision_1_stopped();
   estimator_two_train_collision_2_moving();
-  // stopped_train_test();
+  stopped_train_test();
 }

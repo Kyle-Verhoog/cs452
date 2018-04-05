@@ -36,6 +36,7 @@ typedef struct sensor {
   int conf;
 } sensor;
 
+
 typedef struct train {
   int num;               // train num
   int gear;              // train gear setting
@@ -43,12 +44,14 @@ typedef struct train {
   pos_event next_pos;
   pos_event curr_pos;
   pp_list   prev_pos;     // previous positions train has visited
+  int       next_sen_eta; // next sensor estimated arrival time
   track_node *next_sen;   // the next sensor this train is expected to hit
   TrainModel  s_model;
 } train;
 
+
 #define INC_TR_LIST_SIZE NUM_TRAINS
-CIRCULAR_BUFFER_DEC(inc_tr_list, train *, INC_TR_LIST_SIZE);
+CIRCULAR_BUFFER_DEC(sen_reg_list, train *, INC_TR_LIST_SIZE);
 
 #define TN_LIST_SIZE 16
 CIRCULAR_BUFFER_DEC(tn_list, track_node *, TN_LIST_SIZE);
@@ -65,7 +68,7 @@ typedef struct estimator {
   train train[NUM_TRAINS];
   swi sw[SWITCH_SIZE];
   sensor sensor[SENSOR_SIZE];
-  inc_tr_list inc_tr[SENSOR_SIZE]; // trains incoming to a sensor
+  sen_reg_list sen_reg[SENSOR_SIZE]; // trains passed a sensor in the model, but not irl
   tr_at_list tr_at[TRACK_MAX];     // trains at a particular track node sorted descending distance from the node
   int tmap[TRAIN_MAX];
   int ntrains;                     // number of trains being tracked

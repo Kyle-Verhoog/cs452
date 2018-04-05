@@ -2,7 +2,7 @@
 
 CIRCULAR_BUFFER_DEF(pp_list, pos_event, PREV_POS_LIST_SIZE);
 
-CIRCULAR_BUFFER_DEF(inc_tr_list, train *, INC_TR_LIST_SIZE);
+CIRCULAR_BUFFER_DEF(sen_reg_list, train *, INC_TR_LIST_SIZE);
 
 EXT_CIRCULAR_BUFFER_DEF(tr_at_list, train *, TR_AT_LIST_SIZE);
 
@@ -40,7 +40,7 @@ int tr_at_list_insert(tr_at_list *tr_at, train *tr) {
 }
 
 // inserts trains sorted by their ETA to the sensor
-int inc_tr_list_insert(inc_tr_list *tr_inc, train *tr, int time) {
+int sen_reg_list_insert(sen_reg_list *tr_inc, train *tr, int time) {
 }
 
 
@@ -81,7 +81,7 @@ void est_init(estimator *est) {
   }
 
   for (i = 0; i < SENSOR_SIZE; ++i) {
-    inc_tr_list_init(&est->inc_tr[i]);
+    sen_reg_list_init(&est->sen_reg[i]);
   }
 
   for (i = 0; i < SWITCH_SIZE; ++i) {
@@ -142,24 +142,36 @@ pos_event *est_tr_next_pos(estimator *est, int tr_num) {
 static train *est_assoc_tr(estimator *est, pos_event *pe) {
   // int i;
   train *train;
-  inc_tr_list *inc_trs;
+  sen_reg_list *sen_regs;
+  tr_at_list *tr_at;
+  track_node *prev;
 
   assert(pe->pos->type == NODE_SENSOR);
 
   train = NULL;
-  inc_trs = &est->inc_tr[pe->pos->id];
+  sen_regs = &est->sen_reg[pe->pos->id];
 
-  // TODO: we have to ensure that this train is the actual train passing the sensor
-  // we will have to maintain an ordering as to which train should arrive first
-  // check the incoming trains list for the sensor
-  if (inc_trs->size > 0) {
-    inc_tr_list_get(inc_trs, 0, &train);
+
+  // sen_regs holds the trains that have passed the sensor in the model, in the order
+  // they passed the sensor
+  if (sen_regs->size > 0) {
+    sen_reg_list_pop(sen_regs, &train);
     return train;
   }
 
-  // TODO if we don't have a train registered it could have taken a wrong path
-  //      or been too fast to have registered in time
-  assert(0 && "TODO: train finding");
+  // get the tr_at of the track_node before the sensor
+
+  prev = pe->pos->reverse->edge[DIR_AHEAD].dest->reverse;
+  tr_at = &est->tr_at[prev->id];
+  assert(prev->edge[DIR_AHEAD].dist > 0);
+
+  if (tr_at->size > 0) {
+    tr_at_list_get(tr_at, 0, &train);
+    return train;
+  }
+
+  // TODO train could have taken a different path or something else?
+  assert(0 && "TODO: train recovery");
 
   return train;
 }
@@ -399,16 +411,18 @@ int est_progress_train(estimator *est, train *tr, int dist_to_move, int ts) {
 
   // train was moved up all the way successfully
   if (dist_rem == 0) {
-    // for (i = 0; i < nodes.size; ++i) {
-    //   tn_list_get(&nodes, i, &node);
-    //    add node to the previous positions visited by train
-    //    r = pp_list_push(&tr->prev_pos, (pos_event){node, 0, ts});
-    //    assert(r == 0);
-    //    if (node->type == NODE_SENSOR) {
-    //      r = inc_tr_list_push(&est->inc_tr[node->num], tr);
-    //      assert(r == 0);
-    //    }
-    // }
+
+    // if we passed any sensors then add the train to the sen_reg_list
+    for (i = 0; i < nodes.size; ++i) {
+      tn_list_get(&nodes, i, &node);
+       // add node to the previous positions visited by train
+      // r = pp_list_push(&tr->prev_pos, (pos_event){node, 0, ts});
+      // assert(r == 0);
+      if (node->type == NODE_SENSOR) {
+        r = sen_reg_list_push(&est->sen_reg[node->num], tr);
+        assert(r == 0);
+      }
+    }
   }
   // collision with another train, attempt to resolve by updating all trains
   // at the track node and then trying to move again
@@ -431,13 +445,17 @@ int est_progress_train(estimator *est, train *tr, int dist_to_move, int ts) {
 
     // move was successful
     if (dist_rem == 0) {
-      // for (i = 0; i < nodes.size; ++i) {
-      //   tn_list_get(&nodes, i, &node);
-      //   if (node->type == NODE_SENSOR) {
-      //     r = inc_tr_list_push(&est->inc_tr[node->num], tr);
-      //     assert(r == 0);
-      //   }
-      // }
+      // if we passed any sensors then add the train to the sen_reg_list
+      for (i = 0; i < nodes.size; ++i) {
+        tn_list_get(&nodes, i, &node);
+        // add node to the previous positions visited by train
+        // r = pp_list_push(&tr->prev_pos, (pos_event){node, 0, ts});
+        // assert(r == 0);
+        if (node->type == NODE_SENSOR) {
+          r = sen_reg_list_push(&est->sen_reg[node->num], tr);
+          assert(r == 0);
+        }
+      }
     }
     else if (dist_rem >= 0) {
       // we cannot move up any further, nothing more can be done for this train
@@ -452,8 +470,10 @@ int est_progress_train(estimator *est, train *tr, int dist_to_move, int ts) {
   return 0;
 }
 
-track_node *get_next_est_sensor_exc(estimator *est, track_node *node) {
+track_node *get_next_est_sensor_exc(estimator *est, track_node *node, int *dist) {
   int dir;
+
+  *dist = 0;
 
   do {
     switch (node->type) {
@@ -468,35 +488,41 @@ track_node *get_next_est_sensor_exc(estimator *est, track_node *node) {
     }
 
     node = node->edge[dir].dest;
+    *dist += node->edge[dir].dist;
   } while (node->type != NODE_SENSOR);
 
   return node;
 }
 
-int est_reg_upcoming_sensor(estimator *est, train *tr) {
-  int r;
-  track_node *sen;
-  inc_tr_list *inc_tr;
-
-  sen = NULL;
-  sen = get_next_est_sensor_exc(est, tr->curr_pos.pos);
-  if (sen == NULL) {
-    return -1;
-  }
-
-  // if train isn't registered to this sensor yet, do so
-  if (sen != tr->next_sen) {
-    inc_tr = &est->inc_tr[sen->num];
-
-    // printf("%s %d\n", sen->name, inc_tr->size);
-    r = inc_tr_list_push(inc_tr, tr);
-    assert(r == 0);
-
-    tr->next_sen = sen;
-  }
-
-  return 0;
-}
+// int est_reg_upcoming_sensor(estimator *est, train *tr) {
+//   int dist, eta, r, speed;
+//   track_node *sen;
+//   sen_reg_list *sen_reg;
+//
+//   sen = NULL;
+//   sen = get_next_est_sensor_exc(est, tr->curr_pos.pos, dist);
+//   if (sen == NULL) {
+//     return -1;
+//   }
+//
+//   // TODO: remove old entry and update if register event outdated (new ETA)
+//
+//   dist -= tr->curr_pos.off;
+//   speed = interpolate(&tr->s_model, tr->gear*10);
+//   if (speed > 0) {
+//     // TODO: get from speed model via `get_time_for_dist`
+//     eta = (dist*1000) / speed;
+//   }
+//   else {
+//     eta = INT_MAX;
+//   }
+//
+//   sen_reg = &est->sen_reg[sen->num];
+//   r = sen_reg_list_insert(sen_reg, tr, eta);
+//   tr->next_sen = sen;
+//
+//   return 0;
+// }
 
 int est_update_train(estimator *est, train *train, int ts) {
   int r, delta, dist;
@@ -511,12 +537,6 @@ int est_update_train(estimator *est, train *train, int ts) {
     r = est_progress_train(est, train, dist, ts);
     if (r) {
     }
-  }
-
-  // update the upcoming (estimated) sensor's incoming list
-  r = est_reg_upcoming_sensor(est, train);
-  if (r) {
-    assert(0 && "TODO: deadends");
   }
 
   train->curr_pos.ts = ts;
