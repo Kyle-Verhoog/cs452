@@ -275,7 +275,7 @@ void getAccelerationDistanceModel(TrainModel *tm, int train_num){
 
 int alphaUpdate(TrainModel *tm, int setting, int velocity){
 	int uVelocity;
-	int mVelocity = tm->y[setting];
+	int mVelocity = easyInterpolation(tm, setting);
 	
 	uVelocity = (velocity * ALPHA + mVelocity * (100 - ALPHA)) / 100;
 
