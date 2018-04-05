@@ -67,7 +67,7 @@ typedef struct train_crumb {
 
 typedef struct tn_crumbs {
   train_crumb crumb[NUM_TRAINS];
-  int ncrumbs;
+  int num;
 } tn_crumbs;
 
 #define INC_TR_LIST_SIZE NUM_TRAINS

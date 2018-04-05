@@ -78,7 +78,7 @@ void est_init(estimator *est) {
       est->crumb[i].crumb[j].train = NULL;
       est->crumb[i].crumb[j].ts = -1;
       est->crumb[i].crumb[j].speed = -1;
-      est->crumb[i].ncrumbs = 0;
+      est->crumb[i].num = 0;
     }
   }
 
@@ -143,6 +143,75 @@ pos_event *est_tr_next_pos(estimator *est, int tr_num) {
   return &train->next_pos;
 }
 
+#define SENSOR_DEPTH 2
+static train *est_recover_from_crumbs(estimator *est, track_node *node) {
+  int i, r;
+  int nse[TRACK_MAX];
+  bfs_q q;
+  track_node *next;
+  tn_crumbs *crumbs;
+  train_crumb *crumb;
+  bfs_q_init(&q);
+
+  node = node->reverse;
+
+  nse[node->id] = 0;
+  r = bfs_q_push(&q, node);
+
+  while (q.size > 0) {
+    r = bfs_q_pop(&q, &node);
+    if (r) return 0;
+
+    crumbs = &est->crumb[node->reverse->id];
+
+    train *min_tr;
+    int min_ts;
+    if (crumbs->num > 0) {
+      min_tr = NULL;
+      min_ts = INT_MAX;
+      for (i = 0; i < est->ntrains; ++i) {
+        crumb = &crumbs->crumb[i];
+        if (crumb->train && crumb->ts < min_ts) {
+          min_tr = crumb->train;
+        }
+      }
+      assert(min_tr);
+      return min_tr;
+    }
+
+    if (node->type == NODE_BRANCH) {
+      next = node->edge[DIR_CURVED].dest;
+      nse[next->id] = nse[node->id];
+      r = bfs_q_push(&q, next);
+      if (r) return 0;
+
+      next = node->edge[DIR_STRAIGHT].dest;
+      nse[next->id] = nse[node->id];
+      r = bfs_q_push(&q, next);
+      if (r) return 0;
+    }
+    else if (node->type == NODE_EXIT) {
+      continue;
+    }
+    else if (node->type == NODE_SENSOR) {
+      next = node->edge[DIR_AHEAD].dest;
+      if (nse[node->id] + 1 > SENSOR_DEPTH)
+        continue;
+      nse[next->id] = nse[node->id] + 1;
+      r = bfs_q_push(&q, next);
+      if (r) return 0;
+    }
+    else {
+      next = node->edge[DIR_AHEAD].dest;
+      nse[next->id] = nse[node->id];
+      r = bfs_q_push(&q, next);
+      if (r) return 0;
+    }
+  }
+
+  return NULL;
+}
+
 
 // associate a train to a sensor event
 static train *est_assoc_tr(estimator *est, pos_event *pe) {
@@ -176,8 +245,7 @@ static train *est_assoc_tr(estimator *est, pos_event *pe) {
     return train;
   }
 
-  // TODO train could have taken a different path or something else?
-  assert(0 && "TODO: train recovery");
+  train = est_recover_from_crumbs(est, pe->pos);
 
   return train;
 }
@@ -404,6 +472,7 @@ static int est_cleanup_crumbs(estimator *est, train *tr, track_node *node) {
   int r;
   bfs_q q;
   track_node *next;
+  tn_crumbs *crumbs;
   train_crumb *crumb;
   bfs_q_init(&q);
 
@@ -415,14 +484,16 @@ static int est_cleanup_crumbs(estimator *est, train *tr, track_node *node) {
     r = bfs_q_pop(&q, &node);
     if (r) return -1;
 
-    printf("checking %s for crumbs\n", node->reverse->name);
-    crumb = &est->crumb[node->reverse->id].crumb[tr->num];
+    // printf("checking %s for crumbs\n", node->reverse->name);
+    crumbs = &est->crumb[node->reverse->id];
+    crumb = &crumbs->crumb[est->tmap[tr->num]];
     if (!crumb->train) {
       continue;
     }
     else {
-      printf("cleaning up crumb on %s\n", node->reverse->name);
+      // printf("cleaning up crumb on %s\n", node->reverse->name);
       crumb->train = NULL;
+      crumbs->num--;
     }
 
     if (node->type == NODE_BRANCH) {
@@ -450,6 +521,7 @@ static int est_cleanup_crumbs(estimator *est, train *tr, track_node *node) {
 static int est_pass_nodes(estimator *est, train *tr, tn_list *nodes, int ts) {
   int i, r;
   track_node *node;
+  tn_crumbs *crumbs;
   train_crumb *crumb;
 
   // if we passed any sensors then add the train to the sen_reg_list
@@ -457,12 +529,15 @@ static int est_pass_nodes(estimator *est, train *tr, tn_list *nodes, int ts) {
   for (i = 0; i < nodes->size; ++i) {
     tn_list_get(nodes, i, &node);
 
-    crumb = &est->crumb[node->id].crumb[tr->num];
+    crumbs = &est->crumb[node->id];
+    crumb = &crumbs->crumb[est->tmap[tr->num]];
 
     assert(crumb->train == NULL);
-    printf("placing crumb at %s\n", node->name);
+    // printf("placing crumb at %s\n", node->name);
     crumb->train = tr;
     crumb->ts = ts;
+    crumbs->num++;
+
     // TODO: speed info
 
     if (node->type == NODE_SENSOR) {
@@ -619,7 +694,7 @@ int est_update_tr_at(estimator *est, pos_event *pe) {
 
   ts = pe->ts;
 
-  printf("SENSOR HIT @ %s\n", pe->pos->name);
+  // printf("SENSOR HIT @ %s\n", pe->pos->name);
   // update everything to current time to get best accuracy in model adjustments
   r = est_update(est, ts);
   if (r) {
@@ -634,10 +709,9 @@ int est_update_tr_at(estimator *est, pos_event *pe) {
     // 1. figure out where train is relative to sensor
     rel = est_find_train_rel_to_sensor(est, train, pe->pos);
 
-
     // 2. update model with knowledge of how far off train is
     if (rel == INT_MAX) {
-      assert(0 && "train not found relative to sensor");
+      // assert(0 && "train not found relative to sensor");
     }
     else if (rel < 0) {
       // the train is before the sensor
@@ -648,14 +722,16 @@ int est_update_tr_at(estimator *est, pos_event *pe) {
       // printf("AFTER %d\n", rel);
     }
 
+    r = est_cleanup_crumbs(est, train, pe->pos);
+    assert(r == 0);
+
     // 3. move train to sensor
     r = est_move_train_to_node_unsafe(est, train, pe->pos);
     r = est_update_train(est, train, ts);
 
-    r = est_cleanup_crumbs(est, train, pe->pos);
-    assert(r == 0);
   }
   else {
+    assert(0 && "failed to assoc a train");
   }
 
   return 0;
