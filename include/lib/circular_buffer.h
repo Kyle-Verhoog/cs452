@@ -187,7 +187,7 @@ int NAME##_rem(NAME *cb, T val) {                          \
 SHIFT:                                                     \
   for (; i < u-1; ++i)                                     \
     cb->buf[i] = cb->buf[i+1];                             \
-  if (i == u-1 && j < v-1)                                 \
+  if (i == u-1 && j < v)                                   \
     cb->buf[u-1] = cb->buf[0];                             \
   for (; j < v-1; ++j)                                     \
     cb->buf[j] = cb->buf[j+1];                             \

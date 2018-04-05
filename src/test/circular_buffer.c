@@ -328,6 +328,21 @@ static void int_cbuf_rem() {
   assert(ret == 12);
   r = int_cb_get(&cb, 3, &ret); assert(r == 0);
   assert(ret == 13);
+
+
+  int_cb_init(&cb);
+  cb.start = 4;
+  cb.end = 1;
+  cb.size = 2;
+  cb.buf[0] = 1;
+  cb.buf[1] = 2;
+  cb.buf[2] = 1;
+  cb.buf[3] = 2;
+  cb.buf[4] = 2;
+
+  r = int_cb_rem(&cb, 2);
+  int_cb_get(&cb, 0, &ret);
+  assert(ret == 1);
 }
 
 // test removing when wrapping around the buffer

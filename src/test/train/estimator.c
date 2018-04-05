@@ -144,7 +144,7 @@ static void estimator_move_train_basic() {
   assert(cur_pos_is(est, 1, POS("A1"), 0));
 
   // get the train moving at speed 5
-  r = est_update_tr_gear(est, 1, 5);
+  r = est_update_tr_gear(est, 1, 5, t);
   assert(r == 0);
 
   r = est_update(est, t+=TICK);
@@ -219,7 +219,7 @@ static void estimator_a_ton_of_something() {
   assert(cur_pos_is(est, 1, POS("A1"), 0));
 
   // get the train moving at speed 5
-  r = est_update_tr_gear(est, 1, 5);
+  r = est_update_tr_gear(est, 1, 5, t);
   assert(r == 0);
 
   for (i = 0; i < 10000; ++i) {
@@ -227,7 +227,6 @@ static void estimator_a_ton_of_something() {
     assert(!cur_pos_is(est, 1, POS("A1"), 0));
   }
 }
-
 
 static void estimator_move_train_basic_sensors() {
   const int SPEED = 1400;
@@ -252,7 +251,7 @@ static void estimator_move_train_basic_sensors() {
   assert(cur_pos_is(est, 1, POS("E7"), 0));
 
   // get the train moving at speed 5
-  r = est_update_tr_gear(est, 1, 5);
+  r = est_update_tr_gear(est, 1, 5, t);
   assert(r == 0);
 
   r = est_update(est, t+=TICK);
@@ -269,7 +268,8 @@ static void estimator_move_train_basic_sensors() {
   // r = est_update(est, t+=TICK);
   // assert(cur_pos_is(est, 1, POS("E7"), 6*DIST));
 
-  printf("%d\n", 5*DIST);
+  // printf("%d\n", 5*DIST);
+
   // we should get a sensor event somewhere here if our model was running fast
   // (sensor is 384mm-350mm away)
   pe.ts = t+10;
@@ -297,16 +297,34 @@ static void estimator_move_train_basic_sensors() {
   pe.off = 0;
   r = est_update_tr_at(est, &pe);
   assert(cur_pos_is(est, 1, POS("E10"), 0));
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("E10"), ((TICK-10)*SPEED)/1000));
+
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("D15"), 21));
 }
 
-static void estimator_move_two_train_basic() {
+static void estimator_two_train_collision_1_stopped() {
+  const int SPEED = 1400;
   const int TICK = 50;
+  const int DIST = (SPEED*TICK)/1000;
   int t, r;
-  estimator estimator, *est;
-  est = &estimator;
+  estimator est1, *est;
+  est = &est1;
   pos_event pe, *p;
-  est_init(est);
 
+
+  // test train 1 moving at speed 5, train 2 stopped ahead of train 1
+
+  est_init(est);
   t = 0;
 
   pe.ts = t+=TICK;
@@ -316,10 +334,20 @@ static void estimator_move_two_train_basic() {
   assert(r == 0);
   assert(cur_pos_is(est, 1, POS("A1"), 0));
 
+  pe.ts = t;
+  pe.pos = POS("A1");
+  pe.off = 200;
+  r = est_add_tr(est, 2, &pe);
+  assert(r == 0);
+  assert(cur_pos_is(est, 2, POS("A1"), 200));
+
   r = est_update(est, t+=TICK);
   assert(cur_pos_is(est, 1, POS("A1"), 0));
 
-  r = est_update_tr_gear(est, 1, 5);
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 2, POS("A1"), 200));
+
+  r = est_update_tr_gear(est, 1, 5, t);
   assert(r == 0);
 
   r = est_update(est, t+=TICK);
@@ -328,19 +356,86 @@ static void estimator_move_two_train_basic() {
   r = est_update(est, t+=TICK);
   assert(cur_pos_is(est, 1, POS("A1"), 2*(1400*TICK)/1000));
 
+  // train 1 attempted to move up and is immediately behind train 2
   r = est_update(est, t+=TICK);
-  assert(cur_pos_is(est, 1, POS("A1"), 3*(1400*TICK)/1000));
+  assert(cur_pos_is(est, 1, POS("A1"), 199));
+}
+
+// test train 1 moving at speed 5, train 2 moving at speed 4, they should
+// collide eventually
+static void estimator_two_train_collision_2_moving() {
+  const int SPEED = 1400;
+  const int TICK = 50;
+  const int DIST = (SPEED*TICK)/1000;
+  int t, r;
+  estimator est1, *est;
+  est = &est1;
+  pos_event pe, *p;
+
+  est_init(est);
+  t = 0;
+
+  pe.ts = t+=TICK;
+  pe.pos = POS("A1");
+  pe.off = 0;
+  r = est_add_tr(est, 1, &pe);
+  assert(r == 0);
+  assert(cur_pos_is(est, 1, POS("A1"), 0));
+
+  pe.ts = t;
+  pe.pos = POS("A1");
+  pe.off = 200;
+  r = est_add_tr(est, 2, &pe);
+  assert(r == 0);
+  assert(cur_pos_is(est, 2, POS("A1"), 200));
+
+  r = est_update_tr_gear(est, 1, 5, t);
+  assert(r == 0);
+  r = est_update_tr_gear(est, 2, 3, t);
+  assert(r == 0);
 
   r = est_update(est, t+=TICK);
-  assert(cur_pos_is(est, 1, POS("MR12"), 70-21));
+  assert(cur_pos_is(est, 1, POS("A1"), 70));
+  assert(cur_pos_is(est, 2, POS("MR12"), 14));
 
   r = est_update(est, t+=TICK);
-  assert(cur_pos_is(est, 1, POS("MR12"), 49+70));
+  assert(cur_pos_is(est, 1, POS("A1"), 140));
+  assert(cur_pos_is(est, 2, POS("MR12"), 59));
+
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("A1"), 210));
+  assert(cur_pos_is(est, 2, POS("MR12"), 104));
+
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("MR12"), 49));
+  assert(cur_pos_is(est, 2, POS("MR12"), 149));
+
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("MR12"), 119));
+  assert(cur_pos_is(est, 2, POS("MR11"), 6));
 
   r = est_update(est, t+=TICK);
   assert(cur_pos_is(est, 1, POS("MR11"), 1));
+  assert(cur_pos_is(est, 2, POS("C13"), 8));
 
+  // THIS TESTS THE RECURSIVE UPDATE
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("C13"), 28));
+  assert(cur_pos_is(est, 2, POS("C13"), 53));
+
+  // COLLISION BETWEEN UPDATES
+
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("C13"), 97));
+  assert(cur_pos_is(est, 2, POS("C13"), 98));
+
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("C13"), 142));
+  assert(cur_pos_is(est, 2, POS("C13"), 143));
+  // r = est_update(est, t+=TICK);
+  // assert(cur_pos_is(est, 1, POS("A1"), 2*(1400*TICK)/1000));
 }
+
 // test that an added, stopped train has no next prediction
 static void stopped_train_test() {
   int r;
@@ -371,6 +466,7 @@ void estimator_tests() {
   estimator_move_train_basic();
   // estimator_a_ton_of_something();
   estimator_move_train_basic_sensors();
-  // estimator_move_two_train_basic();
+  estimator_two_train_collision_1_stopped();
+  estimator_two_train_collision_2_moving();
   // stopped_train_test();
 }

@@ -81,7 +81,7 @@ int est_add_tr(estimator *est, int tr_num, pos_event *pe);
 
 int est_update_tr_at(estimator *est, pos_event *pe);
 
-int est_update_tr_gear(estimator *est, int tr_num, int gear);
+int est_update_tr_gear(estimator *est, int tr_num, int gear, int ts);
 
 int est_update_sw(estimator *est, int sw_num, int state);
 
