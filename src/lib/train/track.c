@@ -258,7 +258,10 @@ static void TrackUpdateKnownTrain(Track *track, Train *train, track_node *new_po
     else
       new_speed = (dist*1000) / (ts - train->sen_ts); // speed in um/tick
 
-    train->speed = (alpha*new_speed + (100-alpha)*old_speed) / 100;
+    //Only update reasonable speeds
+    if(new_speed > 0 && new_speed < 8000)
+      train->speed = (alpha*new_speed + (100-alpha)*old_speed) / 100;
+
     train->sen_ts = ts;
     train->pos = new_pos;
     TrackGenerateKnownTrainVEvents(track, train);

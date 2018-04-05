@@ -21,7 +21,7 @@
 #include <lib/train/path_finding.h>
 
 
-#define TRAIN_LIST_SIZE 2
+#define TRAIN_LIST_SIZE 5
 EXT_CIRCULAR_BUFFER_DEC(train_cb, Train, TRAIN_LIST_SIZE);
 CIRCULAR_BUFFER_DEC(train_list, Train *, TRAIN_LIST_SIZE);
 #define UPDATE_LIST_SIZE 16
