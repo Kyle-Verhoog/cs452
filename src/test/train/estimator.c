@@ -17,6 +17,7 @@ static void estimator_init() {
   estimator est;
   est_init(&est);
   assert(sizeof(est) < 128000);
+  // printf("%d\n", sizeof(est));
   assert(est_last_ts(&est) == 0);
 }
 
@@ -264,11 +265,6 @@ static void estimator_move_train_basic_sensors() {
   assert(cur_pos_is(est, 1, POS("E7"), 4*DIST));
   r = est_update(est, t+=TICK);
   assert(cur_pos_is(est, 1, POS("E7"), 5*DIST));
-  // r = est_update(est, t+=TICK);
-  // r = est_update(est, t+=TICK);
-  // assert(cur_pos_is(est, 1, POS("E7"), 6*DIST));
-
-  // printf("%d\n", 5*DIST);
 
   // we should get a sensor event somewhere here if our model was running fast
   // (sensor is 384mm-350mm away)
@@ -460,13 +456,13 @@ static void stopped_train_test() {
 void estimator_tests() {
   init_tracka(T);
   tr_at_list_insert_test();
-  estimator_init();
-  estimator_a_ton_of_nothing();
-  estimator_add_train();
-  estimator_move_train_basic();
+  // estimator_init();
+  // estimator_a_ton_of_nothing();
+  // estimator_add_train();
+  // estimator_move_train_basic();
   // estimator_a_ton_of_something();
   estimator_move_train_basic_sensors();
-  estimator_two_train_collision_1_stopped();
-  estimator_two_train_collision_2_moving();
-  stopped_train_test();
+  // estimator_two_train_collision_1_stopped();
+  // estimator_two_train_collision_2_moving();
+  // stopped_train_test();
 }

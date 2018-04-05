@@ -51,7 +51,7 @@ static void train_uninit(train *t) {
   t->next_pos.pos = NULL;
   t->next_pos.ts  = INT_MIN;
   t->next_sen     = NULL;
-  pp_list_init(&t->prev_pos);
+  // pp_list_init(&t->prev_pos);
 }
 
 int est_last_ts(estimator *est) {
@@ -63,7 +63,7 @@ train *est_get_train(estimator *est, int tr_num) {
 }
 
 void est_init(estimator *est) {
-  int i;
+  int i, j;
 
   est->ntrains = 0;
   est->last_ts = 0;
@@ -74,6 +74,12 @@ void est_init(estimator *est) {
 
   for (i = 0; i < TRACK_MAX; ++i) {
     tr_at_list_init(&est->tr_at[i]);
+    for (j = 0; j < NUM_TRAINS; ++j) {
+      est->crumb[i].crumb[j].train = NULL;
+      est->crumb[i].crumb[j].ts = -1;
+      est->crumb[i].crumb[j].speed = -1;
+      est->crumb[i].ncrumbs = 0;
+    }
   }
 
   for (i = 0; i < TRAIN_MAX; ++i) {
@@ -85,8 +91,8 @@ void est_init(estimator *est) {
   }
 
   for (i = 0; i < SWITCH_SIZE; ++i) {
-    est->sw[i].state = -1;
-    est->sw[i].conf = 0;
+    est->sw[i].state = DIR_CURVED;
+    est->sw[i].conf = 50; // we aren't confident
     est->sw[i].last_known_state = DIR_CURVED;   // by default set last known to curved
   }
 }
@@ -216,6 +222,9 @@ int est_estimate_sw_dir(estimator *est, int sw_num) {
   sw = &est->sw[sw_num];
 
   if (sw->conf == 100) {
+    dir = sw->state;
+  }
+  else if (sw->conf == 50) {
     dir = sw->state;
   }
   else if (sw->conf == 0) {
@@ -390,6 +399,81 @@ int est_move_train_backward(estimator *est, train *train, int dist) {
   return 0;
 }
 
+// clean up all the crumbs starting at node and working backwards
+static int est_cleanup_crumbs(estimator *est, train *tr, track_node *node) {
+  int r;
+  bfs_q q;
+  track_node *next;
+  train_crumb *crumb;
+  bfs_q_init(&q);
+
+  node = node->reverse;
+
+  r = bfs_q_push(&q, node);
+
+  while (q.size > 0) {
+    r = bfs_q_pop(&q, &node);
+    if (r) return -1;
+
+    printf("checking %s for crumbs\n", node->reverse->name);
+    crumb = &est->crumb[node->reverse->id].crumb[tr->num];
+    if (!crumb->train) {
+      continue;
+    }
+    else {
+      printf("cleaning up crumb on %s\n", node->reverse->name);
+      crumb->train = NULL;
+    }
+
+    if (node->type == NODE_BRANCH) {
+      next = node->edge[DIR_CURVED].dest;
+      r = bfs_q_push(&q, next);
+      if (r) return -1;
+
+      next = node->edge[DIR_STRAIGHT].dest;
+      r = bfs_q_push(&q, next);
+      if (r) return -1;
+    }
+    else if (node->type == NODE_EXIT) {
+      continue;
+    }
+    else {
+      next = node->edge[DIR_AHEAD].dest;
+      r = bfs_q_push(&q, next);
+      if (r) return -1;
+    }
+  }
+
+  return 0;
+}
+
+static int est_pass_nodes(estimator *est, train *tr, tn_list *nodes, int ts) {
+  int i, r;
+  track_node *node;
+  train_crumb *crumb;
+
+  // if we passed any sensors then add the train to the sen_reg_list
+  // and place crumbs
+  for (i = 0; i < nodes->size; ++i) {
+    tn_list_get(nodes, i, &node);
+
+    crumb = &est->crumb[node->id].crumb[tr->num];
+
+    assert(crumb->train == NULL);
+    printf("placing crumb at %s\n", node->name);
+    crumb->train = tr;
+    crumb->ts = ts;
+    // TODO: speed info
+
+    if (node->type == NODE_SENSOR) {
+      r = sen_reg_list_push(&est->sen_reg[node->num], tr);
+      assert(r == 0);
+    }
+  }
+
+  return 0;
+}
+
 
 // advances the train taking into consideration the known switch config
 // if while progressing this train we run into a train in front, then
@@ -411,18 +495,7 @@ int est_progress_train(estimator *est, train *tr, int dist_to_move, int ts) {
 
   // train was moved up all the way successfully
   if (dist_rem == 0) {
-
-    // if we passed any sensors then add the train to the sen_reg_list
-    for (i = 0; i < nodes.size; ++i) {
-      tn_list_get(&nodes, i, &node);
-       // add node to the previous positions visited by train
-      // r = pp_list_push(&tr->prev_pos, (pos_event){node, 0, ts});
-      // assert(r == 0);
-      if (node->type == NODE_SENSOR) {
-        r = sen_reg_list_push(&est->sen_reg[node->num], tr);
-        assert(r == 0);
-      }
-    }
+    r = est_pass_nodes(est, tr, &nodes, ts);
   }
   // collision with another train, attempt to resolve by updating all trains
   // at the track node and then trying to move again
@@ -445,17 +518,7 @@ int est_progress_train(estimator *est, train *tr, int dist_to_move, int ts) {
 
     // move was successful
     if (dist_rem == 0) {
-      // if we passed any sensors then add the train to the sen_reg_list
-      for (i = 0; i < nodes.size; ++i) {
-        tn_list_get(&nodes, i, &node);
-        // add node to the previous positions visited by train
-        // r = pp_list_push(&tr->prev_pos, (pos_event){node, 0, ts});
-        // assert(r == 0);
-        if (node->type == NODE_SENSOR) {
-          r = sen_reg_list_push(&est->sen_reg[node->num], tr);
-          assert(r == 0);
-        }
-      }
+      r = est_pass_nodes(est, tr, &nodes, ts);
     }
     else if (dist_rem >= 0) {
       // we cannot move up any further, nothing more can be done for this train
@@ -493,36 +556,6 @@ track_node *get_next_est_sensor_exc(estimator *est, track_node *node, int *dist)
 
   return node;
 }
-
-// int est_reg_upcoming_sensor(estimator *est, train *tr) {
-//   int dist, eta, r, speed;
-//   track_node *sen;
-//   sen_reg_list *sen_reg;
-//
-//   sen = NULL;
-//   sen = get_next_est_sensor_exc(est, tr->curr_pos.pos, dist);
-//   if (sen == NULL) {
-//     return -1;
-//   }
-//
-//   // TODO: remove old entry and update if register event outdated (new ETA)
-//
-//   dist -= tr->curr_pos.off;
-//   speed = interpolate(&tr->s_model, tr->gear*10);
-//   if (speed > 0) {
-//     // TODO: get from speed model via `get_time_for_dist`
-//     eta = (dist*1000) / speed;
-//   }
-//   else {
-//     eta = INT_MAX;
-//   }
-//
-//   sen_reg = &est->sen_reg[sen->num];
-//   r = sen_reg_list_insert(sen_reg, tr, eta);
-//   tr->next_sen = sen;
-//
-//   return 0;
-// }
 
 int est_update_train(estimator *est, train *train, int ts) {
   int r, delta, dist;
@@ -586,6 +619,7 @@ int est_update_tr_at(estimator *est, pos_event *pe) {
 
   ts = pe->ts;
 
+  printf("SENSOR HIT @ %s\n", pe->pos->name);
   // update everything to current time to get best accuracy in model adjustments
   r = est_update(est, ts);
   if (r) {
@@ -596,7 +630,6 @@ int est_update_tr_at(estimator *est, pos_event *pe) {
   train = est_assoc_tr(est, pe);
 
   if (train) {
-    // TODO
 
     // 1. figure out where train is relative to sensor
     rel = est_find_train_rel_to_sensor(est, train, pe->pos);
@@ -618,6 +651,9 @@ int est_update_tr_at(estimator *est, pos_event *pe) {
     // 3. move train to sensor
     r = est_move_train_to_node_unsafe(est, train, pe->pos);
     r = est_update_train(est, train, ts);
+
+    r = est_cleanup_crumbs(est, train, pe->pos);
+    assert(r == 0);
   }
   else {
   }
@@ -642,7 +678,13 @@ int est_update_tr_gear(estimator *est, int tr_num, int gear, int ts) {
 
 
 // update the estimator with a switch change event
-int est_update_sw(estimator *est, int sw_num, int state) {
-  est->sw[sw_num].state = state;
-  return est_update(est, est->last_ts);
+int est_update_sw(estimator *est, int sw_num, int state, int ts) {
+  swi *sw;
+  sw = &est->sw[sw_num];
+
+  if (sw->conf >= 50) {
+    est->sw[sw_num].state = state;
+  }
+
+  return est_update(est, ts);
 }

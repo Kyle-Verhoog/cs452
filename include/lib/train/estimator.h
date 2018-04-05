@@ -36,6 +36,15 @@ typedef struct sensor {
   int conf;
 } sensor;
 
+typedef struct speed_info {
+  int speed;
+  int gear;
+  int start_gear;
+  int stop_gear;
+  int duration;
+  int elapsed;
+  int dist;
+} acc_info;
 
 typedef struct train {
   int num;               // train num
@@ -43,12 +52,23 @@ typedef struct train {
   int len;               // the length of the train
   pos_event next_pos;
   pos_event curr_pos;
-  pp_list   prev_pos;     // previous positions train has visited
+  // pp_list   prev_pos;     // previous positions train has visited
   int       next_sen_eta; // next sensor estimated arrival time
   track_node *next_sen;   // the next sensor this train is expected to hit
   TrainModel  s_model;
 } train;
 
+typedef struct train_crumb {
+  train *train;
+  int ts;
+  int speed;
+  // speed/acceleration information
+} train_crumb;
+
+typedef struct tn_crumbs {
+  train_crumb crumb[NUM_TRAINS];
+  int ncrumbs;
+} tn_crumbs;
 
 #define INC_TR_LIST_SIZE NUM_TRAINS
 CIRCULAR_BUFFER_DEC(sen_reg_list, train *, INC_TR_LIST_SIZE);
@@ -71,6 +91,7 @@ typedef struct estimator {
   sen_reg_list sen_reg[SENSOR_SIZE]; // trains passed a sensor in the model, but not irl
   tr_at_list tr_at[TRACK_MAX];     // trains at a particular track node sorted descending distance from the node
   int tmap[TRAIN_MAX];
+  tn_crumbs crumb[TRACK_MAX];
   int ntrains;                     // number of trains being tracked
   int last_ts;                     // timestamp of the last estimate update
 } estimator;
@@ -86,7 +107,7 @@ int est_update_tr_at(estimator *est, pos_event *pe);
 
 int est_update_tr_gear(estimator *est, int tr_num, int gear, int ts);
 
-int est_update_sw(estimator *est, int sw_num, int state);
+int est_update_sw(estimator *est, int sw_num, int state, int ts);
 
 int est_update_rse(estimator *est, int se_num, int state);
 
