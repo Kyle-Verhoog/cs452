@@ -6,6 +6,7 @@
 
 void train_model_velo_tests();
 void train_model_stpdist_tests();
+void train_model_ttoa_tests();
 
 #endif //TEST_TRAIN_MODEL_H
 

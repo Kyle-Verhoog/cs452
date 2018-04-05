@@ -264,7 +264,10 @@ static void TrackUpdateKnownTrain(Track *track, Train *train, track_node *new_po
     else
       new_speed = (dist*1000) / (ts - train->sen_ts); // speed in um/tick
 
-    train->speed = (alpha*new_speed + (100-alpha)*old_speed) / 100;
+    //Only update reasonable speeds
+    if(new_speed > 0 && new_speed < 8000)
+      train->speed = (alpha*new_speed + (100-alpha)*old_speed) / 100;
+
     train->sen_ts = ts;
     train->pos = new_pos;
     TrackGenerateKnownTrainVEvents(track, train);
@@ -408,12 +411,11 @@ static Train *TrackCheckSensorForFastTrain(Track *track, track_node *sensor) {
     train = &track->train[i];
 
     // break since it is already at the sensor
-    if (train->pos == sensor->reverse) {
-      break;
-    }
+    // if (train->pos == sensor->reverse) {
+    //   break;
+    // }
 
-    if (node_nearby_sd(sensor, train->pos->reverse, 2)) {
-      // assert(0);
+    if ((train->status == TR_UN_SPEED || train->status == TR_KNOWN) && node_nearby_sd(sensor, train->pos->reverse, 2)) {
       return train;
     }
   }

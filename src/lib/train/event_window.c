@@ -164,6 +164,8 @@ int ev_wm_delete_all(ev_wm *wm) {
   int r, k;
   event_window *window;
 
+assert(wm->window_q.size + wm->avail_windows.size == TRACK_MAX);
+
   while (wm->window_q.size > 0) {
     r = ev_w_q_pop(&wm->window_q, &window);
     assert(r == 0);
@@ -189,12 +191,30 @@ int ev_wm_invalidate_after(ev_wm *wm, int key) {
   window = NULL;
   assert(key >= 0 && key < KEY_MAX);
   end = wm->window_map[key];
+  
+  while (true) {
+    if(wm->window_q.size == 0){
+        //Should we assert here? 
+        break;
+    }
 
-  while (wm->window_q.size > 0 && window != end) {
     r = ev_w_q_pop_end(&wm->window_q, &window);
     if (r) return -1;
-    for (k = window->key_offset; k < window->key_offset + window->nevents; ++k) {
-      wm->window_map[k%KEY_MAX] = NULL;
+    assert(window->nevents >= 0);
+
+    if(window == end){
+        r = ev_w_q_push(&wm->window_q, end);
+        if (r) return -1;
+        break;
+    }
+
+    // for (k = window->key_offset; k < window->key_offset + window->nevents; ++k) {
+    //   wm->window_map[k%KEY_MAX] = NULL;
+    // }
+    k = window->key_offset;
+    while(k != window->key_offset + window->nevents){
+      wm->window_map[k] = NULL;
+      k = (k + 1) % KEY_MAX;
     }
     window->node = NULL;
     window->key_offset = -1;
@@ -202,8 +222,7 @@ int ev_wm_invalidate_after(ev_wm *wm, int key) {
     if (r) return -1;
   }
 
-  // r = ev_w_q_push(&wm->window_q, end);
-  // if (r) return -1;
+  assert(wm->window_q.size + wm->avail_windows.size == TRACK_MAX);
 
   return 0;
 }

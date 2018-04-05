@@ -667,7 +667,7 @@ int est_update_train(estimator *est, train *train, int ts) {
   if (delta > 0) {
     // move train along the track the corresponding distance for time delta
     // dist = 0; // speed model generated dist traveled in time delta
-    dist = (delta * interpolate(&train->s_model, train->gear*10))/1000;
+    dist = (delta * easyInterpolation(&train->s_model, train->gear*10))/1000;
     // printf("%d\n", dist);
     // printf("%d %s %d\n", dist, train->curr_pos.pos->name, train->curr_pos.off);
     r = est_progress_train(est, train, dist, ts);

@@ -409,11 +409,15 @@ void Shell(void *args) {
     { "tr", &TrainTR, 28, true },
     //{ "rv", &TrainRV, 28, true }
     { "sw", &SwitchSW, 28, true },
+    { "isw", &SwitchISW, 28, true },
     { "dummy", &DummyTask, 1, true },
     { "dr", &TrainDR, 28, true },
     { "ms", &TrainMS, 28, true },
+    { "sms", &SetTrainMS, 28, true },
     { "cal", &TrainCAL, 28, true },
+    { "acal", &TrainACAL, 28, true },
     { "tst", &TrainTST, 28, true },
+    { "atst", &TrainATST, 28, true },
     { "tk", &TrainTK, 28, true },
   };
 
