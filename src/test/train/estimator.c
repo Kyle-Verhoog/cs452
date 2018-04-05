@@ -2,8 +2,10 @@
 #include <lib/train/track_data.h>
 
 static track_node T[TRACK_MAX];
+static track_node TB[TRACK_MAX];
 
 #define POS(p) &T[trhr(T, p)]
+#define POSB(p) &TB[trhr(TB, p)]
 
 static int cur_pos_is(estimator *est, int tr_num, track_node *n, int off) {
   train *tr;
@@ -20,7 +22,6 @@ static void estimator_init() {
   // printf("%d\n", sizeof(est));
   assert(est_last_ts(&est) == 0);
 }
-
 
 static void estimator_add_train() {
   estimator est;
@@ -47,7 +48,7 @@ static void estimator_a_ton_of_nothing() {
   int i, t, r;
   estimator estimator, *est;
   est = &estimator;
-  pos_event pe, *p;
+  pos_event pe;
   est_init(est);
 
   t = 0;
@@ -129,7 +130,7 @@ static void estimator_move_train_basic() {
   int t, r;
   estimator estimator, *est;
   est = &estimator;
-  pos_event pe, *p;
+  pos_event pe;
   est_init(est);
 
   t = 0;
@@ -207,7 +208,7 @@ static void estimator_a_ton_of_something() {
   int i, t, r;
   estimator estimator, *est;
   est = &estimator;
-  pos_event pe, *p;
+  pos_event pe;
   est_init(est);
 
   t = 0;
@@ -236,7 +237,7 @@ static void estimator_move_train_basic_sensors() {
   int t, r;
   estimator estimator, *est;
   est = &estimator;
-  pos_event pe, *p;
+  pos_event pe;
   est_init(est);
 
   t = 0;
@@ -310,13 +311,11 @@ static void estimator_move_train_basic_sensors() {
 }
 
 static void estimator_two_train_collision_1_stopped() {
-  const int SPEED = 1400;
   const int TICK = 50;
-  const int DIST = (SPEED*TICK)/1000;
   int t, r;
   estimator est1, *est;
   est = &est1;
-  pos_event pe, *p;
+  pos_event pe;
 
 
   // test train 1 moving at speed 5, train 2 stopped ahead of train 1
@@ -361,13 +360,11 @@ static void estimator_two_train_collision_1_stopped() {
 // test train 1 moving at speed 5, train 2 moving at speed 4, they should
 // collide eventually
 static void estimator_two_train_collision_2_moving() {
-  const int SPEED = 1400;
   const int TICK = 50;
-  const int DIST = (SPEED*TICK)/1000;
   int t, r;
   estimator est1, *est;
   est = &est1;
-  pos_event pe, *p;
+  pos_event pe;
 
   est_init(est);
   t = 0;
@@ -454,13 +451,11 @@ static void stopped_train_test() {
 }
 
 static void estimator_wrong_path() {
-  const int SPEED = 1400;
   const int TICK = 50;
-  const int DIST = (SPEED*TICK)/1000;
   int t, r;
   estimator est1, *est;
   est = &est1;
-  pos_event pe, *p;
+  pos_event pe;
 
   est_init(est);
   t = 0;
@@ -509,13 +504,11 @@ static void estimator_wrong_path() {
 }
 
 static void estimator_wrong_path_multi() {
-  const int SPEED = 1400;
   const int TICK = 50;
-  const int DIST = (SPEED*TICK)/1000;
   int t, r;
   estimator est1, *est;
   est = &est1;
-  pos_event pe, *p;
+  pos_event pe;
 
   est_init(est);
   t = 0;
@@ -524,6 +517,7 @@ static void estimator_wrong_path_multi() {
   pe.pos = POS("D7");
   pe.off = 0;
   r = est_add_tr(est, 1, &pe);
+  assert(r == 0);
   assert(cur_pos_is(est, 1, POS("D7"), 0));
 
   pe.ts = t+10;
@@ -573,22 +567,63 @@ static void estimator_wrong_path_multi() {
   r = est_update(est, t+=TICK);
   r = est_update(est, t+=TICK);
   r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("D9"), 266));
   assert(cur_pos_is(est, 2, POS("E12"), 37));
 }
 
+static void estimator_track_b_init() {
+  const int TICK = 10;
+  int t, r;
+  estimator est1, *est;
+  est = &est1;
+  pos_event pe;
+
+  est_init(est);
+
+  t = 10;
+  est_init_trains(est, t, TB, 2);
+  assert(cur_pos_is(est, 1, POSB("A1"), 0));
+  assert(cur_pos_is(est, 1, POSB("A1"), 0));
+
+  r = est_update(est, t+=TICK);
+
+  r = est_update_tr_gear(est, 1, 14, t+10);
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POSB("A1"), 0));
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POSB("MR12"), 171));
+
+  pe.ts = t+10;
+  pe.pos = POSB("C13");
+  pe.off = 0;
+  r = est_update_tr_at(est, &pe);
+  assert(cur_pos_is(est, 1, POSB("C13"), 0));
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POSB("C13"), 201));
+}
 
 void estimator_tests() {
   init_tracka(T);
-  tr_at_list_insert_test();
-  estimator_init();
-  estimator_a_ton_of_nothing();
-  estimator_add_train();
-  estimator_move_train_basic();
-  // estimator_a_ton_of_something();
-  estimator_move_train_basic_sensors();
-  estimator_two_train_collision_1_stopped();
-  estimator_two_train_collision_2_moving();
-  stopped_train_test();
-  estimator_wrong_path();
-  estimator_wrong_path_multi();
+  init_trackb(TB);
+  // tr_at_list_insert_test();
+  // estimator_init();
+  // estimator_a_ton_of_nothing();
+  // estimator_add_train();
+  // estimator_move_train_basic();
+  // // estimator_a_ton_of_something();
+  // estimator_move_train_basic_sensors();
+  // estimator_two_train_collision_1_stopped();
+  // estimator_two_train_collision_2_moving();
+  // stopped_train_test();
+  // estimator_wrong_path();
+  // estimator_wrong_path_multi();
+  estimator_track_b_init();
 }

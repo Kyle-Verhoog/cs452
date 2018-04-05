@@ -39,10 +39,6 @@ int tr_at_list_insert(tr_at_list *tr_at, train *tr) {
   return 0;
 }
 
-// inserts trains sorted by their ETA to the sensor
-int sen_reg_list_insert(sen_reg_list *tr_inc, train *tr, int time) {
-}
-
 
 static void train_uninit(train *t) {
   t->num = -1;
@@ -59,6 +55,8 @@ int est_last_ts(estimator *est) {
 }
 
 train *est_get_train(estimator *est, int tr_num) {
+  if (est->tmap[tr_num] == -1)
+    return NULL;
   return &est->train[est->tmap[tr_num]];
 }
 
@@ -94,6 +92,31 @@ void est_init(estimator *est) {
     est->sw[i].state = DIR_CURVED;
     est->sw[i].conf = 50; // we aren't confident
     est->sw[i].last_known_state = DIR_CURVED;   // by default set last known to curved
+  }
+}
+
+void est_init_trains(estimator *est, int ts, track_node *T, int track) {
+  pos_event pe;
+  pe.ts  = ts;
+
+  if (track == 1) {
+    pe.pos = &T[trhr(T, "B8")];
+    pe.off = 10;
+    est_add_tr(est, 77, &pe);
+    pe.pos = &T[trhr(T, "B12")];
+    pe.off = 10;
+    est_add_tr(est, 78, &pe);
+    pe.pos = &T[trhr(T, "B10")];
+    pe.off = 10;
+    est_add_tr(est, 79, &pe);
+  }
+  else {
+    pe.pos = &T[trhr(T, "A1")];
+    pe.off = 0;
+    est_add_tr(est, 1, &pe);
+    // pe.pos = &TRACK[trhr(TRACK, "A13")];
+    // pe.off = 0;
+    // est_add_tr(est, 78, &pe);
   }
 }
 
@@ -222,11 +245,14 @@ static train *est_assoc_tr(estimator *est, pos_event *pe) {
   tr_at_list *tr_at;
   track_node *prev;
 
+  assert(pe);
+
   assert(pe->pos->type == NODE_SENSOR);
 
   train = NULL;
   sen_regs = &est->sen_reg[pe->pos->id];
 
+  // assert(0);
 
   // sen_regs holds the trains that have passed the sensor in the model, in the order
   // they passed the sensor
@@ -234,6 +260,8 @@ static train *est_assoc_tr(estimator *est, pos_event *pe) {
     sen_reg_list_pop(sen_regs, &train);
     return train;
   }
+
+  assert(0);
 
   // get the tr_at of the track_node before the sensor
 
@@ -533,7 +561,7 @@ static int est_pass_nodes(estimator *est, train *tr, tn_list *nodes, int ts) {
     crumbs = &est->crumb[node->id];
     crumb = &crumbs->crumb[est->tmap[tr->num]];
 
-    assert(crumb->train == NULL);
+    // assert(crumb->train == NULL);
     // printf("placing crumb at %s\n", node->name);
     crumb->train = tr;
     crumb->ts = ts;
@@ -557,7 +585,6 @@ static int est_pass_nodes(estimator *est, train *tr, tn_list *nodes, int ts) {
 int est_progress_train(estimator *est, train *tr, int dist_to_move, int ts) {
   int i, dist_rem, r;
   train *other;
-  track_node *node;
   tr_at_list tr_at;
   tn_list nodes;
   swi *sw;
@@ -642,6 +669,7 @@ int est_update_train(estimator *est, train *train, int ts) {
     // move train along the track the corresponding distance for time delta
     // dist = 0; // speed model generated dist traveled in time delta
     dist = (delta * interpolate(&train->s_model, train->gear*10))/1000;
+    // printf("%d\n", dist);
     // printf("%d %s %d\n", dist, train->curr_pos.pos->name, train->curr_pos.off);
     r = est_progress_train(est, train, dist, ts);
     if (r) {
@@ -746,6 +774,7 @@ int est_update_tr_gear(estimator *est, int tr_num, int gear, int ts) {
   est_update(est, ts);
 
   train = &est->train[est->tmap[tr_num]];
+  // printf("%d %d\n", train->num, tr_num);
   assert(train->num == tr_num);
 
   // TODO: initiate some acceleration or deceleration here

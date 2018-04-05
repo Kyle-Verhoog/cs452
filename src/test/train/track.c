@@ -662,15 +662,12 @@ static void stress_one_train_test() {
       }
       else {
         event = MockSensor(VRE_VE, ts, node->name, &ve);
-        // printf("TO: key: %d, node: %s\n", ve.key, ve.event.train_at.node->name);
+        //  printf("TO: node: %s\n", ve.event.train_at.node->name);
         TrackInterpretEventGroup(&track, &event);
         update_list_init(&track.updates);
       }
     }
 
-    // printf("%d\n", track.vevents.size);
-    // printf("ACT: key: %d, node: %s\n", actual.key, actual.event.train_at.node->name);
-    // assert(actual.key <= 20);
     event = MockSensor(VRE_RE, ts+=500, node->name, &actual);
     TrackInterpretEventGroup(&track, &event);
     update_list_init(&track.updates);
@@ -678,10 +675,9 @@ static void stress_one_train_test() {
     int j, n;
     n = 0;
 
-    // printf("%d\n", track.train[track.tmap[74]].status);
-    // printf("key: %d\n", track.key);
     // assert(track.train[track.tmap[74]].speed > 0 && track.train[track.tmap[74]].speed <= 9000);
     assert(track.train[track.tmap[74]].status == TR_KNOWN);
+    // printf("%d\n", track.train[track.tmap[74]].status);
   }
 }
 

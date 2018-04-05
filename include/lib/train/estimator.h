@@ -97,7 +97,11 @@ typedef struct estimator {
 } estimator;
 
 
+int tr_at_list_insert(tr_at_list *tr_at, train *tr);
+
 void est_init(estimator *estr);
+
+void est_init_trains(estimator *est, int ts, track_node *TRACK, int track);
 
 int est_last_ts(estimator *est);
 

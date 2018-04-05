@@ -330,10 +330,6 @@ void TrainDriver(TrainDriverArgs *args) {
     DRIVER1_DEF = true;
     TMRegister(tm_tid, DRIVER1_OFF_X, DRIVER1_OFF_Y, DRIVER1_WIDTH, DRIVER1_HEIGHT);
   }
-  else if (!DRIVER2_DEF) {
-    DRIVER2_DEF = true;
-    TMRegister(tm_tid, DRIVER2_OFF_X, DRIVER2_OFF_Y, DRIVER2_WIDTH, DRIVER2_HEIGHT);
-  }
 
   path_set_destination(&train.p, &TRACK[args->start], &TRACK[args->end]);
 

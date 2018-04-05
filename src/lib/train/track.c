@@ -8,6 +8,7 @@ CIRCULAR_BUFFER_DEF(ve_list, VirtualEvent, VEVENT_LIST_SIZE);
 #define NEXT_NODE(x) x->edge[DIR_AHEAD].dest
 #define NEXT_DIST(x) x->edge[DIR_AHEAD].dist
 
+
 void TrackInit(Track *track, track_node *tr) {
   int i;
 
@@ -67,7 +68,9 @@ static void TrackGenerateTrainPositionTEvent(Track *track, Train *train, int ts)
   event.type = TE_TR_POSITION;
   event.ts = ts;
   event.event.tr_pos.num = train->num;
+  // assert(train->pos != 1);
   event.event.tr_pos.node = train->pos;
+  // assert(event.event.tr_pos.node != 1);
   r = update_list_push(&track->updates, event);
   assert(r == 0);
 }
@@ -75,13 +78,11 @@ static void TrackGenerateTrainPositionTEvent(Track *track, Train *train, int ts)
 static void TrackAddVEvent(Track *track, Train *train, track_node *tn, VirtualEvent *ve) {
   int r;
   ev_wm_next_key(&train->wm);
-  // printf("%d\n", track->key);
   ve->key = train->wm.key;
   r = ve_list_push(&track->vevents, *ve);
   assert(r == 0);
 
   r = ev_wm_add_to_window(&train->wm, ve->key, train->pos);
-  // assertf(r == 0, "%d, %d %d %d %d %d %d\r\n", r, ve->key, train->window.start, train->window.end, train->window.size, train->window.unexp_size);
   assert(r == 0);
 }
 
@@ -116,6 +117,7 @@ static void TrackGenerateUnknownSpeedTrainVEvents(Track *track, Train *train) {
     ve.depend = sensor.node->num;
     ve.event.train_at.train_num = train->num;
     ve.event.train_at.node = sensor.node;
+    assert(ve.event.train_at.node != 1);
 
     TrackAddVEvent(track, train, sensor.node, &ve);
   }
@@ -125,6 +127,7 @@ static void TrackGenerateUnknownSpeedTrainVEvents(Track *track, Train *train) {
     r = ev_wm_next_window(&train->wm);
     assert(r == 0);
   }
+
 }
 
 static void TrackGenerateKnownTrainVEvents(Track *track, Train *train) {
@@ -170,7 +173,7 @@ static void UpdateSensor(Track *track, int sen_num, int state, int ts) {
   int r;
   TrackEvent event;
 
-  assert(sen_num >= 0 && sen_num < DECODER_SIZE*2*16);
+  assert(sen_num >= 0 && sen_num < DECODER_SIZE*2*8);
   assert(state == 0 || state == 1);
   track->sensors[sen_num].state = state;
 
@@ -410,8 +413,10 @@ static Train *TrackCheckSensorForFastTrain(Track *track, track_node *sensor) {
       break;
     }
 
-    if (node_nearby_sd(sensor, train->pos->reverse, 2))
+    if (node_nearby_sd(sensor, train->pos->reverse, 2)) {
+      // assert(0);
       return train;
+    }
   }
 
   return NULL;
@@ -527,7 +532,9 @@ static void TrackHandleTrainAtSensor(Track *track, EventGroup *grp) {
 
   train_num = grp->ve.event.train_at.train_num;
   assert(IS_VALID_TR_NUM(train_num));
+  // assert(track->tmap[train_num] != -1);
   train = &track->train[track->tmap[train_num]];
+  // assert(grp->ve.event.train_at.node != 1);
 
   r = ev_wm_res_to_window(&train->wm, ekey, HIT);
   if (r == -1) {
@@ -588,6 +595,7 @@ static void TrackHandleTrainAtTimeout(Track *track, EventGroup *grp) {
 
   train_num = grp->ve.event.train_at.train_num;
   assert(IS_VALID_TR_NUM(train_num));
+  // assert(track->tmap[train_num] != -1);
   train = &track->train[track->tmap[train_num]];
 
   r = ev_wm_res_to_window(&train->wm, ekey, TIMEOUT);
