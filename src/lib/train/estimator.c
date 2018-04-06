@@ -478,7 +478,8 @@ int est_move_train_forward(estimator *est, train *tr, int dist_to_move, int forc
         }
       }
     }
-
+    
+    dir = dir % 33; 
     dist_to_next = est_next_node(est, tr, &next, &dir);
     if (dist_to_next < 0) {
       assert(0);
@@ -704,7 +705,7 @@ int est_update_train(estimator *est, train *train, int ts) {
     // dist = 0; // speed model generated dist traveled in time delta
     // dist = sm_calc_dist(&train->sm, delta);
     // dist = (delta * easyInterpolation(&train->snapshot.model, train->snapshot.end_gear))/1000;
-    //train->snapshot.elapsed = delta;
+    train->snapshot.elapsed = delta;
     dist = trainUpdateDist(&train->snapshot, train->num)/1000;
     // printf("%d\n", dist);
     // printf("%d %s %d\n", dist, train->curr_pos.pos->name, train->curr_pos.off);
