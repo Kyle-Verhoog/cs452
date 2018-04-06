@@ -74,8 +74,14 @@ typedef struct tn_crumbs {
 #define INC_TR_LIST_SIZE NUM_TRAINS
 EXT_CIRCULAR_BUFFER_DEC(sen_reg_list, train *, INC_TR_LIST_SIZE);
 
+
+typedef struct track_node_dir {
+  track_node *node;
+  int dir;
+} track_node_dir;
+
 #define TN_LIST_SIZE 16
-CIRCULAR_BUFFER_DEC(tn_list, track_node *, TN_LIST_SIZE);
+CIRCULAR_BUFFER_DEC(tn_list, track_node_dir, TN_LIST_SIZE);
 
 #define TR_AT_LIST_SIZE NUM_TRAINS
 EXT_CIRCULAR_BUFFER_DEC(tr_at_list, train *, TR_AT_LIST_SIZE);
@@ -93,7 +99,7 @@ typedef struct estimator {
   tr_at_list tr_at[TRACK_MAX][2];    // trains at track node sorted descending distance from the node
                                      // need up to 2 per track node for branches
   int tmap[TRAIN_MAX];
-  tn_crumbs crumb[TRACK_MAX];
+  tn_crumbs crumb[TRACK_MAX][2];
   int ntrains;                     // number of trains being tracked
   int last_ts;                     // timestamp of the last estimate update
 } estimator;

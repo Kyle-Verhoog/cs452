@@ -6,7 +6,7 @@ EXT_CIRCULAR_BUFFER_DEF(sen_reg_list, train *, INC_TR_LIST_SIZE);
 
 EXT_CIRCULAR_BUFFER_DEF(tr_at_list, train *, TR_AT_LIST_SIZE);
 
-CIRCULAR_BUFFER_DEF(tn_list, track_node *, TN_LIST_SIZE);
+CIRCULAR_BUFFER_DEF(tn_list, track_node_dir, TN_LIST_SIZE);
 
 // inserts trains sorted descending by their offset away from the node
 //
@@ -76,10 +76,14 @@ void est_init(estimator *est) {
     tr_at_list_init(&est->tr_at[i][0]);
     tr_at_list_init(&est->tr_at[i][1]);
     for (j = 0; j < NUM_TRAINS; ++j) {
-      est->crumb[i].crumb[j].train = NULL;
-      est->crumb[i].crumb[j].ts = -1;
-      est->crumb[i].crumb[j].speed = -1;
-      est->crumb[i].num = 0;
+      est->crumb[i][0].crumb[j].train = NULL;
+      est->crumb[i][0].crumb[j].ts = -1;
+      est->crumb[i][0].crumb[j].speed = -1;
+      est->crumb[i][0].num = 0;
+      est->crumb[i][1].crumb[j].train = NULL;
+      est->crumb[i][1].crumb[j].ts = -1;
+      est->crumb[i][1].crumb[j].speed = -1;
+      est->crumb[i][1].num = 0;
     }
   }
 
@@ -176,14 +180,51 @@ pos_event *est_tr_next_pos(estimator *est, int tr_num) {
   return &train->next_pos;
 }
 
+static train *est_recover_train_from_node_crumbs(estimator *est, track_node *node) {
+  int i, min_ts;
+  train *min_tr;
+  tn_crumbs *crumbs;
+  train_crumb *crumb;
+
+  min_tr = NULL;
+  min_ts = INT_MAX;
+
+  crumbs = &est->crumb[node->id][0];
+
+  // printf("checking %s (%d) for crumbs\n", node->name, 0);
+
+  if (crumbs->num > 0) {
+    for (i = 0; i < est->ntrains; ++i) {
+      crumb = &crumbs->crumb[i];
+      assert(crumb->ts != min_ts);
+      if (crumb->train && crumb->ts < min_ts) {
+        min_tr = crumb->train;
+      }
+    }
+  }
+
+  if (node->type == NODE_BRANCH) {
+    // printf("checking %s (%d) for crumbs\n", node->name, 1);
+    crumbs = &est->crumb[node->id][1];
+    for (i = 0; i < est->ntrains; ++i) {
+      crumb = &crumbs->crumb[i];
+      assert(crumb->ts != min_ts);
+      if (crumb->train && crumb->ts < min_ts) {
+        min_tr = crumb->train;
+      }
+    }
+  }
+
+  return min_tr;
+}
+
 #define SENSOR_DEPTH 2
 static train *est_recover_from_crumbs(estimator *est, track_node *node) {
-  int i, r;
+  int r;
   int nse[TRACK_MAX];
   bfs_q q;
   track_node *next;
-  tn_crumbs *crumbs;
-  train_crumb *crumb;
+  train *tr;
   bfs_q_init(&q);
 
   node = node->reverse;
@@ -195,22 +236,9 @@ static train *est_recover_from_crumbs(estimator *est, track_node *node) {
     r = bfs_q_pop(&q, &node);
     if (r) return 0;
 
-    crumbs = &est->crumb[node->reverse->id];
-
-    // if there are crumbs, take the crumb with the oldest (smallest) timestamp
-    train *min_tr;
-    int min_ts;
-    if (crumbs->num > 0) {
-      min_tr = NULL;
-      min_ts = INT_MAX;
-      for (i = 0; i < est->ntrains; ++i) {
-        crumb = &crumbs->crumb[i];
-        if (crumb->train && crumb->ts < min_ts) {
-          min_tr = crumb->train;
-        }
-      }
-      assert(min_tr);
-      return min_tr;
+    tr = est_recover_train_from_node_crumbs(est, node->reverse);
+    if (tr) {
+      return tr;
     }
 
     if (node->type == NODE_BRANCH) {
@@ -364,7 +392,6 @@ static int est_next_node(estimator *est, train *train, track_node **ret_next, in
 
   next = cur->edge[dir].dest;
   dist = cur->edge[dir].dist - off;
-  assert(next);
 
   switch (next->type) {
     case NODE_BRANCH:
@@ -503,7 +530,7 @@ int est_move_train_forward(estimator *est, train *tr, int dist_to_move, int forc
       tr->curr_pos.off = 0;
       assert(tr->curr_pos.dir == 0 || tr->curr_pos.dir == 1);
       tr_at = &est->tr_at[tr->curr_pos.pos->id][tr->curr_pos.dir];
-      r = tn_list_push(past, next);
+      r = tn_list_push(past, (track_node_dir){ next, dir });
       assert(r == 0);
     }
     else {
@@ -523,13 +550,43 @@ int est_move_train_backward(estimator *est, train *train, int dist) {
   return 0;
 }
 
+static int est_cleanup_node_crumbs(estimator *est, train *tr, track_node *node) {
+  int r;
+  tn_crumbs *crumbs;
+  train_crumb *crumb;
+
+  r = 0;
+
+  // printf("checking %s for %d crumbs (%d)\n", node->name, tr->num, 0);
+  crumbs = &est->crumb[node->id][0];
+  crumb = &crumbs->crumb[est->tmap[tr->num]];
+  if (crumb->train) {
+    // printf("cleaning up crumb for %d on %s (%d)\n", tr->num, node->name, 0);
+    crumb->train = NULL;
+    crumbs->num--;
+    r++;
+  }
+
+  if (node->type == NODE_BRANCH) {
+    // printf("checking %s for %d crumbs (%d)\n", node->name, tr->num, 1);
+    crumbs = &est->crumb[node->id][1];
+    crumb = &crumbs->crumb[est->tmap[tr->num]];
+    if (crumb->train) {
+      // printf("cleaning up crumb for %d on %s (%d)\n", tr->num, node->name, 1);
+      crumb->train = NULL;
+      crumbs->num--;
+      r++;
+    }
+  }
+
+  return r;
+}
+
 // clean up all the crumbs starting at node and working backwards
 static int est_cleanup_crumbs(estimator *est, train *tr, track_node *node) {
   int r;
   bfs_q q;
   track_node *next;
-  tn_crumbs *crumbs;
-  train_crumb *crumb;
   bfs_q_init(&q);
 
   node = node->reverse;
@@ -540,16 +597,9 @@ static int est_cleanup_crumbs(estimator *est, train *tr, track_node *node) {
     r = bfs_q_pop(&q, &node);
     if (r) return -1;
 
-    // printf("checking %s for crumbs\n", node->reverse->name);
-    crumbs = &est->crumb[node->reverse->id];
-    crumb = &crumbs->crumb[est->tmap[tr->num]];
-    if (!crumb->train) {
+    r = est_cleanup_node_crumbs(est, tr, node->reverse);
+    if (!r) {
       continue;
-    }
-    else {
-      // printf("cleaning up crumb on %s\n", node->reverse->name);
-      crumb->train = NULL;
-      crumbs->num--;
     }
 
     if (node->type == NODE_BRANCH) {
@@ -576,7 +626,7 @@ static int est_cleanup_crumbs(estimator *est, train *tr, track_node *node) {
 
 static int est_pass_nodes(estimator *est, train *tr, tn_list *nodes, int ts) {
   int i, r;
-  track_node *node;
+  track_node_dir node;
   tn_crumbs *crumbs;
   train_crumb *crumb;
 
@@ -585,20 +635,23 @@ static int est_pass_nodes(estimator *est, train *tr, tn_list *nodes, int ts) {
   for (i = 0; i < nodes->size; ++i) {
     tn_list_get(nodes, i, &node);
 
-    crumbs = &est->crumb[node->id];
+    assert(node.dir == 0 || node.dir == 1);
+    crumbs = &est->crumb[node.node->id][node.dir];
     crumb = &crumbs->crumb[est->tmap[tr->num]];
 
     // assert(crumb->train == NULL);
-    // printf("placing crumb at %s\n", node->name);
-    crumb->train = tr;
-    crumb->ts = ts;
-    crumbs->num++;
+    // printf("placing crumb for %d at %s\n", tr->num, node.node->name);
+    if (!crumb->train) {
+      crumb->train = tr;
+      crumb->ts = ts + crumbs->num;
+      crumbs->num++;
+    }
 
     // TODO: speed info
 
-    if (node->type == NODE_SENSOR) {
-      r = sen_reg_list_rem(&est->sen_reg[node->num], tr);
-      r = sen_reg_list_push(&est->sen_reg[node->num], tr);
+    if (node.node->type == NODE_SENSOR) {
+      r = sen_reg_list_rem(&est->sen_reg[node.node->num], tr);
+      r = sen_reg_list_push(&est->sen_reg[node.node->num], tr);
       assert(r == 0);
     }
   }
@@ -789,6 +842,16 @@ int est_update_tr_at(estimator *est, pos_event *pe) {
 
     r = est_cleanup_crumbs(est, train, train->curr_pos.pos);
     assert(r == 0);
+
+    // int i;
+    // tn_crumbs *crumbs;
+    // train_crumb *crumb;
+    // for (i = 0; i < TRACK_MAX; ++i) {
+    //   crumbs = &est->crumb[i];
+    //   crumb = &crumbs->crumb[est->tmap[train->num]];
+    //   crumbs = &est->crumb[i];
+    //   crumb = &crumbs->crumb[est->tmap[train->num]];
+    // }
 
     // 3. move train to sensor
     r = est_move_train_to_node_unsafe(est, train, pe->pos);
