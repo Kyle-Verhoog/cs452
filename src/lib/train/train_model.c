@@ -405,7 +405,7 @@ int trainUpdateDist(TrainModelSnapshot *tms, int train_num){
       tms->start_gear = tms->end_gear;
     }
 
-    dist = easyInterpolation(&acl_model, new_gear) - easyInterpolation(&acl_model, tms->cur_gear);
+    dist = zero_limit(easyInterpolation(&acl_model, new_gear) - easyInterpolation(&acl_model, tms->cur_gear));
 #ifndef X86
       assert(new_gear >= tms->cur_gear);
       assert(dist >= 0);
@@ -425,7 +425,7 @@ int trainUpdateDist(TrainModelSnapshot *tms, int train_num){
 	  tms->start_gear = tms->end_gear;
       new_gear = tms->end_gear;
     }
-    dist = easyInterpolation(&stp_model, tms->cur_gear) - easyInterpolation(&stp_model, new_gear);
+    dist = zero_limit(easyInterpolation(&stp_model, tms->cur_gear) - easyInterpolation(&stp_model, new_gear));
 #ifndef X86
       assert(new_gear <= tms->cur_gear);
       assert(dist >= 0);
