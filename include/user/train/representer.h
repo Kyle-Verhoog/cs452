@@ -25,6 +25,7 @@ union uTrackRequest {
   TrackEventType type; // subscribers
   TrackDataType dtype; // subscribers
   int time;
+  int train_num;
 };
 
 typedef struct TrackRequest {

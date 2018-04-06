@@ -77,4 +77,20 @@ typedef struct TrackUpdate {
   int num;
 } TrackUpdate;
 
+//============================================
+
+typedef enum TDType {
+  TD_TR_TRAIN,
+  MAX_TRACK_DATA  // NOTE: keep as last element in enum
+} TrackDataType;
+
+union TrackDatas{
+  train tr_train;
+};
+
+typedef struct TrackData{
+  TDType type;
+  union TrackDatas data;
+} TrackData;
+
 #endif
