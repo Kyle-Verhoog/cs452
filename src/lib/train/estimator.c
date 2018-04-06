@@ -891,6 +891,7 @@ int est_update_tr_at(estimator *est, pos_event *pe) {
         r = alphaUpdate(&train->snapshot, dist, ts);
         assert(r == 0);
       }
+      train->last_sen = pe->pos;
       ret = -2;
       // the train is before the sensor
       // printf("BEFORE %d\n", rel);
@@ -902,6 +903,7 @@ int est_update_tr_at(estimator *est, pos_event *pe) {
         r = alphaUpdate(&train->snapshot, dist, ts);
         assert(r == 0);
       }
+      train->last_sen = pe->pos;
       ret = -3;
       // the train is after the sensor
       // printf("AFTER %d\n", rel);
