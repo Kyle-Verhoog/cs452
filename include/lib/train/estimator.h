@@ -19,6 +19,7 @@
 
 typedef struct pos_event {
   track_node *pos;   // position
+  int dir;           // a possible direction (only for branches)
   int off;           // dist offset from pos
   int ts;            // timestamp of the event
 } pos_event;
@@ -89,7 +90,8 @@ typedef struct estimator {
   swi sw[SWITCH_SIZE];
   sensor sensor[SENSOR_SIZE];
   sen_reg_list sen_reg[SENSOR_SIZE]; // trains passed a sensor in the model, but not irl
-  tr_at_list tr_at[TRACK_MAX];     // trains at a particular track node sorted descending distance from the node
+  tr_at_list tr_at[TRACK_MAX][2];    // trains at track node sorted descending distance from the node
+                                     // need up to 2 per track node for branches
   int tmap[TRAIN_MAX];
   tn_crumbs crumb[TRACK_MAX];
   int ntrains;                     // number of trains being tracked
