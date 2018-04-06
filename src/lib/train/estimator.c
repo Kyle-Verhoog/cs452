@@ -950,8 +950,18 @@ int est_update_tr_gear(estimator *est, int tr_num, int gear, int ts) {
     return -1;
   }
 
+  //TODO: Handle Reverse
+  if(gear == 15){
+
+  }
+
   // TODO: initiate some acceleration or deceleration here
-  train->snapshot.start_gear = train->snapshot.cur_gear / 10 * 10; //TODO: Could be more accurate
+  if(train->snapshot.cur_gear % 10 >= 5){
+    train->snapshot.start_gear = train->snapshot.cur_gear / 10 * 10 + 5;  
+  }
+  else{
+    train->snapshot.start_gear = train->snapshot.cur_gear / 10 * 10;
+  }
   train->snapshot.end_gear = gear * 10;
   train->snapshot.duration = 0;
   // train->gear = gear;
