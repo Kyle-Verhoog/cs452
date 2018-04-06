@@ -2,7 +2,7 @@
 
 CIRCULAR_BUFFER_DEF(pp_list, pos_event, PREV_POS_LIST_SIZE);
 
-CIRCULAR_BUFFER_DEF(sen_reg_list, train *, INC_TR_LIST_SIZE);
+EXT_CIRCULAR_BUFFER_DEF(sen_reg_list, train *, INC_TR_LIST_SIZE);
 
 EXT_CIRCULAR_BUFFER_DEF(tr_at_list, train *, TR_AT_LIST_SIZE);
 
@@ -96,6 +96,7 @@ void est_init(estimator *est) {
 }
 
 void est_init_trains(estimator *est, int ts, track_node *T, int track) {
+  int r;
   pos_event pe;
   pe.ts  = ts;
 
@@ -116,10 +117,12 @@ void est_init_trains(estimator *est, int ts, track_node *T, int track) {
   else {
     pe.pos = &T[trhr(T, "A1")];
     pe.off = 0;
-    est_add_tr(est, 1, &pe);
-    // pe.pos = &TRACK[trhr(TRACK, "A13")];
-    // pe.off = 0;
-    // est_add_tr(est, 78, &pe);
+    r = est_add_tr(est, 77, &pe);
+    assert(r == 0);
+    pe.pos = &T[trhr(T, "A13")];
+    pe.off = 0;
+    r = est_add_tr(est, 79, &pe);
+    assert(r == 0);
   }
 }
 
@@ -569,6 +572,7 @@ static int est_pass_nodes(estimator *est, train *tr, tn_list *nodes, int ts) {
     // TODO: speed info
 
     if (node->type == NODE_SENSOR) {
+      r = sen_reg_list_rem(&est->sen_reg[node->num], tr);
       r = sen_reg_list_push(&est->sen_reg[node->num], tr);
       assert(r == 0);
     }
@@ -664,7 +668,7 @@ int est_update_train(estimator *est, train *train, int ts) {
 
   delta = ts - train->curr_pos.ts;
 
-  if (delta > 0) {
+  if (delta > 0 && train->gear > 0) {
     // move train along the track the corresponding distance for time delta
     // dist = 0; // speed model generated dist traveled in time delta
     dist = (delta * easyInterpolation(&train->s_model, train->gear*10))/1000;
@@ -717,9 +721,10 @@ int est_update(estimator *est, int ts) {
 
 // update the estimator with a train at sensor event
 int est_update_tr_at(estimator *est, pos_event *pe) {
-  int r, rel, ts;
+  int ret, r, rel, ts;
   train *train;
 
+  ret = 0;
   ts = pe->ts;
 
   // printf("SENSOR HIT @ %s\n", pe->pos->name);
@@ -739,13 +744,16 @@ int est_update_tr_at(estimator *est, pos_event *pe) {
 
     // 2. update model with knowledge of how far off train is
     if (rel == INT_MAX) {
+      ret = -1;
       // assert(0 && "train not found relative to sensor");
     }
     else if (rel < 0) {
+      ret = -2;
       // the train is before the sensor
       // printf("BEFORE %d\n", rel);
     }
     else /* if (rel > 0) */ {
+      ret = -3;
       // the train is after the sensor
       // printf("AFTER %d\n", rel);
     }
@@ -756,14 +764,13 @@ int est_update_tr_at(estimator *est, pos_event *pe) {
     // 3. move train to sensor
     r = est_move_train_to_node_unsafe(est, train, pe->pos);
     r = est_update_train(est, train, ts);
-
-    return 0;
   }
   else {
-    assert(0 && "failed to assoc a train");
+    ret = -4;
+    // assert(0 && "failed to assoc a train");
   }
 
-  return -1;
+  return ret;
 }
 
 

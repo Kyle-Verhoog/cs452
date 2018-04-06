@@ -71,7 +71,7 @@ typedef struct tn_crumbs {
 } tn_crumbs;
 
 #define INC_TR_LIST_SIZE NUM_TRAINS
-CIRCULAR_BUFFER_DEC(sen_reg_list, train *, INC_TR_LIST_SIZE);
+EXT_CIRCULAR_BUFFER_DEC(sen_reg_list, train *, INC_TR_LIST_SIZE);
 
 #define TN_LIST_SIZE 16
 CIRCULAR_BUFFER_DEC(tn_list, track_node *, TN_LIST_SIZE);
