@@ -416,14 +416,13 @@ int trainUpdateDist(TrainModelSnapshot *tms, int train_num){
     getStoppingDistanceModel(&stp_model, train_num);
     //Check if still stopping
     if(tms->duration < (stp_model.t[tms->start_gear/10] - stp_model.t[tms->end_gear/10])){
-      new_gear = estimateGear(stp_model.x, stp_model.t, tms->duration);
-      new_gear = new_gear < tms->end_gear ? new_gear : tms->end_gear; //Ensure that we are always going down
+      new_gear = estimateGear(stp_model.x, stp_model.t, stp_model.t[tms->start_gear/10] - tms->duration);
+      new_gear = new_gear < tms->end_gear ? tms->end_gear : new_gear; //Ensure that we are always going down
     }
     else{
 	  tms->start_gear = tms->end_gear;
       new_gear = tms->end_gear;
     }
-
     dist = easyInterpolation(&stp_model, tms->cur_gear) - easyInterpolation(&stp_model, new_gear);
 #ifndef X86
       assert(new_gear <= tms->cur_gear);
@@ -431,7 +430,6 @@ int trainUpdateDist(TrainModelSnapshot *tms, int train_num){
 #endif    
     tms->cur_gear = new_gear;
   }
-
 
   return dist;  
 }

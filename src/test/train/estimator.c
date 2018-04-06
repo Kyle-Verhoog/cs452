@@ -154,7 +154,7 @@ static void estimator_move_train_basic() {
   r = est_update(est, t+=TICK);
   assert(cur_pos_is(est, 1, POS("A1"), 0));
 
-  // get the train moving at speed 5
+  // get the train moving at speed 14
   r = est_update_tr_gear(est, 1, 14, t);
   assert(r == 0);
 
@@ -208,6 +208,39 @@ static void estimator_move_train_basic() {
   r = est_update(est, t+=TICK);
   r = est_update(est, t+=TICK);
   assert(cur_pos_is(est, 1, POS("E10"), 166));
+
+  r = est_update_tr_gear(est, 1, 1, t);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
 }
 
 // stress test a train moving around the track according to just the model
