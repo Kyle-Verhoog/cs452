@@ -3,8 +3,9 @@
 
 #include <lib/train/train_defines.h>
 #include <user/train/train_provider.h>
-// #include <lib/train/train_model.h>
+#include <lib/train/train_model.h>
 #include <defines.h>
+#include <user/train/representer.h>
 
 #define CONTINUE 0
 #define SUSPEND 1
