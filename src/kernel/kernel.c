@@ -317,17 +317,17 @@ int no_tasks() {
 // quite a hack
 void data_abort_handler() {
   asm("DATA_ENTRY:");
-  KASSERTF(0, "TASK %x (0x%x) DATA ABORT", running_task->tid, running_task->task);
+  // KASSERTF(0, "TASK %x (0x%x) DATA ABORT", running_task->tid, running_task->task);
 }
 
 void pre_entry_handler() {
   asm("PRE_ENTRY:");
-  KASSERTF(0, "TASK %x (0x%x) PREFETCH ABORT", running_task->tid, running_task->task);
+  // KASSERTF(0, "TASK %x (0x%x) PREFETCH ABORT", running_task->tid, running_task->task);
 }
 
 void undef_abort_handler() {
   asm("UNDEF_ENTRY:");
-  KASSERTF(0, "TASK %x (0x%x) UNDEFINED ABORT", running_task->tid, running_task->task);
+  // KASSERTF(0, "TASK %x (0x%x) UNDEFINED ABORT", running_task->tid, running_task->task);
 }
 
 
