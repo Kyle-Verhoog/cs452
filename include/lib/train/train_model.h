@@ -21,6 +21,15 @@ typedef struct TrainModel{
 	int t[TRAIN_MODEL_SIZE];
 }TrainModel;
 
+typedef struct TrainModelSnapshot{
+	int cur_gear;
+	int start_gear;
+	int end_gear;
+	int duration;		//Time since start_gear
+	int elapsed;		//Time delta
+	TrainModel model;
+} TrainModelSnapshot;
+
 //Integer Square Root
 unsigned int usqrt(int x);
 
@@ -36,6 +45,8 @@ int easyInterpolation(TrainModel *tm, int setting);
 
 //NOTE: ONLY USE THIS IF YOU ARE SURE LINEAR CONTINUITY
 int estimateGear(int *gear, int *model, int point);
+//Compute Dist train has travelled over time
+int trainUpdateDist(TrainModelSnapshot* tms, int train_num);
 
 void getStoppingDistanceModel(TrainModel *tm, int train_num);
 void getVelocityModel(TrainModel *tm, int train_num);

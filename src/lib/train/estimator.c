@@ -137,11 +137,14 @@ int est_add_tr(estimator *est, int tr_num, pos_event *pe) {
   est->tmap[tr_num] = est->ntrains;
   train = &est->train[est->ntrains++];
   train->num = tr_num;
-  train->gear = 0;
   train->curr_pos = *pe;
   train->len = 200;        // TODO: hard code train length to be 20cm
   train->next_sen = NULL;
-  getVelocityModel(&train->s_model, train->num);
+  train->snapshot.cur_gear = 0;
+  train->snapshot.start_gear = 0;
+  train->snapshot.end_gear = 0;
+  train->snapshot.duration = 0;
+  getVelocityModel(&train->snapshot.model, train->num);
 
   tr_at = &est->tr_at[pe->pos->id];
   tr_at_list_insert(tr_at, train);
@@ -670,11 +673,13 @@ int est_update_train(estimator *est, train *train, int ts) {
 
   delta = ts - train->curr_pos.ts;
 
-  if (delta > 0 && train->gear > 0) {
+  if (delta > 0) {
     // move train along the track the corresponding distance for time delta
     // dist = 0; // speed model generated dist traveled in time delta
     // dist = sm_calc_dist(&train->sm, delta);
-    dist = (delta * easyInterpolation(&train->s_model, train->gear*10))/1000;
+    //dist = (delta * easyInterpolation(&train->s_model, train->gear*10))/1000;
+    train->snapshot.elapsed = delta;
+    dist = trainUpdateDist(&train->snapshot, train->num)/1000;
     // printf("%d\n", dist);
     // printf("%d %s %d\n", dist, train->curr_pos.pos->name, train->curr_pos.off);
     r = est_progress_train(est, train, dist, ts);
@@ -787,7 +792,8 @@ int est_update_tr_gear(estimator *est, int tr_num, int gear, int ts) {
   assert(train->num == tr_num);
 
   // TODO: initiate some acceleration or deceleration here
-  train->gear = gear;
+  train->snapshot.end_gear = gear * 10;
+  // train->gear = gear;
   // sm->start_gear = sm->curr_gear
   // sm->stop_gear = gear
   //
