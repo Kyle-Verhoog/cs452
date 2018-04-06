@@ -15,6 +15,7 @@ typedef struct TDTrain {
   int num;
   track_node *pos;
   bool stopping;
+  bool update_ui;
   path p;
 } TDTrain;
 
@@ -22,6 +23,7 @@ void TDTrainInit(TDTrain *train, int num) {
   train->num = num;
   train->pos = NULL;
   train->stopping = 0;
+  train->update_ui = true;
   path_init(&train->p, TRACK);
 }
 
@@ -46,7 +48,7 @@ static void TrainSubscriber(TDTrain *tr) {
   rep_tid = WhoIs(REPRESENTER_ID);
   assert(rep_tid > 0);
 
-  tr_req.type = TRR_SUBSCRIBE_DATA;
+  tr_req.type = TRR_SUBSCRIBE_TR;
   tr_req.data.train_num = tr->num;
 
   while (true) {
@@ -89,8 +91,9 @@ static bool ShouldStop(path *p, train *raw_train, int stop_dist) {
   }
 
   dist_to_end -= raw_train->curr_pos.off;
-  assert(dist_to_end > 0);
-
+  if (dist_to_end < 0) {
+    return true;
+  }
 
   return dist_to_end < stop_dist + 100;
 }
@@ -107,7 +110,10 @@ static void HandleTrainUpdate(TDTrain *tr, train *raw_train, track_node *end) {
     return;
   }
 
+  tr->update_ui = true;
+
   sw_configs_init(&sw_cfgs);
+
   if (!tr->pos) {
     tr->pos = raw_train->curr_pos.pos;
     path_init(&tr->p, TRACK);
@@ -115,9 +121,17 @@ static void HandleTrainUpdate(TDTrain *tr, train *raw_train, track_node *end) {
     path_generate(&tr->p);
     path_start(&tr->p, tr->pos);
   } else {
+    if (end == raw_train->curr_pos.pos) {
+      TrainCmd(tr->num, 0);
+      tr->stopping = false;
+      TMLogStrf(tm_tid, "YEEHAW\n");
+      Exit();
+    }
 
     r = path_follow_to(&tr->p, raw_train->curr_pos.pos);
     if (r == -1) {
+      TMLogStrf(tm_tid, "PATH LOST - RECALCULATING\n");
+
       // we're off the path
       tr->pos = NULL;
 
@@ -154,7 +168,7 @@ static void HandleTrainUpdate(TDTrain *tr, train *raw_train, track_node *end) {
 
     if (!tr->stopping && ShouldStop(&tr->p, raw_train, stop_dist)) {
       TrainCmd(tr->num, 3);
-      TMLogStrf(tm_tid, "STOPPING tr %d\n");
+      TMLogStrf(tm_tid, "STOPPING tr %d\n", tr->num);
       tr->stopping = true;
     }
   }
@@ -202,9 +216,13 @@ void TrainDriver(TrainDriverArgs *args) {
   while (true) {
     Receive(&sub_tid, &raw_train, sizeof(raw_train));
     HandleTrainUpdate(&tr, &raw_train, args->end);
+    // TMLogStrf(tm_tid, "HERE\n");
 
-    path_to_str(&tr.p, buf);
-    TMPutStrf(tm_tid, "\r%d: %s", tr.num, buf);
+    if (tr.pos && tr.update_ui) {
+      path_to_str(&tr.p, buf);
+      tr.update_ui = false;
+      TMPutStrf(tm_tid, "\r%s", buf);
+    }
     Reply(sub_tid, &r, sizeof(r));
   }
 }

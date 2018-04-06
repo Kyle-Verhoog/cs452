@@ -54,6 +54,7 @@ int path_arrived(path *p) {
 int path_follow_to(path *p, track_node *t) {
   int i, r;
   track_node *tn;
+  tn = NULL;
 
   // check that t is actually in the path ahead
   for (i = 0; i < p->ahead.size; ++i) {
@@ -113,9 +114,9 @@ void path_to_str(path *p, char *buf) {
   for (i = 0; i < p->ahead.size; ++i) {
     tr_path_get(&p->ahead, i, &tn);
     offset += buf_pack_str(buf+offset, tn->name);
-    offset += buf_pack_c(buf+offset, ' ');
+    offset += buf_pack_str(buf+offset, " ");
     if (x == 5) {
-      offset += buf_pack_str(buf+offset, "\n    ");
+      offset += buf_pack_str(buf+offset, "\n  ");
       x = 0;
     }
     else {

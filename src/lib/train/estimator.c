@@ -107,18 +107,17 @@ void est_init_trains(estimator *est, int ts, track_node *T, int track) {
   pe.ts  = ts;
 
   if (track == 1) {
-    pe.pos = &T[trhr(T, "A1")];
+    pe.pos = &T[trhr(T, "A8")];
     pe.off = 0;
-    est_add_tr(est, 1, &pe);
-    // pe.pos = &T[trhr(T, "B8")];
-    // pe.off = 10;
-    // est_add_tr(est, 77, &pe);
-    // pe.pos = &T[trhr(T, "B12")];
-    // pe.off = 10;
-    // est_add_tr(est, 78, &pe);
-    // pe.pos = &T[trhr(T, "B10")];
-    // pe.off = 10;
-    // est_add_tr(est, 79, &pe);
+    est_add_tr(est, 78, &pe);
+
+    pe.pos = &T[trhr(T, "A5")];
+    pe.off = 0;
+    est_add_tr(est, 79, &pe);
+
+    pe.pos = &T[trhr(T, "A10")];
+    pe.off = 0;
+    est_add_tr(est, 77, &pe);
   }
   else {
     pe.pos = &T[trhr(T, "A1")];
@@ -886,9 +885,10 @@ int est_update_tr_at(estimator *est, pos_event *pe) {
     }
     else if (rel < 0) {
       if(train->last_sen){
-        dist = dist_to_node(train->last_sen, pe->pos);  
-        assert(dist > 0);
-        r = alphaUpdate(&train->snapshot, dist, ts);
+        dist = dist_to_node(train->last_sen, pe->pos);
+        if (dist > 0) {
+          r = alphaUpdate(&train->snapshot, dist, ts);
+        }
       }
       train->last_sen = pe->pos;
       train->snapshot.last_sen_ts = ts;
@@ -897,10 +897,11 @@ int est_update_tr_at(estimator *est, pos_event *pe) {
       // printf("BEFORE %d\n", rel);
     }
     else /* if (rel > 0) */ {
-      if(train->last_sen){
-        dist = dist_to_node(train->last_sen, pe->pos);  
-        assert(dist > 0);
-        r = alphaUpdate(&train->snapshot, dist, ts);
+      if (train->last_sen) {
+        dist = dist_to_node(train->last_sen, pe->pos);
+        if (dist > 0) {
+          r = alphaUpdate(&train->snapshot, dist, ts);
+        }
       }
       train->last_sen = pe->pos;
       train->snapshot.last_sen_ts = ts;

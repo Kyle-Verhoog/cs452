@@ -161,6 +161,7 @@ static void est_print_trains(estimator *est) {
       easyInterpolation(&tr->snapshot.model, tr->snapshot.cur_gear)
     );
   }
+  off += buf_pack_c(buf+off, '\0');
   TMPutStr(tm_tid, buf, off);
 }
 
@@ -226,10 +227,8 @@ void Representer() {
       case TRR_SUBSCRIBE:
         AddSubscriber(subscribers, req_tid, req.data.type);
         break;
-      case TRR_SUBSCRIBE_DATA:
-        if(req.data.type == TD_TR_TRAIN){
-          AddTrainSubscriber(tsubs, req_tid, req.data.train_num);
-        }
+      case TRR_SUBSCRIBE_TR:
+        AddTrainSubscriber(tsubs, req_tid, req.data.train_num);
         break;
       default:
         assert(0);

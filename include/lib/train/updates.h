@@ -8,6 +8,7 @@
 
 typedef enum TrackEventType {
   TE_TR_MOVE,
+  TE_TR_DATA,
   TE_TR_POSITION,
   TE_SW_CHANGE,
   TE_SE_CHANGE,
