@@ -110,7 +110,7 @@ static void ApplyUpdates(estimator *estimator, update_list *updates, trm_subscri
 }
 
 
-#define POKE_TIME 20
+#define POKE_TIME 10
 static void Poke() {
   int r;
   tid_t par_tid, cs_tid, my_tid;
@@ -128,6 +128,21 @@ static void Poke() {
     Send(par_tid, &req, sizeof(req), &r, sizeof(r));
     Delay(cs_tid, my_tid, POKE_TIME);
   }
+}
+
+static void est_print_trains(estimator *est) {
+  int i, off;
+  char buf[1024];
+  train *tr;
+
+  off = 0;
+
+  off += buf_pack_c(buf+off, '\r');
+  for (i = 0; i < est->ntrains; ++i) {
+    tr = &est->train[i];
+    off += buf_pack_f(buf+off, "%d %s %d\n", tr->num, tr->curr_pos.pos->name, tr->curr_pos.off);
+  }
+  TMPutStr(tm_tid, buf, off);
 }
 
 void Representer() {
@@ -166,8 +181,6 @@ void Representer() {
     trm_subscribers_init(&subscribers[i]);
   }
 
-  TMPutStrf(tm_tid, "test\n");
-
   while (true) {
     Receive(&req_tid, &req, sizeof(req));
 
@@ -175,14 +188,7 @@ void Representer() {
       case TRR_POKE:
         assert(req.data.time > 0);
         est_update(&estimator, req.data.time);
-        tr1 = est_get_train(&estimator, 77);
-        tr3 = est_get_train(&estimator, 78);
-        tr2 = est_get_train(&estimator, 79);
-        if (tr1 && tr2 && tr3) {
-          TMPutStrf(tm_tid, "\r%d %d %s %d\n", req.data.time, tr1->num, tr1->curr_pos.pos->name, tr1->curr_pos.off);
-          TMPutStrf(tm_tid, "%d %d %s %d\n", req.data.time, tr3->num, tr3->curr_pos.pos->name, tr3->curr_pos.off);
-          TMPutStrf(tm_tid, "%d %d %s %d", req.data.time, tr2->num, tr2->curr_pos.pos->name, tr2->curr_pos.off);
-        }
+        est_print_trains(&estimator);
         Reply(req_tid, &r, sizeof(r));
         break;
       case TRR_UPDATE:

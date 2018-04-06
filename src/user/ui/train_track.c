@@ -11,7 +11,7 @@ void TrainTrackInterface() {
   // const char *asdf = "╝ ═  ║ ╒ ╓ ╔ ╕ ╖ ╗ ╘ ╙ ╚ ╛ ╜ ╝ ╞ ╟
   //
   // U+256x ╠ ╡ ╢ ╣ ╤ ╥ ╦ ╧ ╨ ╩ ╪ ╫ ╬"
-  const char *track = "\n\n\n"
+  const char *track = "\n"
     "      ═══════╦══╦══════════▶═══════════╗\n"
     "      ═══════╝ ╔╝═══════╦════╦════════ ║\n"
     "      ══════╝  ║        ╚╗  ╔╝         ▲\n"

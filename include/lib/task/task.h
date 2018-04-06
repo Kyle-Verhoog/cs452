@@ -22,7 +22,6 @@ typedef enum TaskStatus { // a task is...
   TS_RCV_BL  = 5,
   TS_SND_BL  = 6,
   TS_RPL_BL  = 7,
-  TS_RUNNING = 8,
 } TaskStatus;
 
 //Kernel Handles Task Request

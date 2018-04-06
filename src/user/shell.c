@@ -135,6 +135,7 @@ void shell_info_msg(shell *sh, char *msg) {
 }
 
 void shell_error(shell *sh) {
+  sh->cmd_count++;
   cmd_cb_push_str(&sh->buf, "\nsh: unknown cmd `");
   cmd_cb_push_str(&sh->buf, sh->cmd);
   cmd_cb_push_str(&sh->buf, "`\n");

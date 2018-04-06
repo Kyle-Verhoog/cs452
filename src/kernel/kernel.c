@@ -206,9 +206,8 @@ int task_info(TaskDescriptor *td) {
     TEXT_RED"UNINI"TEXT_BLACK,
     TEXT_RED"ZOMBI"TEXT_BLACK,
     TEXT_RED"RCVBL"TEXT_BLACK,
-    TEXT_RED"SNDBL"TEXT_BLACK,
+    TEXT_YELLOW"SNDBL"TEXT_BLACK,
     TEXT_RED"RPLBL"TEXT_BLACK,
-    TEXT_YELLOW"RUNNG"TEXT_BLACK,
   };
   asm("ldr %0, [%1, #4];":"=r"(buf):"r"(td->sp));
   offset = 0;
@@ -379,7 +378,6 @@ __attribute__((naked)) int main(void) {
 
     //get a task from scheduler
     TaskDescriptor* td = schedule();
-    td->status = TS_RUNNING;
 
     if (!td && no_tasks()) break;
     if (!td) continue;

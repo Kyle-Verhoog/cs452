@@ -639,6 +639,7 @@ static void TrackHandleTrainAtTimeout(Track *track, EventGroup *grp) {
 
 int TrackInterpretEventGroup(Track *track, EventGroup *grp) {
   switch (grp->type) {
+    /*
     case VRE_VE_RE:
     case VRE_RE:
       TrackHandleTrainAtSensor(track, grp);
@@ -648,8 +649,9 @@ int TrackInterpretEventGroup(Track *track, EventGroup *grp) {
     case VRE_VE:
       TrackHandleTrainAtTimeout(track, grp);
       break;
+      */
     case RE:
-      TrackHandleRawEvent(track, &grp->re, true);
+      TrackHandleRawEvent(track, &grp->re, false);
       break;
     default:
       assert(0);
