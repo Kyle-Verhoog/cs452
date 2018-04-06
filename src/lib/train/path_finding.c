@@ -92,7 +92,6 @@ int path_get_switch_config(track_node *t1, track_node *t2) {
   if (e->dest == t2) {
     return DIR_CURVED;
   }
-  KASSERT(0 && "nodes are not connected via edge");
   return 0;
 }
 

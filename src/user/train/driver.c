@@ -209,7 +209,7 @@ static bool ShouldStop(path *p, train *raw_train, int stop_dist) {
 }
 
 
-#define LOOK_AHEAD 500
+#define LOOK_AHEAD 1000
 static void HandleTrainUpdate(TDTrain *tr, train *raw_train, track_node *end) {
   int r, stop_dist;
   sw_configs sw_cfgs;
@@ -228,8 +228,16 @@ static void HandleTrainUpdate(TDTrain *tr, train *raw_train, track_node *end) {
     tr->pos = raw_train->curr_pos.pos;
     path_init(&tr->p, TRACK);
     path_set_destination(&tr->p, tr->pos, end);
-    generate_path(&tr->p, tr);
-    path_start(&tr->p, tr->pos);
+    r = generate_path(&tr->p, tr);
+    if (r <= 0) {
+      TMLogStrf(tm_tid, "COULD NOT FIND PATH\n");
+      tr->pos = NULL;
+      tr->update_ui = false;
+      return;
+    }
+    else {
+      path_start(&tr->p, tr->pos);
+    }
   } else {
     if (end == raw_train->curr_pos.pos) {
       TrainCmd(tr->num, 0);

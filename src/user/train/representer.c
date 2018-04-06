@@ -224,7 +224,7 @@ void Representer() {
   }
 
   TMPutStrf(tm_tid, " TR #\t│  POS\t│  OFF\t│ GEAR\t│ SPEED\t│\n");
-  TMPutStrf(tm_tid, "───────────────────────────────────────────────\n");
+  TMPutStrf(tm_tid, "────────────────────────────────────────\n");
 
   tr_subscribers tsubs[TRAIN_MAX];
   for (i = 0; i < TRAIN_MAX; ++i) {
