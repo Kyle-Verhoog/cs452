@@ -2,6 +2,7 @@
 #define UPDATES_H
 
 #include <lib/train/train.h>
+#include <lib/train/estimator.h>
 
 #define MAX_NUM_UPDATES 10
 
@@ -76,5 +77,21 @@ typedef struct TrackUpdate {
   TrackEvent events[MAX_NUM_UPDATES];
   int num;
 } TrackUpdate;
+
+//============================================
+
+typedef enum TDType {
+  TD_TR_TRAIN,
+  MAX_TRACK_DATA  // NOTE: keep as last element in enum
+} TDType;
+
+union TrackDatas{
+  train tr_train;
+};
+
+typedef struct TrackData{
+  TDType type;
+  union TrackDatas data;
+} TrackData;
 
 #endif

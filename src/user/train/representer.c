@@ -3,8 +3,31 @@
 #include <lib/train/estimator.h>
 
 CIRCULAR_BUFFER_DEF(trm_subscribers, tid_t, MAX_EVENT_SUBSCRIBERS);
+CIRCULAR_BUFFER_DEF(tr_subscribers, tid_t, MAX_EVENT_SUBSCRIBERS);
 
 static tid_t tm_tid;
+
+
+static void NotifyTrainSubscribers(tr_subscribers *subs, TrackData td) {
+  int r, i;
+  tid_t tid;
+  tr_subscribers *tr_sub;
+
+  tr_sub = &subs[td.data.tr_train.num];
+  while(tr_subscribers_pop(tr_sub, &tid) != CB_E_EMPTY){
+    Reply(tid, &td, sizeof(td));
+  }
+}
+
+static void AddTrainSubscriber(tr_subscribers *subs, tid_t tid, int train_num) {
+  assert(train_num >= 0 && train_num < TRAIN_MAX);
+  int r;
+  tr_subscribers *train_subs;
+
+  train_subs = &subs[train_num];
+  r = tr_subscribers_push(train_subs, tid);
+  assert(r == 0);
+}
 
 static void NotifySubscribers(trm_subscribers *subs, TrackEventType type, union TrackEvents *event) {
   int r;
@@ -130,6 +153,18 @@ static void Poke() {
   }
 }
 
+static void est_notif_trains(estimator *est, tr_subscribers *subs){
+  TrackData data;
+  int i;
+
+  data.type = TD_TR_TRAIN;
+
+  for(i = 0; i < est->ntrains; ++i){
+    data.data.tr_train = est->train[i];
+    NotifyTrainSubscribers(subs, data);
+  }
+}
+
 static void est_print_trains(estimator *est) {
   int i, off;
   char buf[1024];
@@ -189,6 +224,12 @@ void Representer() {
 
   TMPutStrf(tm_tid, " TR #\t│  POS\t│  OFF\t│ GEAR\t│ SPEED\t│\n");
   TMPutStrf(tm_tid, "───────────────────────────────────────────────\n");
+
+  tr_subscribers tsubs[TRAIN_MAX];
+  for (i = 0; i < TRAIN_MAX; ++i) {
+    tr_subscribers_init(&tsubs[i]);
+  }
+
   while (true) {
     Receive(&req_tid, &req, sizeof(req));
 
@@ -197,6 +238,7 @@ void Representer() {
         assert(req.data.time > 0);
         est_update(&estimator, req.data.time);
         est_print_trains(&estimator);
+        est_notif_trains(&estimator, tsubs);
         Reply(req_tid, &r, sizeof(r));
         break;
       case TRR_UPDATE:
@@ -205,7 +247,9 @@ void Representer() {
         Reply(req_tid, &r, sizeof(r));
         break;
       case TRR_SUBSCRIBE:
-        AddSubscriber(subscribers, req_tid, req.data.type);
+        if(req.data.type == TD_TR_TRAIN){
+          AddTrainSubscriber(tsubs, req_tid, req.data.train_num);  
+        }
         break;
       default:
         assert(0);
