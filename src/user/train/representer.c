@@ -8,10 +8,13 @@ CIRCULAR_BUFFER_DEF(tr_subscribers, tid_t, MAX_EVENT_SUBSCRIBERS);
 static tid_t tm_tid;
 
 
-static void NotifyTrainSubscribers(tr_subscribers *subs, TrackData td) {
-  int r, i;
+static void NotifyTrainSubscribers(tr_subscribers *subs, train *tr) {
+  TrackData td;
   tid_t tid;
   tr_subscribers *tr_sub;
+
+  td.type = TD_TR_TRAIN;
+  td.data.tr_train = *tr;
 
   tr_sub = &subs[td.data.tr_train.num];
   while(tr_subscribers_pop(tr_sub, &tid) != CB_E_EMPTY){
@@ -70,28 +73,6 @@ static void ApplyUpdates(estimator *estimator, update_list *updates, trm_subscri
       case TE_TR_STATUS:
         // TODO: relay to estimator
         // est_update_tr_status(estimator, &pe);
-        break;
-      case TE_TR_POSITION:
-        /*
-        pe.pos = event.event.tr_pos.node;
-        assert(event.event.tr_pos.num >= 1 && event.event.tr_pos.num <= 80);
-        // TMPutStrf(tm_tid, "%d\n", pe.pos);
-        pe.ts  = event.ts;
-        pe.off = 0;
-        r = est_update_tr_at(estimator, &pe);
-        if (r == -1) {
-          TMLogStrf(tm_tid, "est: tr replaced\n");
-        }
-        else if (r == -2) {
-          TMLogStrf(tm_tid, "est: tr before sen\n");
-        }
-        else if (r == -3) {
-          TMLogStrf(tm_tid, "est: tr after sen\n");
-        }
-        else if (r == -4) {
-          TMLogStrf(tm_tid, "est: could not assoc train!\n");
-        }
-        */
         break;
       case TE_SE_CHANGE:
         if (event.event.se_change.state) {
@@ -154,14 +135,10 @@ static void Poke() {
 }
 
 static void est_notif_trains(estimator *est, tr_subscribers *subs){
-  TrackData data;
   int i;
 
-  data.type = TD_TR_TRAIN;
-
   for(i = 0; i < est->ntrains; ++i){
-    data.data.tr_train = est->train[i];
-    NotifyTrainSubscribers(subs, data);
+    NotifyTrainSubscribers(subs, &est->train[i]);
   }
 }
 

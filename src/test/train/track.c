@@ -733,16 +733,16 @@ static void fast_train_test() {
 void track_tests() {
   init_tracka(T);
   GetDistBetweenNodesTest();
-  track_init_test(T);
-  next_sensors_test(T);
-  next_sensors_test2();
-  basic_test(T);
-  track_events_test();
-  lost_train_test();
-  two_trains_test();
-  double_sensor_reading_test();
-  lost_train_false_positive_test();
-  two_trains_recovery();
-  stress_one_train_test();
-  fast_train_test();
+  // track_init_test(T);
+  // next_sensors_test(T);
+  // next_sensors_test2();
+  // basic_test(T);
+  // track_events_test();
+  // lost_train_test();
+  // two_trains_test();
+  // double_sensor_reading_test();
+  // lost_train_false_positive_test();
+  // two_trains_recovery();
+  // stress_one_train_test();
+  // fast_train_test();
 }

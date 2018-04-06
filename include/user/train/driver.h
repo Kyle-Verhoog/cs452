@@ -2,11 +2,11 @@
 #define DRIVER_H
 
 #include <types.h>
+#include <lib/train/track_node.h>
 
 typedef struct TrainDriverArgs {
   int train_num;
-  int start;
-  int end;
+  track_node *end;
 } TrainDriverArgs;
 
 extern bool DRIVER1_DEF, DRIVER2_DEF;
