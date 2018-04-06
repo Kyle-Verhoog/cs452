@@ -397,7 +397,8 @@ int trainUpdateDist(TrainModelSnapshot *tms, int train_num){
     //Check if still accelerating
     if(tms->duration < (acl_model.t[tms->end_gear/10] - acl_model.t[tms->start_gear/10])){
       new_gear = estimateGear(acl_model.x, acl_model.t, tms->duration);
-      new_gear = new_gear > tms->end_gear ? tms->end_gear : new_gear; //Ensure that we are always going up
+      new_gear = new_gear > tms->end_gear ? tms->end_gear : new_gear; //Ensure we don't exceed bounds
+      new_gear = new_gear < tms->cur_gear ? tms->cur_gear : new_gear;  //Ensure that we are always going up
     }
     else{
       new_gear = tms->end_gear;
@@ -418,6 +419,7 @@ int trainUpdateDist(TrainModelSnapshot *tms, int train_num){
     if(tms->duration < (stp_model.t[tms->start_gear/10] - stp_model.t[tms->end_gear/10])){
       new_gear = estimateGear(stp_model.x, stp_model.t, stp_model.t[tms->start_gear/10] - tms->duration);
       new_gear = new_gear < tms->end_gear ? tms->end_gear : new_gear; //Ensure that we are always going down
+      new_gear = new_gear > tms->cur_gear ? tms->cur_gear : new_gear;
     }
     else{
 	  tms->start_gear = tms->end_gear;
