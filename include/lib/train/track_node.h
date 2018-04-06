@@ -55,6 +55,7 @@ typedef struct PossibleSensor {
 #define POSSIBLE_NODE_LIST_SIZE 5
 CIRCULAR_BUFFER_DEC(poss_node_list, PossibleSensor, POSSIBLE_NODE_LIST_SIZE);
 
+int tn_get_dir(track_node *prev, track_node *node);
 
 int dist_to_node(track_node *node, track_node *dest);
 

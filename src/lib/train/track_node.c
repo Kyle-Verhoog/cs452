@@ -46,6 +46,46 @@ int dist_to_node(track_node *node, track_node *dest) {
 }
 
 
+int tn_get_dir(track_node *prev, track_node *node) {
+  if (prev->type == NODE_BRANCH) {
+    if (prev->edge[DIR_STRAIGHT].dest == node) {
+      return DIR_STRAIGHT;
+    }
+    else if (prev->edge[DIR_CURVED].dest == node) {
+      return DIR_CURVED;
+    }
+    else {
+      return -1;
+    }
+  }
+  else {
+    return DIR_AHEAD;
+  }
+}
+
+
+// if the node before the given `node` is a branch then this function returns
+// the direction of the branch that leads to `node`, else it returns DIR_AHEAD
+int get_prev_branch_dir(track_node *node) {
+  track_node *prev;
+  prev = node->reverse->edge[DIR_AHEAD].dest;
+
+  if (prev->type == NODE_BRANCH) {
+    if (prev->edge[DIR_STRAIGHT].dest == node) {
+      return DIR_STRAIGHT;
+    }
+    else if (prev->edge[DIR_CURVED].dest == node) {
+      return DIR_CURVED;
+    }
+    else {
+      return -1;
+    }
+  }
+  else {
+    return DIR_AHEAD;
+  }
+}
+
 // does a BFS to a depth of `sensor_depth` sensors (since we can assume at most
 // 1 sensor failure)
 bool node_nearby_sd(track_node *node, track_node *dest, int sensor_depth) {

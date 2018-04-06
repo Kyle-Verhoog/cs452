@@ -16,6 +16,14 @@ static int cur_pos_is(estimator *est, int tr_num, track_node *n, int off) {
   return true;
 }
 
+static int cur_pos_is_dir(estimator *est, int tr_num, track_node *n, int off, int dir) {
+  train *tr;
+  tr = est_get_train(est, tr_num);
+  // printf("test: %s %d\n", n->name, off);
+  // printf("actual: %s %d %d\n", tr->curr_pos.pos->name, tr->curr_pos.dir, tr->curr_pos.off);
+  return tr->curr_pos.pos == n && tr->curr_pos.off == off && tr->curr_pos.dir == dir;
+}
+
 static void estimator_init() {
   estimator est;
   est_init(&est);
@@ -548,6 +556,7 @@ static void estimator_wrong_path_multi() {
   pe.off = 0;
   r = est_update_tr_at(est, &pe);
   assert(cur_pos_is(est, 1, POS("D9"), 0));
+  assert(cur_pos_is(est, 2, POS("D9"), 140));
 
   r = est_update(est, t+=TICK);
   r = est_update(est, t+=TICK);
@@ -596,20 +605,64 @@ static void estimator_track_b_init() {
   assert(cur_pos_is(est, 1, POSB("C13"), 201));
 }
 
+static void estimator_cross_over_test() {
+  const int TICK = 50;
+  int t, r;
+  estimator est1, *est;
+  est = &est1;
+  pos_event pe;
+
+  est_init(est);
+  t = 0;
+
+  pe.ts = t+10;
+  pe.pos = POS("D7");
+  pe.off = 0;
+  r = est_add_tr(est, 1, &pe);
+  assert(r == 0);
+  assert(cur_pos_is(est, 1, POS("D7"), 0));
+  pe.pos = POS("D7");
+  pe.off = 10;
+  r = est_add_tr(est, 2, &pe);
+  assert(r == 0);
+  assert(cur_pos_is(est, 2, POS("D7"), 10));
+
+  r = est_update_tr_gear(est, 1, 5, t+10);
+  r = est_update_tr_gear(est, 2, 5, t+10);
+  assert(cur_pos_is(est, 1, POS("D7"), 0));
+  assert(cur_pos_is(est, 2, POS("D7"), 10));
+
+
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is_dir(est, 1, POS("BR8"), 152, DIR_CURVED));
+  assert(cur_pos_is_dir(est, 2, POS("BR8"), 162, DIR_CURVED));
+}
+
 void estimator_tests() {
   init_tracka(T);
   init_trackb(TB);
   tr_at_list_insert_test();
   estimator_init();
-  //estimator_a_ton_of_nothing();
-  //estimator_add_train();
-  //estimator_move_train_basic();
+  // estimator_add_train();
+  // estimator_cross_over_test();
+  // tr_at_list_insert_test();
+  // estimator_init();
+  // estimator_a_ton_of_nothing();
+  // estimator_move_train_basic();
   // estimator_a_ton_of_something();
   // estimator_move_train_basic_sensors();
-  //estimator_two_train_collision_1_stopped();
-  //estimator_two_train_collision_2_moving();
-  //stopped_train_test();
-  //estimator_wrong_path();
-  //estimator_wrong_path_multi();
+  // estimator_two_train_collision_1_stopped();
+  // estimator_two_train_collision_2_moving();
+  // stopped_train_test();
+  // estimator_wrong_path();
+  estimator_wrong_path_multi();
   // estimator_track_b_init();
 }
