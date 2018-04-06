@@ -11,6 +11,7 @@
 #define MAX_EVENT_SUBSCRIBERS 16
 
 CIRCULAR_BUFFER_DEC(trm_subscribers, tid_t, MAX_EVENT_SUBSCRIBERS);
+CIRCULAR_BUFFER_DEC(tr_subscribers, tid_t, MAX_EVENT_SUBSCRIBERS);
 
 
 typedef enum TrackRequestType {

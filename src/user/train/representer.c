@@ -157,7 +157,7 @@ static void est_notif_trains(estimator *est, tr_subscribers *subs){
   TrackData data;
   int i;
 
-  data.data.type = TD_TR_TRAIN;
+  data.type = TD_TR_TRAIN;
 
   for(i = 0; i < est->ntrains; ++i){
     data.data.tr_train = est->train[i];
