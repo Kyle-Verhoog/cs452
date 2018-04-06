@@ -97,7 +97,7 @@ int main(void) {
   PTEST_END();  
 
   PTEST_START("train/track");
-  track_tests();
+  //track_tests();
   PTEST_END();
 
   PRINTF("+----------------------+---+\n");

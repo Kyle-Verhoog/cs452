@@ -362,18 +362,25 @@ void getAccelerationDistanceModel(TrainModel *tm, int train_num){
 	}
 }
 
-int alphaUpdate(TrainModel *tm, int setting, int velocity){
-	int uVelocity;
-	int mVelocity = easyInterpolation(tm, setting);
-	
-	uVelocity = (velocity * ALPHA + mVelocity * (100 - ALPHA)) / 100;
+int alphaUpdate(TrainModelSnapshot *tms, int dist, int ts){
+	int uVelocity, velocity;
+	int mVelocity = tms->model.y[tms->cur_gear/10];
 
-	if(abs(uVelocity - mVelocity) > uVelocity / 4){	//TODO: Crude way to check within 25%
-		return REJECTED;		
+	velocity = (dist * 1000)/(ts - tms->last_sen_ts);
+
+	//Only update if travelling at constant velo
+	if(tms->start_gear == tms->end_gear){
+		uVelocity = (velocity * ALPHA + mVelocity * (100 - ALPHA)) / 100;
+
+		if(abs(uVelocity - mVelocity) > uVelocity / 4){	//TODO: Crude way to check within 25%
+			return REJECTED;		
+		}
+		
+		tms->model.y[tms->cur_gear/10] = uVelocity;
+		return ACCEPTED;	
 	}
-	
-	tm->y[setting] = uVelocity;
-	return ACCEPTED;
+
+	return REJECTED;
 }
 
 /////////////////////////////////////////////////////////
