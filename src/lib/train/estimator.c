@@ -792,7 +792,9 @@ int est_update_tr_gear(estimator *est, int tr_num, int gear, int ts) {
   assert(train->num == tr_num);
 
   // TODO: initiate some acceleration or deceleration here
+  train->snapshot.start_gear = train->snapshot.cur_gear / 10 * 10; //TODO: Could be more accurate
   train->snapshot.end_gear = gear * 10;
+  train->snapshot.duration = 0;
   // train->gear = gear;
   // sm->start_gear = sm->curr_gear
   // sm->stop_gear = gear
