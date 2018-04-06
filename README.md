@@ -2,6 +2,8 @@
 
 
 # NOTE TO TAs:
+**Our final submission is on branch: master**
+
 **Our TC2 submission is in a branch: tc2**
 
 **Our TC1 submission is in a branch: milestone1**
