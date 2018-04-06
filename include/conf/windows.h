@@ -89,7 +89,7 @@
 #define REP_OFF_X  2 + SH_WIDTH/2 + 1
 #define REP_OFF_Y  TRACK_OFF_Y + TRACK_HEIGHT + 1
 #define REP_WIDTH  SH_WIDTH/2
-#define REP_HEIGHT 3
+#define REP_HEIGHT 4
 
 #define RESERV_OFF_X  SH_OFF_X
 #define RESERV_OFF_Y  LOG_OFF_Y + LOG_HEIGHT + 1

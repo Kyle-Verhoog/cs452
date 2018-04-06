@@ -49,6 +49,7 @@ static void ApplyUpdates(estimator *estimator, update_list *updates, trm_subscri
         // est_update_tr_status(estimator, &pe);
         break;
       case TE_TR_POSITION:
+        /*
         pe.pos = event.event.tr_pos.node;
         assert(event.event.tr_pos.num >= 1 && event.event.tr_pos.num <= 80);
         // TMPutStrf(tm_tid, "%d\n", pe.pos);
@@ -67,8 +68,30 @@ static void ApplyUpdates(estimator *estimator, update_list *updates, trm_subscri
         else if (r == -4) {
           TMLogStrf(tm_tid, "est: could not assoc train!\n");
         }
+        */
         break;
       case TE_SE_CHANGE:
+        if (event.event.se_change.state) {
+          assert(event.event.se_change.num >= 0 && event.event.se_change.num <= DECODER_SIZE*16);
+          pe.pos = &TRACK[event.event.se_change.num];
+          // TMPutStrf(tm_tid, "%d\n", pe.pos);
+          pe.ts  = event.ts;
+          pe.off = 0;
+          r = est_update_tr_at(estimator, &pe);
+          if (r == -1) {
+            TMLogStrf(tm_tid, "est: tr replaced\n");
+          }
+          else if (r == -2) {
+            TMLogStrf(tm_tid, "est: tr before sen\n");
+          }
+          else if (r == -3) {
+            TMLogStrf(tm_tid, "est: tr after sen\n");
+          }
+          else if (r == -4) {
+            TMLogStrf(tm_tid, "est: could not assoc train!\n");
+          }
+        }
+
         // est_update_se(estimator, event.event.se_event.id, event.event.se_event.state);
         break;
       case TE_TR_MOVE:
@@ -112,7 +135,7 @@ void Representer() {
   tid_t req_tid, my_tid;
   TrackRequest req;
   estimator estimator;
-  train *tr1, *tr2;
+  train *tr1, *tr2, *tr3;
 
 #ifdef TRACK_A
   track = 1;
@@ -153,9 +176,11 @@ void Representer() {
         assert(req.data.time > 0);
         est_update(&estimator, req.data.time);
         tr1 = est_get_train(&estimator, 77);
+        tr3 = est_get_train(&estimator, 78);
         tr2 = est_get_train(&estimator, 79);
-        if (tr1 && tr2) {
+        if (tr1 && tr2 && tr3) {
           TMPutStrf(tm_tid, "\r%d %d %s %d\n", req.data.time, tr1->num, tr1->curr_pos.pos->name, tr1->curr_pos.off);
+          TMPutStrf(tm_tid, "%d %d %s %d\n", req.data.time, tr3->num, tr3->curr_pos.pos->name, tr3->curr_pos.off);
           TMPutStrf(tm_tid, "%d %d %s %d", req.data.time, tr2->num, tr2->curr_pos.pos->name, tr2->curr_pos.off);
         }
         Reply(req_tid, &r, sizeof(r));

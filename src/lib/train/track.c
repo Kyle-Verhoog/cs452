@@ -297,6 +297,8 @@ static void TrackUpdateUnknownSpeedTrain(Track *track, Train *train, track_node 
   speed = (dist*1000) / ((ts - train->sen_ts)); // speed in um/tick
   if (0 < speed && speed < 8000) {
     train->speed = speed;
+  } else {
+    train->speed = train->gear*450;
   }
   train->status = TR_KNOWN;
   train->sen_ts = ts;

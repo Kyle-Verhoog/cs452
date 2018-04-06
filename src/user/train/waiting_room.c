@@ -339,7 +339,8 @@ static void handle_re_se(RawEvent re, VirtualEvent *waiting, ve_key_cb *sensorTo
     //   TMLogStrf(tm_tid, "HIT %d on %s\n", key, TRACK[re.event.se_event.id].name);
     // }
     //No more conflict, assume earliest timestamp
-    r = pop_earliest_ts(&sensorToVE[sensor], waiting, &key);
+    // r = pop_earliest_ts(&sensorToVE[sensor], waiting, &key);
+    r = ve_key_cb_pop(&sensorToVE[sensor], &key);
     assert(r == 0);
     eg.type = waiting[key].type == VE_REG ? VRE_RE : VRE_VE_RE; 
     eg.re = re;

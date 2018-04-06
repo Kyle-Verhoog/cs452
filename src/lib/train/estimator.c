@@ -98,7 +98,6 @@ void est_init(estimator *est) {
   for (i = 0; i < SWITCH_SIZE; ++i) {
     est->sw[i].state = DIR_CURVED;
     est->sw[i].conf = 50; // we aren't confident
-    est->sw[i].last_known_state = DIR_CURVED;   // by default set last known to curved
   }
 }
 
@@ -123,11 +122,17 @@ void est_init_trains(estimator *est, int ts, track_node *T, int track) {
   }
   else {
     pe.pos = &T[trhr(T, "A1")];
-    pe.off = 0;
+    pe.off = 5;
     r = est_add_tr(est, 77, &pe);
     assert(r == 0);
-    pe.pos = &T[trhr(T, "A13")];
+
+    pe.pos = &T[trhr(T, "A1")];
     pe.off = 0;
+    r = est_add_tr(est, 78, &pe);
+    assert(r == 0);
+
+    pe.pos = &T[trhr(T, "A13")];
+    pe.off = 5;
     r = est_add_tr(est, 79, &pe);
     assert(r == 0);
   }
@@ -144,12 +149,15 @@ int est_add_tr(estimator *est, int tr_num, pos_event *pe) {
   est->tmap[tr_num] = est->ntrains;
   train = &est->train[est->ntrains++];
   train->num = tr_num;
-  train->gear = 0;
   train->curr_pos = *pe;
   train->curr_pos.dir = DIR_AHEAD;
   train->len = 200;        // TODO: hard code train length to be 20cm
   train->next_sen = NULL;
-  getVelocityModel(&train->s_model, train->num);
+  train->snapshot.cur_gear = 0;
+  train->snapshot.start_gear = 0;
+  train->snapshot.end_gear = 0;
+  train->snapshot.duration = 0;
+  getVelocityModel(&train->snapshot.model, train->num);
 
   tr_at = &est->tr_at[train->curr_pos.pos->id][train->curr_pos.dir];
   tr_at_list_insert(tr_at, train);
@@ -217,18 +225,17 @@ static train *est_recover_train_from_node_crumbs(estimator *est, track_node *nod
 
   // TODO: this might cause branches that are not faulty to be marked as such
   // eg if the train is really behind schedule in the model
+  // but maybe this is okay??
   swi *sw;
-  if (min_tr && node->type == NODE_BRANCH) {
+  if (node->type == NODE_BRANCH) {
     sw = &est->sw[node->num];
     // printf("marking %s faulty\n", node->name);
     if (sw->conf >= 50) {
       sw->conf = 0;
-      sw->last_known_state = !sw->state;
     }
     // a stuck switch somehow switched configuration
     else if (sw->conf == 0) {
       sw->conf = 50;
-      sw->state = !sw->state;
     }
     else {
       assert(0);
@@ -364,12 +371,6 @@ static int est_find_train_rel_to_sensor(estimator *est, train *tr, track_node *s
 
 
 
-int est_failed_sw(estimator *est, int sw_num, int actual) {
-  est->sw[sw_num].conf = 0;
-  est->sw[sw_num].last_known_state = actual;
-  return 0;
-}
-
 int est_estimate_sw_dir(estimator *est, int sw_num) {
   int dir;
   swi *sw;
@@ -380,7 +381,7 @@ int est_estimate_sw_dir(estimator *est, int sw_num) {
     dir = sw->state;
   }
   else if (sw->conf == 0) {
-    dir = sw->last_known_state;
+    dir = !sw->state;
   }
   else {
     dir = -1;
@@ -404,6 +405,10 @@ static int est_next_node(estimator *est, train *train, track_node **ret_next, in
   off = train->curr_pos.off;
   dir = train->curr_pos.dir;
 
+  if (cur->type == NODE_EXIT) {
+    return dist;
+  }
+
   assert(dir == DIR_STRAIGHT || dir == DIR_CURVED);
 
   next = cur->edge[dir].dest;
@@ -413,11 +418,6 @@ static int est_next_node(estimator *est, train *train, track_node **ret_next, in
     case NODE_BRANCH:
       next_dir = est_estimate_sw_dir(est, next->num);
       break;
-    case NODE_EXIT:
-      assert(0 && "NODE EXIT");
-      *ret_dir = -1;
-      next = NULL;
-      return dist;
     default:
       next_dir = DIR_AHEAD;
       break;
@@ -476,11 +476,16 @@ int est_move_train_forward(estimator *est, train *tr, int dist_to_move, int forc
   tr_at_list *tr_at;
   pos_event pos_orig;
 
+  // shortcut if current node is an exit node
+  if (tr->curr_pos.pos->type == NODE_EXIT)
+    return 0;
+
+  next = NULL;
   pos_orig = tr->curr_pos;
   assert(tr->curr_pos.dir == 0 || tr->curr_pos.dir == 1);
   tr_at = &est->tr_at[tr->curr_pos.pos->id][tr->curr_pos.dir];
 
-  while (dist_to_move > 0) {
+  while (dist_to_move > 0 && tr->curr_pos.pos->type != NODE_EXIT) {
     if (tr_at->size > 0) {
       // iterate through the tr_at list descending (closest trains first)
       // there are other trains on this track node, determine if we can move
@@ -521,17 +526,12 @@ int est_move_train_forward(estimator *est, train *tr, int dist_to_move, int forc
     }
 
     dist_to_next = est_next_node(est, tr, &next, &next_dir);
+
     if (dist_to_next < 0) {
-      assert(0);
       // restore the old state
       tr->curr_pos = pos_orig;
       return -2;
     }
-    assert(next != NULL);
-    assertf((next->type == NODE_BRANCH && next_dir == DIR_CURVED) ||
-            (next->type != NODE_BRANCH && next_dir == DIR_AHEAD),
-            "%d || %d node %s", (next->type == NODE_BRANCH && next_dir == DIR_CURVED),
-                        (next->type != NODE_BRANCH && next_dir == DIR_AHEAD), next->name);
 
     assert(next_dir == DIR_AHEAD || next_dir == DIR_STRAIGHT || next_dir == DIR_CURVED);
 
@@ -799,11 +799,13 @@ int est_update_train(estimator *est, train *train, int ts) {
 
   delta = ts - train->curr_pos.ts;
 
-  if (delta > 0 && train->gear > 0) {
+  if (delta > 0) {
     // move train along the track the corresponding distance for time delta
     // dist = 0; // speed model generated dist traveled in time delta
     // dist = sm_calc_dist(&train->sm, delta);
-    dist = (delta * easyInterpolation(&train->s_model, train->gear*10))/1000;
+    // dist = (delta * easyInterpolation(&train->snapshot.model, train->snapshot.end_gear))/1000;
+    train->snapshot.elapsed = delta;
+    dist = trainUpdateDist(&train->snapshot, train->num)/1000;
     // printf("%d\n", dist);
     // printf("%d %s %d\n", dist, train->curr_pos.pos->name, train->curr_pos.off);
     r = est_progress_train(est, train, dist, ts);
@@ -926,7 +928,10 @@ int est_update_tr_gear(estimator *est, int tr_num, int gear, int ts) {
   assert(train->num == tr_num);
 
   // TODO: initiate some acceleration or deceleration here
-  train->gear = gear;
+  train->snapshot.start_gear = train->snapshot.cur_gear / 10 * 10; //TODO: Could be more accurate
+  train->snapshot.end_gear = gear * 10;
+  train->snapshot.duration = 0;
+  // train->gear = gear;
   // sm->start_gear = sm->curr_gear
   // sm->stop_gear = gear
   //

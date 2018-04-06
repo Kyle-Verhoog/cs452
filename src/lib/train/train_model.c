@@ -223,7 +223,7 @@ int easyInterpolation(TrainModel *tm, int setting){
 		return interpolatePartial(tm, setting, 8, TRAIN_MODEL_SIZE);
 	}
 	else{
-		return interpolatePartial(tm, setting, 4, 10);	
+		return interpolatePartial(tm, setting, 0, 10);	
 	}
 }
 
@@ -295,9 +295,11 @@ void getStoppingDistanceModel(TrainModel *tm, int train_num){
   if (train_num == 1) {
 		int gear[] = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90 ,100, 110, 120, 130, 140};
 		int stp_dist[] = {0, 0, 0, 0, 0, 13564, 34176, 94045, 168608, 277890, 402523, 570764, 730057, 954537, 1215350};
+		int time[] = {0, 0, 0, 0, 0, 20, 54, 84, 128, 156, 188, 224, 271, 294, 336};
     tm->train_num = 1;
 		memcpy(tm->x, gear, sizeof(gear));
 		memcpy(tm->y, stp_dist, sizeof(stp_dist));
+		memcpy(tm->t, time, sizeof(time));
   }
   else if(train_num == 77){
 		memcpy(tm, &TR_77_STP_DIST, sizeof(TR_77_STP_DIST));
@@ -340,7 +342,11 @@ void getVelocityModel(TrainModel *tm, int train_num){
 }
 
 void getAccelerationDistanceModel(TrainModel *tm, int train_num){
-	if(train_num == 77){
+	//Trains for test
+	if(train_num == 1 || train_num == 2 || train_num == 3){
+		memcpy(tm, &TR_77_ACCEL_DIST, sizeof(TR_77_ACCEL_DIST));
+	}
+	else if(train_num == 77){
 		memcpy(tm, &TR_77_ACCEL_DIST, sizeof(TR_77_ACCEL_DIST));
 	}
 	else if(train_num == 78){
@@ -368,4 +374,64 @@ int alphaUpdate(TrainModel *tm, int setting, int velocity){
 	
 	tm->y[setting] = uVelocity;
 	return ACCEPTED;
+}
+
+/////////////////////////////////////////////////////////
+
+int trainUpdateDist(TrainModelSnapshot *tms, int train_num){
+  int dist, new_gear;
+  TrainModel acl_model;
+  TrainModel stp_model;
+
+  //Update the duration
+  tms->duration += tms->elapsed;
+
+  //Case Constant Velocity
+  if(tms->start_gear == tms->end_gear){
+    dist = tms->model.y[tms->start_gear/10] * tms->elapsed;
+    tms->duration = 0;
+  }
+  //Case Acceleration
+  else if(tms->start_gear < tms->end_gear){
+    getAccelerationDistanceModel(&acl_model, train_num);
+    //Check if still accelerating
+    if(tms->duration < (acl_model.t[tms->end_gear/10] - acl_model.t[tms->start_gear/10])){
+      new_gear = estimateGear(acl_model.x, acl_model.t, tms->duration);
+      new_gear = new_gear > tms->end_gear ? tms->end_gear : new_gear; //Ensure we don't exceed bounds
+      new_gear = new_gear < tms->cur_gear ? tms->cur_gear : new_gear;  //Ensure that we are always going up
+    }
+    else{
+      new_gear = tms->end_gear;
+      tms->start_gear = tms->end_gear;
+    }
+
+    dist = zero_limit(easyInterpolation(&acl_model, new_gear) - easyInterpolation(&acl_model, tms->cur_gear));
+#ifndef X86
+      assert(new_gear >= tms->cur_gear);
+      assert(dist >= 0);
+#endif    
+    tms->cur_gear = new_gear;
+  }
+  //Case De-aceleration
+  else{
+    getStoppingDistanceModel(&stp_model, train_num);
+    //Check if still stopping
+    if(tms->duration < (stp_model.t[tms->start_gear/10] - stp_model.t[tms->end_gear/10])){
+      new_gear = estimateGear(stp_model.x, stp_model.t, stp_model.t[tms->start_gear/10] - tms->duration);
+      new_gear = new_gear < tms->end_gear ? tms->end_gear : new_gear; //Ensure that we are always going down
+      new_gear = new_gear > tms->cur_gear ? tms->cur_gear : new_gear;
+    }
+    else{
+	  tms->start_gear = tms->end_gear;
+      new_gear = tms->end_gear;
+    }
+    dist = zero_limit(easyInterpolation(&stp_model, tms->cur_gear) - easyInterpolation(&stp_model, new_gear));
+#ifndef X86
+      assert(new_gear <= tms->cur_gear);
+      assert(dist >= 0);
+#endif    
+    tms->cur_gear = new_gear;
+  }
+
+  return dist;  
 }
