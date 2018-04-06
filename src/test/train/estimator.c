@@ -155,7 +155,7 @@ static void estimator_move_train_basic() {
   assert(cur_pos_is(est, 1, POS("A1"), 0));
 
   // get the train moving at speed 5
-  r = est_update_tr_gear(est, 1, 5, t);
+  r = est_update_tr_gear(est, 1, 14, t);
   assert(r == 0);
 
   r = est_update(est, t+=TICK);
@@ -656,13 +656,13 @@ void estimator_tests() {
   // tr_at_list_insert_test();
   // estimator_init();
   // estimator_a_ton_of_nothing();
-  // estimator_move_train_basic();
+  estimator_move_train_basic();
   // estimator_a_ton_of_something();
   // estimator_move_train_basic_sensors();
   // estimator_two_train_collision_1_stopped();
   // estimator_two_train_collision_2_moving();
   // stopped_train_test();
   // estimator_wrong_path();
-  estimator_wrong_path_multi();
+  //estimator_wrong_path_multi();
   // estimator_track_b_init();
 }

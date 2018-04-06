@@ -395,7 +395,7 @@ int trainUpdateDist(TrainModelSnapshot *tms, int train_num){
   else if(tms->start_gear < tms->end_gear){
     getAccelerationDistanceModel(&acl_model, train_num);
     //Check if still accelerating
-    if(tms->duration < (acl_model.t[tms->end_gear] - acl_model.t[tms->start_gear])){
+    if(tms->duration < (acl_model.t[tms->end_gear/10] - acl_model.t[tms->start_gear/10])){
       new_gear = estimateGear(acl_model.x, acl_model.t, tms->duration);
       new_gear = new_gear > tms->end_gear ? tms->end_gear : new_gear; //Ensure that we are always going up
     }
@@ -415,7 +415,7 @@ int trainUpdateDist(TrainModelSnapshot *tms, int train_num){
   else{
     getStoppingDistanceModel(&stp_model, train_num);
     //Check if still stopping
-    if(tms->duration < (stp_model.t[tms->start_gear] - stp_model.t[tms->end_gear])){
+    if(tms->duration < (stp_model.t[tms->start_gear/10] - stp_model.t[tms->end_gear/10])){
       new_gear = estimateGear(stp_model.x, stp_model.t, tms->duration);
       new_gear = new_gear < tms->end_gear ? new_gear : tms->end_gear; //Ensure that we are always going down
     }
@@ -431,6 +431,7 @@ int trainUpdateDist(TrainModelSnapshot *tms, int train_num){
 #endif    
     tms->cur_gear = new_gear;
   }
+
 
   return dist;  
 }
