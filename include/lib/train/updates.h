@@ -83,11 +83,13 @@ typedef struct TrackUpdate {
 
 typedef enum TDType {
   TD_TR_TRAIN,
+  TD_SW_SWITCH,
   MAX_TRACK_DATA  // NOTE: keep as last element in enum
 } TDType;
 
 union TrackDatas{
   train tr_train;
+  swi   *sw_switch;
 };
 
 typedef struct TrackData{

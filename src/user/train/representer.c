@@ -22,6 +22,18 @@ static void NotifyTrainSubscribers(tr_subscribers *subs, train *tr) {
   }
 }
 
+static void NotifySWSubscribers(tr_subscribers *subs, swi *sws) {
+  TrackData td;
+  tid_t tid;
+
+  td.data.sw_switch = sws;
+
+  while(tr_subscribers_pop(subs, &tid) != CB_E_EMPTY){
+    Reply(tid, &td, sizeof(td));
+  }
+}
+
+
 static void AddTrainSubscriber(tr_subscribers *subs, tid_t tid, int train_num) {
   assert(train_num >= 0 && train_num < TRAIN_MAX);
   int r;
@@ -29,6 +41,12 @@ static void AddTrainSubscriber(tr_subscribers *subs, tid_t tid, int train_num) {
 
   train_subs = &subs[train_num];
   r = tr_subscribers_push(train_subs, tid);
+  assert(r == 0);
+}
+
+static void AddSWSubscriber(tr_subscribers *subs, tid_t tid) {
+  int r;
+  r = tr_subscribers_push(subs, tid);
   assert(r == 0);
 }
 
@@ -142,6 +160,11 @@ static void est_notif_trains(estimator *est, tr_subscribers *subs){
   }
 }
 
+static void est_notif_sw(estimator *est, tr_subscribers *subs){
+  int i;
+
+}
+
 static void est_print_trains(estimator *est) {
   int i, off;
   char buf[1024];
@@ -208,6 +231,9 @@ void Representer() {
     tr_subscribers_init(&tsubs[i]);
   }
 
+  tr_subscribers swsubs;
+  tr_subscribers_init(&swsubs);
+
   while (true) {
     Receive(&req_tid, &req, sizeof(req));
 
@@ -217,6 +243,7 @@ void Representer() {
         est_update(&estimator, req.data.time);
         est_print_trains(&estimator);
         est_notif_trains(&estimator, tsubs);
+        NotifySWSubscribers(&swsubs, estimator.sw);
         Reply(req_tid, &r, sizeof(r));
         break;
       case TRR_UPDATE:
@@ -229,6 +256,9 @@ void Representer() {
         break;
       case TRR_SUBSCRIBE_TR:
         AddTrainSubscriber(tsubs, req_tid, req.data.train_num);
+        break;
+      case TRR_SUBSCRIBE_SW:
+        AddSWSubscriber(&swsubs, req_tid);
         break;
       default:
         assert(0);

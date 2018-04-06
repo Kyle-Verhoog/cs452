@@ -20,6 +20,7 @@ typedef enum TrackRequestType {
   TRR_UPDATE    = 2,  // update the track model given a list of updates
   TRR_POKE      = 3,  // trigger an estimator update
   TRR_SUBSCRIBE_TR = 4,  // subscribe on an event
+  TRR_SUBSCRIBE_SW = 5,  // subscribe on an event
 } TrackRequestType;
 
 union uTrackRequest {

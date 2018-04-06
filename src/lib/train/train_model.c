@@ -171,7 +171,7 @@ int linear_interpolate(TrainModel *tm, int setting){
 	upper = tm->y[floor/10 + 1];
 
 	result = lower + (upper - lower)*frac/10;
-	assert(result <= upper);
+	// assert(result <= upper);
 	return result;
 }
 

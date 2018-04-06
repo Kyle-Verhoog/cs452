@@ -17,6 +17,8 @@ typedef struct TDTrain {
   bool stopping;
   bool update_ui;
   path p;
+  int driver;
+  swi *sw;
 } TDTrain;
 
 void TDTrainInit(TDTrain *train, int num) {
@@ -24,7 +26,116 @@ void TDTrainInit(TDTrain *train, int num) {
   train->pos = NULL;
   train->stopping = 0;
   train->update_ui = true;
+  train->driver = -1;
   path_init(&train->p, TRACK);
+}
+
+static void path_find(track_node *track, track_node *s, track_node *d, int *prev, swi *sw) {
+  int u, v, i;
+  int sid, did;
+  int dist[TRACK_MAX];
+  // int prev[TRACK_MAX];
+  int vist[TRACK_MAX];
+  tp_queue q;
+
+
+  int nedges[6];
+  nedges[NODE_NONE]   = 0;
+  nedges[NODE_SENSOR] = 1;
+  nedges[NODE_BRANCH] = 2;
+  nedges[NODE_MERGE]  = 1;
+  nedges[NODE_ENTER]  = 1;
+  nedges[NODE_EXIT]   = 0;
+
+  sid = s->id;
+  did = d->id;
+  tpq_init(&q);
+
+
+  for (v = 0; v < TRACK_MAX; ++v) {
+    dist[v] = INT_MAX;
+    prev[v] = -1;
+    vist[v] = 0;
+  }
+
+  dist[sid] = 0;
+  tpq_add(&q, sid, dist[sid]);
+
+  while (q.size > 0) {
+    u = tpq_pop(&q);
+
+    if (u == did)
+      break;
+
+    vist[u] = 1;
+    int alt;
+    track_edge *e;
+    if (track[u].type == NODE_BRANCH && sw[track[u].num].conf < 50) {
+      i = !sw[track[u].num].state;
+      e = &track[u].edge[i];
+      v = e->dest->id;
+
+      alt = dist[u] + e->dist;
+
+      if (!vist[v] && alt < dist[v]) {
+        dist[v] = alt;
+        prev[v] = u;
+        tpq_add(&q, v, alt);
+      }
+    }
+    else {
+      for (i = 0; i < nedges[track[u].type]; ++i) {
+        // KASSERT(&track[u].edge[i]);
+        e = &track[u].edge[i];
+        // KASSERT(e->dist < 1000 && e->dist >= 0);
+        v = e->dest->id;
+
+        alt = dist[u] + e->dist;
+
+        if (!vist[v] && alt < dist[v]) {
+          dist[v] = alt;
+          prev[v] = u;
+          tpq_add(&q, v, alt);
+        }
+      }
+    }
+  }
+}
+
+static int generate_path(path *p, TDTrain *tr) {
+  int i, n, sid, eid;
+  int buf[TRACK_MAX];
+
+  // KASSERT(!p->active);
+  KASSERT(p->start != NULL);
+  KASSERT(p->end != NULL);
+  KASSERT(p->start != p->end);
+
+  sid = p->start->id;
+  eid = p->end->id;
+
+  path_find(p->track, p->start, p->end, p->pred, tr->sw);
+  KASSERT(p->pred[sid] == -1);
+
+  n = 0;
+  buf[n++] = eid;
+
+  i = p->pred[eid];
+  while (i != -1) {
+    buf[n++] = i;
+    i = p->pred[i];
+  }
+
+  for (n = n-1; n >= 0; --n) {
+    tr_path_push(&p->ahead, &p->track[buf[n]]);
+  }
+
+  if (p->ahead.size < 2) {
+    return -1;
+  }
+
+  p->ready = true;
+  return 0;
 }
 
 
@@ -56,7 +167,6 @@ static void TrainSubscriber(TDTrain *tr) {
     Send(par_tid, &td.data.tr_train, sizeof(td.data.tr_train), &r, sizeof(r));
   }
 }
-
 
 static void FlipSwitch(sw_config *cfg) {
   SWProtocol sw;
@@ -99,7 +209,6 @@ static bool ShouldStop(path *p, train *raw_train, int stop_dist) {
 }
 
 
-
 #define LOOK_AHEAD 500
 static void HandleTrainUpdate(TDTrain *tr, train *raw_train, track_node *end) {
   int r, stop_dist;
@@ -115,16 +224,23 @@ static void HandleTrainUpdate(TDTrain *tr, train *raw_train, track_node *end) {
   sw_configs_init(&sw_cfgs);
 
   if (!tr->pos) {
+    TMLogStrf(tm_tid, "CALCULATING PATH\n");
     tr->pos = raw_train->curr_pos.pos;
     path_init(&tr->p, TRACK);
     path_set_destination(&tr->p, tr->pos, end);
-    path_generate(&tr->p);
+    generate_path(&tr->p, tr);
     path_start(&tr->p, tr->pos);
   } else {
     if (end == raw_train->curr_pos.pos) {
       TrainCmd(tr->num, 0);
       tr->stopping = false;
       TMLogStrf(tm_tid, "YEEHAW\n");
+      if (tr->driver == 1) {
+        DRIVER1_DEF = false;
+      }
+      else if (tr->driver == 2) {
+        DRIVER2_DEF = false;
+      }
       Exit();
     }
 
@@ -132,12 +248,12 @@ static void HandleTrainUpdate(TDTrain *tr, train *raw_train, track_node *end) {
     if (r == -1) {
       TMLogStrf(tm_tid, "PATH LOST - RECALCULATING\n");
 
-      // we're off the path
-      tr->pos = NULL;
 
       // TODO: clear out old reservations
       r = Free(rm_tid, tr->num, tr->pos);
       if (r) TMLogStrf(tm_tid, "FREE ALL FAILED\n");
+      // we're off the path
+      tr->pos = NULL;
       return;
     }
 
@@ -156,13 +272,15 @@ static void HandleTrainUpdate(TDTrain *tr, train *raw_train, track_node *end) {
     if (r) {
       // failed to get reservation
       TrainCmd(tr->num, 0);
-      TMLogStrf(tm_tid, "tr %d FAILED to get reservation", tr->num);
+      TMLogStrf(tm_tid, "tr %d FAILED to get reservation\n", tr->num);
+      DelayCS(MyTid(), 500);
+      TrainCmd(tr->num, 8);
     } else {
       // got the reservation
       r = Free(rm_tid, tr->num, tr->pos);
       if (r) {
         // free failed
-        TMLogStrf(tm_tid, "tr %d FAILED free reservation", tr->num);
+        TMLogStrf(tm_tid, "tr %d FAILED free reservation\n", tr->num);
       }
     }
 
@@ -183,7 +301,7 @@ static void HandleTrainUpdate(TDTrain *tr, train *raw_train, track_node *end) {
 
 void TrainDriver(TrainDriverArgs *args) {
   int r;
-  tid_t sub_tid;
+  tid_t sub_tid, rep_tid;
   TDTrain tr;
   char buf[4096];
   train raw_train;
@@ -199,9 +317,18 @@ void TrainDriver(TrainDriverArgs *args) {
   rm_tid = WhoIs(RESERVATION_MANAGER_ID);
   assert(rm_tid > 0);
 
+  rep_tid = WhoIs(REPRESENTER_ID);
+  assert(rep_tid > 0);
+
   if (!DRIVER1_DEF) {
     DRIVER1_DEF = true;
     TMRegister(tm_tid, DRIVER1_OFF_X, DRIVER1_OFF_Y, DRIVER1_WIDTH, DRIVER1_HEIGHT);
+    tr.driver = 1;
+  }
+  else if (!DRIVER2_DEF) {
+    DRIVER2_DEF = true;
+    TMRegister(tm_tid, DRIVER2_OFF_X, DRIVER2_OFF_Y, DRIVER2_WIDTH, DRIVER2_HEIGHT);
+    tr.driver = 2;
   }
 
   sw_tid = WhoIs(SWITCH_PROVIDER_ID);
@@ -213,10 +340,15 @@ void TrainDriver(TrainDriverArgs *args) {
 
   TrainCmd(tr.num, 10);
 
+  TrackData td;
+  TrackRequest tr_req;
+  tr_req.type = TRR_SUBSCRIBE_SW;
+  Send(rep_tid, &tr_req, sizeof(tr_req), &td, sizeof(td));
+  tr.sw = td.data.sw_switch;
+
   while (true) {
     Receive(&sub_tid, &raw_train, sizeof(raw_train));
     HandleTrainUpdate(&tr, &raw_train, args->end);
-    // TMLogStrf(tm_tid, "HERE\n");
 
     if (tr.pos && tr.update_ui) {
       path_to_str(&tr.p, buf);
