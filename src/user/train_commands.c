@@ -19,7 +19,7 @@ void SwitchISW(){
 }
 
 void TrainDR(char *args) {
-  int tn, s1, r;
+  int tn, speed, s1, r;
   char stn1[10];
   TrainDriverArgs tdargs;
   tid_t tm_tid, tid;
@@ -28,7 +28,7 @@ void TrainDR(char *args) {
   assert(tm_tid > 0);
 
   Receive(&tid, &r, sizeof(r));
-  r = parse_args(args, "%d %s", &tn, stn1, sizeof(stn1));
+  r = parse_args(args, "%d %d %s", &tn, &speed, stn1, sizeof(stn1));
   if (r) {
     TMLogStrf(tm_tid, "dr: error parsing arg %d\n", r);
     r = -1;
@@ -38,7 +38,14 @@ void TrainDR(char *args) {
 
   s1 = trhr(TRACK, stn1);
   if (s1 < 0 || s1 > TRACK_MAX-1) {
-    TMLogStrf(tm_tid, "dr: invalid track node %d\n", 2);
+    TMLogStrf(tm_tid, "dr: invalid track node\n");
+    r = -1;
+    Reply(tid, &r, sizeof(r));
+    Exit();
+  }
+
+  if (speed < 1 || speed > 14) {
+    TMLogStrf(tm_tid, "dr: invalid speed %d\n", speed);
     r = -1;
     Reply(tid, &r, sizeof(r));
     Exit();
@@ -46,6 +53,7 @@ void TrainDR(char *args) {
 
   tdargs.train_num = tn;
   tdargs.end = &TRACK[s1];
+  tdargs.speed = speed;
   TMLogStrf(tm_tid, "dr: %d %d\n", tn, s1);
   CreateArgs(PRI_TRAIN_DRIVER, &TrainDriver, &tdargs, sizeof(tdargs));
   r = 0;

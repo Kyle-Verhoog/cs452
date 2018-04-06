@@ -18,15 +18,17 @@ typedef struct TDTrain {
   bool update_ui;
   path p;
   int driver;
+  int speed;
   swi *sw;
 } TDTrain;
 
-void TDTrainInit(TDTrain *train, int num) {
+void TDTrainInit(TDTrain *train, int num, int speed) {
   train->num = num;
   train->pos = NULL;
   train->stopping = 0;
   train->update_ui = true;
   train->driver = -1;
+  train->speed = speed;
   path_init(&train->p, TRACK);
 }
 
@@ -255,7 +257,7 @@ static void HandleTrainUpdate(TDTrain *tr, train *raw_train, track_node *end) {
     r = path_follow_to(&tr->p, raw_train->curr_pos.pos);
     if (r == -1) {
       TMLogStrf(tm_tid, "PATH LOST - RECALCULATING\n");
-
+      TrainCmd(tr->num, tr->speed);
 
       // TODO: clear out old reservations
       r = Free(rm_tid, tr->num, tr->pos);
@@ -314,7 +316,7 @@ void TrainDriver(TrainDriverArgs *args) {
   char buf[4096];
   train raw_train;
 
-  TDTrainInit(&tr, args->train_num);
+  TDTrainInit(&tr, args->train_num, args->speed);
 
   tm_tid = WhoIs(TERMINAL_MANAGER_ID);
   assert(tm_tid > 0);
@@ -346,7 +348,7 @@ void TrainDriver(TrainDriverArgs *args) {
 
   CreateArgs(21, &TrainSubscriber, &tr, sizeof(tr));
 
-  TrainCmd(tr.num, 10);
+  TrainCmd(tr.num, tr.speed);
 
   TrackData td;
   TrackRequest tr_req;

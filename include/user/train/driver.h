@@ -7,6 +7,7 @@
 typedef struct TrainDriverArgs {
   int train_num;
   track_node *end;
+  int speed;
 } TrainDriverArgs;
 
 extern bool DRIVER1_DEF, DRIVER2_DEF;

@@ -101,13 +101,13 @@ static void ApplyUpdates(estimator *estimator, update_list *updates, trm_subscri
           pe.off = 0;
           r = est_update_tr_at(estimator, &pe);
           if (r == -1) {
-            TMLogStrf(tm_tid, "est: tr replaced\n");
+            // TMLogStrf(tm_tid, "est: tr replaced\n");
           }
           else if (r == -2) {
-            TMLogStrf(tm_tid, "est: tr before sen\n");
+            // TMLogStrf(tm_tid, "est: tr before sen\n");
           }
           else if (r == -3) {
-            TMLogStrf(tm_tid, "est: tr after sen\n");
+            // TMLogStrf(tm_tid, "est: tr after sen\n");
           }
           else if (r == -4) {
             TMLogStrf(tm_tid, "est: could not assoc train!\n");
