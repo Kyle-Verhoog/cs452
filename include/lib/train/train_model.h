@@ -57,7 +57,7 @@ void getAccelerationDistanceModel(TrainModel *tm, int train_num);
 #define ACCEPTED 0
 #define REJECTED 1
 #define ALPHA 50
-int alphaUpdate(TrainModel *tm, int setting, int velocity);
+int alphaUpdate(TrainModelSnapshot *tms, int dist, int ts);
 
 void getVelocityModel(TrainModel *tm, int train_num);
 #endif //TRAIN_MODEL_H

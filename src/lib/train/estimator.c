@@ -885,16 +885,25 @@ int est_update_tr_at(estimator *est, pos_event *pe) {
       // assert(0 && "train not found relative to sensor");
     }
     else if (rel < 0) {
-      if (train->last_sen) {
-        dist = dist_to_node(train->last_sen, pe->pos);
+      if(train->last_sen){
+        dist = dist_to_node(train->last_sen, pe->pos);  
         assert(dist > 0);
-        alphaUpdate(&train->snapshot, dist, ts);
+        r = alphaUpdate(&train->snapshot, dist, ts);
       }
+      train->last_sen = pe->pos;
+      train->snapshot.last_sen_ts = ts;
       ret = -2;
       // the train is before the sensor
       // printf("BEFORE %d\n", rel);
     }
     else /* if (rel > 0) */ {
+      if(train->last_sen){
+        dist = dist_to_node(train->last_sen, pe->pos);  
+        assert(dist > 0);
+        r = alphaUpdate(&train->snapshot, dist, ts);
+      }
+      train->last_sen = pe->pos;
+      train->snapshot.last_sen_ts = ts;
       ret = -3;
       // the train is after the sensor
       // printf("AFTER %d\n", rel);
