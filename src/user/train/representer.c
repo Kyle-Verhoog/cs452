@@ -110,7 +110,7 @@ static void ApplyUpdates(estimator *estimator, update_list *updates, trm_subscri
 }
 
 
-#define POKE_TIME 10
+#define POKE_TIME 5
 static void Poke() {
   int r;
   tid_t par_tid, cs_tid, my_tid;
@@ -137,10 +137,17 @@ static void est_print_trains(estimator *est) {
 
   off = 0;
 
-  off += buf_pack_c(buf+off, '\r');
+  off += buf_pack_str(buf+off, "\v\n\n");
   for (i = 0; i < est->ntrains; ++i) {
     tr = &est->train[i];
-    off += buf_pack_f(buf+off, "%d %s %d\n", tr->num, tr->curr_pos.pos->name, tr->curr_pos.off);
+    off += buf_pack_f(
+      buf+off, "  %d\t│ %s \t│ %d  \t│ %d  \t│ %d  \t│\n",
+      tr->num,
+      tr->curr_pos.pos->name,
+      tr->curr_pos.off,
+      tr->snapshot.cur_gear,
+      easyInterpolation(&tr->snapshot.model, tr->snapshot.cur_gear)
+    );
   }
   TMPutStr(tm_tid, buf, off);
 }
@@ -150,7 +157,6 @@ void Representer() {
   tid_t req_tid, my_tid;
   TrackRequest req;
   estimator estimator;
-  train *tr1, *tr2, *tr3;
 
 #ifdef TRACK_A
   track = 1;
@@ -181,6 +187,8 @@ void Representer() {
     trm_subscribers_init(&subscribers[i]);
   }
 
+  TMPutStrf(tm_tid, " TR #\t│  POS\t│  OFF\t│ GEAR\t│ SPEED\t│\n");
+  TMPutStrf(tm_tid, "───────────────────────────────────────────────\n");
   while (true) {
     Receive(&req_tid, &req, sizeof(req));
 

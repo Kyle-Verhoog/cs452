@@ -70,9 +70,9 @@
 // #define TASK_OFF_Y  TRACK_OFF_Y + TRACK_HEIGHT + 2
 // #define TASK_WIDTH  SH_WIDTH
 // #define TASK_HEIGHT 11
-#define TASK_OFF_X  LOG_OFF_X + LOG_WIDTH + 2
+#define TASK_OFF_X  LOG_OFF_X + LOG_WIDTH + 1
 #define TASK_OFF_Y  LOG_OFF_Y
-#define TASK_WIDTH  15
+#define TASK_WIDTH  24
 #define TASK_HEIGHT LOG_HEIGHT
 
 // trains
@@ -88,7 +88,7 @@
 
 #define REP_OFF_X  SH_OFF_X
 #define REP_OFF_Y  TRAIN_OFF_Y + TRAIN_HEIGHT + 1
-#define REP_WIDTH  15
+#define REP_WIDTH  TRACK_WIDTH
 #define REP_HEIGHT NUM_TRAINS + 1
 
 #define RESERV_OFF_X  SH_OFF_X

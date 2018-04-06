@@ -925,7 +925,10 @@ int est_update_tr_gear(estimator *est, int tr_num, int gear, int ts) {
 
   train = &est->train[est->tmap[tr_num]];
   // printf("%d %d\n", train->num, tr_num);
-  assert(train->num == tr_num);
+
+  if (train->num != tr_num) {
+    return -1;
+  }
 
   // TODO: initiate some acceleration or deceleration here
   train->snapshot.start_gear = train->snapshot.cur_gear / 10 * 10; //TODO: Could be more accurate

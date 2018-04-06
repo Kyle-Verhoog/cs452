@@ -36,16 +36,6 @@ typedef struct sensor {
   int conf;
 } sensor;
 
-typedef struct speed_info {
-  // int speed;
-  // int gear;
-  int start_gear;
-  int stop_gear;
-  int duration;
-  int elapsed;
-  // int dist;
-} acc_info;
-
 typedef struct train {
   int num;               // train num
   //int gear;              // train gear setting
@@ -55,7 +45,6 @@ typedef struct train {
   // pp_list   prev_pos;     // previous positions train has visited
   int       next_sen_eta; // next sensor estimated arrival time
   track_node *next_sen;   // the next sensor this train is expected to hit
-  //TrainModel  s_model;
   TrainModelSnapshot snapshot;
 } train;
 

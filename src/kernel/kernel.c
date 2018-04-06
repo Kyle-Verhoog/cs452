@@ -212,12 +212,12 @@ int task_info(TaskDescriptor *td) {
   asm("ldr %0, [%1, #4];":"=r"(buf):"r"(td->sp));
   offset = 0;
 
-  offset += buf_pack_str(buf+offset, "\vtid\tstatus\n");
-    offset += buf_pack_f(buf+offset, "┉┉┉┉┉┉┉┉┉┉┉┉┉\n");
+  offset += buf_pack_str(buf+offset, "\v TID\t│  PRI\t│STAT\n");
+  offset += buf_pack_f(buf+offset, "─────────────────────\n");
   for (i = 0; i < MAX_TASK; ++i) {
     status = tasks[i].status;
     if (status != TS_ZOMBIE && status != TS_UNINIT)
-      offset += buf_pack_f(buf+offset, "%d %d\t%s\n", i, tasks[i].priority, stat[status]);
+      offset += buf_pack_f(buf+offset, " %d  \t│  %d  \t│%s\n", i, tasks[i].priority, stat[status]);
   }
   return offset;
 }
