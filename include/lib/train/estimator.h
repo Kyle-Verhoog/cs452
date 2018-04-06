@@ -23,8 +23,8 @@ typedef struct pos_event {
   int ts;            // timestamp of the event
 } pos_event;
 
-#define PREV_POS_LIST_SIZE 16
-CIRCULAR_BUFFER_DEC(pp_list, pos_event, PREV_POS_LIST_SIZE);
+// #define PREV_POS_LIST_SIZE 16
+// CIRCULAR_BUFFER_DEC(pp_list, pos_event, PREV_POS_LIST_SIZE);
 
 typedef struct swi {
   int state;

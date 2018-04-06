@@ -390,44 +390,29 @@ static void estimator_two_train_collision_2_moving() {
 
   r = est_update(est, t+=TICK);
   assert(cur_pos_is(est, 1, POS("A1"), 70));
-  assert(cur_pos_is(est, 2, POS("MR12"), 14));
+  assert(cur_pos_is(est, 2, POS("A1"), 230));
 
   r = est_update(est, t+=TICK);
   assert(cur_pos_is(est, 1, POS("A1"), 140));
-  assert(cur_pos_is(est, 2, POS("MR12"), 59));
+  assert(cur_pos_is(est, 2, POS("MR12"), 29));
 
   r = est_update(est, t+=TICK);
   assert(cur_pos_is(est, 1, POS("A1"), 210));
-  assert(cur_pos_is(est, 2, POS("MR12"), 104));
-
-  r = est_update(est, t+=TICK);
-  assert(cur_pos_is(est, 1, POS("MR12"), 49));
-  assert(cur_pos_is(est, 2, POS("MR12"), 149));
-
-  r = est_update(est, t+=TICK);
-  assert(cur_pos_is(est, 1, POS("MR12"), 119));
-  assert(cur_pos_is(est, 2, POS("MR11"), 6));
-
-  r = est_update(est, t+=TICK);
-  assert(cur_pos_is(est, 1, POS("MR11"), 1));
-  assert(cur_pos_is(est, 2, POS("C13"), 8));
+  assert(cur_pos_is(est, 2, POS("MR12"), 59));
 
   // THIS TESTS THE RECURSIVE UPDATE
   r = est_update(est, t+=TICK);
-  assert(cur_pos_is(est, 1, POS("C13"), 28));
-  assert(cur_pos_is(est, 2, POS("C13"), 53));
+  assert(cur_pos_is(est, 1, POS("MR12"), 49));
+  assert(cur_pos_is(est, 2, POS("MR12"), 89));
 
   // COLLISION BETWEEN UPDATES
+  r = est_update(est, t+=TICK);
+  assert(cur_pos_is(est, 1, POS("MR12"), 118));
+  assert(cur_pos_is(est, 2, POS("MR12"), 119));
 
   r = est_update(est, t+=TICK);
-  assert(cur_pos_is(est, 1, POS("C13"), 97));
-  assert(cur_pos_is(est, 2, POS("C13"), 98));
-
-  r = est_update(est, t+=TICK);
-  assert(cur_pos_is(est, 1, POS("C13"), 142));
-  assert(cur_pos_is(est, 2, POS("C13"), 143));
-  // r = est_update(est, t+=TICK);
-  // assert(cur_pos_is(est, 1, POS("A1"), 2*(1400*TICK)/1000));
+  assert(cur_pos_is(est, 1, POS("MR12"), 148));
+  assert(cur_pos_is(est, 2, POS("MR12"), 149));
 }
 
 // test that an added, stopped train has no next prediction
@@ -613,17 +598,17 @@ static void estimator_track_b_init() {
 void estimator_tests() {
   init_tracka(T);
   init_trackb(TB);
-  // tr_at_list_insert_test();
-  // estimator_init();
-  // estimator_a_ton_of_nothing();
-  // estimator_add_train();
-  // estimator_move_train_basic();
-  // // estimator_a_ton_of_something();
-  // estimator_move_train_basic_sensors();
-  // estimator_two_train_collision_1_stopped();
-  // estimator_two_train_collision_2_moving();
-  // stopped_train_test();
-  // estimator_wrong_path();
-  // estimator_wrong_path_multi();
-  estimator_track_b_init();
+  tr_at_list_insert_test();
+  estimator_init();
+  estimator_a_ton_of_nothing();
+  estimator_add_train();
+  estimator_move_train_basic();
+  // estimator_a_ton_of_something();
+  estimator_move_train_basic_sensors();
+  estimator_two_train_collision_1_stopped();
+  estimator_two_train_collision_2_moving();
+  stopped_train_test();
+  estimator_wrong_path();
+  estimator_wrong_path_multi();
+  // estimator_track_b_init();
 }

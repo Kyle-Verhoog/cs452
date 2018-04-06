@@ -1,6 +1,6 @@
 #include <lib/train/estimator.h>
 
-CIRCULAR_BUFFER_DEF(pp_list, pos_event, PREV_POS_LIST_SIZE);
+// CIRCULAR_BUFFER_DEF(pp_list, pos_event, PREV_POS_LIST_SIZE);
 
 EXT_CIRCULAR_BUFFER_DEF(sen_reg_list, train *, INC_TR_LIST_SIZE);
 
@@ -602,6 +602,7 @@ int est_progress_train(estimator *est, train *tr, int dist_to_move, int ts) {
   // train was moved up all the way successfully
   if (dist_rem == 0) {
     r = est_pass_nodes(est, tr, &nodes, ts);
+    tn_list_init(&nodes);
   }
   // collision with another train, attempt to resolve by updating all trains
   // at the track node and then trying to move again
@@ -625,6 +626,7 @@ int est_progress_train(estimator *est, train *tr, int dist_to_move, int ts) {
     // move was successful
     if (dist_rem == 0) {
       r = est_pass_nodes(est, tr, &nodes, ts);
+      tn_list_init(&nodes);
     }
     else if (dist_rem >= 0) {
       // we cannot move up any further, nothing more can be done for this train
@@ -671,6 +673,7 @@ int est_update_train(estimator *est, train *train, int ts) {
   if (delta > 0 && train->gear > 0) {
     // move train along the track the corresponding distance for time delta
     // dist = 0; // speed model generated dist traveled in time delta
+    // dist = sm_calc_dist(&train->sm, delta);
     dist = (delta * easyInterpolation(&train->s_model, train->gear*10))/1000;
     // printf("%d\n", dist);
     // printf("%d %s %d\n", dist, train->curr_pos.pos->name, train->curr_pos.off);
@@ -785,6 +788,10 @@ int est_update_tr_gear(estimator *est, int tr_num, int gear, int ts) {
 
   // TODO: initiate some acceleration or deceleration here
   train->gear = gear;
+  // sm->start_gear = sm->curr_gear
+  // sm->stop_gear = gear
+  //
+  // sm_acc(
 
   return 0;
 }
