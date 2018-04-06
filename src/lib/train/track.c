@@ -285,7 +285,7 @@ static void TrackUpdateKnownTrain(Track *track, Train *train, track_node *new_po
 
 // UN_SPEED -> KNOWN
 static void TrackUpdateUnknownSpeedTrain(Track *track, Train *train, track_node *new_pos, int ts) {
-  int dist;
+  int speed, dist;
   assert(train->status == TR_UN_SPEED && train->pos != NULL);
 
   // if the speed is unknown and the previous position is not null then we can
@@ -294,7 +294,10 @@ static void TrackUpdateUnknownSpeedTrain(Track *track, Train *train, track_node 
   dist = dist_to_node(train->pos, new_pos);
   assert(dist >= 0 && dist <= 10000);
   assert(ts - train->sen_ts != 0);
-  train->speed = (dist*1000) / ((ts - train->sen_ts)); // speed in um/tick
+  speed = (dist*1000) / ((ts - train->sen_ts)); // speed in um/tick
+  if (0 < speed && speed < 8000) {
+    train->speed = speed;
+  }
   train->status = TR_KNOWN;
   train->sen_ts = ts;
   train->pos = new_pos;

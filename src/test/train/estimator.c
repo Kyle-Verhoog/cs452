@@ -275,6 +275,7 @@ static void estimator_move_train_basic_sensors() {
   r = est_update(est, t+=TICK);
   assert(cur_pos_is(est, 1, POS("E7"), 5*DIST));
 
+
   // we should get a sensor event somewhere here if our model was running fast
   // (sensor is 384mm-350mm away)
   pe.ts = t+10;
@@ -604,15 +605,13 @@ static void estimator_wrong_path_multi_2() {
   r = est_update(est, t+=TICK);
   r = est_update(est, t+=TICK);
   r = est_update(est, t+=TICK);
-  // r = est_update(est, t+=TICK);
-  // r = est_update(est, t+=TICK);
-  // r = est_update(est, t+=TICK);
-  // r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
+  r = est_update(est, t+=TICK);
 
-  //assert(cur_pos_is(est, 1, POS("E13"), 7));
-  //assert(cur_pos_is(est, 2, POS("E10"), 333));
-  cur_pos_is(est, 1, POS("E13"), 7);
-  cur_pos_is(est, 2, POS("E10"), 333);
+  assert(cur_pos_is(est, 1, POS("E13"), 7));
+  assert(cur_pos_is(est, 2, POS("E10"), 333));
 
   pe.ts = t+10;
   pe.pos = POS("D9");
@@ -736,5 +735,5 @@ void estimator_tests() {
   estimator_wrong_path();
   estimator_wrong_path_multi();
   estimator_wrong_path_multi_2();
-  // estimator_track_b_init();
+  // // estimator_track_b_init();
 }

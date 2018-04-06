@@ -75,7 +75,8 @@ static void ApplyUpdates(estimator *estimator, update_list *updates, trm_subscri
         r = est_update_tr_gear(estimator, event.event.tr_gear.num, event.event.tr_gear.newgear, event.ts);
         break;
       case TE_SW_CHANGE:
-        r = est_update_sw(estimator, event.event.sw_change.num, event.event.sw_change.newdir, event.ts);
+        assert(event.event.sw_change.newdir == 33 || event.event.sw_change.newdir == 34);
+        r = est_update_sw(estimator, event.event.sw_change.num, event.event.sw_change.newdir-33, event.ts);
         break;
       default:
         assert(0);

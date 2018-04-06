@@ -215,6 +215,26 @@ static train *est_recover_train_from_node_crumbs(estimator *est, track_node *nod
     }
   }
 
+  // TODO: this might cause branches that are not faulty to be marked as such
+  // eg if the train is really behind schedule in the model
+  swi *sw;
+  if (min_tr && node->type == NODE_BRANCH) {
+    sw = &est->sw[node->num];
+    // printf("marking %s faulty\n", node->name);
+    if (sw->conf >= 50) {
+      sw->conf = 0;
+      sw->last_known_state = !sw->state;
+    }
+    // a stuck switch somehow switched configuration
+    else if (sw->conf == 0) {
+      sw->conf = 50;
+      sw->state = !sw->state;
+    }
+    else {
+      assert(0);
+    }
+  }
+
   return min_tr;
 }
 
@@ -277,7 +297,6 @@ static train *est_recover_from_crumbs(estimator *est, track_node *node) {
 
 // associate a train to a sensor event
 static train *est_assoc_tr(estimator *est, pos_event *pe) {
-  // int i;
   int dir;
   train *train;
   sen_reg_list *sen_regs;
@@ -357,10 +376,7 @@ int est_estimate_sw_dir(estimator *est, int sw_num) {
 
   sw = &est->sw[sw_num];
 
-  if (sw->conf == 100) {
-    dir = sw->state;
-  }
-  else if (sw->conf == 50) {
+  if (sw->conf >= 50) {
     dir = sw->state;
   }
   else if (sw->conf == 0) {
@@ -368,7 +384,7 @@ int est_estimate_sw_dir(estimator *est, int sw_num) {
   }
   else {
     dir = -1;
-    assert(0);
+    assert(0 && "UNDEFINED SW CONFIDENCE");
   }
 
   return dir;
@@ -398,6 +414,7 @@ static int est_next_node(estimator *est, train *train, track_node **ret_next, in
       next_dir = est_estimate_sw_dir(est, next->num);
       break;
     case NODE_EXIT:
+      assert(0 && "NODE EXIT");
       *ret_dir = -1;
       next = NULL;
       return dist;
@@ -453,7 +470,7 @@ int est_move_train_to_node_unsafe(estimator *est, train *tr, track_node *dest) {
 //  -1 if the path was blocked by another train (train position not updated)
 //  -2 if the train cannot move because there is a dead end
 int est_move_train_forward(estimator *est, train *tr, int dist_to_move, int force, tn_list *past) {
-  int i, r, dir, dist_to_next;
+  int i, r, next_dir, dist_to_next;
   track_node *next;
   train *other;
   tr_at_list *tr_at;
@@ -503,7 +520,7 @@ int est_move_train_forward(estimator *est, train *tr, int dist_to_move, int forc
       }
     }
 
-    dist_to_next = est_next_node(est, tr, &next, &dir);
+    dist_to_next = est_next_node(est, tr, &next, &next_dir);
     if (dist_to_next < 0) {
       assert(0);
       // restore the old state
@@ -511,8 +528,12 @@ int est_move_train_forward(estimator *est, train *tr, int dist_to_move, int forc
       return -2;
     }
     assert(next != NULL);
-    assert((next->type == NODE_BRANCH && dir == DIR_CURVED) || (next->type != NODE_BRANCH && dir == DIR_AHEAD));
-    assert(dir == DIR_AHEAD || dir == DIR_STRAIGHT || dir == DIR_CURVED);
+    assertf((next->type == NODE_BRANCH && next_dir == DIR_CURVED) ||
+            (next->type != NODE_BRANCH && next_dir == DIR_AHEAD),
+            "%d || %d node %s", (next->type == NODE_BRANCH && next_dir == DIR_CURVED),
+                        (next->type != NODE_BRANCH && next_dir == DIR_AHEAD), next->name);
+
+    assert(next_dir == DIR_AHEAD || next_dir == DIR_STRAIGHT || next_dir == DIR_CURVED);
 
     // printf("togo %d %s %d\n", dist_to_move, tr->curr_pos.pos->name, tr->curr_pos.off);
 
@@ -523,14 +544,38 @@ int est_move_train_forward(estimator *est, train *tr, int dist_to_move, int forc
     // move to next node
     // printf("COND %d + %d  >= %d\n", tr->curr_pos.off, dist_to_move, dist_to_next);
     if (dist_to_move >= dist_to_next) {
-      // TODO check that next node is not occupied
+      // TODO: much of this is the same logic as the above
+      // check that next node is not occupied
+      tr_at = &est->tr_at[next->id][next_dir];
+      if (tr_at->size > 0) {
+        // get the closest train to node
+        tr_at_list_get(tr_at, tr_at->size-1, &other);
+        if (other->curr_pos.off == 0) {
+          // we cannot move to next node!
+          if (force) {
+            dist_to_move -= dist_to_next;
+            tr->curr_pos.off += dist_to_next;
+            tr_at = &est->tr_at[tr->curr_pos.pos->id][tr->curr_pos.dir];
+            r = tr_at_list_insert(tr_at, tr);
+            assert(r == 0);
+            return dist_to_move;
+          }
+          else {
+            // restore the old state
+            tr->curr_pos = pos_orig;
+            return -1;
+          }
+        }
+      }
+
+      // now move train to next node
       dist_to_move -= dist_to_next;
       tr->curr_pos.pos = next;
-      tr->curr_pos.dir = dir;
+      tr->curr_pos.dir = next_dir;
       tr->curr_pos.off = 0;
       assert(tr->curr_pos.dir == 0 || tr->curr_pos.dir == 1);
       tr_at = &est->tr_at[tr->curr_pos.pos->id][tr->curr_pos.dir];
-      r = tn_list_push(past, (track_node_dir){ next, dir });
+      r = tn_list_push(past, (track_node_dir){ next, next_dir });
       assert(r == 0);
     }
     else {
@@ -550,12 +595,17 @@ int est_move_train_backward(estimator *est, train *train, int dist) {
   return 0;
 }
 
-static int est_cleanup_node_crumbs(estimator *est, train *tr, track_node *node) {
+static int est_cleanup_node(estimator *est, train *tr, track_node *node) {
   int r;
   tn_crumbs *crumbs;
   train_crumb *crumb;
 
   r = 0;
+
+  // remove any possible registrations on the sensor from `tr`
+  if (node->type == NODE_SENSOR) {
+    sen_reg_list_rem(&est->sen_reg[node->num], tr);
+  }
 
   // printf("checking %s for %d crumbs (%d)\n", node->name, tr->num, 0);
   crumbs = &est->crumb[node->id][0];
@@ -582,8 +632,8 @@ static int est_cleanup_node_crumbs(estimator *est, train *tr, track_node *node) 
   return r;
 }
 
-// clean up all the crumbs starting at node and working backwards
-static int est_cleanup_crumbs(estimator *est, train *tr, track_node *node) {
+// clean up all the crumbs and registrations starting at node and working backwards
+static int est_cleanup(estimator *est, train *tr, track_node *node) {
   int r;
   bfs_q q;
   track_node *next;
@@ -597,7 +647,7 @@ static int est_cleanup_crumbs(estimator *est, train *tr, track_node *node) {
     r = bfs_q_pop(&q, &node);
     if (r) return -1;
 
-    r = est_cleanup_node_crumbs(est, tr, node->reverse);
+    r = est_cleanup_node(est, tr, node->reverse);
     if (!r) {
       continue;
     }
@@ -840,7 +890,7 @@ int est_update_tr_at(estimator *est, pos_event *pe) {
       // printf("AFTER %d\n", rel);
     }
 
-    r = est_cleanup_crumbs(est, train, train->curr_pos.pos);
+    r = est_cleanup(est, train, train->curr_pos.pos);
     assert(r == 0);
 
     // int i;
@@ -888,6 +938,8 @@ int est_update_tr_gear(estimator *est, int tr_num, int gear, int ts) {
 
 // update the estimator with a switch change event
 int est_update_sw(estimator *est, int sw_num, int state, int ts) {
+  assert(state == 0 || state == 1);
+
   swi *sw;
   sw = &est->sw[sw_num];
 
