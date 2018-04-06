@@ -703,9 +703,9 @@ int est_update_train(estimator *est, train *train, int ts) {
     // move train along the track the corresponding distance for time delta
     // dist = 0; // speed model generated dist traveled in time delta
     // dist = sm_calc_dist(&train->sm, delta);
-    dist = (delta * easyInterpolation(&train->snapshot.model, train->snapshot.end_gear))/1000;
+    // dist = (delta * easyInterpolation(&train->snapshot.model, train->snapshot.end_gear))/1000;
     //train->snapshot.elapsed = delta;
-    //dist = trainUpdateDist(&train->snapshot, train->num)/1000;
+    dist = trainUpdateDist(&train->snapshot, train->num)/1000;
     // printf("%d\n", dist);
     // printf("%d %s %d\n", dist, train->curr_pos.pos->name, train->curr_pos.off);
     r = est_progress_train(est, train, dist, ts);
