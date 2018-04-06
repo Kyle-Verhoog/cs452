@@ -176,7 +176,7 @@ static void est_print_trains(estimator *est) {
   for (i = 0; i < est->ntrains; ++i) {
     tr = &est->train[i];
     off += buf_pack_f(
-      buf+off, "  %d\t│ %s \t│ %d  \t│ %d  \t│ %d  \t│\n",
+      buf+off, "  %d\t│ %s \t│ %d  \t│ %d  \t│ %d \n",
       tr->num,
       tr->curr_pos.pos->name,
       tr->curr_pos.off,
@@ -223,8 +223,8 @@ void Representer() {
     trm_subscribers_init(&subscribers[i]);
   }
 
-  TMPutStrf(tm_tid, " TR #\t│  POS\t│  OFF\t│ GEAR\t│ SPEED\t│\n");
-  TMPutStrf(tm_tid, "────────────────────────────────────────\n");
+  TMPutStrf(tm_tid, " TR #\t│  POS\t│  OFF\t│ GEAR\t│ SPEED\n");
+  TMPutStrf(tm_tid, "─────────────────────────────────────\n");
 
   tr_subscribers tsubs[TRAIN_MAX];
   for (i = 0; i < TRAIN_MAX; ++i) {

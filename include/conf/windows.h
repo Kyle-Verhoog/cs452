@@ -56,13 +56,13 @@
 
 #define TRACK_OFF_X SH_OFF_X
 #define TRACK_OFF_Y SH_OFF_Y + SH_HEIGHT + 1
-#define TRACK_WIDTH IDLE_OFF_X + IDLE_WIDTH - 8
+#define TRACK_WIDTH IDLE_OFF_X + IDLE_WIDTH - 11
 #define TRACK_HEIGHT 15
 
 // sensor window config
 #define SWITCH_OFF_X  TRACK_OFF_X + TRACK_WIDTH + 1
 #define SWITCH_OFF_Y  TRACK_OFF_Y
-#define SWITCH_WIDTH  25
+#define SWITCH_WIDTH  28
 #define SWITCH_HEIGHT 29
 
 // task manager
@@ -94,7 +94,7 @@
 #define REP_OFF_X  SH_OFF_X
 #define REP_OFF_Y  TRAIN_OFF_Y + TRAIN_HEIGHT + 1
 #define REP_WIDTH  TRACK_WIDTH
-#define REP_HEIGHT NUM_TRAINS + 1
+#define REP_HEIGHT NUM_TRAINS + 3
 
 #define RESERV_OFF_X  SH_OFF_X
 #define RESERV_OFF_Y  LOG_OFF_Y + LOG_HEIGHT + 1

@@ -64,12 +64,12 @@ void SwitchInterface() {
 
     offset = 0;
     offset += buf_pack_c(buf+offset, TERM_RESET);
-    offset += buf_pack_f(buf+offset, "  sw\t cmd  est  conf   \n");
-    offset += buf_pack_f(buf+offset, "────────────────────────── \n");
+    offset += buf_pack_f(buf+offset, " sw\tcmd\test\tconf \n");
+    offset += buf_pack_f(buf+offset, "──────────────────────────\n");
     for (i = 0; i < SWITCH_SIZE; ++i) {
       c = switches[i];
       if (c != '\0') {
-        offset += buf_pack_f(buf+offset, " %d\t  %c  %c  %d\n", i, c, sw[i].state == 1 ? 'C' : 'S', sw[i].conf);
+        offset += buf_pack_f(buf+offset, " %d\t  %c\t %c\t%d \n", i, c, sw[i].state == 1 ? 'C' : 'S', sw[i].conf);
       }
     }
     TMPutStr(tm_tid, buf, offset);

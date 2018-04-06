@@ -205,7 +205,7 @@ static bool ShouldStop(path *p, train *raw_train, int stop_dist) {
     return true;
   }
 
-  return dist_to_end < stop_dist + 100;
+  return dist_to_end < stop_dist+10;
 }
 
 
@@ -229,7 +229,7 @@ static void HandleTrainUpdate(TDTrain *tr, train *raw_train, track_node *end) {
     path_init(&tr->p, TRACK);
     path_set_destination(&tr->p, tr->pos, end);
     r = generate_path(&tr->p, tr);
-    if (r <= 0) {
+    if (r < 0) {
       TMLogStrf(tm_tid, "COULD NOT FIND PATH\n");
       tr->pos = NULL;
       tr->update_ui = false;
