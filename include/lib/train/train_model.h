@@ -27,6 +27,7 @@ typedef struct TrainModelSnapshot{
 	int end_gear;
 	int duration;		//Time since start_gear
 	int elapsed;		//Time delta
+  int last_sen_ts;
 	TrainModel model;
 } TrainModelSnapshot;
 

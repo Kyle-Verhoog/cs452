@@ -153,10 +153,12 @@ int est_add_tr(estimator *est, int tr_num, pos_event *pe) {
   train->curr_pos.dir = DIR_AHEAD;
   train->len = 200;        // TODO: hard code train length to be 20cm
   train->next_sen = NULL;
+  train->last_sen = NULL;
   train->snapshot.cur_gear = 0;
   train->snapshot.start_gear = 0;
   train->snapshot.end_gear = 0;
   train->snapshot.duration = 0;
+  train->snapshot.last_sen_ts = -1;
   getVelocityModel(&train->snapshot.model, train->num);
 
   tr_at = &est->tr_at[train->curr_pos.pos->id][train->curr_pos.dir];
@@ -856,7 +858,7 @@ int est_update(estimator *est, int ts) {
 
 // update the estimator with a train at sensor event
 int est_update_tr_at(estimator *est, pos_event *pe) {
-  int ret, r, rel, ts;
+  int ret, r, rel, ts, dist;
   train *train;
 
   ret = 0;
@@ -883,6 +885,9 @@ int est_update_tr_at(estimator *est, pos_event *pe) {
       // assert(0 && "train not found relative to sensor");
     }
     else if (rel < 0) {
+      dist = dist_to_node(train->last_sen, pe->pos);
+      assert(dist > 0);
+      alphaUpdate(&train->snapshot, dist, ts);
       ret = -2;
       // the train is before the sensor
       // printf("BEFORE %d\n", rel);

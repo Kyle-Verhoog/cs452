@@ -247,8 +247,11 @@ void Representer() {
         Reply(req_tid, &r, sizeof(r));
         break;
       case TRR_SUBSCRIBE:
+        AddSubscriber(subscribers, req_tid, req.data.type);
+        break;
+      case TRR_SUBSCRIBE_DATA:
         if(req.data.type == TD_TR_TRAIN){
-          AddTrainSubscriber(tsubs, req_tid, req.data.train_num);  
+          AddTrainSubscriber(tsubs, req_tid, req.data.train_num);
         }
         break;
       default:
